@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: #FAFAFA;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --orange: #FF6B00;
+  --orange-dark: #E05A00;
+  --orange-light: #FFF3EA;
+  --dark: #1A1A1A;
+  --gray: #6B7280;
+  --border: #EBEBEB;
+  --bg: #FAFAFA;
+}
