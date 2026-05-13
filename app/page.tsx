@@ -35,11 +35,11 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* CARDURI */}
+          {/* CARDURI — border portocaliu */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
 
             {/* Card Proprietar */}
-            <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(24px,3.5vw,40px)", border: "1px solid #EBEBEB", boxShadow: "0 2px 20px rgba(26,26,26,.07)", display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(24px,3.5vw,40px)", border: "2px solid #FF6B00", boxShadow: "0 2px 20px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 18 }}>
               <div style={{ width: 52, height: 52, borderRadius: 14, background: "#FFF3EA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🐾</div>
               <div style={{ fontSize: 10, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ești proprietar de animal</div>
               <h2 style={{ fontSize: "clamp(20px,2.6vw,28px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginTop: -4 }}>Programează-ți<br />animăluțul</h2>
@@ -57,17 +57,18 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Card Salon — acum ALB ca proprietar */}
-            <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(24px,3.5vw,40px)", border: "1px solid #EBEBEB", boxShadow: "0 2px 20px rgba(26,26,26,.07)", display: "flex", flexDirection: "column", gap: 18 }}>
+            {/* Card Salon */}
+            <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(24px,3.5vw,40px)", border: "2px solid #FF6B00", boxShadow: "0 2px 20px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 18 }}>
               <div style={{ width: 52, height: 52, borderRadius: 14, background: "#FFF3EA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>✂️</div>
               <div style={{ fontSize: 10, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un salon de grooming</div>
               <h2 style={{ fontSize: "clamp(20px,2.6vw,28px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginTop: -4 }}>Umple-ți<br />calendarul</h2>
               <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, flexGrow: 1 }}>Primești programări online, reduci neprezentările și urmărești statisticile salonului.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {/* Cifre — fix responsive */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {[["-70%", "Neprezentări"], ["3h", "Economisite pe zi"], ["+40%", "Clienți noi"]].map(([val, label]) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 17, fontWeight: 900, color: "#FF6B00", minWidth: 48 }}>{val}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#6B7280" }}>{label}</span>
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 16, background: "#FAFAFA", borderRadius: 12, padding: "10px 14px" }}>
+                    <span style={{ fontSize: 20, fontWeight: 900, color: "#FF6B00", minWidth: 56 }}>{val}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -81,15 +82,17 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* STATS BAR */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 56, paddingTop: 36, borderTop: "1px solid #EBEBEB" }}>
-            {[["500+", "Saloane"], ["24/7", "Disponibil"], ["-70%", "Neprezentări"], ["10s", "Programare"]].map(([val, label], i, arr) => (
-              <div key={label} style={{ display: "flex", alignItems: "center" }}>
-                <div style={{ textAlign: "center", padding: "8px 32px" }}>
-                  <div style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1 }}>{val}</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", marginTop: 4, textTransform: "uppercase", letterSpacing: .8 }}>{label}</div>
-                </div>
-                {i < arr.length - 1 && <div style={{ width: 1, height: 28, background: "#E5E7EB" }} />}
+          {/* STATS BAR — fix responsive 2x2 pe mobil */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, marginTop: 56, paddingTop: 36, borderTop: "1px solid #EBEBEB" }}>
+            {[["500+", "Saloane"], ["24/7", "Disponibil"], ["-70%", "Neprezentări"], ["10s", "Programare"]].map(([val, label], i) => (
+              <div key={label} style={{
+                textAlign: "center",
+                padding: "16px 8px",
+                borderRight: i % 2 === 0 ? "1px solid #E5E7EB" : "none",
+                borderBottom: i < 2 ? "1px solid #E5E7EB" : "none"
+              }}>
+                <div style={{ fontSize: "clamp(22px,4vw,32px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1 }}>{val}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", marginTop: 4, textTransform: "uppercase", letterSpacing: .8 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -109,7 +112,7 @@ export default function HomePage() {
                 ["🐾", "Profil animăluț unic", "Rasă, vârstă, alergii salvate. Salonul îl cunoaște deja."],
                 ["⭐", "Status Special", "Istoric complet vizite. Animăluțul tău are dosar propriu."],
               ].map(([icon, title, desc]) => (
-                <div key={title as string} style={{ background: "#FAFAFA", borderRadius: 20, padding: 28, border: "1px solid #EBEBEB" }}>
+                <div key={title as string} style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
                   <div style={{ fontSize: 32, marginBottom: 14 }}>{icon}</div>
                   <h3 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{title}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.6 }}>{desc}</p>
@@ -124,7 +127,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* SECTION SALOANE — carduri albe */}
+        {/* SECTION SALOANE */}
         <section style={{ background: "#FAFAFA", padding: "72px 20px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -138,7 +141,7 @@ export default function HomePage() {
                 ["+40%", "Clienți noi", "Vizibilitate garantată pe CalyHub."],
                 ["24/7", "Calendar activ", "Programări automate inclusiv noaptea."],
               ].map(([stat, title, desc]) => (
-                <div key={title as string} style={{ background: "#fff", borderRadius: 20, padding: 28, border: "1px solid #EBEBEB", boxShadow: "0 2px 12px rgba(26,26,26,.06)" }}>
+                <div key={title as string} style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
                   <div style={{ fontSize: 32, fontWeight: 900, color: "#FF6B00", marginBottom: 8 }}>{stat}</div>
                   <h3 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{title}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.6 }}>{desc}</p>
@@ -165,14 +168,16 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* FOOTER */}
-      <footer style={{ background: "#111", padding: "24px 20px" }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <Image src="/logo.png" alt="CalyHub" width={100} height={34} style={{ height: 32, width: "auto", filter: "brightness(0) invert(1)", opacity: .7 }} />
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)" }}>© 2026 CalyHub · România</div>
+      {/* FOOTER — logo real, fundal închis dar nu negru pur */}
+      <footer style={{ background: "#1A1A1A", padding: "28px 20px" }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <Link href="/">
+            <Image src="/logo.png" alt="CalyHub" width={120} height={42} style={{ height: 42, width: "auto", objectFit: "contain", background: "#fff", borderRadius: 10, padding: "4px 8px" }} />
+          </Link>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)" }}>© 2026 CalyHub · România</div>
           <div style={{ display: "flex", gap: 20 }}>
             {[["Conectare", "/login"], ["Prețuri", "/pricing"]].map(([label, href]) => (
-              <Link key={href as string} href={href as string} style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,.38)", textDecoration: "none" }}>{label}</Link>
+              <Link key={href as string} href={href as string} style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,.5)", textDecoration: "none" }}>{label}</Link>
             ))}
           </div>
         </div>
