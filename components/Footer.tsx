@@ -52,7 +52,7 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
           <div>
             <div style={titleStyle}>🐾 Clienți</div>
             <Link href="/cum-functioneaza" style={linkStyle}>Cum funcționează</Link>
-            <Link href="/register" style={linkStyle}>Caută saloane</Link>
+            <Link href="/login" style={linkStyle}>Caută saloane</Link>
             <Link href="/login" style={linkStyle}>Programările mele</Link>
             <Link href="/register" style={linkStyle}>Înregistrare gratuită</Link>
           </div>
@@ -62,7 +62,7 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
             <Link href="/register" style={linkStyle}>Înregistrează salon</Link>
             <Link href="/register/abonament-salon" style={linkStyle}>Prețuri & abonamente</Link>
             <Link href="/cum-functioneaza" style={linkStyle}>Cum funcționează</Link>
-            <a href="mailto:parteneri@calyhub.ro" style={linkStyle}>Suport parteneri</a>
+            <Link href="/suport-parteneri" style={linkStyle}>Suport parteneri</Link>
           </div>
 
           <div>
