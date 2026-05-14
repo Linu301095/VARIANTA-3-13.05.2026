@@ -2,11 +2,55 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Nunito', system-ui, sans-serif;
   background: #FAFAFA;
   color: #1A1A1A;
   -webkit-font-smoothing: antialiased;
+}
+
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent iOS auto-zoom on input focus */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* ---------- Mobile breakpoint adjustments ---------- */
+@media (max-width: 640px) {
+  /* Tighten padding on small screens */
+  body { font-size: 15px; }
+
+  /* Disable hover lift on touch devices to prevent sticky hover */
+  button:not(:disabled):hover,
+  a:hover {
+    transform: none;
+    filter: none;
+    box-shadow: none;
+  }
+}
+
+/* Disable hover effects on touch-only devices */
+@media (hover: none) {
+  button:not(:disabled):hover,
+  a:hover {
+    transform: none;
+    filter: none;
+    box-shadow: none;
+  }
 }
 
 :root {
