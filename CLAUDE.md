@@ -1,0 +1,42 @@
+# CalyHub — Reguli proiect
+
+## SEO (OBLIGATORIU pentru orice pagină nouă)
+
+Orice pagină publică nouă adăugată în aplicație trebuie să respecte standardul SEO deja stabilit:
+
+1. **Metadata individuală** — fiecare pagină exportă propriul `metadata: Metadata` cu:
+   - `title` unic și descriptiv (include keyword-uri RO)
+   - `description` 140-160 caractere, conține keyword-uri naturale
+   - `alternates: { canonical: "/ruta" }`
+   - `openGraph` complet (title, description, url, type)
+   - `keywords` array cu termeni RO relevanți
+
+2. **Pentru paginile `"use client"`** — metadata se pune într-un `layout.tsx` separat în același folder (nu poți exporta `metadata` dintr-un client component).
+
+3. **Pagini private (dashboard, setări utilizator)** — `robots: { index: false, follow: false }`.
+
+4. **Pagini locale / orașe** — adaugă JSON-LD `LocalBusiness` + `BreadcrumbList`, înregistrează ruta în `app/sitemap.ts` și (dacă folosește URL keyword-rich) în `next.config.js` rewrites.
+
+5. **Adaugă în `app/sitemap.ts`** orice rută publică nouă cu `priority` și `changeFrequency` corespunzătoare.
+
+6. **Conținut vizibil = conținut indexabil:**
+   - Folosește un singur `<h1>` per pagină, descriptiv.
+   - Ierarhie corectă `h1 → h2 → h3`.
+   - Text real în HTML, nu doar în imagini.
+   - `alt` pe toate imaginile relevante.
+   - Link-uri interne către alte pagini din site.
+
+7. **URL-uri** — doar lowercase, cuvinte separate prin `-`, fără diacritice, keyword-rich (ex: `/saloane-grooming-bucuresti`, nu `/page-42`).
+
+## Stil cod
+
+- Inline styles (no Tailwind classes în practică)
+- Font Nunito, brand color `#FF6B00`
+- Footer cu varianta corectă pe fiecare tip de pagină
+- Limba română pentru tot conținutul UI
+
+## Branch & deploy
+
+- Development: `claude/change-project-background-zPuM4`
+- Production (Vercel auto-deploy): `main`
+- Pentru ca modificările să apară pe Vercel, trebuie merge din branch-ul de dev în `main` și push pe `main`.
