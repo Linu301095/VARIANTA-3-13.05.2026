@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-type Variant = "full" | "auth" | "payment" | "client" | "salon";
+type Variant = "full" | "auth" | "payment" | "client" | "salon" | "admin";
 
 const LOGO = (
   <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
@@ -155,6 +155,23 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
             <a href="mailto:parteneri@calyhub.ro" style={{ ...linkStyleSm, color: "#FF8C42" }}>⚡ Suport prioritar</a>
           </div>
           <div style={copyright}>© 2026 CalyHub · Partener</div>
+        </div>
+      </footer>
+    );
+  }
+
+  /* ----- ADMIN (panou administrator) ----- */
+  if (variant === "admin") {
+    return (
+      <footer style={{ ...wrapperSm, background: "#0A0A0A", borderTop: "1px solid #1F1F1F" }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {LOGO}
+            <span style={{ background: "#FF6B00", color: "#fff", padding: "3px 10px", borderRadius: 50, fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>Admin</span>
+          </div>
+          <div style={{ ...copyright, color: "rgba(255,255,255,.5)" }}>
+            © 2026 CalyHub · Panou intern · Sesiune securizată
+          </div>
         </div>
       </footer>
     );
