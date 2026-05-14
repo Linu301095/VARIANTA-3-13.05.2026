@@ -35,48 +35,55 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* CARDURI — border portocaliu */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+          {/* CARDURI */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
 
             {/* Card Proprietar */}
-            <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(24px,3.5vw,40px)", border: "2px solid #FF6B00", boxShadow: "0 2px 20px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 18 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: "#FFF3EA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🐾</div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ești proprietar de animal</div>
-              <h2 style={{ fontSize: "clamp(20px,2.6vw,28px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginTop: -4 }}>Programează-ți<br />animăluțul</h2>
-              <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, flexGrow: 1 }}>Găsești salonul potrivit, alegi ora și primești reminder prin SMS.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {[["📅", "Programări 24/7, fără telefon"], ["📱", "Reminder SMS automat"], ["🐕", "Profil animăluț salvat"]].map(([icon, text]) => (
-                  <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 16 }}>{icon}</span>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#374151" }}>{text}</span>
+            <div style={{ background: "#fff", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>🐾</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un animal de companie</div>
+              </div>
+              <h2 style={{ fontSize: "clamp(22px,2.6vw,30px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginBottom: 10 }}>Programează-ți<br />animăluțul</h2>
+              <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>Găsești salonul potrivit în câteva secunde, alegi ora și primești reminder automat înainte de vizită.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+                {[["500+", "Saloane disponibile în platformă"], ["10s", "Timp mediu de programare"], ["4.9★", "Rating mediu saloane partenere"]].map(([val, label]) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAFAFA", borderRadius: 12, padding: "11px 14px" }}>
+                    <span style={{ fontSize: 17, fontWeight: 900, color: "#FF6B00", minWidth: 52 }}>{val}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
                 ))}
               </div>
-              <Link href="/search" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
+              <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 14, padding: "12px 16px", marginBottom: 22 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>🐾 Profil animăluț salvat automat</div>
+                <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>Rasă, vârstă, alergii — salonul îl cunoaște deja</div>
+              </div>
+              <Link href="/search" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "15px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)", marginTop: "auto" }}>
                 Caută salon acum →
               </Link>
             </div>
 
             {/* Card Salon */}
-            <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(24px,3.5vw,40px)", border: "2px solid #FF6B00", boxShadow: "0 2px 20px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 18 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: "#FFF3EA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>✂️</div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un salon de grooming</div>
-              <h2 style={{ fontSize: "clamp(20px,2.6vw,28px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginTop: -4 }}>Umple-ți<br />calendarul</h2>
-              <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, flexGrow: 1 }}>Primești programări online, reduci neprezentările și urmărești statisticile salonului.</p>
-              {/* Cifre — fix responsive */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {[["-70%", "Neprezentări"], ["3h", "Economisite pe zi"], ["+40%", "Clienți noi"]].map(([val, label]) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 16, background: "#FAFAFA", borderRadius: 12, padding: "10px 14px" }}>
-                    <span style={{ fontSize: 20, fontWeight: 900, color: "#FF6B00", minWidth: 56 }}>{val}</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>{label}</span>
+            <div style={{ background: "#fff", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>✂️</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un salon de grooming</div>
+              </div>
+              <h2 style={{ fontSize: "clamp(22px,2.6vw,30px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginBottom: 10 }}>Umple-ți<br />calendarul</h2>
+              <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>Primești programări online non-stop, reduci neprezentările și urmărești statisticile salonului în timp real.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+                {[["-70%", "Reducere neprezentări clienți"], ["3h", "Economisite zilnic față de telefon"], ["+40%", "Creștere clienți noi lunar"]].map(([val, label]) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAFAFA", borderRadius: 12, padding: "11px 14px" }}>
+                    <span style={{ fontSize: 17, fontWeight: 900, color: "#FF6B00", minWidth: 52 }}>{val}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
                 ))}
               </div>
-              <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 14, padding: "12px 14px" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#FF6B00" }}>🎁 Primele 3 luni gratuite</div>
+              <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 14, padding: "12px 16px", marginBottom: 22 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>🎁 Primele 3 luni complet gratuite</div>
                 <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>Fără card · 0% comision · Anulezi oricând</div>
               </div>
-              <Link href="/register" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
+              <Link href="/register" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "15px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)", marginTop: "auto" }}>
                 Înregistrează salonul gratuit →
               </Link>
             </div>
