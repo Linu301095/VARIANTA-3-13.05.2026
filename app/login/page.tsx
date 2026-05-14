@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", parola: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
@@ -86,7 +87,13 @@ export default function LoginPage() {
               </div>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Parolă</label>
-                <input value={form.parola} onChange={e => set("parola", e.target.value)} type="password" placeholder="••••••••" style={errors.parola ? inpErr : inp} />
+                <div style={{ position: "relative" }}>
+                  <input value={form.parola} onChange={e => set("parola", e.target.value)} type={showPass ? "text" : "password"} placeholder="••••••••" style={{ ...(errors.parola ? inpErr : inp), paddingRight: 46 }} />
+                  <button type="button" onClick={() => setShowPass(s => !s)} aria-label={showPass ? "Ascunde parola" : "Arată parola"}
+                    style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "8px 10px", fontSize: 16, color: "#9CA3AF", fontFamily: "Nunito, sans-serif", lineHeight: 1 }}>
+                    {showPass ? "🙈" : "👁️"}
+                  </button>
+                </div>
                 {errors.parola && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.parola}</div>}
               </div>
               <button onClick={handleSubmit} disabled={loading}
