@@ -374,7 +374,7 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
         </div>
       </header>
       <main style={{ flex: 1 }}>{children}</main>
-      <Footer />
+      <Footer variant="client" />
     </div>
   );
 }

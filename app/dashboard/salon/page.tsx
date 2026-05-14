@@ -378,7 +378,7 @@ export default function DashboardSalon() {
         </div>
       </main>
 
-      <Footer />
+      <Footer variant="salon" />
     </div>
   );
 }

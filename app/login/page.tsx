@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Footer from "../../components/Footer";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -105,12 +106,7 @@ export default function LoginPage() {
         </div>
       </main>
 
-      <footer style={{ background: "#111", padding: "20px" }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-          <Image src="/logo.png" alt="CalyHub" width={80} height={28} style={{ height: 26, width: "auto", filter: "brightness(0) invert(1)", opacity: .6 }} />
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)" }}>© 2026 CalyHub · România</div>
-        </div>
-      </footer>
+      <Footer variant="auth" />
     </div>
   );
 }

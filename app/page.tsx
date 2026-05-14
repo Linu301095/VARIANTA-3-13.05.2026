@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import Footer from "../components/Footer";
 
 export default function HomePage() {
   return (
@@ -175,20 +176,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* FOOTER — logo real, fundal închis dar nu negru pur */}
-      <footer style={{ background: "#1A1A1A", padding: "28px 20px" }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <Link href="/">
-            <Image src="/logo.png" alt="CalyHub" width={120} height={42} style={{ height: 42, width: "auto", objectFit: "contain", background: "#fff", borderRadius: 10, padding: "4px 8px" }} />
-          </Link>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)" }}>© 2026 CalyHub · România</div>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            {[["Acasă", "/"], ["Conectare", "/login"], ["Înregistrare", "/register"]].map(([label, href]) => (
-              <Link key={href as string} href={href as string} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.6)", textDecoration: "none" }}>{label}</Link>
-            ))}
-          </div>
-        </div>
-      </footer>
+      <Footer variant="full" />
     </div>
   );
 }

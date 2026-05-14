@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Footer from "../../../components/Footer";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -72,6 +73,7 @@ export default function ConfigurareAnimal() {
             </button>
           </div>
         </main>
+        <Footer variant="auth" />
       </div>
     );
   }
@@ -157,6 +159,7 @@ export default function ConfigurareAnimal() {
           </div>
         </div>
       </main>
+      <Footer variant="auth" />
     </div>
   );
 }
