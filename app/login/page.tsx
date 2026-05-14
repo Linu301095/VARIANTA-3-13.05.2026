@@ -1,7 +1,47 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
+const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [form, setForm] = useState({ email: "", parola: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  function set(k: string, v: string) {
+    setForm(f => ({ ...f, [k]: v }));
+    setErrors(e => { const n = { ...e }; delete n[k]; return n; });
+  }
+
+  function validate() {
+    const e: Record<string, string> = {};
+    if (!form.email.trim()) e.email = "Câmp obligatoriu";
+    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Email invalid";
+    if (!form.parola) e.parola = "Câmp obligatoriu";
+    return e;
+  }
+
+  function handleSubmit() {
+    const e = validate();
+    if (Object.keys(e).length > 0) { setErrors(e); return; }
+    setLoading(true);
+    setTimeout(() => {
+      const user = localStorage.getItem("calyhub_user");
+      if (user) {
+        const parsed = JSON.parse(user);
+        if (parsed.tip === "salon") router.push("/dashboard/salon");
+        else router.push("/dashboard/client");
+      } else {
+        router.push("/dashboard/client");
+      }
+    }, 700);
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
@@ -10,6 +50,7 @@ export default function LoginPage() {
           <Link href="/register" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
         </div>
       </header>
+
       <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
         <div style={{ width: "100%", maxWidth: 440 }}>
           <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(28px,5vw,48px)", border: "1px solid #EBEBEB", boxShadow: "0 4px 32px rgba(26,26,26,.08)" }}>
@@ -18,6 +59,7 @@ export default function LoginPage() {
             </div>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: "#1A1A1A", textAlign: "center", marginBottom: 6 }}>Bine ai revenit! 👋</h1>
             <p style={{ fontSize: 14, color: "#6B7280", textAlign: "center", marginBottom: 28 }}>Introdu emailul și te ducem în contul tău</p>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
               <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "12px 20px", borderRadius: 12, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", cursor: "pointer", width: "100%", fontFamily: "Nunito, sans-serif" }}>
                 <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
@@ -28,24 +70,30 @@ export default function LoginPage() {
                 Continuă cu Facebook
               </button>
             </div>
+
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <div style={{ flex: 1, height: 1, background: "#EBEBEB" }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF" }}>sau cu email</span>
               <div style={{ flex: 1, height: 1, background: "#EBEBEB" }} />
             </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Email</label>
-                <input type="email" placeholder="nume@email.com" style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" }} />
+                <input value={form.email} onChange={e => set("email", e.target.value)} type="email" placeholder="nume@email.com" style={errors.email ? inpErr : inp} />
+                {errors.email && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.email}</div>}
               </div>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Parolă</label>
-                <input type="password" placeholder="••••••••" style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" }} />
+                <input value={form.parola} onChange={e => set("parola", e.target.value)} type="password" placeholder="••••••••" style={errors.parola ? inpErr : inp} />
+                {errors.parola && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.parola}</div>}
               </div>
-              <button style={{ padding: "14px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif", marginTop: 4 }}>
-                Intră în cont →
+              <button onClick={handleSubmit} disabled={loading}
+                style={{ padding: "14px 24px", borderRadius: 50, border: "none", background: loading ? "#FFB07A" : "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading ? "default" : "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif", marginTop: 4 }}>
+                {loading ? "Se verifică..." : "Intră în cont →"}
               </button>
             </div>
+
             <div style={{ textAlign: "center", marginTop: 16 }}>
               <Link href="/forgot-password" style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none", fontWeight: 600 }}>Ai uitat parola?</Link>
             </div>
@@ -56,6 +104,7 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
+
       <footer style={{ background: "#111", padding: "20px" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
           <Image src="/logo.png" alt="CalyHub" width={80} height={28} style={{ height: 26, width: "auto", filter: "brightness(0) invert(1)", opacity: .6 }} />
