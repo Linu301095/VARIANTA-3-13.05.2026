@@ -51,7 +51,7 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
 
           <div>
             <div style={titleStyle}>🐾 Clienți</div>
-            <Link href="/register" style={linkStyle}>Cum funcționează</Link>
+            <Link href="/cum-functioneaza" style={linkStyle}>Cum funcționează</Link>
             <Link href="/register" style={linkStyle}>Caută saloane</Link>
             <Link href="/login" style={linkStyle}>Programările mele</Link>
             <Link href="/register" style={linkStyle}>Înregistrare gratuită</Link>
@@ -61,25 +61,25 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
             <div style={titleStyle}>✂️ Saloane</div>
             <Link href="/register" style={linkStyle}>Înregistrează salon</Link>
             <Link href="/register/abonament-salon" style={linkStyle}>Prețuri & abonamente</Link>
-            <Link href="/login" style={linkStyle}>Panou de control</Link>
+            <Link href="/cum-functioneaza" style={linkStyle}>Cum funcționează</Link>
             <a href="mailto:parteneri@calyhub.ro" style={linkStyle}>Suport parteneri</a>
           </div>
 
           <div>
             <div style={titleStyle}>📋 Companie</div>
-            <Link href="/" style={linkStyle}>Despre noi</Link>
+            <Link href="/despre-noi" style={linkStyle}>Despre noi</Link>
             <a href="mailto:contact@calyhub.ro" style={linkStyle}>Contact</a>
-            <Link href="/" style={linkStyle}>Termeni & Condiții</Link>
-            <Link href="/" style={linkStyle}>Confidențialitate</Link>
+            <Link href="/termeni" style={linkStyle}>Termeni & Condiții</Link>
+            <Link href="/confidentialitate" style={linkStyle}>Confidențialitate</Link>
           </div>
         </div>
 
         <div style={bottomBar}>
           <div style={copyright}>© 2026 CalyHub · România · contact@calyhub.ro</div>
           <div style={{ display: "flex", gap: 18 }}>
-            <Link href="/" style={linkStyleSm}>Cookies</Link>
-            <Link href="/" style={linkStyleSm}>GDPR</Link>
-            <Link href="/" style={linkStyleSm}>Sitemap</Link>
+            <Link href="/confidentialitate" style={linkStyleSm}>Cookies & GDPR</Link>
+            <Link href="/termeni" style={linkStyleSm}>Termeni</Link>
+            <Link href="/confidentialitate" style={linkStyleSm}>Confidențialitate</Link>
           </div>
         </div>
       </footer>
