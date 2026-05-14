@@ -317,6 +317,11 @@ export default function DashboardClient() {
 function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void }) {
   const [open, setOpen] = useState(false);
 
+  const TAB_LABELS: Record<Tab, string> = {
+    saloane: "Saloane", programari: "Programările mele", profil: "Profilul meu",
+    animal: "Animăluțul meu", notificari: "Notificări", setari: "Setări cont", ajutor: "Ajutor",
+  };
+
   const items: { icon: string; label: string; sub: string; t: Tab }[] = [
     { icon: "👤", label: "Profilul meu", sub: "Nume, email, telefon", t: "profil" },
     { icon: "🐾", label: "Animăluțul meu", sub: "Editează profil", t: "animal" },
@@ -331,7 +336,19 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
       {open && <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 64 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority /></Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Link href="/"><Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority /></Link>
+            {tab !== "saloane" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 1, height: 22, background: "#EBEBEB" }} />
+                <button onClick={() => onNav("saloane")}
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 13, fontWeight: 700, color: "#6B7280", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  ← Înapoi
+                </button>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#1A1A1A" }}>{TAB_LABELS[tab]}</div>
+              </div>
+            )}
+          </div>
           <div style={{ position: "relative" }}>
             <button onClick={() => setOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: open ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>

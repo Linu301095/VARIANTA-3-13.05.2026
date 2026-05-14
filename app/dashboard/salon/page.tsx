@@ -61,6 +61,12 @@ export default function DashboardSalon() {
 
   const numeSalon = salonData?.dateFirma?.numeSalon || user?.numeSalon || "Salonul tau";
   const numeComplet = user?.numeComplet?.split(" ")[0] || "Manager";
+
+  const TAB_LABELS: Record<Tab, string> = {
+    agenda: "Agenda", statistici: "Statistici", notificari: "Notificări",
+    "profil-salon": "Profilul salonului", servicii: "Serviciile mele",
+    echipa: "Echipa mea", abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
+  };
   const necitite = notificari.filter(n => !n.citit).length;
 
   function accepta(id: number) {
@@ -84,6 +90,16 @@ export default function DashboardSalon() {
               <div style={{ fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>{numeSalon}</div>
               <div style={{ fontSize: 11, color: "#9CA3AF" }}>Panou de control</div>
             </div>
+            {tab !== "agenda" && (
+              <>
+                <div style={{ width: 1, height: 22, background: "#EBEBEB" }} />
+                <button onClick={() => setTab("agenda")}
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 13, fontWeight: 700, color: "#6B7280", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  ← Înapoi
+                </button>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#1A1A1A" }}>{TAB_LABELS[tab]}</div>
+              </>
+            )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button onClick={() => setTab("notificari")} style={{ position: "relative", padding: "8px 14px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
