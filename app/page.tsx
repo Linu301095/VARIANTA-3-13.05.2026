@@ -83,13 +83,13 @@ export default function HomePage() {
           </div>
 
           {/* STATS BAR — fix responsive 2x2 pe mobil */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, marginTop: 56, paddingTop: 36, borderTop: "1px solid #EBEBEB" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, marginTop: 56, paddingTop: 36, borderTop: "1px solid #FF6B00" }}>
             {[["500+", "Saloane"], ["24/7", "Disponibil"], ["-70%", "Neprezentări"], ["10s", "Programare"]].map(([val, label], i) => (
               <div key={label} style={{
                 textAlign: "center",
                 padding: "16px 8px",
-                borderRight: i % 2 === 0 ? "1px solid #E5E7EB" : "none",
-                borderBottom: i < 2 ? "1px solid #E5E7EB" : "none"
+                borderRight: i % 2 === 0 ? "1px solid #FF6B00" : "none",
+                borderBottom: i < 2 ? "1px solid #FF6B00" : "none"
               }}>
                 <div style={{ fontSize: "clamp(22px,4vw,32px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1 }}>{val}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", marginTop: 4, textTransform: "uppercase", letterSpacing: .8 }}>{label}</div>
