@@ -4,7 +4,7 @@ import Footer from "../../components/Footer";
 
 const STEPS_CLIENT = [
   { nr: "01", icon: "📝", titlu: "Creează cont gratuit", desc: "Înregistrează-te în 2 minute cu emailul sau contul Google. Adaugi profilul animăluțului: rasă, vârstă, alergii — salonul îl cunoaște deja." },
-  { nr: "02", icon: "🔍", titlu: "Alege salonul potrivit", desc: "Filtrează după locație, servicii și rating. Citești recenzii reale de la alți proprietari și vezi prețurile înainte să rezervi." },
+  { nr: "02", icon: "🔍", titlu: "Alege salonul potrivit", desc: "Filtrează după locație, servicii și rating. Citești recenzii reale de la alți stăpâni și vezi prețurile înainte să rezervi." },
   { nr: "03", icon: "📅", titlu: "Rezervă în 10 secunde", desc: "Alegi ziua, ora și serviciul. Confirmi — gata. Primești reminder SMS automat cu 24h înainte de vizită." },
 ];
 
@@ -48,16 +48,16 @@ export default function CumFunctioneaza() {
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
             <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Cum funcționează CalyHub</div>
             <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15, marginBottom: 18 }}>
-              Simplu pentru proprietari.<br />
+              Simplu pentru stăpâni.<br />
               <span style={{ color: "#FF6B00" }}>Profitabil pentru saloane.</span>
             </h1>
             <p style={{ fontSize: 17, color: "#6B7280", lineHeight: 1.7, maxWidth: 540, margin: "0 auto" }}>
-              CalyHub conectează proprietarii de animale cu cele mai bune saloane de grooming din România — în câteva click-uri.
+              CalyHub conectează stăpânii de animale cu cele mai bune saloane de grooming din România — în câteva click-uri.
             </p>
           </div>
         </section>
 
-        {/* PENTRU PROPRIETARI */}
+        {/* PENTRU STĂPÂNI */}
         <section style={{ padding: "72px 20px", background: "#FAFAFA" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
@@ -143,7 +143,7 @@ export default function CumFunctioneaza() {
         <section style={{ background: "#1A1A1A", padding: "64px 20px", textAlign: "center" }}>
           <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Gata să începi?</h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginBottom: 32, lineHeight: 1.7 }}>
-            Alătură-te celor 500+ saloane și mii de proprietari care folosesc CalyHub.
+            Alătură-te celor 500+ saloane și mii de stăpâni care folosesc CalyHub.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>Creează cont</Link>

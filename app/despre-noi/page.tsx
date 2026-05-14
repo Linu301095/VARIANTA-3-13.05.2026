@@ -57,11 +57,11 @@ export default function DespreNoi() {
               </p>
 
               <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                De ani buni mă gândesc la o aplicație care să schimbe în bine domeniul de grooming din România. Nu o aplicație care să rezolve o problemă mică sau să adauge încă un canal de comunicare — ci o platformă care să aducă o <strong style={{ color: "#FF6B00" }}>soluție reală</strong>, o soluție pe care orice proprietar de animal și orice salon profesionist și-ar dori-o.
+                De ani buni mă gândesc la o aplicație care să schimbe în bine domeniul de grooming din România. Nu o aplicație care să rezolve o problemă mică sau să adauge încă un canal de comunicare — ci o platformă care să aducă o <strong style={{ color: "#FF6B00" }}>soluție reală</strong>, o soluție pe care orice stăpân de animale și orice salon profesionist și-ar dori-o.
               </p>
 
               <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Am observat ani la rând cât de fragmentată e industria. Saloane bune ascunse pe ulițe lăturalnice, fără vizibilitate. Proprietari care își fac programări prin telefon, uneori sună la 5-6 locuri până găsesc disponibilitate. Animăluți care primesc servicii inconstante pentru că salonul nu are istoricul lor. Pierderi de timp, frustrări, oportunități ratate — și mai ales, animale care nu primesc întotdeauna ce merită.
+                Am observat ani la rând cât de fragmentată e industria. Saloane bune ascunse pe ulițe lăturalnice, fără vizibilitate. Stăpâni care își fac programări prin telefon, uneori sună la 5-6 locuri până găsesc disponibilitate. Animăluți care primesc servicii inconstante pentru că salonul nu are istoricul lor. Pierderi de timp, frustrări, oportunități ratate — și mai ales, animale care nu primesc întotdeauna ce merită.
               </p>
 
               <div style={{ background: "#FFF3EA", borderLeft: "4px solid #FF6B00", padding: "22px 26px", borderRadius: "0 16px 16px 0", margin: "10px 0" }}>
@@ -71,7 +71,7 @@ export default function DespreNoi() {
               </div>
 
               <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Așa s-a născut CalyHub: din convingerea că tehnologia poate fi pusă în slujba binelui — în slujba acestor ființe care ne dau atâta iubire necondiționată. O platformă care să conecteze proprietarii cu cele mai bune saloane, care să ajute saloanele profesioniste să crească și să fie vizibile, și care să ridice ștacheta întregii industrii.
+                Așa s-a născut CalyHub: din convingerea că tehnologia poate fi pusă în slujba binelui — în slujba acestor ființe care ne dau atâta iubire necondiționată. O platformă care să conecteze stăpânii cu cele mai bune saloane, care să ajute saloanele profesioniste să crească și să fie vizibile, și care să ridice ștacheta întregii industrii.
               </p>
 
               <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
@@ -79,7 +79,7 @@ export default function DespreNoi() {
               </p>
 
               <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Dacă ești proprietar de animal de companie sau dacă deții un salon și vrei să faci parte din această misiune — bine ai venit. Construim împreună standardul îngrijirii animalelor de mâine.
+                Dacă ești stăpân de animale sau dacă deții un salon și vrei să faci parte din această misiune — bine ai venit. Construim împreună standardul îngrijirii animalelor de mâine.
               </p>
 
               <div style={{ fontSize: 15, color: "#FF6B00", fontWeight: 800, marginTop: 12, fontStyle: "italic" }}>
@@ -109,7 +109,7 @@ export default function DespreNoi() {
               Ca fiecare animal din România să primească <span style={{ color: "#FF6B00" }}>cele mai bune servicii</span> — fără compromis.
             </h2>
             <p style={{ fontSize: 16, color: "#6B7280", lineHeight: 1.8 }}>
-              Construim instrumentele care fac asta posibil: pentru proprietarii care vor ce e mai bun pentru animalul lor și pentru saloanele care vor să livreze servicii la cele mai înalte standarde.
+              Construim instrumentele care fac asta posibil: pentru stăpânii care vor ce e mai bun pentru animalul lor și pentru saloanele care vor să livreze servicii la cele mai înalte standarde.
             </p>
           </div>
         </section>
@@ -137,7 +137,7 @@ export default function DespreNoi() {
         <section style={{ background: "#1A1A1A", padding: "64px 20px", textAlign: "center" }}>
           <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Fă parte din poveste</h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginBottom: 32, lineHeight: 1.7 }}>
-            Fie că ești proprietar sau deții un salon — locul tău e pe CalyHub.
+            Fie că ești stăpân sau deții un salon — locul tău e pe CalyHub.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>Înregistrare gratuită</Link>

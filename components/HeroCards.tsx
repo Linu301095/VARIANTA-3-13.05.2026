@@ -55,7 +55,7 @@ function OwnerCard() {
             textTransform: "uppercase",
           }}
         >
-          Ești proprietar de animal
+          Ești stăpân de animale
         </span>
       </div>
 
