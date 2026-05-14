@@ -15,7 +15,7 @@ const PROGRAMARI = [
 const NOTIFICARI = [
   { id: 1, tip: "nou", mesaj: "Ion Gheorghe a solicitat o programare pentru Bella", timp: "acum 5 min", citit: false },
   { id: 2, tip: "nou", mesaj: "Andrei Dumitrescu a solicitat o programare pentru Luna", timp: "acum 18 min", citit: false },
-  { id: 3, tip: "info", mesaj: "Ana Popescu a lăsat o recenzie ⭐ 5/5 — „Serviciu excelent!"", timp: "1h ago", citit: true },
+  { id: 3, tip: "info", mesaj: "Ana Popescu a lăsat o recenzie ⭐ 5/5 — Serviciu excelent!", timp: "1h ago", citit: true },
   { id: 4, tip: "info", mesaj: "Reminder: 5 programări confirmate pentru mâine", timp: "ieri", citit: true },
 ];
 
