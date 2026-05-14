@@ -120,7 +120,7 @@ export default function DashboardClient() {
 
           {rezervare?.serviciu && (<>
             <SectionTitle>Alege ora</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 24 }}>
               {["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map(ora => {
                 const sel = rezervare?.ora === ora;
                 return <button key={ora} onClick={() => setRezervare(r => ({ ...r!, ora }))} style={{ padding: "11px 6px", borderRadius: 10, border: sel ? `2px solid ${salon.culoare}` : "1.5px solid #EBEBEB", background: sel ? salon.bg : "#fff", fontSize: 13, fontWeight: 700, color: sel ? salon.culoare : "#374151", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>{ora}</button>;
@@ -227,7 +227,7 @@ export default function DashboardClient() {
                     <input value={(animalForm as any)[f.key]} onChange={e => setAnimalForm(af => ({ ...af, [f.key]: e.target.value }))} placeholder={f.placeholder} style={inp} />
                   </div>
                 ))}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 12 }}>
                   {[{ key: "greutate", label: "Greutate (kg)", placeholder: "8.5" }, { key: "varsta", label: "Vârstă (ani)", placeholder: "3" }].map(f => (
                     <div key={f.key}>
                       <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>{f.label}</label>

@@ -122,7 +122,7 @@ export default function ConfigurareAnimal() {
                 {errors.rasa && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.rasa}</div>}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Greutate (kg) *</label>
                   <input value={form.greutate} onChange={e => set("greutate", e.target.value)} type="number" min="0.1" step="0.1" placeholder="Ex: 8.5" style={errors.greutate ? inpErr : inp} />

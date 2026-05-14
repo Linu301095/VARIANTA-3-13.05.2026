@@ -163,7 +163,7 @@ function OverviewTab({ data }: { data: MockData }) {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 380px), 1fr))", gap: 20 }}>
         <div style={card}>
           <div style={subTitle}>Evoluție MRR — ultimele 6 luni</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 14, height: 200, padding: "16px 0" }}>
@@ -536,7 +536,7 @@ function MarketingTab() {
         <div style={card}><div style={subTitle}>Pagini locale</div><div style={{ fontSize: 28, fontWeight: 900, color: "#A855F7" }}>5</div><div style={{ fontSize: 12, color: "#9CA3AF" }}>Buc, Cluj, Tim, Iași, Brașov</div></div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 20 }}>
         <div style={card}>
           <div style={subTitle}>Top pagini după trafic</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
@@ -585,7 +585,7 @@ function SetariTab() {
   return (
     <div>
       <h2 style={sectionTitle}>⚙️ Setări sistem</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 20 }}>
         <div style={card}>
           <div style={subTitle}>Orașe cu pagini SEO locale</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>

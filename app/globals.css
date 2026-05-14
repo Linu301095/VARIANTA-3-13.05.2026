@@ -31,8 +31,16 @@ input, select, textarea {
 
 /* ---------- Mobile breakpoint adjustments ---------- */
 @media (max-width: 640px) {
-  /* Tighten padding on small screens */
   body { font-size: 15px; }
+
+  /* Ensure tables scroll horizontally rather than overflow */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Tighter section padding on phones */
+  section { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Admin tab bar stays scrollable */
+  [data-admin-tabs] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   /* Disable hover lift on touch devices to prevent sticky hover */
   button:not(:disabled):hover,

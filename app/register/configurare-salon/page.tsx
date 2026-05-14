@@ -150,7 +150,7 @@ export default function ConfigurareSalon() {
                             placeholder="Ex: Tuns + Băiță câine mic" style={errors[`s_nume_${i}`] ? inpErr : inp} />
                           {errors[`s_nume_${i}`] && <div style={{ fontSize: 11, color: "#EF4444", marginTop: 2 }}>{errors[`s_nume_${i}`]}</div>}
                         </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10 }}>
                           <div>
                             <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Preț (RON) *</label>
                             <input value={s.pret} onChange={e => setServicii(sv => sv.map((x, idx) => idx === i ? { ...x, pret: e.target.value } : x))}
@@ -185,13 +185,13 @@ export default function ConfigurareSalon() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {echipa.map((g, i) => (
-                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10, alignItems: "end" }}>
-                      <div>
+                    <div key={i} style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
+                      <div style={{ flex: "1 1 160px" }}>
                         <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Nume groomer</label>
                         <input value={g.nume} onChange={e => setEchipa(ec => ec.map((x, idx) => idx === i ? { ...x, nume: e.target.value } : x))}
                           placeholder="Ex: Maria Ionescu" style={inp} />
                       </div>
-                      <div>
+                      <div style={{ flex: "1 1 160px" }}>
                         <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Specialitate</label>
                         <input value={g.specialitate} onChange={e => setEchipa(ec => ec.map((x, idx) => idx === i ? { ...x, specialitate: e.target.value } : x))}
                           placeholder="Ex: Rase mici" style={inp} />
