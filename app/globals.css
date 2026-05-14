@@ -18,3 +18,68 @@ body {
   --border: #EBEBEB;
   --bg: #FAFAFA;
 }
+
+/* ---------- Interactive buttons & links ---------- */
+button,
+a {
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background-color .18s ease, border-color .18s ease, opacity .18s ease;
+  will-change: transform;
+}
+
+button:not(:disabled):hover,
+a:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 8px 20px rgba(26, 26, 26, 0.12);
+}
+
+button:not(:disabled):active,
+a:active {
+  transform: translateY(0) scale(.97);
+  filter: brightness(.95);
+  box-shadow: 0 2px 6px rgba(26, 26, 26, 0.08);
+  transition-duration: .08s;
+}
+
+button:disabled {
+  cursor: not-allowed !important;
+  opacity: .7;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #FF6B00;
+  outline-offset: 2px;
+}
+
+/* Pulse animation for primary CTA-style buttons (orange bg) */
+@keyframes calyhub-pulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(255, 107, 0, .35); }
+  50%      { box-shadow: 0 6px 24px rgba(255, 107, 0, .55); }
+}
+
+/* Inputs & select hover/focus */
+input:not([type="file"]):focus,
+select:focus,
+textarea:focus {
+  border-color: #FF6B00 !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, .12);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+input:not([type="file"]):hover:not(:focus),
+select:hover:not(:focus),
+textarea:hover:not(:focus) {
+  border-color: #D1D5DB !important;
+  transition: border-color .18s ease;
+}
+
+/* Toggle / checkbox / radio cursor */
+label,
+[role="button"] {
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+label:hover {
+  opacity: .92;
+}
