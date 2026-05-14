@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Footer from "../../../components/Footer";
 
 const PROGRAMARI_INIT = [
   { id: 1, client: "Ana Popescu", animal: "Max (Labrador, 28kg)", serviciu: "Tuns complet", ora: "09:00", status: "confirmat" },
@@ -19,7 +20,7 @@ const NOTIFICARI_INIT = [
   { id: 4, tip: "info", mesaj: "Reminder: 5 programari confirmate pentru maine", timp: "ieri", citit: true },
 ];
 
-type Tab = "agenda" | "statistici" | "notificari" | "profil-salon" | "servicii" | "echipa" | "setari" | "ajutor";
+type Tab = "agenda" | "statistici" | "notificari" | "profil-salon" | "servicii" | "echipa" | "abonament" | "setari" | "ajutor";
 type Serviciu = { id: number; nume: string; pret: string; durata: string };
 type Groomer = { id: number; nume: string; specialitate: string };
 
@@ -31,6 +32,7 @@ const inp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRa
 export default function DashboardSalon() {
   const router = useRouter();
   const [salonData, setSalonData] = useState<any>(null);
+  const [abonament, setAbonament] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("agenda");
   const [programari, setProgramari] = useState(PROGRAMARI_INIT);
@@ -51,8 +53,10 @@ export default function DashboardSalon() {
   useEffect(() => {
     const u = localStorage.getItem("calyhub_user");
     const s = localStorage.getItem("calyhub_salon");
+    const a = localStorage.getItem("calyhub_abonament");
     if (u) { const p = JSON.parse(u); setUser(p); }
     if (s) { const sd = JSON.parse(s); setSalonData(sd); setProfilSalon({ numeSalon: sd.dateFirma?.numeSalon || "", adresa: sd.dateFirma?.adresa || "", oras: sd.dateFirma?.oras || "", telefon: sd.dateFirma?.telefon || "", descriere: sd.dateFirma?.descriere || "" }); }
+    if (a) setAbonament(JSON.parse(a));
   }, []);
 
   const numeSalon = salonData?.dateFirma?.numeSalon || user?.numeSalon || "Salonul tau";
@@ -268,6 +272,68 @@ export default function DashboardSalon() {
             </div>
           )}
 
+          {/* ABONAMENT */}
+          {tab === "abonament" && (
+            <div style={{ maxWidth: 720 }}>
+              <PageHeader icon="💳" title="Abonamentul meu" sub="Detalii despre planul tau si facturare" />
+              {abonament ? (
+                <>
+                  <div style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 20, padding: "26px 28px", color: "#fff", marginBottom: 18, boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, opacity: .85, marginBottom: 6 }}>Plan curent</div>
+                        <div style={{ fontSize: 32, fontWeight: 900, lineHeight: 1 }}>{abonament.planNume}</div>
+                        <div style={{ fontSize: 14, opacity: .9, marginTop: 8 }}>
+                          {abonament.pret === 0 ? "Trial gratuit" : `${abonament.pret} RON / luna`}
+                        </div>
+                      </div>
+                      <div style={{ background: "rgba(255,255,255,.18)", padding: "8px 14px", borderRadius: 50, fontSize: 12, fontWeight: 800 }}>
+                        ✓ Activ
+                      </div>
+                    </div>
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,.2)", marginTop: 18, paddingTop: 14, fontSize: 13, opacity: .9 }}>
+                      Urmatoarea facturare: <strong>{new Date(abonament.dataExpirare).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ background: "#fff", borderRadius: 18, padding: "22px 26px", border: "1.5px solid #EBEBEB", marginBottom: 16 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "#1A1A1A", marginBottom: 14 }}>Detalii facturare</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {[
+                        ["Plan", abonament.planNume],
+                        ["Pret lunar", abonament.pret === 0 ? "Gratuit" : `${abonament.pret} RON`],
+                        ["Activat la", new Date(abonament.dataStart).toLocaleDateString("ro-RO")],
+                        ["Reinnoire automata", abonament.autoRenew ? "Da" : "Nu"],
+                      ].map(([k, v]) => (
+                        <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: "1px solid #F3F4F6" }}>
+                          <span style={{ color: "#6B7280" }}>{k}</span>
+                          <span style={{ fontWeight: 700, color: "#1A1A1A" }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
+                    <button onClick={() => router.push("/register/abonament-salon")} style={btnPrimary}>Schimba planul</button>
+                    <button onClick={() => salveaza("Cererea de anulare a fost trimisa")} style={{ padding: "12px 24px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", color: "#6B7280", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Anuleaza abonament</button>
+                  </div>
+
+                  <div style={{ background: "#fff", borderRadius: 18, padding: "22px 26px", border: "1.5px solid #EBEBEB" }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "#1A1A1A", marginBottom: 14 }}>Istoric facturi</div>
+                    <div style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", padding: "20px 0" }}>Nicio factura emisa inca. Prima va aparea aici dupa primul ciclu de facturare.</div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ background: "#fff", borderRadius: 20, padding: "32px", border: "1.5px solid #EBEBEB", textAlign: "center" }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>💳</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>Niciun abonament activ</div>
+                  <div style={{ fontSize: 14, color: "#6B7280", marginBottom: 20 }}>Alege un plan pentru a debloca toate functionalitatile salonului.</div>
+                  <button onClick={() => router.push("/register/abonament-salon")} style={btnPrimary}>Alege un plan</button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* SETARI */}
           {tab === "setari" && (
             <div style={{ maxWidth: 520 }}>
@@ -311,6 +377,8 @@ export default function DashboardSalon() {
 
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
@@ -323,6 +391,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav }: { numeComple
     { icon: "✂️", label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
     { icon: "👥", label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
     { icon: "📊", label: "Statistici", sub: "Vezi rapoarte detaliate", t: "statistici" },
+    { icon: "💳", label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
     { icon: "🔔", label: "Notificari", sub: "Setari alerte programari", t: "notificari" },
     { icon: "🔒", label: "Setari cont", sub: "Schimba parola", t: "setari" },
     { icon: "❓", label: "Ajutor", sub: "Support dedicat", t: "ajutor" },

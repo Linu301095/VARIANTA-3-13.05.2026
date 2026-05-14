@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Footer from "../../../components/Footer";
 
 const SALOANE = [
   { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], pretDe: 80, distanta: "1.2 km", badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -373,6 +374,7 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
         </div>
       </header>
       <main style={{ flex: 1 }}>{children}</main>
+      <Footer />
     </div>
   );
 }

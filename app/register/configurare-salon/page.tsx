@@ -234,9 +234,9 @@ export default function ConfigurareSalon() {
                     <div key={item} style={{ fontSize: 13, color: "#374151", fontWeight: 600, marginTop: 4 }}>{item}</div>
                   ))}
                 </div>
-                <button onClick={() => router.push("/dashboard/salon")}
+                <button onClick={() => router.push("/register/abonament-salon")}
                   style={{ padding: "14px 32px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif" }}>
-                  ✂️ Deschide panoul de control →
+                  Continua spre alegerea planului →
                 </button>
               </div>
             )}
