@@ -17,38 +17,42 @@ export default function Footer() {
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: "12px",
+          gap: "16px",
         }}
       >
-        <Image
-          src="/logo.png"
-          alt="CalyHub"
-          width={100}
-          height={36}
-          style={{
-            height: "32px",
-            width: "auto",
-            filter: "brightness(0) invert(1)",
-            opacity: 0.8,
-          }}
-        />
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
+          <Image
+            src="/logo.png"
+            alt="CalyHub"
+            width={120}
+            height={42}
+            style={{
+              height: "38px",
+              width: "auto",
+              objectFit: "contain",
+              background: "#fff",
+              borderRadius: "10px",
+              padding: "4px 10px",
+            }}
+          />
+        </Link>
 
-        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
+        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
           © 2026 CalyHub · România
         </div>
 
-        <div style={{ display: "flex", gap: "20px" }}>
+        <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center" }}>
           {[
+            { href: "/", label: "Acasă" },
             { href: "/login", label: "Conectare" },
-            { href: "/register/salon", label: "Saloane" },
-            { href: "/pricing", label: "Prețuri" },
+            { href: "/register", label: "Înregistrare" },
           ].map((l) => (
             <Link
               key={l.href}
               href={l.href}
               style={{
-                fontSize: "12px",
-                color: "rgba(255,255,255,0.4)",
+                fontSize: "13px",
+                color: "rgba(255,255,255,0.6)",
                 textDecoration: "none",
                 fontWeight: 700,
               }}

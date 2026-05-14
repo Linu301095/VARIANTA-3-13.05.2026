@@ -58,7 +58,7 @@ export default function HomePage() {
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>🐾 Profil animăluț salvat automat</div>
                 <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>Rasă, vârstă, alergii — salonul îl cunoaște deja</div>
               </div>
-              <Link href="/search" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "15px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)", marginTop: "auto" }}>
+              <Link href="/register" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "15px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)", marginTop: "auto" }}>
                 Caută salon acum →
               </Link>
             </div>
@@ -127,7 +127,7 @@ export default function HomePage() {
               ))}
             </div>
             <div style={{ textAlign: "center" }}>
-              <Link href="/search" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
+              <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
                 🐾 Găsește salon acum →
               </Link>
             </div>
@@ -169,7 +169,7 @@ export default function HomePage() {
           <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#fff", marginBottom: 16 }}>Ești gata să începi?</h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,.6)", marginBottom: 36 }}>Proprietari — programare în 10 secunde.<br />Saloane — primele 3 luni gratuite.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/search" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>🐾 Programează acum</Link>
+            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>🐾 Programează acum</Link>
             <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}>✂️ Înregistrează salonul</Link>
           </div>
         </section>
@@ -182,9 +182,9 @@ export default function HomePage() {
             <Image src="/logo.png" alt="CalyHub" width={120} height={42} style={{ height: 42, width: "auto", objectFit: "contain", background: "#fff", borderRadius: 10, padding: "4px 8px" }} />
           </Link>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)" }}>© 2026 CalyHub · România</div>
-          <div style={{ display: "flex", gap: 20 }}>
-            {[["Conectare", "/login"], ["Prețuri", "/pricing"]].map(([label, href]) => (
-              <Link key={href as string} href={href as string} style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,.5)", textDecoration: "none" }}>{label}</Link>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            {[["Acasă", "/"], ["Conectare", "/login"], ["Înregistrare", "/register"]].map(([label, href]) => (
+              <Link key={href as string} href={href as string} style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.6)", textDecoration: "none" }}>{label}</Link>
             ))}
           </div>
         </div>
