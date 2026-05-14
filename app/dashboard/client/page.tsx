@@ -174,7 +174,7 @@ export default function DashboardClient() {
   const trecute = programari.filter(p => p.status === "finalizat" || p.status === "anulat");
 
   return (
-    <PageShell prenume={prenume} onLogout={() => router.push("/login")}>
+    <PageShell prenume={prenume} onLogout={() => router.push("/login")} onNav={(t) => { if (t === "programari") setTab("programari"); }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
 
         {/* Bun venit */}
@@ -258,18 +258,69 @@ export default function DashboardClient() {
 
 // --- Componente reutilizabile ---
 
-function PageShell({ children, prenume, onLogout }: { children: React.ReactNode; prenume: string; onLogout: () => void }) {
+function PageShell({ children, prenume, onLogout, onNav }: { children: React.ReactNode; prenume: string; onLogout: () => void; onNav?: (t: string) => void }) {
+  const [open, setOpen] = useState(false);
+
+  const items = [
+    { icon: "👤", label: "Profilul meu", sub: "Nume, email, telefon", action: () => {} },
+    { icon: "🐾", label: "Animăluțul meu", sub: "Editează profil", action: () => {} },
+    { icon: "📅", label: "Programările mele", sub: "Vezi toate programările", action: () => { onNav?.("programari"); } },
+    { icon: "🔔", label: "Notificări", sub: "Setări SMS / email", action: () => {} },
+    { icon: "🔒", label: "Setări cont", sub: "Schimbă parola", action: () => {} },
+    { icon: "❓", label: "Ajutor", sub: "FAQ · Contact support", action: () => {} },
+  ];
+
   return (
     <div style={{ minHeight: "100vh", background: "#F8F8F8", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
+      {open && <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 64 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority /></Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#374151" }}>
-              <span style={{ width: 28, height: 28, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>👤</span>
-              {prenume}
-            </div>
-            <button onClick={onLogout} style={{ padding: "7px 16px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 13, fontWeight: 700, color: "#6B7280", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Ieșire</button>
+
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setOpen(o => !o)}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: open ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
+              <span style={{ width: 30, height: 30, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>👤</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>{prenume}</span>
+              <span style={{ fontSize: 10, color: "#9CA3AF", marginLeft: 2, transition: "transform .2s", display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
+            </button>
+
+            {open && (
+              <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, width: 260, background: "#fff", borderRadius: 18, border: "1.5px solid #EBEBEB", boxShadow: "0 8px 32px rgba(0,0,0,.12)", overflow: "hidden", zIndex: 200 }}>
+                {/* Header dropdown */}
+                <div style={{ padding: "14px 18px", background: "#FFF3EA", borderBottom: "1px solid #FFDCC6" }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: "#1A1A1A" }}>{prenume}</div>
+                  <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2 }}>Cont client 🐾</div>
+                </div>
+
+                {/* Items */}
+                <div style={{ padding: "6px 0" }}>
+                  {items.map(item => (
+                    <button key={item.label} onClick={() => { item.action(); setOpen(false); }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", transition: "background .1s" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#F9FAFB")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                      <span style={{ width: 34, height: 34, borderRadius: 10, background: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>{item.label}</div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{item.sub}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Ieșire */}
+                <div style={{ borderTop: "1px solid #EBEBEB", padding: "6px 0" }}>
+                  <button onClick={() => { setOpen(false); onLogout(); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#FEF2F2")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                    <span style={{ width: 34, height: 34, borderRadius: 10, background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🚪</span>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>Ieșire din cont</div>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>

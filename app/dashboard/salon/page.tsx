@@ -65,8 +65,7 @@ export default function DashboardSalon() {
               🔔
               {necitite > 0 && <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{necitite}</span>}
             </button>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>👤 {numeComplet}</div>
-            <button onClick={() => router.push("/login")} style={{ padding: "8px 16px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 13, fontWeight: 700, color: "#6B7280", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Ieșire</button>
+            <UserMenuSalon numeComplet={numeComplet} numeSalon={numeSalon} onLogout={() => router.push("/login")} onNav={(t) => setTab(t as any)} />
           </div>
         </div>
       </header>
@@ -200,6 +199,66 @@ export default function DashboardSalon() {
 
         </div>
       </main>
+    </div>
+  );
+}
+
+function UserMenuSalon({ numeComplet, numeSalon, onLogout, onNav }: { numeComplet: string; numeSalon: string; onLogout: () => void; onNav: (t: string) => void }) {
+  const [open, setOpen] = useState(false);
+
+  const items = [
+    { icon: "🏪", label: "Profilul salonului", sub: "Editează datele firmei", action: () => {} },
+    { icon: "✂️", label: "Serviciile mele", sub: "Adaugă / modifică servicii", action: () => {} },
+    { icon: "👥", label: "Echipa mea", sub: "Gestionează groomerii", action: () => {} },
+    { icon: "📊", label: "Statistici", sub: "Vezi rapoarte detaliate", action: () => onNav("statistici") },
+    { icon: "🔔", label: "Notificări", sub: "Setări alerte programări", action: () => onNav("notificari") },
+    { icon: "🔒", label: "Setări cont", sub: "Schimbă parola", action: () => {} },
+    { icon: "❓", label: "Ajutor", sub: "Support dedicat", action: () => {} },
+  ];
+
+  return (
+    <div style={{ position: "relative" }}>
+      {open && <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
+      <button onClick={() => setOpen(o => !o)}
+        style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: open ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
+        <span style={{ width: 30, height: 30, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>✂️</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>{numeComplet}</span>
+        <span style={{ fontSize: 10, color: "#9CA3AF", marginLeft: 2, transition: "transform .2s", display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
+      </button>
+
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, width: 270, background: "#fff", borderRadius: 18, border: "1.5px solid #EBEBEB", boxShadow: "0 8px 32px rgba(0,0,0,.12)", overflow: "hidden", zIndex: 200 }}>
+          <div style={{ padding: "14px 18px", background: "#FFF3EA", borderBottom: "1px solid #FFDCC6" }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: "#1A1A1A" }}>{numeSalon}</div>
+            <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2 }}>Cont salon ✂️ · {numeComplet}</div>
+          </div>
+
+          <div style={{ padding: "6px 0" }}>
+            {items.map(item => (
+              <button key={item.label} onClick={() => { item.action(); setOpen(false); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", transition: "background .1s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#F9FAFB")}
+                onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                <span style={{ width: 34, height: 34, borderRadius: 10, background: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>{item.label}</div>
+                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{item.sub}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ borderTop: "1px solid #EBEBEB", padding: "6px 0" }}>
+            <button onClick={() => { setOpen(false); onLogout(); }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#FEF2F2")}
+              onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+              <span style={{ width: 34, height: 34, borderRadius: 10, background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🚪</span>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>Ieșire din cont</div>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
