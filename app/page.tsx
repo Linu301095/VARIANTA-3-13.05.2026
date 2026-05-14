@@ -1,6 +1,21 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
+
+export const metadata: Metadata = {
+  title: "CalyHub — Programări grooming online pentru câini și pisici",
+  description:
+    "Găsește cel mai potrivit salon de grooming din orașul tău și programează-ți animalul online în 10 secunde. Platformă gratuită pentru stăpâni, primele 3 luni gratuite pentru saloane.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "CalyHub — Programări grooming online pentru câini și pisici",
+    description:
+      "Găsește salonul perfect și programează-ți animalul online în 10 secunde. Gratuit, rapid, fără telefon.",
+    url: "/",
+    type: "website",
+  },
+};
 
 export default function HomePage() {
   return (

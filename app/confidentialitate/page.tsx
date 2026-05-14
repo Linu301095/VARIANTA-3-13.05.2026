@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+
+export const metadata: Metadata = {
+  title: "Politica de confidențialitate — CalyHub",
+  description:
+    "Cum colectăm, folosim și protejăm datele tale personale conform GDPR. Politica de confidențialitate a platformei CalyHub.",
+  alternates: { canonical: "/confidentialitate" },
+  robots: { index: true, follow: true },
+};
 
 const SECTIUNI = [
   {

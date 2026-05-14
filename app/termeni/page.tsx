@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+
+export const metadata: Metadata = {
+  title: "Termeni și condiții — CalyHub",
+  description:
+    "Termenii și condițiile de utilizare a platformei CalyHub pentru programări la saloane de grooming în România.",
+  alternates: { canonical: "/termeni" },
+  robots: { index: true, follow: true },
+};
 
 const SECTIUNI = [
   {

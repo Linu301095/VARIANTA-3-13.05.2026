@@ -1,6 +1,19 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+
+export const metadata: Metadata = {
+  title: "Cum funcționează CalyHub — Programări grooming în 3 pași",
+  description:
+    "Află cum să rezervi o programare la salonul de grooming în 10 secunde. 3 pași simpli pentru stăpâni și 3 pași pentru saloane. Fără telefon, fără bătăi de cap.",
+  alternates: { canonical: "/cum-functioneaza" },
+  openGraph: {
+    title: "Cum funcționează CalyHub — Programări grooming în 3 pași",
+    description: "Programări grooming online în 10 secunde. Vezi cum funcționează platforma.",
+    url: "/cum-functioneaza",
+  },
+};
 
 const STEPS_CLIENT = [
   { nr: "01", icon: "📝", titlu: "Creează cont gratuit", desc: "Înregistrează-te în 2 minute cu emailul sau contul Google. Adaugi profilul animăluțului: rasă, vârstă, alergii — salonul îl cunoaște deja." },

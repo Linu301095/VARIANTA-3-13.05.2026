@@ -1,6 +1,19 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+
+export const metadata: Metadata = {
+  title: "Despre noi — Povestea CalyHub",
+  description:
+    "Cum s-a născut CalyHub: o platformă creată din pasiune pentru animale, care simplifică programările la grooming pentru stăpâni și saloane din România.",
+  alternates: { canonical: "/despre-noi" },
+  openGraph: {
+    title: "Despre noi — Povestea CalyHub",
+    description: "Platformă creată din pasiune pentru animale și pentru saloane de grooming.",
+    url: "/despre-noi",
+  },
+};
 
 const VALORI = [
   { icon: "❤️", titlu: "Pasiune pentru animale", desc: "Fiecare decizie de produs o luăm cu animăluțul în minte. Bunăstarea lor nu e o opțiune — e centrul a tot ce construim." },
