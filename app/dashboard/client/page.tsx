@@ -259,7 +259,7 @@ export default function DashboardClient() {
           {tab === "saloane" && (<>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, margin: 0 }}>📍 Recomandate în zona ta</h2>
-              <span style={{ fontSize: 12, color: c.xmuted, fontWeight: 600, background: c.surface3, padding: "4px 12px", borderRadius: 50 }}>București</span>
+              <span style={{ fontSize: 12, color: c.text, fontWeight: 800, background: c.surface, padding: "4px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, fontFamily: "Nunito, sans-serif" }}>📍 București</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
               {SALOANE.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
