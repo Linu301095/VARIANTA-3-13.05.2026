@@ -192,7 +192,7 @@ export default function DashboardClient() {
             <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `2px solid ${salon.culoare}`, marginBottom: 20, boxShadow: c.cardShadow }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: salon.bg, padding: "4px 10px", borderRadius: 50, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
                   <h2 style={{ fontSize: 22, fontWeight: 900, color: c.text, margin: "0 0 6px" }}>{salon.nume}</h2>
                   <div style={{ fontSize: 13, color: c.muted }}>📍 {salon.oras} · {salon.distanta}</div>
                 </div>
@@ -207,7 +207,7 @@ export default function DashboardClient() {
                 const sel = rezervare?.serviciu === s.nume;
                 return (
                   <button key={s.nume} onClick={() => setRezervare(r => ({ ...r!, salonId: salon.id, serviciu: s.nume, ora: r?.ora || "" }))}
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? salon.bg : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
                     <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div><div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {s.durata}</div></div>
                     <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{s.pret}</div>
                   </button>
@@ -220,7 +220,7 @@ export default function DashboardClient() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 24 }}>
                 {["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map(ora => {
                   const sel = rezervare?.ora === ora;
-                  return <button key={ora} onClick={() => setRezervare(r => ({ ...r!, ora }))} style={{ padding: "11px 6px", borderRadius: 10, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? salon.bg : c.surface, fontSize: 13, fontWeight: 700, color: sel ? salon.culoare : c.text2, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>{ora}</button>;
+                  return <button key={ora} onClick={() => setRezervare(r => ({ ...r!, ora }))} style={{ padding: "11px 6px", borderRadius: 10, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, fontSize: 13, fontWeight: 700, color: sel ? salon.culoare : c.text2, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>{ora}</button>;
                 })}
               </div>
             </>)}
@@ -574,13 +574,13 @@ function FAQ({ items }: { items: { q: string; r: string }[] }) {
 }
 
 function CardSalon({ salon, onSelect }: { salon: typeof SALOANE[0]; onSelect: () => void }) {
-  const { c } = useContext(ThemeCtx);
+  const { c, theme } = useContext(ThemeCtx);
   return (
     <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
       <div style={{ height: 4, background: salon.culoare }} />
       <div style={{ padding: "18px 20px 20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
           <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {salon.rating}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({salon.recenzii})</span></div>
         </div>
         <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600 }}>📍 {salon.oras} · {salon.distanta}</div></div>
@@ -617,7 +617,8 @@ function CardProgramare({ p, onAnuleaza }: { p: Programare; onAnuleaza?: (id: nu
 }
 
 function Tag({ label, color, bg }: { label: string; color: string; bg: string }) {
-  return <span style={{ fontSize: 11, fontWeight: 700, color, background: bg, padding: "4px 10px", borderRadius: 50 }}>{label}</span>;
+  const { theme } = useContext(ThemeCtx);
+  return <span style={{ fontSize: 11, fontWeight: 700, color, background: theme === "dark" ? `${color}26` : bg, padding: "4px 10px", borderRadius: 50 }}>{label}</span>;
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
