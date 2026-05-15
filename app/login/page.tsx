@@ -84,9 +84,6 @@ export default function LoginPage() {
       <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
         <div style={{ width: "100%", maxWidth: 440 }}>
           <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(28px,5vw,48px)", border: "1px solid #EBEBEB", boxShadow: "0 4px 32px rgba(26,26,26,.08)" }}>
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <Image src="/logo.png" alt="CalyHub" width={120} height={40} style={{ height: 40, width: "auto", objectFit: "contain" }} />
-            </div>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: "#1A1A1A", textAlign: "center", marginBottom: 6 }}>Bine ai revenit! 👋</h1>
             <p style={{ fontSize: 14, color: "#6B7280", textAlign: "center", marginBottom: 28 }}>Introdu emailul și te ducem în contul tău</p>
 
