@@ -136,7 +136,6 @@ export default function DashboardClient() {
   async function handleLogout() {
     await supabase.auth.signOut();
     document.documentElement.dataset.theme = "";
-    try { localStorage.removeItem("calyhub_theme"); } catch {}
     router.push("/login");
   }
 

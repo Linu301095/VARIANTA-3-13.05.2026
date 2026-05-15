@@ -55,10 +55,15 @@ export default function LoginPage() {
       .eq("id", data.user.id)
       .single();
 
-    if (profile?.tema === "dark") {
-      document.documentElement.dataset.theme = "dark";
-      try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
-    }
+    try {
+      if (profile?.tema === "dark") {
+        localStorage.setItem("calyhub_theme", "dark");
+        document.documentElement.dataset.theme = "dark";
+      } else {
+        localStorage.removeItem("calyhub_theme");
+        document.documentElement.dataset.theme = "";
+      }
+    } catch {}
 
     if (profile?.tip === "salon") router.push("/dashboard/salon");
     else router.push("/dashboard/client");
