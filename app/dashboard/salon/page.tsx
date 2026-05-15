@@ -180,7 +180,7 @@ export default function DashboardSalon() {
               {/* On mobile with sub-tab open, hide logo & salon name and show back button */}
               {!(isMobile && tab !== "agenda") && (
                 <>
-                  <Link href="/"><Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority /></Link>
+                  <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
                   {!isMobile && (
                     <>
                       <div style={{ width: 1, height: 24, background: c.border }} />

@@ -469,7 +469,7 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             {/* On mobile with sub-tab open, hide logo and show back button instead */}
             {!(isMobile && tab !== "saloane") && (
-              <Link href="/"><Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority /></Link>
+              <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
             )}
             {tab !== "saloane" && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
