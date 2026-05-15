@@ -74,10 +74,13 @@ export default function DashboardClient() {
   const [savedMsg, setSavedMsg] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("calyhub_theme");
-    if (saved === "dark") {
+    const u = localStorage.getItem("calyhub_user");
+    const userTema = u ? JSON.parse(u)?.tema : null;
+    const savedTheme = localStorage.getItem("calyhub_theme");
+    if (userTema === "dark" || savedTheme === "dark") {
       setTheme("dark");
       document.documentElement.dataset.theme = "dark";
+      try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
     }
   }, []);
 
