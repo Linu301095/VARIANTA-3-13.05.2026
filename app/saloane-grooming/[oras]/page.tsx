@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Footer from "../../../components/Footer";
+import ThemeToggle from "../../../components/ThemeToggle";
 
 type OrasData = {
   slug: string;
@@ -141,7 +142,10 @@ export default async function OrasPage({ params }: { params: Promise<{ oras: str
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
-          <Link href="/register" style={{ padding: "10px 22px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none" }}>Programează acum</Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <ThemeToggle size={36} />
+            <Link href="/register" style={{ padding: "10px 22px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none" }}>Programează acum</Link>
+          </div>
         </div>
       </header>
 

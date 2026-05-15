@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
+import ThemeToggle from "../../../components/ThemeToggle";
 
 const SALOANE = [
   { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], pretDe: 80, distanta: "1.2 km", badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -349,6 +350,8 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
               </div>
             )}
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <ThemeToggle size={34} />
           <div style={{ position: "relative" }}>
             <button onClick={() => setOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: open ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
@@ -387,6 +390,7 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
       </header>
