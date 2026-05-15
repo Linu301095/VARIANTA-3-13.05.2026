@@ -1,10 +1,11 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
+import { SEED_USERS } from "../../lib/seedAccounts";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -16,6 +17,22 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [showDemoPanel, setShowDemoPanel] = useState(false);
+
+  useEffect(() => {
+    const existing = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
+    const emails = new Set(existing.map((u: any) => u.email.toLowerCase()));
+    const missing = SEED_USERS.filter(u => !emails.has(u.email.toLowerCase()));
+    if (missing.length > 0) {
+      localStorage.setItem("calyhub_users", JSON.stringify([...existing, ...missing]));
+    }
+  }, []);
+
+  function loginAs(email: string, parola: string) {
+    set("email", email);
+    set("parola", parola);
+    setShowDemoPanel(false);
+  }
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
@@ -105,8 +122,12 @@ export default function LoginPage() {
                 <div style={{ position: "relative" }}>
                   <input value={form.parola} onChange={e => set("parola", e.target.value)} type={showPass ? "text" : "password"} placeholder="••••••••" style={{ ...(errors.parola ? inpErr : inp), paddingRight: 46 }} />
                   <button type="button" onClick={() => setShowPass(s => !s)} aria-label={showPass ? "Ascunde parola" : "Arată parola"}
-                    style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "8px 10px", fontSize: 16, color: "#9CA3AF", fontFamily: "Nunito, sans-serif", lineHeight: 1 }}>
-                    {showPass ? "🙈" : "👁️"}
+                    style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "8px 10px", color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {showPass ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
                   </button>
                 </div>
                 {errors.parola && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.parola}</div>}
@@ -124,6 +145,38 @@ export default function LoginPage() {
 
             <div style={{ textAlign: "center", marginTop: 16 }}>
               <Link href="/forgot-password" style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none", fontWeight: 600 }}>Ai uitat parola?</Link>
+            </div>
+
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px dashed #EBEBEB" }}>
+              <button type="button" onClick={() => setShowDemoPanel(s => !s)}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #EBEBEB", background: showDemoPanel ? "#FFF3EA" : "#fff", color: showDemoPanel ? "#FF6B00" : "#6B7280", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                {showDemoPanel ? "▲ Ascunde" : "▼ Conturi demo pentru testare (20)"}
+              </button>
+              {showDemoPanel && (
+                <div style={{ marginTop: 10, border: "1.5px solid #EBEBEB", borderRadius: 12, padding: 10, maxHeight: 280, overflowY: "auto", background: "#FAFAFA" }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, padding: "0 4px" }}>🐾 Clienți</div>
+                  {SEED_USERS.filter(u => u.tip === "client").map(u => (
+                    <button key={u.email} type="button" onClick={() => loginAs(u.email, u.parola)}
+                      style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#374151", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#fff"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <span style={{ fontWeight: 700 }}>{u.email}</span>
+                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>{u.numeComplet}</span>
+                    </button>
+                  ))}
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, margin: "10px 0 6px", padding: "0 4px" }}>✂️ Saloane</div>
+                  {SEED_USERS.filter(u => u.tip === "salon").map(u => (
+                    <button key={u.email} type="button" onClick={() => loginAs(u.email, u.parola)}
+                      style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#374151", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#fff"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <span style={{ fontWeight: 700 }}>{u.email}</span>
+                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>{(u as any).numeSalon}</span>
+                    </button>
+                  ))}
+                  <div style={{ fontSize: 11, color: "#9CA3AF", padding: "8px 4px 2px", textAlign: "center", fontStyle: "italic" }}>Click pe un cont → completează formularul · parolă: <strong>test</strong></div>
+                </div>
+              )}
             </div>
             <div style={{ textAlign: "center", marginTop: 20, paddingTop: 16, borderTop: "1px solid #EBEBEB" }}>
               <span style={{ fontSize: 13, color: "#6B7280" }}>Nu ai cont? </span>
