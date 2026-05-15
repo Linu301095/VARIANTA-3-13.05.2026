@@ -36,6 +36,10 @@ export default function LoginPage() {
       const user = localStorage.getItem("calyhub_user");
       if (user) {
         const parsed = JSON.parse(user);
+        if (parsed.tema === "dark") {
+          document.documentElement.dataset.theme = "dark";
+          try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
+        }
         if (parsed.tip === "salon") router.push("/dashboard/salon");
         else router.push("/dashboard/client");
       } else {

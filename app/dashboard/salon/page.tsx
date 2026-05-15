@@ -92,8 +92,18 @@ export default function DashboardSalon() {
 
   function toggleTheme(t: "light" | "dark") {
     setTheme(t);
-    document.documentElement.dataset.theme = t;
-    try { localStorage.setItem("calyhub_theme", t); } catch {}
+    document.documentElement.dataset.theme = t === "light" ? "" : t;
+    try {
+      localStorage.setItem("calyhub_theme", t);
+      const u = localStorage.getItem("calyhub_user");
+      if (u) localStorage.setItem("calyhub_user", JSON.stringify({ ...JSON.parse(u), tema: t }));
+    } catch {}
+  }
+
+  function handleLogout() {
+    document.documentElement.dataset.theme = "";
+    try { localStorage.removeItem("calyhub_theme"); } catch {}
+    router.push("/login");
   }
 
   const c = C[theme];
@@ -145,7 +155,7 @@ export default function DashboardSalon() {
                 🔔
                 {necitite > 0 && <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{necitite}</span>}
               </button>
-              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={() => router.push("/login")} onNav={setTab} />
+              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} />
             </div>
           </div>
         </header>

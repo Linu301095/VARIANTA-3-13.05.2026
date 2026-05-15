@@ -90,8 +90,18 @@ export default function DashboardClient() {
 
   function toggleTheme(t: "light" | "dark") {
     setTheme(t);
-    document.documentElement.dataset.theme = t;
-    try { localStorage.setItem("calyhub_theme", t); } catch {}
+    document.documentElement.dataset.theme = t === "light" ? "" : t;
+    try {
+      localStorage.setItem("calyhub_theme", t);
+      const u = localStorage.getItem("calyhub_user");
+      if (u) localStorage.setItem("calyhub_user", JSON.stringify({ ...JSON.parse(u), tema: t }));
+    } catch {}
+  }
+
+  function handleLogout() {
+    document.documentElement.dataset.theme = "";
+    try { localStorage.removeItem("calyhub_theme"); } catch {}
+    router.push("/login");
   }
 
   const c = C[theme];
@@ -111,7 +121,7 @@ export default function DashboardClient() {
     const noua: Programare = { id: Date.now(), salon: salon.nume, serviciu: rezervare.serviciu, data: new Date().toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" }), ora: rezervare.ora, status: "în așteptare", pret: "—" };
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={() => router.push("/login")} onNav={setTab}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
             <div style={{ textAlign: "center", maxWidth: 460, width: "100%" }}>
               <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>✅</div>
@@ -139,7 +149,7 @@ export default function DashboardClient() {
   if (salonSelectat && salon) {
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={() => router.push("/login")} onNav={setTab}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab}>
           <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
             <button onClick={() => { setSalonSelectat(null); setRezervare(null); }} style={btnBack}>← Înapoi</button>
             <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `2px solid ${salon.culoare}`, marginBottom: 20, boxShadow: c.cardShadow }}>
@@ -189,7 +199,7 @@ export default function DashboardClient() {
 
   return (
     <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-      <Shell prenume={prenume} tab={tab} onLogout={() => router.push("/login")} onNav={setTab}>
+      <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
 
           {/* Toast */}
