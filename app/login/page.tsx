@@ -50,7 +50,7 @@ export default function LoginPage() {
     }
 
     const { data: profile } = await supabase
-      .from("calyhub_user")
+      .from("profiluri")
       .select("tip, tema")
       .eq("id", data.user.id)
       .single();

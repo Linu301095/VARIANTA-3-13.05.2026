@@ -80,7 +80,7 @@ export default function DashboardSalon() {
       if (!authUser) { router.push("/login"); return; }
 
       const { data: profile } = await supabase
-        .from("calyhub_user")
+        .from("profiluri")
         .select("*")
         .eq("id", authUser.id)
         .single();
@@ -95,7 +95,7 @@ export default function DashboardSalon() {
       }
 
       const { data: salonRow } = await supabase
-        .from("calyhub_salon")
+        .from("saloane")
         .select("*")
         .eq("user_id", authUser.id)
         .single();
@@ -103,7 +103,7 @@ export default function DashboardSalon() {
       if (salonRow) {
         setSalonData(salonRow);
         setProfilSalon({
-          numeSalon: salonRow.numeSalon || "",
+          numeSalon: salonRow.nume || "",
           adresa: salonRow.adresa || "",
           oras: salonRow.oras || "",
           telefon: salonRow.telefon || "",
@@ -122,7 +122,7 @@ export default function DashboardSalon() {
     document.documentElement.dataset.theme = t === "light" ? "" : t;
     try { if (t === "dark") localStorage.setItem("calyhub_theme", "dark"); else localStorage.removeItem("calyhub_theme"); } catch {}
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
-      if (authUser) supabase.from("calyhub_user").update({ tema: t }).eq("id", authUser.id);
+      if (authUser) supabase.from("profiluri").update({ tema: t }).eq("id", authUser.id);
     });
   }
 
@@ -136,8 +136,8 @@ export default function DashboardSalon() {
   const c = C[theme];
   const inp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", background: c.input, color: c.text };
 
-  const numeSalon = salonData?.dateFirma?.numeSalon || user?.numeSalon || "Salonul tau";
-  const numeComplet = user?.numeComplet?.split(" ")[0] || "Manager";
+  const numeSalon = salonData?.nume || "Salonul tau";
+  const numeComplet = user?.nume?.split(" ")[0] || "Manager";
   const TAB_LABELS: Record<Tab, string> = {
     agenda: "Agenda", statistici: "Statistici", notificari: "Notificări",
     "profil-salon": "Profilul salonului", servicii: "Serviciile mele",
@@ -314,13 +314,14 @@ export default function DashboardSalon() {
                     <button onClick={async () => {
                       const { data: { user: authUser } } = await supabase.auth.getUser();
                       if (authUser) {
-                        await supabase.from("calyhub_salon").update({
-                          numeSalon: profilSalon.numeSalon,
+                        await supabase.from("saloane").update({
+                          nume: profilSalon.numeSalon,
                           adresa: profilSalon.adresa,
                           oras: profilSalon.oras,
                           telefon: profilSalon.telefon,
                           descriere: profilSalon.descriere,
                         }).eq("user_id", authUser.id);
+                        setSalonData((s: any) => ({ ...s, nume: profilSalon.numeSalon, adresa: profilSalon.adresa, oras: profilSalon.oras, telefon: profilSalon.telefon, descriere: profilSalon.descriere }));
                       }
                       salveaza("Profil salon actualizat!");
                     }} style={btnPrimary}>Salveaza modificarile</button>
@@ -354,7 +355,7 @@ export default function DashboardSalon() {
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
                   if (authUser) {
-                    await supabase.from("calyhub_salon").update({ servicii }).eq("user_id", authUser.id);
+                    await supabase.from("saloane").update({ servicii }).eq("user_id", authUser.id);
                   }
                   salveaza("Servicii actualizate!");
                 }} style={btnPrimary}>Salveaza serviciile</button>
@@ -381,7 +382,7 @@ export default function DashboardSalon() {
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
                   if (authUser) {
-                    await supabase.from("calyhub_salon").update({ echipa }).eq("user_id", authUser.id);
+                    await supabase.from("saloane").update({ echipa }).eq("user_id", authUser.id);
                   }
                   salveaza("Echipa actualizata!");
                 }} style={btnPrimary}>Salveaza echipa</button>
