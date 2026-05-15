@@ -124,13 +124,15 @@ export default function DashboardClient() {
     loadUser();
   }, []);
 
-  function toggleTheme(t: "light" | "dark") {
+  async function toggleTheme(t: "light" | "dark") {
     setTheme(t);
     document.documentElement.dataset.theme = t === "light" ? "" : t;
     try { if (t === "dark") localStorage.setItem("calyhub_theme", "dark"); else localStorage.removeItem("calyhub_theme"); } catch {}
-    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
-      if (authUser) supabase.from("profiluri").update({ tema: t }).eq("id", authUser.id);
-    });
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      const { error } = await supabase.from("profiluri").update({ tema: t }).eq("id", authUser.id);
+      if (error) console.error("Theme save error:", error);
+    }
   }
 
   async function handleLogout() {
