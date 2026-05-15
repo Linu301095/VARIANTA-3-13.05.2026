@@ -31,11 +31,16 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
+    // One-time cleanup al conturilor demo create anterior. Flag-ul previne
+    // stergerea repetata - daca un user inregistreaza ulterior un email
+    // care era pe lista demo, contul lui NU mai e afectat.
+    if (localStorage.getItem("calyhub_demo_cleaned") === "1") return;
     const existing: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
     const cleaned = existing.filter((u: any) => !DEMO_EMAILS_TO_REMOVE.has(u.email.toLowerCase()));
     if (cleaned.length !== existing.length) {
       localStorage.setItem("calyhub_users", JSON.stringify(cleaned));
     }
+    localStorage.setItem("calyhub_demo_cleaned", "1");
   }, []);
 
   function set(k: string, v: string) {
