@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
+import { supabase } from "../../../lib/supabase";
 
 const PROGRAMARI_INIT = [
   { id: 1, client: "Ana Popescu", animal: "Max (Labrador, 28kg)", serviciu: "Tuns complet", ora: "09:00", status: "confirmat" },
@@ -74,51 +75,61 @@ export default function DashboardSalon() {
   ]);
 
   useEffect(() => {
-    const u = localStorage.getItem("calyhub_user");
-    const userTema = u ? JSON.parse(u)?.tema : null;
-    const savedTheme = localStorage.getItem("calyhub_theme");
-    if (userTema === "dark" || savedTheme === "dark") {
-      setTheme("dark");
-      document.documentElement.dataset.theme = "dark";
-      try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
-    }
-  }, []);
+    async function loadData() {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) { router.push("/login"); return; }
 
-  useEffect(() => {
-    const u = localStorage.getItem("calyhub_user");
-    const s = localStorage.getItem("calyhub_salon");
-    const a = localStorage.getItem("calyhub_abonament");
-    if (u) { const p = JSON.parse(u); setUser(p); }
-    if (s) { const sd = JSON.parse(s); setSalonData(sd); setProfilSalon({ numeSalon: sd.dateFirma?.numeSalon || "", adresa: sd.dateFirma?.adresa || "", oras: sd.dateFirma?.oras || "", telefon: sd.dateFirma?.telefon || "", descriere: sd.dateFirma?.descriere || "" }); }
-    if (a) setAbonament(JSON.parse(a));
+      const { data: profile } = await supabase
+        .from("calyhub_user")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
+
+      if (profile) {
+        setUser({ ...profile, email: authUser.email });
+        if (profile.tema === "dark") {
+          setTheme("dark");
+          document.documentElement.dataset.theme = "dark";
+          try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
+        }
+      }
+
+      const { data: salonRow } = await supabase
+        .from("calyhub_salon")
+        .select("*")
+        .eq("user_id", authUser.id)
+        .single();
+
+      if (salonRow) {
+        setSalonData(salonRow);
+        setProfilSalon({
+          numeSalon: salonRow.numeSalon || "",
+          adresa: salonRow.adresa || "",
+          oras: salonRow.oras || "",
+          telefon: salonRow.telefon || "",
+          descriere: salonRow.descriere || "",
+        });
+        if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
+        if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
+        setAbonament({ plan: salonRow.plan || "starter" });
+      }
+    }
+    loadData();
   }, []);
 
   function toggleTheme(t: "light" | "dark") {
     setTheme(t);
     document.documentElement.dataset.theme = t === "light" ? "" : t;
-    try {
-      if (t === "dark") localStorage.setItem("calyhub_theme", "dark");
-      else localStorage.removeItem("calyhub_theme");
-      const u = localStorage.getItem("calyhub_user");
-      if (u) {
-        const cur = JSON.parse(u);
-        const updated = { ...cur, tema: t };
-        localStorage.setItem("calyhub_user", JSON.stringify(updated));
-        const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
-        localStorage.setItem("calyhub_users", JSON.stringify(
-          users.map((x: any) => x.email === cur.email ? { ...x, tema: t } : x)
-        ));
-      }
-    } catch {}
+    try { if (t === "dark") localStorage.setItem("calyhub_theme", "dark"); else localStorage.removeItem("calyhub_theme"); } catch {}
+    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+      if (authUser) supabase.from("calyhub_user").update({ tema: t }).eq("id", authUser.id);
+    });
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    await supabase.auth.signOut();
     document.documentElement.dataset.theme = "";
-    try {
-      localStorage.removeItem("calyhub_theme");
-      localStorage.removeItem("calyhub_user");
-      localStorage.removeItem("calyhub_salon");
-    } catch {}
+    try { localStorage.removeItem("calyhub_theme"); } catch {}
     router.push("/login");
   }
 
@@ -300,7 +311,19 @@ export default function DashboardSalon() {
                       <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Descriere scurta</label>
                       <textarea value={profilSalon.descriere} onChange={e => setProfilSalon(p => ({ ...p, descriere: e.target.value }))} rows={3} placeholder="Salon specializat in..." style={{ ...inp, resize: "vertical" }} />
                     </div>
-                    <button onClick={() => { localStorage.setItem("calyhub_salon", JSON.stringify({ ...salonData, dateFirma: { ...salonData?.dateFirma, ...profilSalon } })); salveaza("Profil salon actualizat!"); }} style={btnPrimary}>Salveaza modificarile</button>
+                    <button onClick={async () => {
+                      const { data: { user: authUser } } = await supabase.auth.getUser();
+                      if (authUser) {
+                        await supabase.from("calyhub_salon").update({
+                          numeSalon: profilSalon.numeSalon,
+                          adresa: profilSalon.adresa,
+                          oras: profilSalon.oras,
+                          telefon: profilSalon.telefon,
+                          descriere: profilSalon.descriere,
+                        }).eq("user_id", authUser.id);
+                      }
+                      salveaza("Profil salon actualizat!");
+                    }} style={btnPrimary}>Salveaza modificarile</button>
                   </div>
                 </div>
               </div>
@@ -328,7 +351,13 @@ export default function DashboardSalon() {
                   ))}
                 </div>
                 <button onClick={() => setServicii(sv => [...sv, { id: Date.now(), nume: "", pret: "", durata: "" }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga serviciu</button>
-                <button onClick={() => salveaza("Servicii actualizate!")} style={btnPrimary}>Salveaza serviciile</button>
+                <button onClick={async () => {
+                  const { data: { user: authUser } } = await supabase.auth.getUser();
+                  if (authUser) {
+                    await supabase.from("calyhub_salon").update({ servicii }).eq("user_id", authUser.id);
+                  }
+                  salveaza("Servicii actualizate!");
+                }} style={btnPrimary}>Salveaza serviciile</button>
               </div>
             )}
 
@@ -349,7 +378,13 @@ export default function DashboardSalon() {
                   ))}
                 </div>
                 <button onClick={() => setEchipa(ec => [...ec, { id: Date.now(), nume: "", specialitate: "" }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga groomer</button>
-                <button onClick={() => salveaza("Echipa actualizata!")} style={btnPrimary}>Salveaza echipa</button>
+                <button onClick={async () => {
+                  const { data: { user: authUser } } = await supabase.auth.getUser();
+                  if (authUser) {
+                    await supabase.from("calyhub_salon").update({ echipa }).eq("user_id", authUser.id);
+                  }
+                  salveaza("Echipa actualizata!");
+                }} style={btnPrimary}>Salveaza echipa</button>
               </div>
             )}
 
