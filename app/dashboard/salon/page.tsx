@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
-import ThemeToggle from "../../../components/ThemeToggle";
 
 const PROGRAMARI_INIT = [
   { id: 1, client: "Ana Popescu", animal: "Max (Labrador, 28kg)", serviciu: "Tuns complet", ora: "09:00", status: "confirmat" },
@@ -103,7 +102,6 @@ export default function DashboardSalon() {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <ThemeToggle size={34} />
             <button onClick={() => setTab("notificari")} style={{ position: "relative", padding: "8px 14px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
               🔔
               {necitite > 0 && <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{necitite}</span>}
@@ -403,6 +401,18 @@ export default function DashboardSalon() {
 
 function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void }) {
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("calyhub_theme");
+    if (saved === "dark") setTheme("dark");
+  }, []);
+
+  function toggleTheme(t: "light" | "dark") {
+    setTheme(t);
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem("calyhub_theme", t); } catch {}
+  }
 
   const items: { icon: string; label: string; sub: string; t: Tab }[] = [
     { icon: "🏪", label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
@@ -444,6 +454,19 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav }: { numeComple
                 </div>
               </button>
             ))}
+          </div>
+          <div style={{ borderTop: "1px solid #EBEBEB", padding: "12px 18px" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>Aspect</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => toggleTheme("light")}
+                style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "light" ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: theme === "light" ? "#FFF3EA" : "#fff", color: theme === "light" ? "#FF6B00" : "#6B7280", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                ☀️ Luminos
+              </button>
+              <button onClick={() => toggleTheme("dark")}
+                style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "dark" ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: theme === "dark" ? "#FFF3EA" : "#fff", color: theme === "dark" ? "#FF6B00" : "#6B7280", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                🌙 Întunecat
+              </button>
+            </div>
           </div>
           <div style={{ borderTop: "1px solid #EBEBEB", padding: "6px 0" }}>
             <button onClick={() => { setOpen(false); onLogout(); }}

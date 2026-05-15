@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
-import ThemeToggle from "../../../components/ThemeToggle";
 
 const SALOANE = [
   { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], pretDe: 80, distanta: "1.2 km", badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -317,6 +316,18 @@ export default function DashboardClient() {
 // --- Shell cu dropdown ---
 function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void }) {
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("calyhub_theme");
+    if (saved === "dark") setTheme("dark");
+  }, []);
+
+  function toggleTheme(t: "light" | "dark") {
+    setTheme(t);
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem("calyhub_theme", t); } catch {}
+  }
 
   const TAB_LABELS: Record<Tab, string> = {
     saloane: "Saloane", programari: "Programările mele", profil: "Profilul meu",
@@ -350,8 +361,6 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
               </div>
             )}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <ThemeToggle size={34} />
           <div style={{ position: "relative" }}>
             <button onClick={() => setOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: open ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
@@ -379,6 +388,19 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
                     </button>
                   ))}
                 </div>
+                <div style={{ borderTop: "1px solid #EBEBEB", padding: "12px 18px" }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>Aspect</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => toggleTheme("light")}
+                      style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "light" ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: theme === "light" ? "#FFF3EA" : "#fff", color: theme === "light" ? "#FF6B00" : "#6B7280", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                      ☀️ Luminos
+                    </button>
+                    <button onClick={() => toggleTheme("dark")}
+                      style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "dark" ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: theme === "dark" ? "#FFF3EA" : "#fff", color: theme === "dark" ? "#FF6B00" : "#6B7280", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                      🌙 Întunecat
+                    </button>
+                  </div>
+                </div>
                 <div style={{ borderTop: "1px solid #EBEBEB", padding: "6px 0" }}>
                   <button onClick={() => { setOpen(false); onLogout(); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
@@ -390,7 +412,6 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
                 </div>
               </div>
             )}
-          </div>
           </div>
         </div>
       </header>
