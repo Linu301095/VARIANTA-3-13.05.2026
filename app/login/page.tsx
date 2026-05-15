@@ -5,7 +5,19 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
-import { SEED_USERS } from "../../lib/seedAccounts";
+
+// Email-urile conturilor demo create anterior — se șterg automat la mount
+// pentru ca utilizatorii care le aveau salvate în localStorage să aibă slate curat.
+const DEMO_EMAILS_TO_REMOVE = new Set([
+  "alin.tilvar@yahoo.com", "maria.popescu@gmail.com", "ion.gheorghe@gmail.com",
+  "andrei.dumitrescu@yahoo.com", "elena.popa@gmail.com", "cristian.stanescu@yahoo.com",
+  "ioana.munteanu@gmail.com", "razvan.petrescu@gmail.com", "diana.constantin@yahoo.com",
+  "mihai.stoica@gmail.com",
+  "paws@calyhub.test", "fluffy@calyhub.test", "happy@calyhub.test",
+  "royal@calyhub.test", "centru@calyhub.test", "petstyle@calyhub.test",
+  "express@calyhub.test", "cuddly@calyhub.test", "doggyspa@calyhub.test",
+  "catchdog@calyhub.test",
+]);
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -17,22 +29,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [loginError, setLoginError] = useState("");
-  const [showDemoPanel, setShowDemoPanel] = useState(false);
 
   useEffect(() => {
-    const existing = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
-    const emails = new Set(existing.map((u: any) => u.email.toLowerCase()));
-    const missing = SEED_USERS.filter(u => !emails.has(u.email.toLowerCase()));
-    if (missing.length > 0) {
-      localStorage.setItem("calyhub_users", JSON.stringify([...existing, ...missing]));
+    const existing: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
+    const cleaned = existing.filter((u: any) => !DEMO_EMAILS_TO_REMOVE.has(u.email.toLowerCase()));
+    if (cleaned.length !== existing.length) {
+      localStorage.setItem("calyhub_users", JSON.stringify(cleaned));
     }
   }, []);
-
-  function loginAs(email: string, parola: string) {
-    set("email", email);
-    set("parola", parola);
-    setShowDemoPanel(false);
-  }
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
@@ -145,38 +149,6 @@ export default function LoginPage() {
 
             <div style={{ textAlign: "center", marginTop: 16 }}>
               <Link href="/forgot-password" style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none", fontWeight: 600 }}>Ai uitat parola?</Link>
-            </div>
-
-            <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px dashed #EBEBEB" }}>
-              <button type="button" onClick={() => setShowDemoPanel(s => !s)}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #EBEBEB", background: showDemoPanel ? "#FFF3EA" : "#fff", color: showDemoPanel ? "#FF6B00" : "#6B7280", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                {showDemoPanel ? "▲ Ascunde" : "▼ Conturi demo pentru testare (20)"}
-              </button>
-              {showDemoPanel && (
-                <div style={{ marginTop: 10, border: "1.5px solid #EBEBEB", borderRadius: 12, padding: 10, maxHeight: 280, overflowY: "auto", background: "#FAFAFA" }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, padding: "0 4px" }}>🐾 Clienți</div>
-                  {SEED_USERS.filter(u => u.tip === "client").map(u => (
-                    <button key={u.email} type="button" onClick={() => loginAs(u.email, u.parola)}
-                      style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#374151", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#fff"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <span style={{ fontWeight: 700 }}>{u.email}</span>
-                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>{u.numeComplet}</span>
-                    </button>
-                  ))}
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, margin: "10px 0 6px", padding: "0 4px" }}>✂️ Saloane</div>
-                  {SEED_USERS.filter(u => u.tip === "salon").map(u => (
-                    <button key={u.email} type="button" onClick={() => loginAs(u.email, u.parola)}
-                      style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#374151", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#fff"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <span style={{ fontWeight: 700 }}>{u.email}</span>
-                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>{(u as any).numeSalon}</span>
-                    </button>
-                  ))}
-                  <div style={{ fontSize: 11, color: "#9CA3AF", padding: "8px 4px 2px", textAlign: "center", fontStyle: "italic" }}>Click pe un cont → completează formularul · parolă: <strong>test</strong></div>
-                </div>
-              )}
             </div>
             <div style={{ textAlign: "center", marginTop: 20, paddingTop: 16, borderTop: "1px solid #EBEBEB" }}>
               <span style={{ fontSize: 13, color: "#6B7280" }}>Nu ai cont? </span>
