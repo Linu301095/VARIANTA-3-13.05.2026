@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
+import ResetTheme from "../components/ResetTheme";
 
 export const metadata: Metadata = {
   title: "CalyHub — Programări grooming online pentru câini și pisici",
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif" }}>
+      <ResetTheme />
 
       {/* HEADER */}
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>

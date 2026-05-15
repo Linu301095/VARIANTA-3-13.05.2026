@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
+import ResetTheme from "../../components/ResetTheme";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -36,8 +37,17 @@ export default function RegisterPage() {
   function handleSubmit() {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
+
+    const existing: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
+    if (existing.some((u: any) => u.email.toLowerCase() === form.email.toLowerCase())) {
+      setErrors({ email: "Există deja un cont cu acest email" });
+      return;
+    }
+
     setLoading(true);
-    localStorage.setItem("calyhub_user", JSON.stringify({ tip, ...form }));
+    const newUser = { tip, ...form };
+    localStorage.setItem("calyhub_users", JSON.stringify([...existing, newUser]));
+    localStorage.setItem("calyhub_user", JSON.stringify(newUser));
     setTimeout(() => {
       if (tip === "client") router.push("/register/configurare-animal");
       else router.push("/register/configurare-salon");
@@ -46,6 +56,7 @@ export default function RegisterPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
+      <ResetTheme />
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>

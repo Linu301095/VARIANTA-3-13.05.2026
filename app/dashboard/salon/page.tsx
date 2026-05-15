@@ -97,15 +97,28 @@ export default function DashboardSalon() {
     setTheme(t);
     document.documentElement.dataset.theme = t === "light" ? "" : t;
     try {
-      localStorage.setItem("calyhub_theme", t);
+      if (t === "dark") localStorage.setItem("calyhub_theme", "dark");
+      else localStorage.removeItem("calyhub_theme");
       const u = localStorage.getItem("calyhub_user");
-      if (u) localStorage.setItem("calyhub_user", JSON.stringify({ ...JSON.parse(u), tema: t }));
+      if (u) {
+        const cur = JSON.parse(u);
+        const updated = { ...cur, tema: t };
+        localStorage.setItem("calyhub_user", JSON.stringify(updated));
+        const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
+        localStorage.setItem("calyhub_users", JSON.stringify(
+          users.map((x: any) => x.email === cur.email ? { ...x, tema: t } : x)
+        ));
+      }
     } catch {}
   }
 
   function handleLogout() {
     document.documentElement.dataset.theme = "";
-    try { localStorage.removeItem("calyhub_theme"); } catch {}
+    try {
+      localStorage.removeItem("calyhub_theme");
+      localStorage.removeItem("calyhub_user");
+      localStorage.removeItem("calyhub_salon");
+    } catch {}
     router.push("/login");
   }
 

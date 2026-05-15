@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
+import ResetTheme from "../../components/ResetTheme";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -14,10 +15,12 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
     setErrors(e => { const n = { ...e }; delete n[k]; return n; });
+    setLoginError("");
   }
 
   function validate() {
@@ -32,24 +35,30 @@ export default function LoginPage() {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
     setLoading(true);
+    setLoginError("");
     setTimeout(() => {
-      const user = localStorage.getItem("calyhub_user");
-      if (user) {
-        const parsed = JSON.parse(user);
-        if (parsed.tema === "dark") {
-          document.documentElement.dataset.theme = "dark";
-          try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
-        }
-        if (parsed.tip === "salon") router.push("/dashboard/salon");
-        else router.push("/dashboard/client");
-      } else {
-        router.push("/dashboard/client");
+      const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
+      const found = users.find((u: any) => u.email.toLowerCase() === form.email.trim().toLowerCase());
+      if (!found || found.parola !== form.parola) {
+        setLoginError("Email sau parolă incorectă");
+        setLoading(false);
+        return;
       }
+      localStorage.setItem("calyhub_user", JSON.stringify(found));
+      if (found.animal) localStorage.setItem("calyhub_animal", JSON.stringify(found.animal));
+      if (found.salon) localStorage.setItem("calyhub_salon", JSON.stringify(found.salon));
+      if (found.tema === "dark") {
+        document.documentElement.dataset.theme = "dark";
+        try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
+      }
+      if (found.tip === "salon") router.push("/dashboard/salon");
+      else router.push("/dashboard/client");
     }, 700);
   }
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
+      <ResetTheme />
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
@@ -102,6 +111,11 @@ export default function LoginPage() {
                 </div>
                 {errors.parola && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.parola}</div>}
               </div>
+              {loginError && (
+                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center" }}>
+                  ⚠️ {loginError}
+                </div>
+              )}
               <button onClick={handleSubmit} disabled={loading}
                 style={{ padding: "14px 24px", borderRadius: 50, border: "none", background: loading ? "#FFB07A" : "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading ? "default" : "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif", marginTop: 4 }}>
                 {loading ? "Se verifică..." : "Intră în cont →"}

@@ -55,7 +55,16 @@ export default function ConfigurareSalon() {
       if (Object.keys(e).length > 0) { setErrors(e); return; }
     }
     if (step === 2) {
-      localStorage.setItem("calyhub_salon", JSON.stringify({ dateFirma, servicii, echipa }));
+      const salonData = { dateFirma, servicii, echipa };
+      localStorage.setItem("calyhub_salon", JSON.stringify(salonData));
+      const u = localStorage.getItem("calyhub_user");
+      if (u) {
+        const cur = JSON.parse(u);
+        const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
+        const updated = users.map((x: any) => x.email === cur.email ? { ...x, salon: salonData } : x);
+        localStorage.setItem("calyhub_users", JSON.stringify(updated));
+        localStorage.setItem("calyhub_user", JSON.stringify({ ...cur, salon: salonData }));
+      }
     }
     setErrors({});
     setStep(s => s + 1);

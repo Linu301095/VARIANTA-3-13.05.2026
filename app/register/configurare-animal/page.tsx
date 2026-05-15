@@ -39,6 +39,14 @@ export default function ConfigurareAnimal() {
     if (Object.keys(e).length > 0) { setErrors(e); return; }
     setLoading(true);
     localStorage.setItem("calyhub_animal", JSON.stringify(form));
+    const u = localStorage.getItem("calyhub_user");
+    if (u) {
+      const cur = JSON.parse(u);
+      const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
+      const updated = users.map((x: any) => x.email === cur.email ? { ...x, animal: form } : x);
+      localStorage.setItem("calyhub_users", JSON.stringify(updated));
+      localStorage.setItem("calyhub_user", JSON.stringify({ ...cur, animal: form }));
+    }
     setTimeout(() => setStep("success"), 700);
   }
 
