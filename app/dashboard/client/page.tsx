@@ -75,6 +75,13 @@ export default function DashboardClient() {
   const [savedMsg, setSavedMsg] = useState("");
 
   useEffect(() => {
+    try {
+      if (localStorage.getItem("calyhub_theme") === "dark") {
+        setTheme("dark");
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch {}
+
     async function loadUser() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { router.push("/login"); return; }
