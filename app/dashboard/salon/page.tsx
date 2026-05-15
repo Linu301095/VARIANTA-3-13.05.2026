@@ -60,6 +60,7 @@ export default function DashboardSalon() {
   const [abonament, setAbonament] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("agenda");
+  const [isMobile, setIsMobile] = useState(false);
   const [programari, setProgramari] = useState(PROGRAMARI_INIT);
   const [notificari, setNotificari] = useState(NOTIFICARI_INIT);
   const [savedMsg, setSavedMsg] = useState("");
@@ -73,6 +74,14 @@ export default function DashboardSalon() {
     { id: 1, nume: "Maria Ionescu", specialitate: "Rase mici" },
     { id: 2, nume: "Andrei Pop", specialitate: "Rase mari" },
   ]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 600px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     try {
@@ -166,31 +175,40 @@ export default function DashboardSalon() {
 
         {/* Header */}
         <header style={{ position: "sticky", top: 0, zIndex: 100, background: c.surface, borderBottom: `1px solid ${c.border}`, height: 66 }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Link href="/"><Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority /></Link>
-              <div style={{ width: 1, height: 24, background: c.border }} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: c.text }}>{numeSalon}</div>
-                <div style={{ fontSize: 11, color: c.xmuted }}>Panou de control</div>
-              </div>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              {/* On mobile with sub-tab open, hide logo & salon name and show back button */}
+              {!(isMobile && tab !== "agenda") && (
+                <>
+                  <Link href="/"><Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority /></Link>
+                  {!isMobile && (
+                    <>
+                      <div style={{ width: 1, height: 24, background: c.border }} />
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: c.text }}>{numeSalon}</div>
+                        <div style={{ fontSize: 11, color: c.xmuted }}>Panou de control</div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
               {tab !== "agenda" && (
                 <>
-                  <div style={{ width: 1, height: 22, background: c.border }} />
+                  {!isMobile && <div style={{ width: 1, height: 22, background: c.border }} />}
                   <button onClick={() => setTab("agenda")}
-                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                     ← Înapoi
                   </button>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text }}>{TAB_LABELS[tab]}</div>
+                  {!isMobile && <div style={{ fontSize: 13, fontWeight: 800, color: c.text }}>{TAB_LABELS[tab]}</div>}
                 </>
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button onClick={() => setTab("notificari")} style={{ position: "relative", padding: "8px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.text2, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <button onClick={() => setTab("notificari")} style={{ position: "relative", padding: isMobile ? "8px 10px" : "8px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.text2, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                 🔔
                 {necitite > 0 && <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{necitite}</span>}
               </button>
-              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} />
+              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} />
             </div>
           </div>
         </header>
@@ -507,7 +525,7 @@ export default function DashboardSalon() {
   );
 }
 
-function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void }) {
+function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean }) {
   const [open, setOpen] = useState(false);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
 
@@ -526,9 +544,9 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav }: { numeComple
     <div style={{ position: "relative" }}>
       {open && <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
       <button onClick={() => setOpen(o => !o)}
-        style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
+        style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
         <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>✂️</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{numeComplet}</span>
+        {!isMobile && <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{numeComplet}</span>}
         <span style={{ fontSize: 10, color: c.xmuted, display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}>▼</span>
       </button>
 
