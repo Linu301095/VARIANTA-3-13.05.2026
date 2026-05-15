@@ -44,10 +44,10 @@ export default function ConfigurareAnimal() {
     if (!user) { router.push("/login"); return; }
 
     const { error } = await supabase
-      .from("calyhub_animal")
+      .from("animale")
       .insert({
         user_id: user.id,
-        numeAnimal: form.numeAnimal.trim(),
+        nume: form.numeAnimal.trim(),
         rasa: form.rasa,
         greutate: Number(form.greutate),
         varsta: Number(form.varsta),

@@ -80,14 +80,14 @@ export default function DashboardClient() {
       if (!authUser) { router.push("/login"); return; }
 
       const { data: profile } = await supabase
-        .from("calyhub_user")
+        .from("profiluri")
         .select("*")
         .eq("id", authUser.id)
         .single();
 
       if (profile) {
         setUser({ ...profile, email: authUser.email });
-        setProfilForm({ numeComplet: profile.numeComplet || "", email: authUser.email || "", telefon: profile.telefon || "" });
+        setProfilForm({ numeComplet: profile.nume || "", email: authUser.email || "", telefon: profile.telefon || "" });
         if (profile.tema === "dark") {
           setTheme("dark");
           document.documentElement.dataset.theme = "dark";
@@ -96,7 +96,7 @@ export default function DashboardClient() {
       }
 
       const { data: animalData } = await supabase
-        .from("calyhub_animal")
+        .from("animale")
         .select("*")
         .eq("user_id", authUser.id)
         .order("created_at", { ascending: false })
@@ -106,7 +106,7 @@ export default function DashboardClient() {
       if (animalData) {
         setAnimal(animalData);
         setAnimalForm({
-          numeAnimal: animalData.numeAnimal || "",
+          numeAnimal: animalData.nume || "",
           rasa: animalData.rasa || "",
           greutate: String(animalData.greutate || ""),
           varsta: String(animalData.varsta || ""),
@@ -122,7 +122,7 @@ export default function DashboardClient() {
     document.documentElement.dataset.theme = t === "light" ? "" : t;
     try { if (t === "dark") localStorage.setItem("calyhub_theme", "dark"); else localStorage.removeItem("calyhub_theme"); } catch {}
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
-      if (authUser) supabase.from("calyhub_user").update({ tema: t }).eq("id", authUser.id);
+      if (authUser) supabase.from("profiluri").update({ tema: t }).eq("id", authUser.id);
     });
   }
 
@@ -134,7 +134,7 @@ export default function DashboardClient() {
   }
 
   const c = C[theme];
-  const prenume = user?.numeComplet?.split(" ")[0] || "Utilizator";
+  const prenume = user?.nume?.split(" ")[0] || "Utilizator";
   const salon = SALOANE.find(s => s.id === salonSelectat);
   const inp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", background: c.input, color: c.text };
 
@@ -157,7 +157,7 @@ export default function DashboardClient() {
               <h1 style={{ fontSize: 24, fontWeight: 900, color: c.text, marginBottom: 10 }}>Programare trimisă!</h1>
               <p style={{ fontSize: 14, color: c.muted, marginBottom: 24, lineHeight: 1.7 }}>Salonul va confirma în curând. Vei primi un SMS de confirmare.</p>
               <div style={{ background: c.surface, border: "2px solid #FF6B00", borderRadius: 20, padding: "20px 24px", marginBottom: 24, textAlign: "left" }}>
-                {[["🏪 Salon", salon.nume], ["✂️ Serviciu", rezervare.serviciu], ["🕐 Ora", rezervare.ora], ["🐾 Animal", animal?.numeAnimal || "Animăluțul tău"]].map(([k, v]) => (
+                {[["🏪 Salon", salon.nume], ["✂️ Serviciu", rezervare.serviciu], ["🕐 Ora", rezervare.ora], ["🐾 Animal", animal?.nume || "Animăluțul tău"]].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "8px 0", borderBottom: `1px solid ${c.border2}` }}>
                     <span style={{ color: c.muted }}>{k}</span><span style={{ fontWeight: 700, color: c.text }}>{v}</span>
                   </div>
@@ -240,7 +240,7 @@ export default function DashboardClient() {
             {animal && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13 }}>
                 <span style={{ fontSize: 18 }}>🐕</span>
-                <span style={{ fontWeight: 800, color: c.text }}>{animal.numeAnimal}</span>
+                <span style={{ fontWeight: 800, color: c.text }}>{animal.nume}</span>
                 <span style={{ color: c.border }}>|</span>
                 <span style={{ color: c.muted, fontWeight: 600 }}>{animal.rasa}, {animal.greutate} kg</span>
               </div>
@@ -303,9 +303,9 @@ export default function DashboardClient() {
                   <button onClick={async () => {
                     const { data: { user: authUser } } = await supabase.auth.getUser();
                     if (authUser) {
-                      await supabase.from("calyhub_user").update({ numeComplet: profilForm.numeComplet, telefon: profilForm.telefon }).eq("id", authUser.id);
+                      await supabase.from("profiluri").update({ nume: profilForm.numeComplet, telefon: profilForm.telefon }).eq("id", authUser.id);
                     }
-                    setUser((u: any) => ({ ...u, ...profilForm }));
+                    setUser((u: any) => ({ ...u, nume: profilForm.numeComplet, telefon: profilForm.telefon }));
                     salveaza("Profil actualizat!");
                   }} style={{ ...btnPrimary, marginTop: 4 }}>Salvează modificările</button>
                 </div>
@@ -336,15 +336,15 @@ export default function DashboardClient() {
                   <button onClick={async () => {
                     const { data: { user: authUser } } = await supabase.auth.getUser();
                     if (authUser && animal?.id) {
-                      await supabase.from("calyhub_animal").update({
-                        numeAnimal: animalForm.numeAnimal,
+                      await supabase.from("animale").update({
+                        nume: animalForm.numeAnimal,
                         rasa: animalForm.rasa,
                         greutate: Number(animalForm.greutate),
                         varsta: Number(animalForm.varsta),
                         alergii: animalForm.alergii,
                       }).eq("id", animal.id);
                     }
-                    setAnimal((a: any) => ({ ...a, ...animalForm }));
+                    setAnimal((a: any) => ({ ...a, nume: animalForm.numeAnimal, rasa: animalForm.rasa, greutate: Number(animalForm.greutate), varsta: Number(animalForm.varsta), alergii: animalForm.alergii }));
                     salveaza("Profil animăluț actualizat!");
                   }} style={{ ...btnPrimary, marginTop: 4 }}>Salvează modificările</button>
                 </div>

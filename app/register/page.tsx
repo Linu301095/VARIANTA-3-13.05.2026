@@ -49,7 +49,7 @@ export default function RegisterPage() {
       options: {
         data: {
           tip,
-          numeComplet: form.numeComplet.trim(),
+          nume: form.numeComplet.trim(),
           telefon: form.telefon.trim(),
           numeSalon: tip === "salon" ? form.numeSalon.trim() : null,
         },
@@ -68,11 +68,11 @@ export default function RegisterPage() {
 
     if (data.user) {
       const { error: profileError } = await supabase
-        .from("calyhub_user")
+        .from("profiluri")
         .upsert({
           id: data.user.id,
           tip,
-          numeComplet: form.numeComplet.trim(),
+          nume: form.numeComplet.trim(),
           telefon: form.telefon.trim(),
           tema: "light",
         });

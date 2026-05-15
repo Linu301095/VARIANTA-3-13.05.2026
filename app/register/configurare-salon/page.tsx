@@ -62,10 +62,10 @@ export default function ConfigurareSalon() {
       if (!user) { router.push("/login"); return; }
 
       const { error: salonError } = await supabase
-        .from("calyhub_salon")
+        .from("saloane")
         .upsert({
           user_id: user.id,
-          numeSalon: dateFirma.numeSalon.trim(),
+          nume: dateFirma.numeSalon.trim(),
           adresa: dateFirma.adresa.trim(),
           oras: dateFirma.oras.trim(),
           telefon: dateFirma.telefon.trim(),
