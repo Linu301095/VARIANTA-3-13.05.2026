@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
+import { supabase } from "../../../lib/supabase";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -34,20 +35,29 @@ export default function ConfigurareAnimal() {
     return e;
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
     setLoading(true);
-    localStorage.setItem("calyhub_animal", JSON.stringify(form));
-    const u = localStorage.getItem("calyhub_user");
-    if (u) {
-      const cur = JSON.parse(u);
-      const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
-      const updated = users.map((x: any) => x.email === cur.email ? { ...x, animal: form } : x);
-      localStorage.setItem("calyhub_users", JSON.stringify(updated));
-      localStorage.setItem("calyhub_user", JSON.stringify({ ...cur, animal: form }));
-    }
-    setTimeout(() => setStep("success"), 700);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.push("/login"); return; }
+
+    const { error } = await supabase
+      .from("calyhub_animal")
+      .insert({
+        user_id: user.id,
+        numeAnimal: form.numeAnimal.trim(),
+        rasa: form.rasa,
+        greutate: Number(form.greutate),
+        varsta: Number(form.varsta),
+        alergii: form.alergii.trim(),
+      });
+
+    if (error) console.error("Animal insert error:", error);
+
+    setLoading(false);
+    setStep("success");
   }
 
   if (step === "success") {
@@ -97,10 +107,9 @@ export default function ConfigurareAnimal() {
 
       <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
         <div style={{ width: "100%", maxWidth: 500 }}>
-          {/* Progress */}
           <div style={{ display: "flex", gap: 6, marginBottom: 28 }}>
             {["Cont creat ✓", "Profil animăluț"].map((label, i) => (
-              <div key={label} style={{ flex: 1, height: 4, borderRadius: 4, background: i === 0 ? "#FF6B00" : "#FF6B00", opacity: i === 0 ? 1 : 1 }} />
+              <div key={label} style={{ flex: 1, height: 4, borderRadius: 4, background: "#FF6B00" }} />
             ))}
           </div>
 

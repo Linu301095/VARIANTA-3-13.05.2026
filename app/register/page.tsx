@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
+import { supabase } from "../../lib/supabase";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -16,10 +17,12 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [registerError, setRegisterError] = useState("");
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
     setErrors(e => { const n = { ...e }; delete n[k]; return n; });
+    setRegisterError("");
   }
 
   function validate() {
@@ -34,24 +37,56 @@ export default function RegisterPage() {
     return e;
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
+    setLoading(true);
+    setRegisterError("");
 
-    const existing: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
-    if (existing.some((u: any) => u.email.toLowerCase() === form.email.toLowerCase())) {
-      setErrors({ email: "Există deja un cont cu acest email" });
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email.trim(),
+      password: form.parola,
+      options: {
+        data: {
+          tip,
+          numeComplet: form.numeComplet.trim(),
+          telefon: form.telefon.trim(),
+          numeSalon: tip === "salon" ? form.numeSalon.trim() : null,
+        },
+      },
+    });
+
+    if (error) {
+      if (error.message.includes("already registered") || error.message.includes("User already")) {
+        setErrors({ email: "Există deja un cont cu acest email" });
+      } else {
+        setRegisterError(error.message);
+      }
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    const newUser = { tip, ...form };
-    localStorage.setItem("calyhub_users", JSON.stringify([...existing, newUser]));
-    localStorage.setItem("calyhub_user", JSON.stringify(newUser));
-    setTimeout(() => {
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from("calyhub_user")
+        .upsert({
+          id: data.user.id,
+          tip,
+          numeComplet: form.numeComplet.trim(),
+          telefon: form.telefon.trim(),
+          tema: "light",
+        });
+
+      if (profileError) console.error("Profile upsert error:", profileError);
+
+      sessionStorage.setItem("calyhub_reg_tip", tip);
+      if (tip === "salon") sessionStorage.setItem("calyhub_reg_numeSalon", form.numeSalon.trim());
+
       if (tip === "client") router.push("/register/configurare-animal");
       else router.push("/register/configurare-salon");
-    }, 600);
+    }
+
+    setLoading(false);
   }
 
   return (
@@ -133,6 +168,12 @@ export default function RegisterPage() {
                 <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 12, padding: "12px 16px", textAlign: "center" }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>🎁 3 luni gratuite pentru parteneri fondatori</div>
                   <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>0% comision · Suport dedicat</div>
+                </div>
+              )}
+
+              {registerError && (
+                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center" }}>
+                  ⚠️ {registerError}
                 </div>
               )}
 

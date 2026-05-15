@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
+import { supabase } from "../../../lib/supabase";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -17,6 +18,7 @@ export default function ConfigurareSalon() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   const [dateFirma, setDateFirma] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
   const [servicii, setServicii] = useState<Serviciu[]>([{ nume: "", pret: "", durata: "" }]);
@@ -45,7 +47,7 @@ export default function ConfigurareSalon() {
     return e;
   }
 
-  function next() {
+  async function next() {
     if (step === 0) {
       const e = validateStep0();
       if (Object.keys(e).length > 0) { setErrors(e); return; }
@@ -55,22 +57,32 @@ export default function ConfigurareSalon() {
       if (Object.keys(e).length > 0) { setErrors(e); return; }
     }
     if (step === 2) {
-      const salonData = { dateFirma, servicii, echipa };
-      localStorage.setItem("calyhub_salon", JSON.stringify(salonData));
-      const u = localStorage.getItem("calyhub_user");
-      if (u) {
-        const cur = JSON.parse(u);
-        const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
-        const updated = users.map((x: any) => x.email === cur.email ? { ...x, salon: salonData } : x);
-        localStorage.setItem("calyhub_users", JSON.stringify(updated));
-        localStorage.setItem("calyhub_user", JSON.stringify({ ...cur, salon: salonData }));
-      }
+      setSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/login"); return; }
+
+      const { error: salonError } = await supabase
+        .from("calyhub_salon")
+        .upsert({
+          user_id: user.id,
+          numeSalon: dateFirma.numeSalon.trim(),
+          adresa: dateFirma.adresa.trim(),
+          oras: dateFirma.oras.trim(),
+          telefon: dateFirma.telefon.trim(),
+          descriere: dateFirma.descriere.trim(),
+          servicii: servicii.filter(s => s.nume.trim()),
+          echipa: echipa.filter(g => g.nume.trim()),
+          plan: "starter",
+        }, { onConflict: "user_id" });
+
+      if (salonError) console.error("Salon upsert error:", salonError);
+      setSaving(false);
     }
     setErrors({});
     setStep(s => s + 1);
   }
 
-  const progress = ((step) / (STEPS.length - 1)) * 100;
+  const progress = (step / (STEPS.length - 1)) * 100;
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
@@ -84,7 +96,6 @@ export default function ConfigurareSalon() {
       <main style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px" }}>
         <div style={{ width: "100%", maxWidth: 560 }}>
 
-          {/* Progress bar */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               {STEPS.map((label, i) => (
@@ -110,11 +121,11 @@ export default function ConfigurareSalon() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
-                    { key: "numeSalon", label: "Numele salonului *", placeholder: "Ex: Paws & Style", required: true },
-                    { key: "adresa", label: "Adresa *", placeholder: "Str. Florilor nr. 12", required: true },
-                    { key: "oras", label: "Orașul *", placeholder: "București", required: true },
-                    { key: "telefon", label: "Telefon public", placeholder: "07XX XXX XXX", required: false },
-                    { key: "descriere", label: "Descriere scurtă", placeholder: "Salon specializat în câini de talie mică...", required: false },
+                    { key: "numeSalon", label: "Numele salonului *", placeholder: "Ex: Paws & Style" },
+                    { key: "adresa", label: "Adresa *", placeholder: "Str. Florilor nr. 12" },
+                    { key: "oras", label: "Orașul *", placeholder: "București" },
+                    { key: "telefon", label: "Telefon public", placeholder: "07XX XXX XXX" },
+                    { key: "descriere", label: "Descriere scurtă", placeholder: "Salon specializat în câini de talie mică..." },
                   ].map(({ key, label, placeholder }) => (
                     <div key={key}>
                       <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>{label}</label>
@@ -207,7 +218,7 @@ export default function ConfigurareSalon() {
                       </div>
                       {echipa.length > 1 && (
                         <button onClick={() => setEchipa(ec => ec.filter((_, idx) => idx !== i))}
-                          style={{ padding: "12px", borderRadius: 10, border: "1px solid #EBEBEB", background: "#fff", cursor: "pointer", fontSize: 16, fontFamily: "Nunito, sans-serif", marginBottom: 0 }}>✕</button>
+                          style={{ padding: "12px", borderRadius: 10, border: "1px solid #EBEBEB", background: "#fff", cursor: "pointer", fontSize: 16, fontFamily: "Nunito, sans-serif" }}>✕</button>
                       )}
                     </div>
                   ))}
@@ -246,16 +257,15 @@ export default function ConfigurareSalon() {
                 </div>
                 <button onClick={() => router.push("/register/abonament-salon")}
                   style={{ padding: "14px 32px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif" }}>
-                  Continua spre alegerea planului →
+                  Continuă spre alegerea planului →
                 </button>
               </div>
             )}
 
-            {/* Buton Next */}
             {step < 3 && (
-              <button onClick={next}
-                style={{ marginTop: 24, width: "100%", padding: "14px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif" }}>
-                {step === 2 ? "Finalizează configurarea →" : "Continuă →"}
+              <button onClick={next} disabled={saving}
+                style={{ marginTop: 24, width: "100%", padding: "14px 24px", borderRadius: 50, border: "none", background: saving ? "#FFB07A" : "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: saving ? "default" : "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif" }}>
+                {saving ? "Se salvează..." : step === 2 ? "Finalizează configurarea →" : "Continuă →"}
               </button>
             )}
             {step > 0 && step < 3 && (

@@ -1,23 +1,11 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
-
-// Email-urile conturilor demo create anterior — se șterg automat la mount
-// pentru ca utilizatorii care le aveau salvate în localStorage să aibă slate curat.
-const DEMO_EMAILS_TO_REMOVE = new Set([
-  "alin.tilvar@yahoo.com", "maria.popescu@gmail.com", "ion.gheorghe@gmail.com",
-  "andrei.dumitrescu@yahoo.com", "elena.popa@gmail.com", "cristian.stanescu@yahoo.com",
-  "ioana.munteanu@gmail.com", "razvan.petrescu@gmail.com", "diana.constantin@yahoo.com",
-  "mihai.stoica@gmail.com",
-  "paws@calyhub.test", "fluffy@calyhub.test", "happy@calyhub.test",
-  "royal@calyhub.test", "centru@calyhub.test", "petstyle@calyhub.test",
-  "express@calyhub.test", "cuddly@calyhub.test", "doggyspa@calyhub.test",
-  "catchdog@calyhub.test",
-]);
+import { supabase } from "../../lib/supabase";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -29,19 +17,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [loginError, setLoginError] = useState("");
-
-  useEffect(() => {
-    // One-time cleanup al conturilor demo create anterior. Flag-ul previne
-    // stergerea repetata - daca un user inregistreaza ulterior un email
-    // care era pe lista demo, contul lui NU mai e afectat.
-    if (localStorage.getItem("calyhub_demo_cleaned") === "1") return;
-    const existing: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
-    const cleaned = existing.filter((u: any) => !DEMO_EMAILS_TO_REMOVE.has(u.email.toLowerCase()));
-    if (cleaned.length !== existing.length) {
-      localStorage.setItem("calyhub_users", JSON.stringify(cleaned));
-    }
-    localStorage.setItem("calyhub_demo_cleaned", "1");
-  }, []);
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
@@ -57,29 +32,36 @@ export default function LoginPage() {
     return e;
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
     setLoading(true);
     setLoginError("");
-    setTimeout(() => {
-      const users: any[] = JSON.parse(localStorage.getItem("calyhub_users") || "[]");
-      const found = users.find((u: any) => u.email.toLowerCase() === form.email.trim().toLowerCase());
-      if (!found || found.parola !== form.parola) {
-        setLoginError("Email sau parolă incorectă");
-        setLoading(false);
-        return;
-      }
-      localStorage.setItem("calyhub_user", JSON.stringify(found));
-      if (found.animal) localStorage.setItem("calyhub_animal", JSON.stringify(found.animal));
-      if (found.salon) localStorage.setItem("calyhub_salon", JSON.stringify(found.salon));
-      if (found.tema === "dark") {
-        document.documentElement.dataset.theme = "dark";
-        try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
-      }
-      if (found.tip === "salon") router.push("/dashboard/salon");
-      else router.push("/dashboard/client");
-    }, 700);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: form.email.trim(),
+      password: form.parola,
+    });
+
+    if (error) {
+      setLoginError("Email sau parolă incorectă");
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("calyhub_user")
+      .select("tip, tema")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profile?.tema === "dark") {
+      document.documentElement.dataset.theme = "dark";
+      try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
+    }
+
+    if (profile?.tip === "salon") router.push("/dashboard/salon");
+    else router.push("/dashboard/client");
   }
 
   return (
@@ -123,13 +105,16 @@ export default function LoginPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Email</label>
-                <input value={form.email} onChange={e => set("email", e.target.value)} type="email" placeholder="nume@email.com" style={errors.email ? inpErr : inp} />
+                <input value={form.email} onChange={e => set("email", e.target.value)} type="email" placeholder="nume@email.com" style={errors.email ? inpErr : inp}
+                  onKeyDown={e => e.key === "Enter" && handleSubmit()} />
                 {errors.email && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.email}</div>}
               </div>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Parolă</label>
                 <div style={{ position: "relative" }}>
-                  <input value={form.parola} onChange={e => set("parola", e.target.value)} type={showPass ? "text" : "password"} placeholder="••••••••" style={{ ...(errors.parola ? inpErr : inp), paddingRight: 46 }} />
+                  <input value={form.parola} onChange={e => set("parola", e.target.value)} type={showPass ? "text" : "password"} placeholder="••••••••"
+                    style={{ ...(errors.parola ? inpErr : inp), paddingRight: 46 }}
+                    onKeyDown={e => e.key === "Enter" && handleSubmit()} />
                   <button type="button" onClick={() => setShowPass(s => !s)} aria-label={showPass ? "Ascunde parola" : "Arată parola"}
                     style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "8px 10px", color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {showPass ? (
