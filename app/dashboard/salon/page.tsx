@@ -187,6 +187,8 @@ export default function DashboardSalon() {
 
   const numeSalon = salonData?.nume || "Salonul tau";
   const numeComplet = user?.nume?.split(" ")[0] || "Manager";
+  const SUB_TABS: Tab[] = ["profil-salon", "servicii", "echipa", "abonament", "setari", "ajutor"];
+  const isSubTab = SUB_TABS.includes(tab);
   const TAB_LABELS: Record<Tab, string> = {
     agenda: "Agenda", statistici: "Statistici", notificari: "Notificări",
     "profil-salon": "Profilul salonului", servicii: "Serviciile mele",
@@ -214,39 +216,49 @@ export default function DashboardSalon() {
 
         {/* Header */}
         <header style={{ position: "sticky", top: 0, zIndex: 100, background: c.surface, borderBottom: `1px solid ${c.border}`, height: 66 }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              {/* On mobile with sub-tab open, hide logo & salon name and show back button */}
-              {!(isMobile && tab !== "agenda") && (
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            {/* Left: logo + name OR back button when in sub-tab */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexShrink: 0 }}>
+              {!(isMobile && isSubTab) && (
+                <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain", flexShrink: 0 }} priority />
+              )}
+              {!isMobile && !isSubTab && (
                 <>
-                  <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
-                  {!isMobile && (
-                    <>
-                      <div style={{ width: 1, height: 24, background: c.border }} />
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 900, color: c.text }}>{numeSalon}</div>
-                        <div style={{ fontSize: 11, color: c.xmuted }}>Panou de control</div>
-                      </div>
-                    </>
-                  )}
+                  <div style={{ width: 1, height: 24, background: c.border, flexShrink: 0 }} />
+                  <div style={{ flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 900, color: c.text, whiteSpace: "nowrap" }}>{numeSalon}</div>
+                    <div style={{ fontSize: 11, color: c.xmuted }}>Panou de control</div>
+                  </div>
                 </>
               )}
-              {tab !== "agenda" && (
+              {isSubTab && (
                 <>
-                  {!isMobile && <div style={{ width: 1, height: 22, background: c.border }} />}
                   <button onClick={() => setTab("agenda")}
                     style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                     ← Înapoi
                   </button>
-                  {!isMobile && <div style={{ fontSize: 13, fontWeight: 800, color: c.text }}>{TAB_LABELS[tab]}</div>}
+                  {!isMobile && <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap" }}>{TAB_LABELS[tab]}</div>}
                 </>
               )}
             </div>
+
+            {/* Center: main tab buttons (only when not in sub-tab) */}
+            {!isSubTab && (
+              <div style={{ display: "flex", alignItems: "center", gap: 2, flex: "0 1 auto", overflow: "hidden" }}>
+                {([["agenda", "📅", "Agenda"], ["statistici", "📊", "Statistici"], ["notificari", "🔔", `Notificări${necitite > 0 ? ` (${necitite})` : ""}`]] as const).map(([t, icon, label]) => (
+                  <button key={t} onClick={() => setTab(t)}
+                    style={{ padding: isMobile ? "7px 10px" : "7px 16px", borderRadius: 50, border: "none", background: tab === t ? "#FF6B00" : "transparent", color: tab === t ? "#fff" : c.muted, fontSize: isMobile ? 18 : 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0, transition: "all .15s", position: "relative" }}>
+                    {isMobile ? icon : label}
+                    {isMobile && t === "notificari" && necitite > 0 && (
+                      <span style={{ position: "absolute", top: 2, right: 2, width: 8, height: 8, borderRadius: "50%", background: "#EF4444" }} />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Right: user menu */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <button onClick={() => setTab("notificari")} style={{ position: "relative", padding: isMobile ? "8px 10px" : "8px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.text2, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                🔔
-                {necitite > 0 && <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{necitite}</span>}
-              </button>
               <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} />
             </div>
           </div>
@@ -254,33 +266,6 @@ export default function DashboardSalon() {
 
         <main style={{ flex: 1, padding: "28px 20px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-
-            {/* Stats cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 28 }}>
-              {[
-                { icon: "💰", label: "Incasari azi", valoare: "840 RON", sub: "+12% fata de ieri", color: "#10B981" },
-                { icon: "📅", label: "Programari azi", valoare: `${programari.length}`, sub: `${programari.filter(p => p.status === "în așteptare").length} noi · ${programari.filter(p => p.status === "confirmat").length} confirmate`, color: "#FF6B00" },
-                { icon: "👥", label: "Clienti luna asta", valoare: "43", sub: "+8 fata de luna trecuta", color: "#8B5CF6" },
-                { icon: "⭐", label: "Rating mediu", valoare: "4.9", sub: "127 recenzii total", color: "#F59E0B" },
-              ].map(card => (
-                <div key={card.label} style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
-                  <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{card.label}</div>
-                  <div style={{ fontSize: 26, fontWeight: 900, color: c.text, lineHeight: 1 }}>{card.valoare}</div>
-                  <div style={{ fontSize: 12, color: card.color, fontWeight: 700, marginTop: 6 }}>{card.sub}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Tabs */}
-            <div style={{ display: "flex", gap: 4, background: c.surface, border: `1px solid ${c.border}`, borderRadius: 14, padding: 4, marginBottom: 24, width: "fit-content", flexWrap: "wrap" }}>
-              {([["agenda", "📅 Agenda"], ["statistici", "📊 Statistici"], ["notificari", `🔔 Notificari${necitite > 0 ? ` (${necitite})` : ""}`]] as const).map(([t, label]) => (
-                <button key={t} onClick={() => setTab(t)}
-                  style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: tab === t ? "#FF6B00" : "transparent", color: tab === t ? "#fff" : c.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .2s" }}>
-                  {label}
-                </button>
-              ))}
-            </div>
 
             {/* AGENDA */}
             {tab === "agenda" && (
@@ -326,6 +311,21 @@ export default function DashboardSalon() {
             {/* STATISTICI */}
             {tab === "statistici" && (
               <div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 28 }}>
+                  {[
+                    { icon: "💰", label: "Incasari azi", valoare: "840 RON", sub: "+12% fata de ieri", color: "#10B981" },
+                    { icon: "📅", label: "Programari azi", valoare: `${programari.length}`, sub: `${programari.filter(p => p.status === "în așteptare").length} noi · ${programari.filter(p => p.status === "confirmat").length} confirmate`, color: "#FF6B00" },
+                    { icon: "👥", label: "Clienti luna asta", valoare: "43", sub: "+8 fata de luna trecuta", color: "#8B5CF6" },
+                    { icon: "⭐", label: "Rating mediu", valoare: "4.9", sub: "127 recenzii total", color: "#F59E0B" },
+                  ].map(card => (
+                    <div key={card.label} style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
+                      <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{card.label}</div>
+                      <div style={{ fontSize: 26, fontWeight: 900, color: c.text, lineHeight: 1 }}>{card.valoare}</div>
+                      <div style={{ fontSize: 12, color: card.color, fontWeight: 700, marginTop: 6 }}>{card.sub}</div>
+                    </div>
+                  ))}
+                </div>
                 <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 20 }}>Statistici lunare</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
                   <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
