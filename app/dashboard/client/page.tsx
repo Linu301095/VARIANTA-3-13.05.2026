@@ -13,6 +13,37 @@ const SALOANE = [
   { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string };
+
+const PALETA_SALOANE = [
+  { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { badge: "Nou",       badgeIcon: "🆕", culoare: "#8B5CF6", bg: "#F5F3FF" },
+  { badge: "Popular",   badgeIcon: "🔥", culoare: "#10B981", bg: "#ECFDF5" },
+  { badge: "Premium",   badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
+];
+
+function mapSalonDB(s: any, i: number): SalonItem {
+  const p = PALETA_SALOANE[i % PALETA_SALOANE.length];
+  const serviciiArr = Array.isArray(s.servicii) ? s.servicii : [];
+  const preturi = serviciiArr.map((sv: any) => Number(sv?.pret)).filter((n: number) => !isNaN(n) && n > 0);
+  const pretDe = preturi.length > 0 ? Math.min(...preturi) : 0;
+  const numeServicii = serviciiArr.map((sv: any) => sv?.nume).filter(Boolean).slice(0, 3);
+  return {
+    id: s.id,
+    nume: s.nume || "Salon",
+    oras: s.oras || "România",
+    rating: 5.0,
+    recenzii: 0,
+    servicii: numeServicii.length > 0 ? numeServicii : ["Tuns", "Băiță"],
+    pretDe,
+    distanta: "",
+    badge: p.badge,
+    badgeIcon: p.badgeIcon,
+    culoare: p.culoare,
+    bg: p.bg,
+  };
+}
+
 type Tab = "saloane" | "programari" | "profil" | "animal" | "notificari" | "setari" | "ajutor";
 type Programare = {
   id: number; salon: string; serviciu: string; data: string; ora: string;
@@ -60,8 +91,9 @@ export default function DashboardClient() {
   const [user, setUser] = useState<any>(null);
   const [animal, setAnimal] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("saloane");
-  const [salonSelectat, setSalonSelectat] = useState<number | null>(null);
-  const [rezervare, setRezervare] = useState<{ salonId: number; serviciu: string; ora: string } | null>(null);
+  const [salonSelectat, setSalonSelectat] = useState<string | number | null>(null);
+  const [saloaneList, setSaloaneList] = useState<SalonItem[]>(SALOANE);
+  const [rezervare, setRezervare] = useState<{ salonId: string | number; serviciu: string; ora: string } | null>(null);
   const [confirmat, setConfirmat] = useState(false);
   const [programari, setProgramari] = useState<Programare[]>([
     { id: 1, salon: "Paws & Style", serviciu: "Tuns + Băiță + Unghii", data: "16 Mai 2026", ora: "10:00", status: "confirmat", pret: "120 RON" },
@@ -120,6 +152,15 @@ export default function DashboardClient() {
           alergii: animalData.alergii || "",
         });
       }
+
+      const { data: dbSaloane } = await supabase
+        .from("saloane")
+        .select("id, nume, oras, servicii")
+        .order("created_at", { ascending: false });
+
+      if (dbSaloane && dbSaloane.length > 0) {
+        setSaloaneList(dbSaloane.map(mapSalonDB));
+      }
     }
     loadUser();
   }, []);
@@ -143,7 +184,7 @@ export default function DashboardClient() {
 
   const c = C[theme];
   const prenume = user?.nume?.split(" ")[0] || "Utilizator";
-  const salon = SALOANE.find(s => s.id === salonSelectat);
+  const salon = saloaneList.find(s => s.id === salonSelectat);
   const inp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", background: c.input, color: c.text };
 
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
@@ -194,7 +235,7 @@ export default function DashboardClient() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
                   <h2 style={{ fontSize: 22, fontWeight: 900, color: c.text, margin: "0 0 6px" }}>{salon.nume}</h2>
-                  <div style={{ fontSize: 13, color: c.muted }}>📍 {salon.oras} · {salon.distanta}</div>
+                  <div style={{ fontSize: 13, color: c.muted }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
                 </div>
                 <div style={{ textAlign: "right" }}><div style={{ fontSize: 24, fontWeight: 900, color: c.text }}>⭐ {salon.rating}</div><div style={{ fontSize: 12, color: c.xmuted }}>{salon.recenzii} recenzii</div></div>
               </div>
@@ -262,11 +303,11 @@ export default function DashboardClient() {
               <span style={{ fontSize: 12, color: c.text, fontWeight: 800, background: c.surface, padding: "4px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, fontFamily: "Nunito, sans-serif" }}>📍 București</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
-              {SALOANE.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+              {saloaneList.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
             </div>
             <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 16 }}>✂️ Toți partenerii CalyHub</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-              {SALOANE.map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+              {saloaneList.map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
             </div>
           </>)}
 
@@ -573,7 +614,7 @@ function FAQ({ items }: { items: { q: string; r: string }[] }) {
   );
 }
 
-function CardSalon({ salon, onSelect }: { salon: typeof SALOANE[0]; onSelect: () => void }) {
+function CardSalon({ salon, onSelect }: { salon: SalonItem; onSelect: () => void }) {
   const { c, theme } = useContext(ThemeCtx);
   return (
     <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
@@ -583,10 +624,10 @@ function CardSalon({ salon, onSelect }: { salon: typeof SALOANE[0]; onSelect: ()
           <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
           <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {salon.rating}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({salon.recenzii})</span></div>
         </div>
-        <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600 }}>📍 {salon.oras} · {salon.distanta}</div></div>
+        <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600 }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div></div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${c.border2}` }}>
-          <div><div style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>de la</div><div style={{ fontSize: 18, fontWeight: 900, color: c.text }}>{salon.pretDe} RON</div></div>
+          <div><div style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>de la</div><div style={{ fontSize: 18, fontWeight: 900, color: c.text }}>{salon.pretDe > 0 ? `${salon.pretDe} RON` : "—"}</div></div>
           <button onClick={onSelect} style={{ padding: "10px 20px", borderRadius: 50, border: "none", background: salon.culoare, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: `0 4px 14px ${salon.culoare}55` }}>Programează →</button>
         </div>
       </div>
