@@ -63,7 +63,7 @@ export default function DashboardSalon() {
   const [salonData, setSalonData] = useState<any>(null);
   const [abonament, setAbonament] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
-  const [tab, setTab] = useState<Tab>("agenda");
+  const [tab, setTab] = useState<Tab>("statistici");
   const [isMobile, setIsMobile] = useState(false);
   const [programari, setProgramari] = useState<ProgramareSalon[]>([]);
   const [notificari, setNotificari] = useState(NOTIFICARI_INIT);
@@ -233,7 +233,7 @@ export default function DashboardSalon() {
               )}
               {isSubTab && (
                 <>
-                  <button onClick={() => setTab("agenda")}
+                  <button onClick={() => setTab("statistici")}
                     style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                     ← Înapoi
                   </button>
@@ -588,7 +588,6 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile }: { 
     { icon: "👥", label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
     { icon: "📊", label: "Statistici", sub: "Vezi rapoarte detaliate", t: "statistici" },
     { icon: "💳", label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
-    { icon: "🔔", label: "Notificari", sub: "Setari alerte programari", t: "notificari" },
     { icon: "🔒", label: "Setari cont", sub: "Schimba parola", t: "setari" },
     { icon: "❓", label: "Ajutor", sub: "Support dedicat", t: "ajutor" },
   ];
