@@ -245,7 +245,7 @@ export default function DashboardSalon() {
             {/* Center: main tab buttons (only when not in sub-tab) */}
             {!isSubTab && (
               <div style={{ display: "flex", alignItems: "center", gap: 2, flex: "0 1 auto", overflow: "hidden" }}>
-                {([["agenda", "📅", "Agenda"], ["statistici", "📊", "Statistici"], ["notificari", "🔔", `Notificări${necitite > 0 ? ` (${necitite})` : ""}`]] as const).map(([t, icon, label]) => (
+                {([["statistici", "📊", "Statistici"], ["agenda", "📅", "Agenda"], ["notificari", "🔔", `Notificări${necitite > 0 ? ` (${necitite})` : ""}`]] as const).map(([t, icon, label]) => (
                   <button key={t} onClick={() => setTab(t)}
                     style={{ padding: isMobile ? "7px 10px" : "7px 16px", borderRadius: 50, border: "none", background: tab === t ? "#FF6B00" : "transparent", color: tab === t ? "#fff" : c.muted, fontSize: isMobile ? 18 : 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0, transition: "all .15s", position: "relative" }}>
                     {isMobile ? icon : label}
