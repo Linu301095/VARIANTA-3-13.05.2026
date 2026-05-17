@@ -6,13 +6,17 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 
-const PROGRAMARI_INIT = [
-  { id: 1, client: "Ana Popescu", animal: "Max (Labrador, 28kg)", serviciu: "Tuns complet", ora: "09:00", status: "confirmat" },
-  { id: 2, client: "Ion Gheorghe", animal: "Bella (Pudel, 6kg)", serviciu: "Tuns + Băiță", ora: "10:30", status: "nou" },
-  { id: 3, client: "Maria Ionescu", animal: "Charlie (Husky, 22kg)", serviciu: "Băiță + uscare", ora: "12:00", status: "confirmat" },
-  { id: 4, client: "Andrei Dumitrescu", animal: "Luna (Bichon, 4kg)", serviciu: "Styling complet", ora: "14:00", status: "nou" },
-  { id: 5, client: "Elena Popa", animal: "Rocky (Ciobanesc, 35kg)", serviciu: "Tuns complet", ora: "15:30", status: "confirmat" },
-];
+type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
+type ProgramareSalon = {
+  id: string;
+  client: string;
+  animal: string;
+  serviciu: string;
+  ora: string;
+  data: string;
+  pret: number;
+  status: StatusProg;
+};
 
 const NOTIFICARI_INIT = [
   { id: 1, tip: "nou", mesaj: "Ion Gheorghe a solicitat o programare pentru Bella", timp: "acum 5 min", citit: false },
@@ -61,7 +65,7 @@ export default function DashboardSalon() {
   const [user, setUser] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("agenda");
   const [isMobile, setIsMobile] = useState(false);
-  const [programari, setProgramari] = useState(PROGRAMARI_INIT);
+  const [programari, setProgramari] = useState<ProgramareSalon[]>([]);
   const [notificari, setNotificari] = useState(NOTIFICARI_INIT);
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -128,6 +132,34 @@ export default function DashboardSalon() {
         if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
         if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
         setAbonament({ plan: salonRow.plan || "starter" });
+
+        await loadProgramari(salonRow.id);
+      }
+    }
+
+    async function loadProgramari(salonId: string) {
+      const { data } = await supabase
+        .from("programari")
+        .select("id, ora, data, serviciu, pret, status, profiluri!user_id(nume), animale!animal_id(nume, rasa, greutate)")
+        .eq("salon_id", salonId)
+        .neq("status", "anulat")
+        .order("data", { ascending: true })
+        .order("ora", { ascending: true });
+
+      if (data) {
+        setProgramari(data.map((p: any) => {
+          const animalParts = [p.animale?.nume, p.animale?.rasa, p.animale?.greutate ? `${p.animale.greutate}kg` : null].filter(Boolean);
+          return {
+            id: p.id,
+            client: p.profiluri?.nume || "Client",
+            animal: animalParts.length > 0 ? `${animalParts[0]}${animalParts.length > 1 ? ` (${animalParts.slice(1).join(", ")})` : ""}` : "—",
+            serviciu: p.serviciu,
+            ora: p.ora,
+            data: p.data,
+            pret: Number(p.pret) || 0,
+            status: p.status as StatusProg,
+          };
+        }));
       }
     }
     loadData();
@@ -162,9 +194,16 @@ export default function DashboardSalon() {
   };
   const necitite = notificari.filter(n => !n.citit).length;
 
-  function accepta(id: number) {
+  async function accepta(id: string) {
+    const { error } = await supabase.from("programari").update({ status: "confirmat" }).eq("id", id);
+    if (error) { console.error("Accept error:", error); return; }
     setProgramari(p => p.map(pr => pr.id === id ? { ...pr, status: "confirmat" } : pr));
-    setNotificari(n => n.map(not => not.id === id ? { ...not, citit: true } : not));
+  }
+
+  async function respinge(id: string) {
+    const { error } = await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
+    if (error) { console.error("Reject error:", error); return; }
+    setProgramari(p => p.filter(pr => pr.id !== id));
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
 
@@ -220,7 +259,7 @@ export default function DashboardSalon() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 28 }}>
               {[
                 { icon: "💰", label: "Incasari azi", valoare: "840 RON", sub: "+12% fata de ieri", color: "#10B981" },
-                { icon: "📅", label: "Programari azi", valoare: `${programari.length}`, sub: `${programari.filter(p => p.status === "nou").length} noi · ${programari.filter(p => p.status === "confirmat").length} confirmate`, color: "#FF6B00" },
+                { icon: "📅", label: "Programari azi", valoare: `${programari.length}`, sub: `${programari.filter(p => p.status === "în așteptare").length} noi · ${programari.filter(p => p.status === "confirmat").length} confirmate`, color: "#FF6B00" },
                 { icon: "👥", label: "Clienti luna asta", valoare: "43", sub: "+8 fata de luna trecuta", color: "#8B5CF6" },
                 { icon: "⭐", label: "Rating mediu", valoare: "4.9", sub: "127 recenzii total", color: "#F59E0B" },
               ].map(card => (
@@ -251,21 +290,35 @@ export default function DashboardSalon() {
                   <div style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>{programari.length} programari</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {programari.map(p => (
-                    <div key={p.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: p.status === "nou" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                      <div style={{ width: 52, height: 52, borderRadius: 12, background: p.status === "nou" ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: p.status === "nou" ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.client}</div>
-                        <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>🐾 {p.animal}</div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}</div>
-                      </div>
-                      {p.status === "nou" ? (
-                        <button onClick={() => accepta(p.id)} style={{ padding: "9px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 12px rgba(255,107,0,.3)", flexShrink: 0 }}>Accepta</button>
-                      ) : (
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981", background: "rgba(16,185,129,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✓ Confirmat</span>
-                      )}
+                  {programari.length === 0 && (
+                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
+                      Nu ai programări încă. Clienții te vor găsi în aplicație și pot rezerva.
                     </div>
-                  ))}
+                  )}
+                  {programari.map(p => {
+                    const nou = p.status === "în așteptare";
+                    return (
+                      <div key={p.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                        <div style={{ width: 52, height: 52, borderRadius: 12, background: nou ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: nou ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.client}</div>
+                          <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>🐾 {p.animal}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
+                          <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>📅 {new Date(p.data).toLocaleDateString("ro-RO", { day: "numeric", month: "long" })}</div>
+                        </div>
+                        {nou ? (
+                          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                            <button onClick={() => respinge(p.id)} style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Refuză</button>
+                            <button onClick={() => accepta(p.id)} style={{ padding: "9px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 12px rgba(255,107,0,.3)" }}>Acceptă</button>
+                          </div>
+                        ) : p.status === "confirmat" ? (
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981", background: "rgba(16,185,129,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✓ Confirmat</span>
+                        ) : (
+                          <span style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>{p.status}</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

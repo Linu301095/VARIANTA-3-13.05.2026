@@ -6,14 +6,21 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 
-const SALOANE = [
-  { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], pretDe: 80, distanta: "1.2 km", badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { id: 2, nume: "Fluffy Salon", oras: "București, Sector 1", rating: 4.8, recenzii: 89, servicii: ["Tuns", "Styling", "Spa"], pretDe: 90, distanta: "2.1 km", badge: "Nou", badgeIcon: "🆕", culoare: "#8B5CF6", bg: "#F5F3FF" },
-  { id: 3, nume: "Happy Pets Grooming", oras: "București, Sector 3", rating: 4.7, recenzii: 214, servicii: ["Tuns", "Băiță", "Anti-purici"], pretDe: 65, distanta: "3.4 km", badge: "Popular", badgeIcon: "🔥", culoare: "#10B981", bg: "#ECFDF5" },
-  { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
+const SERVICII_DEMO = [
+  { nume: "Tuns complet", pret: "80", durata: "60" },
+  { nume: "Băiță + uscare", pret: "50", durata: "40" },
+  { nume: "Tuns + Băiță + Unghii", pret: "120", durata: "90" },
+  { nume: "Styling complet", pret: "150", durata: "120" },
 ];
 
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string };
+const SALOANE = [
+  { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], serviciiComplete: SERVICII_DEMO, pretDe: 80, distanta: "1.2 km", badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { id: 2, nume: "Fluffy Salon", oras: "București, Sector 1", rating: 4.8, recenzii: 89, servicii: ["Tuns", "Styling", "Spa"], serviciiComplete: SERVICII_DEMO, pretDe: 90, distanta: "2.1 km", badge: "Nou", badgeIcon: "🆕", culoare: "#8B5CF6", bg: "#F5F3FF" },
+  { id: 3, nume: "Happy Pets Grooming", oras: "București, Sector 3", rating: 4.7, recenzii: 214, servicii: ["Tuns", "Băiță", "Anti-purici"], serviciiComplete: SERVICII_DEMO, pretDe: 65, distanta: "3.4 km", badge: "Popular", badgeIcon: "🔥", culoare: "#10B981", bg: "#ECFDF5" },
+  { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
+];
+
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -25,9 +32,12 @@ const PALETA_SALOANE = [
 function mapSalonDB(s: any, i: number): SalonItem {
   const p = PALETA_SALOANE[i % PALETA_SALOANE.length];
   const serviciiArr = Array.isArray(s.servicii) ? s.servicii : [];
-  const preturi = serviciiArr.map((sv: any) => Number(sv?.pret)).filter((n: number) => !isNaN(n) && n > 0);
+  const serviciiComplete: Serviciu[] = serviciiArr
+    .filter((sv: any) => sv?.nume)
+    .map((sv: any) => ({ nume: sv.nume, pret: String(sv.pret || ""), durata: String(sv.durata || "") }));
+  const preturi = serviciiComplete.map(sv => Number(sv.pret)).filter(n => !isNaN(n) && n > 0);
   const pretDe = preturi.length > 0 ? Math.min(...preturi) : 0;
-  const numeServicii = serviciiArr.map((sv: any) => sv?.nume).filter(Boolean).slice(0, 3);
+  const numeServicii = serviciiComplete.map(sv => sv.nume).slice(0, 3);
   return {
     id: s.id,
     nume: s.nume || "Salon",
@@ -35,6 +45,7 @@ function mapSalonDB(s: any, i: number): SalonItem {
     rating: 5.0,
     recenzii: 0,
     servicii: numeServicii.length > 0 ? numeServicii : ["Tuns", "Băiță"],
+    serviciiComplete,
     pretDe,
     distanta: "",
     badge: p.badge,
@@ -45,10 +56,18 @@ function mapSalonDB(s: any, i: number): SalonItem {
 }
 
 type Tab = "saloane" | "programari" | "profil" | "animal" | "notificari" | "setari" | "ajutor";
+type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat";
 type Programare = {
-  id: number; salon: string; serviciu: string; data: string; ora: string;
-  status: "confirmat" | "în așteptare" | "finalizat" | "anulat"; pret: string;
+  id: string;
+  salon_id: string;
+  salon_nume: string;
+  serviciu: string;
+  data: string;
+  ora: string;
+  status: StatusProgramare;
+  pret: number;
 };
+type Serviciu = { nume: string; pret: string; durata: string };
 
 /* ── Color palette ── */
 const C = {
@@ -95,12 +114,9 @@ export default function DashboardClient() {
   const [saloaneList, setSaloaneList] = useState<SalonItem[]>(SALOANE);
   const [rezervare, setRezervare] = useState<{ salonId: string | number; serviciu: string; ora: string } | null>(null);
   const [confirmat, setConfirmat] = useState(false);
-  const [programari, setProgramari] = useState<Programare[]>([
-    { id: 1, salon: "Paws & Style", serviciu: "Tuns + Băiță + Unghii", data: "16 Mai 2026", ora: "10:00", status: "confirmat", pret: "120 RON" },
-    { id: 2, salon: "Fluffy Salon", serviciu: "Styling complet", data: "20 Mai 2026", ora: "14:00", status: "în așteptare", pret: "150 RON" },
-    { id: 3, salon: "Happy Pets Grooming", serviciu: "Băiță + uscare", data: "2 Mai 2026", ora: "11:00", status: "finalizat", pret: "50 RON" },
-    { id: 4, salon: "Paws & Style", serviciu: "Tuns complet", data: "10 Apr 2026", ora: "09:30", status: "finalizat", pret: "80 RON" },
-  ]);
+  const [programari, setProgramari] = useState<Programare[]>([]);
+  const [confirmareLoading, setConfirmareLoading] = useState(false);
+  const [confirmareError, setConfirmareError] = useState("");
   const [notifSettings, setNotifSettings] = useState({ sms: true, email: true, newsletter: false });
   const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "" });
   const [animalForm, setAnimalForm] = useState({ numeAnimal: "", rasa: "", greutate: "", varsta: "", alergii: "" });
@@ -161,6 +177,30 @@ export default function DashboardClient() {
       if (dbSaloane && dbSaloane.length > 0) {
         setSaloaneList(dbSaloane.map(mapSalonDB));
       }
+
+      await loadProgramari(authUser.id);
+    }
+
+    async function loadProgramari(userId: string) {
+      const { data } = await supabase
+        .from("programari")
+        .select("id, salon_id, serviciu, pret, data, ora, status, saloane(nume)")
+        .eq("user_id", userId)
+        .order("data", { ascending: false })
+        .order("ora", { ascending: false });
+
+      if (data) {
+        setProgramari(data.map((p: any) => ({
+          id: p.id,
+          salon_id: p.salon_id,
+          salon_nume: p.saloane?.nume || "Salon necunoscut",
+          serviciu: p.serviciu,
+          data: p.data,
+          ora: p.ora,
+          status: p.status as StatusProgramare,
+          pret: Number(p.pret) || 0,
+        })));
+      }
     }
     loadUser();
   }, []);
@@ -189,6 +229,54 @@ export default function DashboardClient() {
 
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
 
+  async function creazaProgramare() {
+    if (!salon || !rezervare) return;
+    setConfirmareError("");
+    setConfirmareLoading(true);
+
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) { setConfirmareError("Trebuie să fii conectat"); setConfirmareLoading(false); return; }
+
+    const serviciuSelectat = salon.serviciiComplete.find(s => s.nume === rezervare.serviciu);
+    const pretNumeric = Number(serviciuSelectat?.pret) || 0;
+    const dataIso = new Date().toISOString().slice(0, 10);
+
+    const { data: nou, error } = await supabase
+      .from("programari")
+      .insert({
+        user_id: authUser.id,
+        salon_id: salon.id,
+        animal_id: animal?.id || null,
+        serviciu: rezervare.serviciu,
+        pret: pretNumeric,
+        data: dataIso,
+        ora: rezervare.ora,
+        status: "în așteptare",
+      })
+      .select("id")
+      .single();
+
+    setConfirmareLoading(false);
+
+    if (error || !nou) {
+      setConfirmareError("Nu am putut salva programarea. Încearcă din nou.");
+      return;
+    }
+
+    setProgramari(prev => [{
+      id: nou.id,
+      salon_id: String(salon.id),
+      salon_nume: salon.nume,
+      serviciu: rezervare.serviciu,
+      data: dataIso,
+      ora: rezervare.ora,
+      status: "în așteptare",
+      pret: pretNumeric,
+    }, ...prev]);
+
+    setConfirmat(true);
+  }
+
   const btnPrimary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 16px rgba(255,107,0,.35)" };
   const btnSecondary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" };
   const btnBack: React.CSSProperties = { display: "flex", alignItems: "center", gap: 6, marginBottom: 20, background: "none", border: "none", fontSize: 14, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0 };
@@ -196,7 +284,6 @@ export default function DashboardClient() {
 
   /* ── Confirmare view ── */
   if (confirmat && rezervare && salon) {
-    const noua: Programare = { id: Date.now(), salon: salon.nume, serviciu: rezervare.serviciu, data: new Date().toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" }), ora: rezervare.ora, status: "în așteptare", pret: "—" };
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
         <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab}>
@@ -204,7 +291,7 @@ export default function DashboardClient() {
             <div style={{ textAlign: "center", maxWidth: 460, width: "100%" }}>
               <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>✅</div>
               <h1 style={{ fontSize: 24, fontWeight: 900, color: c.text, marginBottom: 10 }}>Programare trimisă!</h1>
-              <p style={{ fontSize: 14, color: c.muted, marginBottom: 24, lineHeight: 1.7 }}>Salonul va confirma în curând. Vei primi un SMS de confirmare.</p>
+              <p style={{ fontSize: 14, color: c.muted, marginBottom: 24, lineHeight: 1.7 }}>Salonul va confirma în curând. Vei primi notificare când se aprobă.</p>
               <div style={{ background: c.surface, border: "2px solid #FF6B00", borderRadius: 20, padding: "20px 24px", marginBottom: 24, textAlign: "left" }}>
                 {[["🏪 Salon", salon.nume], ["✂️ Serviciu", rezervare.serviciu], ["🕐 Ora", rezervare.ora], ["🐾 Animal", animal?.nume || "Animăluțul tău"]].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "8px 0", borderBottom: `1px solid ${c.border2}` }}>
@@ -213,8 +300,8 @@ export default function DashboardClient() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <button onClick={() => { setProgramari(p => [...p, noua]); setConfirmat(false); setSalonSelectat(null); setRezervare(null); setTab("programari"); }} style={btnSecondary}>Vezi programările mele</button>
-                <button onClick={() => { setProgramari(p => [...p, noua]); setConfirmat(false); setSalonSelectat(null); setRezervare(null); }} style={btnPrimary}>← Înapoi la saloane</button>
+                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setTab("programari"); }} style={btnSecondary}>Vezi programările mele</button>
+                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); }} style={btnPrimary}>← Înapoi la saloane</button>
               </div>
             </div>
           </div>
@@ -243,18 +330,24 @@ export default function DashboardClient() {
             </div>
 
             <SectionTitle>Alege serviciul</SectionTitle>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-              {[{ nume: "Tuns complet", pret: "80 RON", durata: "60 min" }, { nume: "Băiță + uscare", pret: "50 RON", durata: "40 min" }, { nume: "Tuns + Băiță + Unghii", pret: "120 RON", durata: "90 min" }, { nume: "Styling complet", pret: "150 RON", durata: "120 min" }].map(s => {
-                const sel = rezervare?.serviciu === s.nume;
-                return (
-                  <button key={s.nume} onClick={() => setRezervare(r => ({ ...r!, salonId: salon.id, serviciu: s.nume, ora: r?.ora || "" }))}
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                    <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div><div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {s.durata}</div></div>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{s.pret}</div>
-                  </button>
-                );
-              })}
-            </div>
+            {salon.serviciiComplete.length === 0 ? (
+              <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
+                Salonul nu a configurat încă servicii.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                {salon.serviciiComplete.map(s => {
+                  const sel = rezervare?.serviciu === s.nume;
+                  return (
+                    <button key={s.nume} onClick={() => setRezervare(r => ({ ...r!, salonId: salon.id, serviciu: s.nume, ora: r?.ora || "" }))}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                      <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{s.durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {s.durata} min</div>}</div>
+                      {s.pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{s.pret} RON</div>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {rezervare?.serviciu && (<>
               <SectionTitle>Alege ora</SectionTitle>
@@ -265,7 +358,17 @@ export default function DashboardClient() {
                 })}
               </div>
             </>)}
-            {rezervare?.serviciu && rezervare?.ora && <button onClick={() => setConfirmat(true)} style={{ ...btnPrimary, width: "100%" }}>Confirmă programarea →</button>}
+            {confirmareError && (
+              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center", marginBottom: 12 }}>
+                ⚠️ {confirmareError}
+              </div>
+            )}
+            {rezervare?.serviciu && rezervare?.ora && (
+              <button onClick={creazaProgramare} disabled={confirmareLoading}
+                style={{ ...btnPrimary, width: "100%", background: confirmareLoading ? "#FFB07A" : "#FF6B00", cursor: confirmareLoading ? "default" : "pointer" }}>
+                {confirmareLoading ? "Se salvează..." : "Confirmă programarea →"}
+              </button>
+            )}
           </div>
         </Shell>
       </ThemeCtx.Provider>
@@ -318,7 +421,10 @@ export default function DashboardClient() {
               {viitoare.length > 0 && (<>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Viitoare</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-                  {viitoare.map(p => <CardProgramare key={p.id} p={p} onAnuleaza={id => setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x))} />)}
+                  {viitoare.map(p => <CardProgramare key={p.id} p={p} onAnuleaza={async id => {
+                    await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
+                    setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x));
+                  }} />)}
                 </div>
               </>)}
               {trecute.length > 0 && (<>
@@ -635,20 +741,27 @@ function CardSalon({ salon, onSelect }: { salon: SalonItem; onSelect: () => void
   );
 }
 
-function CardProgramare({ p, onAnuleaza }: { p: Programare; onAnuleaza?: (id: number) => void }) {
+function formatData(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" });
+  } catch { return iso; }
+}
+
+function CardProgramare({ p, onAnuleaza }: { p: Programare; onAnuleaza?: (id: string) => void }) {
   const { theme, c } = useContext(ThemeCtx);
   const st = statusStyle(theme)[p.status];
   return (
     <div style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", boxShadow: c.cardShadow }}>
       <div style={{ width: 46, height: 46, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>✂️</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.salon}</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.salon_nume}</div>
         <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.serviciu}</div>
-        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>📅 {p.data} · 🕐 {p.ora}</div>
+        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>📅 {formatData(p.data)} · 🕐 {p.ora}</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
         <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: st.bg, padding: "4px 12px", borderRadius: 50 }}>{st.label}</span>
-        <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{p.pret}</div>
+        {p.pret > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{p.pret} RON</div>}
         {onAnuleaza && (p.status === "confirmat" || p.status === "în așteptare") && (
           <button onClick={() => onAnuleaza(p.id)} style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "4px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Anulează</button>
         )}
