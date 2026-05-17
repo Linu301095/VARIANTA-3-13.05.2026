@@ -140,27 +140,40 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, profiluri!user_id(nume), animale!animal_id(nume, rasa, greutate)")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id")
         .eq("salon_id", salonId)
         .neq("status", "anulat")
         .order("data", { ascending: true })
         .order("ora", { ascending: true });
 
-      if (data) {
-        setProgramari(data.map((p: any) => {
-          const animalParts = [p.animale?.nume, p.animale?.rasa, p.animale?.greutate ? `${p.animale.greutate}kg` : null].filter(Boolean);
-          return {
-            id: p.id,
-            client: p.profiluri?.nume || "Client",
-            animal: animalParts.length > 0 ? `${animalParts[0]}${animalParts.length > 1 ? ` (${animalParts.slice(1).join(", ")})` : ""}` : "—",
-            serviciu: p.serviciu,
-            ora: p.ora,
-            data: p.data,
-            pret: Number(p.pret) || 0,
-            status: p.status as StatusProg,
-          };
-        }));
-      }
+      if (!data || data.length === 0) { setProgramari([]); return; }
+
+      const userIds = [...new Set(data.map((p: any) => p.user_id).filter(Boolean))];
+      const animalIds = [...new Set(data.map((p: any) => p.animal_id).filter(Boolean))];
+
+      const [{ data: profiles }, { data: animals }] = await Promise.all([
+        userIds.length > 0 ? supabase.from("profiluri").select("id, nume").in("id", userIds) : Promise.resolve({ data: [] }),
+        animalIds.length > 0 ? supabase.from("animale").select("id, nume, rasa, greutate").in("id", animalIds) : Promise.resolve({ data: [] }),
+      ]);
+
+      const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
+      const animalMap = Object.fromEntries((animals || []).map((a: any) => [a.id, a]));
+
+      setProgramari(data.map((p: any) => {
+        const profil = profileMap[p.user_id];
+        const animal = animalMap[p.animal_id];
+        const animalParts = [animal?.nume, animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null].filter(Boolean);
+        return {
+          id: p.id,
+          client: profil?.nume || "—",
+          animal: animalParts.length > 0 ? `${animalParts[0]}${animalParts.length > 1 ? ` (${animalParts.slice(1).join(", ")})` : ""}` : "—",
+          serviciu: p.serviciu,
+          ora: p.ora,
+          data: p.data,
+          pret: Number(p.pret) || 0,
+          status: p.status as StatusProg,
+        };
+      }));
     }
     loadData();
   }, []);
