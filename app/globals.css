@@ -244,3 +244,11 @@ label,
 label:hover {
   opacity: .92;
 }
+
+.footer-link {
+  transition: color .15s ease, opacity .15s ease;
+}
+.footer-link:hover {
+  color: #FFB07A !important;
+  opacity: 1;
+}
