@@ -9,6 +9,7 @@ import { supabase } from "../../../lib/supabase";
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
   id: string;
+  user_id: string;
   client: string;
   animal: string;
   serviciu: string;
@@ -18,12 +19,7 @@ type ProgramareSalon = {
   status: StatusProg;
 };
 
-const NOTIFICARI_INIT = [
-  { id: 1, tip: "nou", mesaj: "Ion Gheorghe a solicitat o programare pentru Bella", timp: "acum 5 min", citit: false },
-  { id: 2, tip: "nou", mesaj: "Andrei Dumitrescu a solicitat o programare pentru Luna", timp: "acum 18 min", citit: false },
-  { id: 3, tip: "info", mesaj: "Ana Popescu a lasat o recenzie 5/5 - Serviciu excelent!", timp: "1h ago", citit: true },
-  { id: 4, tip: "info", mesaj: "Reminder: 5 programari confirmate pentru maine", timp: "ieri", citit: true },
-];
+type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
 
 type Tab = "agenda" | "statistici" | "notificari" | "profil-salon" | "servicii" | "echipa" | "abonament" | "setari" | "ajutor";
 type Serviciu = { id: number; nume: string; pret: string; durata: string };
@@ -66,7 +62,8 @@ export default function DashboardSalon() {
   const [tab, setTab] = useState<Tab>("statistici");
   const [isMobile, setIsMobile] = useState(false);
   const [programari, setProgramari] = useState<ProgramareSalon[]>([]);
-  const [notificari, setNotificari] = useState(NOTIFICARI_INIT);
+  const [notificari, setNotificari] = useState<Notificare[]>([]);
+  const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
   const [servicii, setServicii] = useState<Serviciu[]>([
@@ -98,6 +95,7 @@ export default function DashboardSalon() {
     async function loadData() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { router.push("/login"); return; }
+      setUserId(authUser.id);
 
       const { data: profile } = await supabase
         .from("profiluri")
@@ -134,7 +132,18 @@ export default function DashboardSalon() {
         setAbonament({ plan: salonRow.plan || "starter" });
 
         await loadProgramari(salonRow.id);
+        await loadNotificari(authUser.id);
       }
+    }
+
+    async function loadNotificari(uid: string) {
+      const { data } = await supabase
+        .from("notificari")
+        .select("*")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (data) setNotificari(data);
     }
 
     async function loadProgramari(salonId: string) {
@@ -165,6 +174,7 @@ export default function DashboardSalon() {
         const animalParts = [animal?.nume, animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null].filter(Boolean);
         return {
           id: p.id,
+          user_id: p.user_id,
           client: profil?.nume || "—",
           animal: animalParts.length > 0 ? `${animalParts[0]}${animalParts.length > 1 ? ` (${animalParts.slice(1).join(", ")})` : ""}` : "—",
           serviciu: p.serviciu,
@@ -177,6 +187,32 @@ export default function DashboardSalon() {
     }
     loadData();
   }, []);
+
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (!u) return;
+      channel = supabase
+        .channel(`notificari-salon-${u.id}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "notificari", filter: `user_id=eq.${u.id}` },
+          (payload) => setNotificari(prev => [payload.new as Notificare, ...prev])
+        )
+        .subscribe();
+    });
+    return () => { if (channel) supabase.removeChannel(channel); };
+  }, []);
+
+  function formatTimp(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return "acum";
+    if (min < 60) return `acum ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `acum ${h}h`;
+    const d = Math.floor(h / 24);
+    if (d === 1) return "ieri";
+    return `acum ${d} zile`;
+  }
 
   async function toggleTheme(t: "light" | "dark") {
     setTheme(t);
@@ -212,13 +248,31 @@ export default function DashboardSalon() {
   async function accepta(id: string) {
     const { error } = await supabase.from("programari").update({ status: "confirmat" }).eq("id", id);
     if (error) { console.error("Accept error:", error); return; }
+    const prog = programari.find(p => p.id === id);
     setProgramari(p => p.map(pr => pr.id === id ? { ...pr, status: "confirmat" } : pr));
+    if (prog?.user_id) {
+      await supabase.from("notificari").insert({
+        user_id: prog.user_id,
+        tip: "confirmat",
+        mesaj: `✅ ${numeSalon} a confirmat programarea ta — ${prog.serviciu}`,
+        programare_id: id,
+      });
+    }
   }
 
   async function respinge(id: string) {
     const { error } = await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
     if (error) { console.error("Reject error:", error); return; }
+    const prog = programari.find(p => p.id === id);
     setProgramari(p => p.filter(pr => pr.id !== id));
+    if (prog?.user_id) {
+      await supabase.from("notificari").insert({
+        user_id: prog.user_id,
+        tip: "anulat",
+        mesaj: `❌ ${numeSalon} a respins programarea ta — ${prog.serviciu}`,
+        programare_id: id,
+      });
+    }
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
 
@@ -368,17 +422,34 @@ export default function DashboardSalon() {
             {tab === "notificari" && (
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>Notificari</h2>
-                  {necitite > 0 && <button onClick={() => setNotificari(n => n.map(x => ({ ...x, citit: true })))} style={{ fontSize: 13, fontWeight: 700, color: "#FF6B00", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Marcheaza toate citite</button>}
+                  <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>Notificări</h2>
+                  {necitite > 0 && (
+                    <button onClick={async () => {
+                      await supabase.from("notificari").update({ citit: true }).eq("user_id", userId);
+                      setNotificari(n => n.map(x => ({ ...x, citit: true })));
+                    }} style={{ fontSize: 13, fontWeight: 700, color: "#FF6B00", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                      Marchează toate citite
+                    </button>
+                  )}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {notificari.length === 0 && (
+                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
+                      Nu ai notificări încă.
+                    </div>
+                  )}
                   {notificari.map(n => (
-                    <div key={n.id} onClick={() => setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x))}
+                    <div key={n.id} onClick={async () => {
+                      if (!n.citit) {
+                        await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
+                        setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+                      }
+                    }}
                       style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                      <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "nou" ? "🔔" : "ℹ️"}</div>
+                      <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "programare_noua" ? "🔔" : n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "ℹ️"}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
-                        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{n.timp}</div>
+                        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
                       </div>
                       {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
                     </div>

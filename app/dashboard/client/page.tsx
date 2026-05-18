@@ -56,6 +56,7 @@ function mapSalonDB(s: any, i: number): SalonItem {
 }
 
 type Tab = "saloane" | "programari" | "profil" | "animal" | "notificari" | "setari" | "ajutor";
+type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
 type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat";
 type Programare = {
   id: string;
@@ -118,6 +119,8 @@ export default function DashboardClient() {
   const [confirmareLoading, setConfirmareLoading] = useState(false);
   const [confirmareError, setConfirmareError] = useState("");
   const [notifSettings, setNotifSettings] = useState({ sms: true, email: true, newsletter: false });
+  const [notificari, setNotificari] = useState<Notificare[]>([]);
+  const [userId, setUserId] = useState("");
   const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "" });
   const [animalForm, setAnimalForm] = useState({ numeAnimal: "", rasa: "", greutate: "", varsta: "", alergii: "" });
   const [savedMsg, setSavedMsg] = useState("");
@@ -133,6 +136,7 @@ export default function DashboardClient() {
     async function loadUser() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { router.push("/login"); return; }
+      setUserId(authUser.id);
 
       const { data: profile } = await supabase
         .from("profiluri")
@@ -179,6 +183,17 @@ export default function DashboardClient() {
       }
 
       await loadProgramari(authUser.id);
+      await loadNotificari(authUser.id);
+    }
+
+    async function loadNotificari(uid: string) {
+      const { data } = await supabase
+        .from("notificari")
+        .select("*")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (data) setNotificari(data);
     }
 
     async function loadProgramari(userId: string) {
@@ -205,6 +220,32 @@ export default function DashboardClient() {
     loadUser();
   }, []);
 
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (!u) return;
+      channel = supabase
+        .channel(`notificari-client-${u.id}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "notificari", filter: `user_id=eq.${u.id}` },
+          (payload) => setNotificari(prev => [payload.new as Notificare, ...prev])
+        )
+        .subscribe();
+    });
+    return () => { if (channel) supabase.removeChannel(channel); };
+  }, []);
+
+  function formatTimp(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return "acum";
+    if (min < 60) return `acum ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `acum ${h}h`;
+    const d = Math.floor(h / 24);
+    if (d === 1) return "ieri";
+    return `acum ${d} zile`;
+  }
+
   async function toggleTheme(t: "light" | "dark") {
     setTheme(t);
     document.documentElement.dataset.theme = t === "light" ? "" : t;
@@ -224,6 +265,7 @@ export default function DashboardClient() {
 
   const c = C[theme];
   const prenume = user?.nume?.split(" ")[0] || "Utilizator";
+  const necitite = notificari.filter(n => !n.citit).length;
   const salon = saloaneList.find(s => s.id === salonSelectat);
   const inp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", background: c.input, color: c.text };
 
@@ -274,6 +316,17 @@ export default function DashboardClient() {
       pret: pretNumeric,
     }, ...prev]);
 
+    // Notificare pentru proprietarul salonului
+    const { data: salonRow } = await supabase.from("saloane").select("user_id").eq("id", salon.id).single();
+    if (salonRow?.user_id) {
+      await supabase.from("notificari").insert({
+        user_id: salonRow.user_id,
+        tip: "programare_noua",
+        mesaj: `🐾 ${user?.nume || "Un client"} a solicitat o programare pentru ${animal?.nume || "animăluțul său"} — ${rezervare.serviciu}`,
+        programare_id: nou.id,
+      });
+    }
+
     setConfirmat(true);
   }
 
@@ -286,7 +339,7 @@ export default function DashboardClient() {
   if (confirmat && rezervare && salon) {
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
             <div style={{ textAlign: "center", maxWidth: 460, width: "100%" }}>
               <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>✅</div>
@@ -314,7 +367,7 @@ export default function DashboardClient() {
   if (salonSelectat && salon) {
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite}>
           <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
             <button onClick={() => { setSalonSelectat(null); setRezervare(null); }} style={btnBack}>← Înapoi</button>
             <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `2px solid ${salon.culoare}`, marginBottom: 20, boxShadow: c.cardShadow }}>
@@ -380,7 +433,7 @@ export default function DashboardClient() {
 
   return (
     <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-      <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab}>
+      <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
 
           {/* Toast */}
@@ -510,7 +563,41 @@ export default function DashboardClient() {
           {/* TAB NOTIFICARI */}
           {tab === "notificari" && (
             <div style={{ maxWidth: 520 }}>
-              <PageHeader icon="🔔" title="Notificări" sub="Alege cum vrei să fii anunțat" />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <PageHeader icon="🔔" title="Notificări" sub="Activitate recentă a programărilor" />
+                {notificari.filter(n => !n.citit).length > 0 && (
+                  <button onClick={async () => {
+                    await supabase.from("notificari").update({ citit: true }).eq("user_id", userId);
+                    setNotificari(n => n.map(x => ({ ...x, citit: true })));
+                  }} style={{ fontSize: 13, fontWeight: 700, color: "#FF6B00", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                    Marchează toate citite
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                {notificari.length === 0 && (
+                  <div style={{ padding: "28px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
+                    Nu ai notificări încă.
+                  </div>
+                )}
+                {notificari.map(n => (
+                  <div key={n.id} onClick={async () => {
+                    if (!n.citit) {
+                      await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
+                      setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+                    }
+                  }}
+                    style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                    <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "🔔"}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
+                      <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
+                    </div>
+                    {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 12 }}>Preferințe notificări</div>
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}`, display: "flex", flexDirection: "column", gap: 0 }}>
                 {[
                   { key: "sms", label: "SMS programări", sub: "Confirmare și reminder cu 24h înainte" },
@@ -581,7 +668,7 @@ export default function DashboardClient() {
 }
 
 /* ── Shell ── */
-function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void }) {
+function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0 }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
@@ -631,7 +718,12 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
               </div>
             )}
           </div>
-          <div style={{ position: "relative", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button onClick={() => onNav("notificari")} style={{ position: "relative", padding: isMobile ? "8px 10px" : "8px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 16, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+              🔔
+              {necitite > 0 && <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{necitite}</span>}
+            </button>
+          <div style={{ position: "relative" }}>
             <button onClick={() => setOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
               <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>👤</span>
@@ -682,6 +774,7 @@ function Shell({ children, prenume, tab, onLogout, onNav }: { children: React.Re
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
       </header>
