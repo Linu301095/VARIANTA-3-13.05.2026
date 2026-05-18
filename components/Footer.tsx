@@ -52,7 +52,7 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
           <nav style={{ display: "flex", flexWrap: "wrap", gap: "12px 24px", alignItems: "center", justifyContent: "flex-end" }}>
             <Link href="/cum-functioneaza" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Cum funcționează</Link>
             <Link href="/despre-noi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Despre noi</Link>
-            <a href="mailto:contact@calyhub.ro" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Contact</a>
+            <Link href="/contact" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Contact</Link>
             <Link href="/termeni" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Termeni și condiții</Link>
             <Link href="/confidentialitate" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Confidențialitate</Link>
           </nav>

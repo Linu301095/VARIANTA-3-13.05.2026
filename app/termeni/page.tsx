@@ -83,15 +83,6 @@ Continuarea utilizării platformei după data intrării în vigoare a modificăr
 
 Înainte de orice acțiune judiciară, părțile se obligă să încerce soluționarea amiabilă a disputei. Utilizatorul poate sesiza CalyHub la adresa legal@calyhub.ro.`,
   },
-  {
-    titlu: "10. Contact",
-    continut: `CalyHub SRL
-Email: legal@calyhub.ro
-Suport clienți: support@calyhub.ro
-Program: Luni–Vineri, 09:00–18:00
-
-Data ultimei actualizări: 14 mai 2026`,
-  },
 ];
 
 export default function Termeni() {
