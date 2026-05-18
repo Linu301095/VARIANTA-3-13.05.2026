@@ -40,10 +40,10 @@ export default function ContactPage() {
       </header>
 
       <main style={{ flex: 1 }}>
-        <section style={{ background: "#1A1A1A", padding: "56px 20px 48px", textAlign: "center" }}>
-          <div style={{ display: "inline-block", background: "rgba(255,107,0,.15)", color: "#FF8C42", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20, border: "1px solid rgba(255,107,0,.3)" }}>📞 Contact</div>
-          <h1 style={{ fontSize: "clamp(26px,4vw,42px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Hai să luăm legătura</h1>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.65)", maxWidth: 540, margin: "0 auto", lineHeight: 1.6 }}>
+        <section style={{ background: "#fff", padding: "56px 20px 48px", textAlign: "center" }}>
+          <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>📞 Contact</div>
+          <h1 style={{ fontSize: "clamp(26px,4vw,42px)", fontWeight: 900, color: "#1A1A1A", marginBottom: 12 }}>Hai să luăm legătura</h1>
+          <p style={{ fontSize: 15, color: "#6B7280", maxWidth: 540, margin: "0 auto", lineHeight: 1.6 }}>
             Ai o întrebare, o sugestie sau ai nevoie de ajutor? Scrie-ne și îți răspundem cât mai repede posibil.
           </p>
         </section>
