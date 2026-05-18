@@ -40,47 +40,26 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
   if (variant === "full") {
     return (
       <footer style={wrapper}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 32 }}>
-          <div>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 28 }}>
+          <div style={{ flex: "1 1 260px", minWidth: 0 }}>
             {LOGO}
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.7, marginTop: 14, maxWidth: 240 }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.7, marginTop: 14, maxWidth: 320 }}>
               Platforma #1 din România pentru programări la salon de grooming.
             </p>
             <div style={{ marginTop: 16 }}><SocialIcons /></div>
           </div>
 
-          <div>
-            <div style={titleStyle}>🐾 Clienți</div>
-            <Link href="/cum-functioneaza" className="footer-link" style={linkStyle}>Cum funcționează</Link>
-            <Link href="/login" className="footer-link" style={linkStyle}>Caută saloane</Link>
-            <Link href="/login" className="footer-link" style={linkStyle}>Programările mele</Link>
-            <Link href="/register" className="footer-link" style={linkStyle}>Înregistrare gratuită</Link>
-          </div>
-
-          <div>
-            <div style={titleStyle}>✂️ Saloane</div>
-            <Link href="/register" className="footer-link" style={linkStyle}>Înregistrează salon</Link>
-            <Link href="/register/abonament-salon" className="footer-link" style={linkStyle}>Prețuri & abonamente</Link>
-            <Link href="/cum-functioneaza" className="footer-link" style={linkStyle}>Cum funcționează</Link>
-            <Link href="/suport-parteneri" className="footer-link" style={linkStyle}>Suport parteneri</Link>
-          </div>
-
-          <div>
-            <div style={titleStyle}>📋 Companie</div>
-            <Link href="/despre-noi" className="footer-link" style={linkStyle}>Despre noi</Link>
-            <a href="mailto:contact@calyhub.ro" className="footer-link" style={linkStyle}>Contact</a>
-            <Link href="/termeni" className="footer-link" style={linkStyle}>Termeni & Condiții</Link>
-            <Link href="/confidentialitate" className="footer-link" style={linkStyle}>Confidențialitate</Link>
-          </div>
+          <nav style={{ display: "flex", flexWrap: "wrap", gap: "12px 24px", alignItems: "center", justifyContent: "flex-end" }}>
+            <Link href="/cum-functioneaza" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Cum funcționează</Link>
+            <Link href="/despre-noi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Despre noi</Link>
+            <a href="mailto:contact@calyhub.ro" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Contact</a>
+            <Link href="/termeni" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Termeni și condiții</Link>
+            <Link href="/confidentialitate" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Confidențialitate</Link>
+          </nav>
         </div>
 
         <div style={bottomBar}>
           <div style={copyright}>© 2026 CalyHub · România · contact@calyhub.ro</div>
-          <div style={{ display: "flex", gap: 18 }}>
-            <Link href="/confidentialitate" className="footer-link" style={linkStyleSm}>Cookies & GDPR</Link>
-            <Link href="/termeni" className="footer-link" style={linkStyleSm}>Termeni</Link>
-            <Link href="/confidentialitate" className="footer-link" style={linkStyleSm}>Confidențialitate</Link>
-          </div>
         </div>
       </footer>
     );
