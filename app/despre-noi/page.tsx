@@ -45,14 +45,14 @@ export default function DespreNoi() {
       <main style={{ flex: 1 }}>
 
         {/* HERO */}
-        <section style={{ background: "#1A1A1A", padding: "80px 20px", textAlign: "center" }}>
+        <section style={{ background: "#fff", padding: "80px 20px", textAlign: "center" }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <div style={{ display: "inline-block", background: "rgba(255,107,0,.15)", color: "#FF8C42", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, border: "1px solid rgba(255,107,0,.3)" }}>Povestea noastră</div>
-            <h1 style={{ fontSize: "clamp(30px,4.5vw,52px)", fontWeight: 900, color: "#fff", lineHeight: 1.15, marginBottom: 20 }}>
+            <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24 }}>Povestea noastră</div>
+            <h1 style={{ fontSize: "clamp(30px,4.5vw,52px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15, marginBottom: 20 }}>
               O idee cu rădăcini adânci,<br />
               <span style={{ color: "#FF6B00" }}>născută din iubire pentru animale.</span>
             </h1>
-            <p style={{ fontSize: 17, color: "rgba(255,255,255,.65)", lineHeight: 1.8, maxWidth: 560, margin: "0 auto" }}>
+            <p style={{ fontSize: 17, color: "#6B7280", lineHeight: 1.8, maxWidth: 560, margin: "0 auto" }}>
               CalyHub nu este o aplicație construită peste noapte. Este rezultatul unor ani buni de gândire, observație și un singur scop clar: să ridicăm standardele îngrijirii animalelor în România.
             </p>
           </div>
