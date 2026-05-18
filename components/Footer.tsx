@@ -10,8 +10,8 @@ const LOGO = (
   </Link>
 );
 
-const linkStyle: React.CSSProperties = { fontSize: 13, color: "rgba(255,255,255,.65)", textDecoration: "none", fontWeight: 600, display: "block", padding: "3px 0" };
-const linkStyleSm: React.CSSProperties = { fontSize: 12, color: "rgba(255,255,255,.55)", textDecoration: "none", fontWeight: 600 };
+const linkStyle: React.CSSProperties = { fontSize: 13, color: "#FF8C42", textDecoration: "none", fontWeight: 800, display: "block", padding: "3px 0" };
+const linkStyleSm: React.CSSProperties = { fontSize: 12, color: "#FF8C42", textDecoration: "none", fontWeight: 800 };
 const titleStyle: React.CSSProperties = { fontSize: 12, fontWeight: 800, color: "#FF8C42", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 };
 const wrapper: React.CSSProperties = { background: "#1A1A1A", padding: "44px 20px 28px" };
 const wrapperSm: React.CSSProperties = { background: "#1A1A1A", padding: "26px 20px" };
@@ -51,35 +51,35 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
 
           <div>
             <div style={titleStyle}>🐾 Clienți</div>
-            <Link href="/cum-functioneaza" style={linkStyle}>Cum funcționează</Link>
-            <Link href="/login" style={linkStyle}>Caută saloane</Link>
-            <Link href="/login" style={linkStyle}>Programările mele</Link>
-            <Link href="/register" style={linkStyle}>Înregistrare gratuită</Link>
+            <Link href="/cum-functioneaza" className="footer-link" style={linkStyle}>Cum funcționează</Link>
+            <Link href="/login" className="footer-link" style={linkStyle}>Caută saloane</Link>
+            <Link href="/login" className="footer-link" style={linkStyle}>Programările mele</Link>
+            <Link href="/register" className="footer-link" style={linkStyle}>Înregistrare gratuită</Link>
           </div>
 
           <div>
             <div style={titleStyle}>✂️ Saloane</div>
-            <Link href="/register" style={linkStyle}>Înregistrează salon</Link>
-            <Link href="/register/abonament-salon" style={linkStyle}>Prețuri & abonamente</Link>
-            <Link href="/cum-functioneaza" style={linkStyle}>Cum funcționează</Link>
-            <Link href="/suport-parteneri" style={linkStyle}>Suport parteneri</Link>
+            <Link href="/register" className="footer-link" style={linkStyle}>Înregistrează salon</Link>
+            <Link href="/register/abonament-salon" className="footer-link" style={linkStyle}>Prețuri & abonamente</Link>
+            <Link href="/cum-functioneaza" className="footer-link" style={linkStyle}>Cum funcționează</Link>
+            <Link href="/suport-parteneri" className="footer-link" style={linkStyle}>Suport parteneri</Link>
           </div>
 
           <div>
             <div style={titleStyle}>📋 Companie</div>
-            <Link href="/despre-noi" style={linkStyle}>Despre noi</Link>
-            <a href="mailto:contact@calyhub.ro" style={linkStyle}>Contact</a>
-            <Link href="/termeni" style={linkStyle}>Termeni & Condiții</Link>
-            <Link href="/confidentialitate" style={linkStyle}>Confidențialitate</Link>
+            <Link href="/despre-noi" className="footer-link" style={linkStyle}>Despre noi</Link>
+            <a href="mailto:contact@calyhub.ro" className="footer-link" style={linkStyle}>Contact</a>
+            <Link href="/termeni" className="footer-link" style={linkStyle}>Termeni & Condiții</Link>
+            <Link href="/confidentialitate" className="footer-link" style={linkStyle}>Confidențialitate</Link>
           </div>
         </div>
 
         <div style={bottomBar}>
           <div style={copyright}>© 2026 CalyHub · România · contact@calyhub.ro</div>
           <div style={{ display: "flex", gap: 18 }}>
-            <Link href="/confidentialitate" style={linkStyleSm}>Cookies & GDPR</Link>
-            <Link href="/termeni" style={linkStyleSm}>Termeni</Link>
-            <Link href="/confidentialitate" style={linkStyleSm}>Confidențialitate</Link>
+            <Link href="/confidentialitate" className="footer-link" style={linkStyleSm}>Cookies & GDPR</Link>
+            <Link href="/termeni" className="footer-link" style={linkStyleSm}>Termeni</Link>
+            <Link href="/confidentialitate" className="footer-link" style={linkStyleSm}>Confidențialitate</Link>
           </div>
         </div>
       </footer>
@@ -93,10 +93,10 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            <Link href="/" style={linkStyleSm}>Acasă</Link>
-            <Link href="/login" style={linkStyleSm}>Conectare</Link>
-            <Link href="/register" style={linkStyleSm}>Înregistrare</Link>
-            <a href="mailto:support@calyhub.ro" style={linkStyleSm}>support@calyhub.ro</a>
+            <Link href="/" className="footer-link" style={linkStyleSm}>Acasă</Link>
+            <Link href="/login" className="footer-link" style={linkStyleSm}>Conectare</Link>
+            <Link href="/register" className="footer-link" style={linkStyleSm}>Înregistrare</Link>
+            <a href="mailto:support@calyhub.ro" className="footer-link" style={linkStyleSm}>support@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub</div>
         </div>
@@ -111,10 +111,10 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ ...linkStyleSm, color: "#10B981" }}>🔒 Plată securizată</span>
-            <span style={{ ...linkStyleSm, color: "#FF8C42" }}>🛡️ Garanție 30 zile</span>
-            <a href="mailto:parteneri@calyhub.ro" style={linkStyleSm}>parteneri@calyhub.ro</a>
-            <Link href="/" style={linkStyleSm}>Politică plăți</Link>
+            <span className="footer-link" style={{ ...linkStyleSm, color: "#10B981" }}>🔒 Plată securizată</span>
+            <span className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42" }}>🛡️ Garanție 30 zile</span>
+            <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={linkStyleSm}>parteneri@calyhub.ro</a>
+            <Link href="/" className="footer-link" style={linkStyleSm}>Politică plăți</Link>
           </div>
           <div style={copyright}>© 2026 CalyHub</div>
         </div>
@@ -129,11 +129,11 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
-            <Link href="/dashboard/client" style={linkStyleSm}>Programările mele</Link>
-            <Link href="/dashboard/client" style={linkStyleSm}>Profil</Link>
-            <Link href="/dashboard/client" style={linkStyleSm}>Notificări</Link>
-            <Link href="/dashboard/client" style={linkStyleSm}>Ajutor</Link>
-            <a href="mailto:support@calyhub.ro" style={linkStyleSm}>support@calyhub.ro</a>
+            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Programările mele</Link>
+            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Profil</Link>
+            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Notificări</Link>
+            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Ajutor</Link>
+            <a href="mailto:support@calyhub.ro" className="footer-link" style={linkStyleSm}>support@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub</div>
         </div>
@@ -148,11 +148,11 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
-            <Link href="/dashboard/salon" style={linkStyleSm}>Agenda</Link>
-            <Link href="/dashboard/salon" style={linkStyleSm}>Servicii</Link>
-            <Link href="/dashboard/salon" style={linkStyleSm}>Echipa</Link>
-            <Link href="/dashboard/salon" style={linkStyleSm}>Abonament</Link>
-            <a href="mailto:parteneri@calyhub.ro" style={{ ...linkStyleSm, color: "#FF8C42" }}>⚡ Suport prioritar</a>
+            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Agenda</Link>
+            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Servicii</Link>
+            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Echipa</Link>
+            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Abonament</Link>
+            <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42" }}>⚡ Suport prioritar</a>
           </div>
           <div style={copyright}>© 2026 CalyHub · Partener</div>
         </div>
