@@ -11,7 +11,7 @@ type Tab = "overview" | "stapani" | "saloane" | "programari" | "abonamente" | "r
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "overview", label: "Overview", icon: "📊" },
-  { id: "stapani", label: "Stăpâni", icon: "👤" },
+  { id: "stapani", label: "Clienți", icon: "👤" },
   { id: "saloane", label: "Saloane", icon: "✂️" },
   { id: "programari", label: "Programări", icon: "📅" },
   { id: "abonamente", label: "Abonamente", icon: "💳" },
@@ -209,7 +209,7 @@ function OverviewTab({ data }: { data: MockData }) {
   const ratingMediu = data.saloane.length ? (data.saloane.reduce((s, x) => s + x.rating, 0) / data.saloane.length).toFixed(2) : "0";
 
   const KPI = [
-    { label: "Stăpâni înregistrați", val: data.clienti.length, sub: `${data.clienti.filter(c => c.status === "activ").length} activi`, color: "#10B981" },
+    { label: "Clienți înregistrați", val: data.clienti.length, sub: `${data.clienti.filter(c => c.status === "activ").length} activi`, color: "#10B981" },
     { label: "Saloane partenere", val: data.saloane.length, sub: `${data.saloane.filter(s => s.status === "activ").length} active`, color: "#3B82F6" },
     { label: "Programări azi", val: programariAzi, sub: `${programariLuna} luna aceasta`, color: "#FF6B00" },
     { label: "MRR (venit lunar)", val: `${mrr} RON`, sub: `${data.saloane.filter(s => s.plan !== "starter").length} saloane plătitoare`, color: "#A855F7" },
@@ -287,7 +287,7 @@ function StapaniTab({ data, setData }: { data: MockData; setData: (d: MockData) 
 
   return (
     <div>
-      <h2 style={sectionTitle}>👤 Stăpâni ({data.clienti.length})</h2>
+      <h2 style={sectionTitle}>👤 Clienți ({data.clienti.length})</h2>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <input style={{ ...inputDark, flex: 1, minWidth: 200 }} placeholder="🔍 Caută după nume sau email..." value={search} onChange={e => setSearch(e.target.value)} />
         <select style={inputDark} value={filterOras} onChange={e => setFilterOras(e.target.value)}>
