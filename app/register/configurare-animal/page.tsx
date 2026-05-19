@@ -9,7 +9,15 @@ import { supabase } from "../../../lib/supabase";
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
 
-const RASE = ["Labrador Retriever", "Golden Retriever", "Pudel", "Chihuahua", "Husky Siberian", "Bulldog Francez", "Ciobanesc German", "Shih Tzu", "Bichon Frisé", "Maltez", "Yorkshire Terrier", "Cocker Spaniel", "Altă rasă"];
+const RASE_PE_SPECII: Record<string, string[]> = {
+  caine:   ["Labrador Retriever", "Golden Retriever", "Pudel", "Chihuahua", "Husky Siberian", "Bulldog Francez", "Ciobanesc German", "Shih Tzu", "Bichon Frisé", "Maltez", "Yorkshire Terrier", "Cocker Spaniel", "Beagle", "Pomeranian", "Dachshund", "Boxer", "Dalmatian"],
+  pisica:  ["Persan", "Maine Coon", "British Shorthair", "Siam", "Bengal", "Ragdoll", "Abisinian", "Scottish Fold", "Sphynx", "Norwegian Forest", "Turkish Angora", "Russian Blue"],
+  iepure:  ["Angora", "Leu (Lionhead)", "Rex", "Mini Rex", "Olandeze (Dutch)", "Flemish Giant", "Lop (Floppy Ears)", "Californian"],
+  pasare:  ["Peruș (Budgerigar)", "Papagal African Gri", "Agapornis (Lovebird)", "Nimfă (Cockatiel)", "Canar", "Cacadu (Cockatoo)", "Amazon", "Eclectus"],
+  rozator: ["Hamster Syrian", "Hamster Pitic", "Cobai (Guinea Pig)", "Chinchilla", "Gerbil", "Șobolan de companie", "Dihor (Ferret)"],
+  reptila: ["Iguana", "Șarpe Corn (Corn Snake)", "Leopard Gecko", "Bearded Dragon", "Blue Tongue Skink", "Cameleon", "Broasca Testoasă"],
+  altele:  [],
+};
 
 const SPECII = [
   { val: "caine", label: "Câine", icon: "🐶" },
@@ -27,6 +35,7 @@ export default function ConfigurareAnimal() {
   const [form, setForm] = useState({ specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "", numeAnimal: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [rasaLibera, setRasaLibera] = useState(false);
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
@@ -154,7 +163,7 @@ export default function ConfigurareAnimal() {
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Specie *</label>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 110px), 1fr))", gap: 8 }}>
                   {SPECII.map(s => (
-                    <button key={s.val} type="button" onClick={() => set("specie", s.val)}
+                    <button key={s.val} type="button" onClick={() => { setForm(f => ({ ...f, specie: s.val, rasa: "" })); setRasaLibera(false); setErrors(e => { const n = { ...e }; delete n.specie; delete n.rasa; return n; }); }}
                       style={{ padding: "10px 8px", borderRadius: 12, border: form.specie === s.val ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: form.specie === s.val ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                       <span style={{ fontSize: 22 }}>{s.icon}</span>
                       <span style={{ fontSize: 12, fontWeight: 800, color: form.specie === s.val ? "#FF6B00" : "#374151" }}>{s.label}</span>
@@ -179,12 +188,30 @@ export default function ConfigurareAnimal() {
 
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Rasa *</label>
-                <input value={form.rasa} onChange={e => set("rasa", e.target.value)} type="text"
-                  placeholder={form.specie === "pisica" ? "Ex: Persan, Maine Coon, British..." : form.specie === "caine" ? "Ex: Labrador, Bichon Frisé..." : "Ex: rasa animăluțului tău"}
-                  list="rase-sugestii" style={errors.rasa ? inpErr : inp} />
-                <datalist id="rase-sugestii">
-                  {RASE.map(r => <option key={r} value={r} />)}
-                </datalist>
+                {form.specie === "altele" || rasaLibera ? (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input value={form.rasa} onChange={e => set("rasa", e.target.value)} type="text"
+                      placeholder="Scrie rasa animăluțului" style={{ ...(errors.rasa ? inpErr : inp), flex: 1 }} />
+                    {form.specie !== "altele" && (
+                      <button type="button" onClick={() => { setRasaLibera(false); set("rasa", ""); }}
+                        style={{ padding: "0 14px", borderRadius: 12, border: "1.5px solid #EBEBEB", background: "#fff", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "Nunito, sans-serif" }}>
+                        ← Listă
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <select value={form.rasa} onChange={e => set("rasa", e.target.value)}
+                      style={{ ...(errors.rasa ? inpErr : inp), flex: 1, appearance: "none", WebkitAppearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", paddingRight: 36 } as React.CSSProperties}>
+                      <option value="">— Alege rasa —</option>
+                      {(RASE_PE_SPECII[form.specie] || []).map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <button type="button" onClick={() => { setRasaLibera(true); set("rasa", ""); }}
+                      style={{ padding: "0 14px", borderRadius: 12, border: "1.5px solid #FF6B00", background: "#FFF3EA", fontSize: 13, fontWeight: 700, color: "#FF6B00", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "Nunito, sans-serif" }}>
+                      Altă rasă
+                    </button>
+                  </div>
+                )}
                 {errors.rasa && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.rasa}</div>}
               </div>
 
