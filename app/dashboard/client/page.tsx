@@ -67,6 +67,16 @@ const SPECII = [
   { val: "reptila", label: "Reptilă", icon: "🦎" },
   { val: "altele", label: "Altele", icon: "✨" },
 ];
+
+const RASE_PE_SPECII: Record<string, string[]> = {
+  caine:   ["Labrador Retriever", "Golden Retriever", "Pudel", "Chihuahua", "Husky Siberian", "Bulldog Francez", "Ciobanesc German", "Shih Tzu", "Bichon Frisé", "Maltez", "Yorkshire Terrier", "Cocker Spaniel", "Beagle", "Pomeranian", "Dachshund", "Boxer", "Dalmatian"],
+  pisica:  ["Persan", "Maine Coon", "British Shorthair", "Siam", "Bengal", "Ragdoll", "Abisinian", "Scottish Fold", "Sphynx", "Norwegian Forest", "Turkish Angora", "Russian Blue"],
+  iepure:  ["Angora", "Leu (Lionhead)", "Rex", "Mini Rex", "Olandeze (Dutch)", "Flemish Giant", "Lop (Floppy Ears)", "Californian"],
+  pasare:  ["Peruș (Budgerigar)", "Papagal African Gri", "Agapornis (Lovebird)", "Nimfă (Cockatiel)", "Canar", "Cacadu (Cockatoo)", "Amazon", "Eclectus"],
+  rozator: ["Hamster Syrian", "Hamster Pitic", "Cobai (Guinea Pig)", "Chinchilla", "Gerbil", "Șobolan de companie", "Dihor (Ferret)"],
+  reptila: ["Iguana", "Șarpe Corn (Corn Snake)", "Leopard Gecko", "Bearded Dragon", "Blue Tongue Skink", "Cameleon", "Broasca Testoasă"],
+  altele:  [],
+};
 function specieInfo(val?: string) { return SPECII.find(s => s.val === val) || { val: "altele", label: "—", icon: "🐾" }; }
 function sexLabel(val?: string) { return val === "mascul" ? "♂️ Mascul" : val === "femela" ? "♀️ Femelă" : "—"; }
 type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat";
@@ -962,6 +972,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel }: { form: any; setForm: (f: any) => void; c: any; inp: React.CSSProperties; onSave: () => void; onCancel: () => void }) {
+  const [rasaLibera, setRasaLibera] = useState(false);
   const set = (k: string, v: string) => setForm((f: any) => ({ ...f, [k]: v }));
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -973,7 +984,7 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel }: { form: any
         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Specie</label>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 100px), 1fr))", gap: 6 }}>
           {SPECII.map(s => (
-            <button key={s.val} type="button" onClick={() => set("specie", s.val)}
+            <button key={s.val} type="button" onClick={() => { setForm((f: any) => ({ ...f, specie: s.val, rasa: "" })); setRasaLibera(false); }}
               style={{ padding: "8px 6px", borderRadius: 10, border: form.specie === s.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: form.specie === s.val ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
               <span style={{ fontSize: 18 }}>{s.icon}</span>
               <span style={{ fontSize: 11, fontWeight: 800, color: form.specie === s.val ? "#FF6B00" : c.text2 }}>{s.label}</span>
@@ -994,7 +1005,29 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel }: { form: any
       </div>
       <div>
         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Rasa</label>
-        <input value={form.rasa} onChange={e => set("rasa", e.target.value)} placeholder="Ex: Bichon Frisé, Persan..." style={inp} />
+        {form.specie === "altele" || rasaLibera ? (
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={form.rasa} onChange={e => set("rasa", e.target.value)} placeholder="Scrie rasa animăluțului" style={{ ...inp, flex: 1 } as React.CSSProperties} />
+            {form.specie !== "altele" && (
+              <button type="button" onClick={() => { setRasaLibera(false); set("rasa", ""); }}
+                style={{ padding: "0 12px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 12, fontWeight: 700, color: c.text2, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "Nunito, sans-serif" }}>
+                ← Listă
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 8 }}>
+            <select value={form.rasa} onChange={e => set("rasa", e.target.value)}
+              style={{ ...inp, flex: 1, appearance: "none", WebkitAppearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", backgroundColor: c.input, paddingRight: 36 } as React.CSSProperties}>
+              <option value="">— Alege rasa —</option>
+              {(RASE_PE_SPECII[form.specie] || []).map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <button type="button" onClick={() => { setRasaLibera(true); set("rasa", ""); }}
+              style={{ padding: "0 12px", borderRadius: 10, border: "1.5px solid #FF6B00", background: c.orangeAccent, fontSize: 12, fontWeight: 700, color: "#FF6B00", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "Nunito, sans-serif" }}>
+              Altă rasă
+            </button>
+          </div>
+        )}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <div>
