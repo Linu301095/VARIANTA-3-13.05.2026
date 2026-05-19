@@ -151,6 +151,8 @@ export default function DashboardClient() {
   const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "" });
   const [animalForm, setAnimalForm] = useState({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" });
   const [savedMsg, setSavedMsg] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
 
   useEffect(() => {
@@ -175,6 +177,7 @@ export default function DashboardClient() {
       if (profile) {
         setUser({ ...profile, email: authUser.email });
         setProfilForm({ numeComplet: profile.nume || "", email: authUser.email || "", telefon: profile.telefon || "" });
+        if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
         if (profile.tema === "dark") {
           setTheme("dark");
           document.documentElement.dataset.theme = "dark";
@@ -291,6 +294,28 @@ export default function DashboardClient() {
 
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
 
+  async function uploadAvatar(file: File) {
+    if (!userId) return;
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop();
+    const path = `${userId}/avatar.${ext}`;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (upErr) { salveaza("Eroare la upload!"); setUploadingAvatar(false); return; }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const url = `${urlData.publicUrl}?t=${Date.now()}`;
+    await supabase.from("profiluri").update({ avatar_url: url }).eq("id", userId);
+    setAvatarUrl(url);
+    setUploadingAvatar(false);
+    salveaza("Avatar actualizat!");
+  }
+
+  async function stergeAvatar() {
+    if (!userId) return;
+    await supabase.from("profiluri").update({ avatar_url: null }).eq("id", userId);
+    setAvatarUrl(null);
+    salveaza("Avatar șters!");
+  }
+
   async function creazaProgramare() {
     if (!salon || !rezervare) return;
     setConfirmareError("");
@@ -359,7 +384,7 @@ export default function DashboardClient() {
   if (confirmat && rezervare && salon) {
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
             <div style={{ textAlign: "center", maxWidth: 460, width: "100%" }}>
               <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>✅</div>
@@ -387,7 +412,7 @@ export default function DashboardClient() {
   if (salonSelectat && salon) {
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
           <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
             <button onClick={() => { setSalonSelectat(null); setRezervare(null); }} style={btnBack}>← Înapoi</button>
             <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, marginBottom: 20, boxShadow: c.cardShadow, overflow: "hidden" }}>
@@ -497,7 +522,7 @@ export default function DashboardClient() {
 
   return (
     <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-      <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite}>
+      <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
 
           {/* Toast */}
@@ -569,6 +594,33 @@ export default function DashboardClient() {
           {tab === "profil" && (
             <div style={{ maxWidth: 520 }}>
               <PageHeader icon="👤" title="Profilul meu" sub="Actualizează datele tale de contact" />
+
+              {/* AVATAR */}
+              <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14 }}>📷 Poza de profil</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                  <div style={{ width: 96, height: 96, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, flexShrink: 0, overflow: "hidden" }}>
+                    {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "👤"}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <label style={{ cursor: "pointer" }}>
+                      <div style={{ padding: "10px 18px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif" }}>
+                        {uploadingAvatar ? "Se încarcă..." : avatarUrl ? "✏️ Schimbă" : "📤 Încarcă"}
+                      </div>
+                      <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingAvatar}
+                        onChange={e => { if (e.target.files?.[0]) uploadAvatar(e.target.files[0]); }} />
+                    </label>
+                    {avatarUrl && (
+                      <button onClick={stergeAvatar}
+                        style={{ padding: "10px 18px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                        🗑️ Șterge
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>JPG, PNG, WEBP — max 5MB</div>
+              </div>
+
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {[{ key: "numeComplet", label: "Nume complet", placeholder: "Ion Popescu" }, { key: "email", label: "Email", placeholder: "ion@email.com" }, { key: "telefon", label: "Telefon", placeholder: "07XX XXX XXX" }].map(f => (
@@ -790,7 +842,7 @@ export default function DashboardClient() {
 }
 
 /* ── Shell ── */
-function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0 }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number }) {
+function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUrl }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number; avatarUrl?: string | null }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
@@ -849,7 +901,9 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0 }: { chil
             <button onClick={() => setOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
               <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>🐾</span>
-              <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>👤</span>
+              <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, overflow: "hidden" }}>
+                {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "👤"}
+              </span>
               {!isMobile && <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{prenume}</span>}
               <span style={{ fontSize: 10, color: c.xmuted, display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}>▼</span>
             </button>
