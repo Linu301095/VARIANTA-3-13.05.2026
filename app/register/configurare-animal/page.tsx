@@ -11,10 +11,20 @@ const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
 
 const RASE = ["Labrador Retriever", "Golden Retriever", "Pudel", "Chihuahua", "Husky Siberian", "Bulldog Francez", "Ciobanesc German", "Shih Tzu", "Bichon Frisé", "Maltez", "Yorkshire Terrier", "Cocker Spaniel", "Altă rasă"];
 
+const SPECII = [
+  { val: "caine", label: "Câine", icon: "🐶" },
+  { val: "pisica", label: "Pisică", icon: "🐱" },
+  { val: "iepure", label: "Iepure", icon: "🐰" },
+  { val: "pasare", label: "Pasăre", icon: "🐦" },
+  { val: "rozator", label: "Rozătoare", icon: "🐹" },
+  { val: "reptila", label: "Reptilă", icon: "🦎" },
+  { val: "altele", label: "Altele", icon: "✨" },
+];
+
 export default function ConfigurareAnimal() {
   const router = useRouter();
   const [step, setStep] = useState<"form" | "success">("form");
-  const [form, setForm] = useState({ rasa: "", greutate: "", varsta: "", alergii: "", numeAnimal: "" });
+  const [form, setForm] = useState({ specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "", numeAnimal: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +36,9 @@ export default function ConfigurareAnimal() {
   function validate() {
     const e: Record<string, string> = {};
     if (!form.numeAnimal.trim()) e.numeAnimal = "Câmp obligatoriu";
-    if (!form.rasa) e.rasa = "Selectează rasa";
+    if (!form.specie) e.specie = "Alege specia";
+    if (!form.sex) e.sex = "Alege sexul";
+    if (!form.rasa.trim()) e.rasa = "Câmp obligatoriu";
     if (!form.greutate.trim()) e.greutate = "Câmp obligatoriu";
     else if (isNaN(Number(form.greutate)) || Number(form.greutate) <= 0) e.greutate = "Valoare invalidă";
     if (!form.varsta.trim()) e.varsta = "Câmp obligatoriu";
@@ -48,7 +60,9 @@ export default function ConfigurareAnimal() {
       .insert({
         user_id: user.id,
         nume: form.numeAnimal.trim(),
-        rasa: form.rasa,
+        specie: form.specie,
+        sex: form.sex,
+        rasa: form.rasa.trim(),
         greutate: Number(form.greutate),
         varsta: Number(form.varsta),
         alergii: form.alergii.trim(),
@@ -78,7 +92,14 @@ export default function ConfigurareAnimal() {
             </p>
             <div style={{ background: "#fff", border: "2px solid #FF6B00", borderRadius: 20, padding: "20px 24px", margin: "24px 0", textAlign: "left" }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Profilul lui {form.numeAnimal}</div>
-              {[["🐾 Rasă", form.rasa], ["⚖️ Greutate", `${form.greutate} kg`], ["🎂 Vârstă", `${form.varsta} ani`], ["💊 Alergii", form.alergii]].map(([label, val]) => (
+              {[
+                [`${SPECII.find(s => s.val === form.specie)?.icon || "🐾"} Specie`, SPECII.find(s => s.val === form.specie)?.label || "—"],
+                ["⚥ Sex", form.sex === "mascul" ? "♂️ Mascul" : form.sex === "femela" ? "♀️ Femelă" : "—"],
+                ["🐾 Rasă", form.rasa],
+                ["⚖️ Greutate", `${form.greutate} kg`],
+                ["🎂 Vârstă", `${form.varsta} ani`],
+                ["💊 Alergii", form.alergii],
+              ].map(([label, val]) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "6px 0", borderBottom: "1px solid #F3F4F6" }}>
                   <span style={{ color: "#6B7280" }}>{label}</span>
                   <span style={{ fontWeight: 700, color: "#1A1A1A" }}>{val}</span>
@@ -130,12 +151,40 @@ export default function ConfigurareAnimal() {
               </div>
 
               <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Specie *</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 110px), 1fr))", gap: 8 }}>
+                  {SPECII.map(s => (
+                    <button key={s.val} type="button" onClick={() => set("specie", s.val)}
+                      style={{ padding: "10px 8px", borderRadius: 12, border: form.specie === s.val ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: form.specie === s.val ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <span style={{ fontSize: 22 }}>{s.icon}</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: form.specie === s.val ? "#FF6B00" : "#374151" }}>{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+                {errors.specie && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.specie}</div>}
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Sex *</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {[{ val: "mascul", label: "Mascul", icon: "♂️" }, { val: "femela", label: "Femelă", icon: "♀️" }].map(s => (
+                    <button key={s.val} type="button" onClick={() => set("sex", s.val)}
+                      style={{ padding: "12px", borderRadius: 12, border: form.sex === s.val ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: form.sex === s.val ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 14, fontWeight: 800, color: form.sex === s.val ? "#FF6B00" : "#374151" }}>
+                      <span style={{ fontSize: 18 }}>{s.icon}</span> {s.label}
+                    </button>
+                  ))}
+                </div>
+                {errors.sex && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.sex}</div>}
+              </div>
+
+              <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Rasa *</label>
-                <select value={form.rasa} onChange={e => set("rasa", e.target.value)}
-                  style={{ ...(errors.rasa ? inpErr : inp), appearance: "none", background: "white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' fill='none' stroke-width='1.5'/%3E%3C/svg%3E\") no-repeat right 14px center" }}>
-                  <option value="">Selectează rasa...</option>
-                  {RASE.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
+                <input value={form.rasa} onChange={e => set("rasa", e.target.value)} type="text"
+                  placeholder={form.specie === "pisica" ? "Ex: Persan, Maine Coon, British..." : form.specie === "caine" ? "Ex: Labrador, Bichon Frisé..." : "Ex: rasa animăluțului tău"}
+                  list="rase-sugestii" style={errors.rasa ? inpErr : inp} />
+                <datalist id="rase-sugestii">
+                  {RASE.map(r => <option key={r} value={r} />)}
+                </datalist>
                 {errors.rasa && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.rasa}</div>}
               </div>
 

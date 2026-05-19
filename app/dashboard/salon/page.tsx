@@ -162,7 +162,7 @@ export default function DashboardSalon() {
 
       const [{ data: profiles }, { data: animals }] = await Promise.all([
         userIds.length > 0 ? supabase.from("profiluri").select("id, nume").in("id", userIds) : Promise.resolve({ data: [] }),
-        animalIds.length > 0 ? supabase.from("animale").select("id, nume, rasa, greutate").in("id", animalIds) : Promise.resolve({ data: [] }),
+        animalIds.length > 0 ? supabase.from("animale").select("id, nume, specie, sex, rasa, greutate").in("id", animalIds) : Promise.resolve({ data: [] }),
       ]);
 
       const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
@@ -171,12 +171,14 @@ export default function DashboardSalon() {
       setProgramari(data.map((p: any) => {
         const profil = profileMap[p.user_id];
         const animal = animalMap[p.animal_id];
-        const animalParts = [animal?.nume, animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null].filter(Boolean);
+        const specieIcon = animal?.specie === "pisica" ? "🐱" : animal?.specie === "iepure" ? "🐰" : animal?.specie === "pasare" ? "🐦" : animal?.specie === "rozator" ? "🐹" : animal?.specie === "reptila" ? "🦎" : animal?.specie === "altele" ? "✨" : "🐶";
+        const sexIcon = animal?.sex === "femela" ? "♀️" : animal?.sex === "mascul" ? "♂️" : "";
+        const detalii = [animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null, sexIcon].filter(Boolean).join(", ");
         return {
           id: p.id,
           user_id: p.user_id,
           client: profil?.nume || "—",
-          animal: animalParts.length > 0 ? `${animalParts[0]}${animalParts.length > 1 ? ` (${animalParts.slice(1).join(", ")})` : ""}` : "—",
+          animal: animal?.nume ? `${specieIcon} ${animal.nume}${detalii ? ` (${detalii})` : ""}` : "—",
           serviciu: p.serviciu,
           ora: p.ora,
           data: p.data,
@@ -354,7 +356,7 @@ export default function DashboardSalon() {
                         <div style={{ width: 52, height: 52, borderRadius: 12, background: nou ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: nou ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.client}</div>
-                          <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>🐾 {p.animal}</div>
+                          <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.animal}</div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
                           <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>📅 {new Date(p.data).toLocaleDateString("ro-RO", { day: "numeric", month: "long" })}</div>
                         </div>

@@ -57,6 +57,18 @@ function mapSalonDB(s: any, i: number): SalonItem {
 
 type Tab = "saloane" | "programari" | "profil" | "animal" | "notificari" | "setari" | "ajutor";
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
+
+const SPECII = [
+  { val: "caine", label: "Câine", icon: "🐶" },
+  { val: "pisica", label: "Pisică", icon: "🐱" },
+  { val: "iepure", label: "Iepure", icon: "🐰" },
+  { val: "pasare", label: "Pasăre", icon: "🐦" },
+  { val: "rozator", label: "Rozătoare", icon: "🐹" },
+  { val: "reptila", label: "Reptilă", icon: "🦎" },
+  { val: "altele", label: "Altele", icon: "✨" },
+];
+function specieInfo(val?: string) { return SPECII.find(s => s.val === val) || { val: "altele", label: "—", icon: "🐾" }; }
+function sexLabel(val?: string) { return val === "mascul" ? "♂️ Mascul" : val === "femela" ? "♀️ Femelă" : "—"; }
 type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat";
 type Programare = {
   id: string;
@@ -109,7 +121,10 @@ export default function DashboardClient() {
   const router = useRouter();
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [user, setUser] = useState<any>(null);
-  const [animal, setAnimal] = useState<any>(null);
+  const [animale, setAnimale] = useState<any[]>([]);
+  const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
+  const [editingAnimalId, setEditingAnimalId] = useState<string | null>(null);
+  const [showAddAnimal, setShowAddAnimal] = useState(false);
   const [tab, setTab] = useState<Tab>("saloane");
   const [salonSelectat, setSalonSelectat] = useState<string | number | null>(null);
   const [saloaneList, setSaloaneList] = useState<SalonItem[]>(SALOANE);
@@ -122,8 +137,9 @@ export default function DashboardClient() {
   const [notificari, setNotificari] = useState<Notificare[]>([]);
   const [userId, setUserId] = useState("");
   const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "" });
-  const [animalForm, setAnimalForm] = useState({ numeAnimal: "", rasa: "", greutate: "", varsta: "", alergii: "" });
+  const [animalForm, setAnimalForm] = useState({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" });
   const [savedMsg, setSavedMsg] = useState("");
+  const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
 
   useEffect(() => {
     try {
@@ -154,23 +170,15 @@ export default function DashboardClient() {
         }
       }
 
-      const { data: animalData } = await supabase
+      const { data: animaleData } = await supabase
         .from("animale")
         .select("*")
         .eq("user_id", authUser.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+        .order("created_at", { ascending: true });
 
-      if (animalData) {
-        setAnimal(animalData);
-        setAnimalForm({
-          numeAnimal: animalData.nume || "",
-          rasa: animalData.rasa || "",
-          greutate: String(animalData.greutate || ""),
-          varsta: String(animalData.varsta || ""),
-          alergii: animalData.alergii || "",
-        });
+      if (animaleData && animaleData.length > 0) {
+        setAnimale(animaleData);
+        setSelectedAnimalId(animaleData[0].id);
       }
 
       const { data: dbSaloane } = await supabase
@@ -382,6 +390,28 @@ export default function DashboardClient() {
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14 }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
             </div>
 
+            {animale.length > 1 && (
+              <>
+                <SectionTitle>Pentru cine programezi?</SectionTitle>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, marginBottom: 24 }}>
+                  {animale.map(a => {
+                    const sel = a.id === selectedAnimalId;
+                    const sp = specieInfo(a.specie);
+                    return (
+                      <button key={a.id} onClick={() => setSelectedAnimalId(a.id)}
+                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                        <span style={{ fontSize: 22 }}>{sp.icon}</span>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{a.nume}</div>
+                          <div style={{ fontSize: 11, color: c.xmuted }}>{a.rasa}, {a.greutate}kg</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
             <SectionTitle>Alege serviciul</SectionTitle>
             {salon.serviciiComplete.length === 0 ? (
               <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
@@ -443,11 +473,16 @@ export default function DashboardClient() {
           <div style={{ marginBottom: 28 }}>
             <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10 }}>Bună, {prenume}! 🐾</h1>
             {animal && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13 }}>
-                <span style={{ fontSize: 18 }}>🐕</span>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 18 }}>{specieInfo(animal.specie).icon}</span>
                 <span style={{ fontWeight: 800, color: c.text }}>{animal.nume}</span>
                 <span style={{ color: c.border }}>|</span>
                 <span style={{ color: c.muted, fontWeight: 600 }}>{animal.rasa}, {animal.greutate} kg</span>
+                {animale.length > 1 && (
+                  <button onClick={() => setTab("animal")} style={{ marginLeft: 4, fontSize: 11, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, border: "none", padding: "4px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    +{animale.length - 1} {animale.length === 2 ? "altul" : "alți"}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -521,42 +556,95 @@ export default function DashboardClient() {
             </div>
           )}
 
-          {/* TAB ANIMAL */}
+          {/* TAB ANIMALE */}
           {tab === "animal" && (
-            <div style={{ maxWidth: 520 }}>
-              <PageHeader icon="🐾" title="Animăluțul meu" sub="Actualizează profilul animăluțului" />
-              <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {[{ key: "numeAnimal", label: "Numele animăluțului", placeholder: "Max" }, { key: "rasa", label: "Rasa", placeholder: "Labrador Retriever" }, { key: "alergii", label: "Alergii / Sensibilități", placeholder: "Fără alergii" }].map(f => (
-                    <div key={f.key}>
-                      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>{f.label}</label>
-                      <input value={(animalForm as any)[f.key]} onChange={e => setAnimalForm(af => ({ ...af, [f.key]: e.target.value }))} placeholder={f.placeholder} style={inp} />
-                    </div>
-                  ))}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 12 }}>
-                    {[{ key: "greutate", label: "Greutate (kg)", placeholder: "8.5" }, { key: "varsta", label: "Vârstă (ani)", placeholder: "3" }].map(f => (
-                      <div key={f.key}>
-                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>{f.label}</label>
-                        <input value={(animalForm as any)[f.key]} onChange={e => setAnimalForm(af => ({ ...af, [f.key]: e.target.value }))} type="number" placeholder={f.placeholder} style={inp} />
-                      </div>
-                    ))}
+            <div style={{ maxWidth: 640 }}>
+              <PageHeader icon="🐾" title="Animalele mele" sub="Gestionează profilurile animăluților tăi" />
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+                {animale.length === 0 && !showAddAnimal && (
+                  <div style={{ padding: "28px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
+                    Nu ai niciun animal înregistrat. Adaugă unul ca să poți rezerva.
                   </div>
-                  <button onClick={async () => {
-                    const { data: { user: authUser } } = await supabase.auth.getUser();
-                    if (authUser && animal?.id) {
-                      await supabase.from("animale").update({
-                        nume: animalForm.numeAnimal,
-                        rasa: animalForm.rasa,
-                        greutate: Number(animalForm.greutate),
-                        varsta: Number(animalForm.varsta),
-                        alergii: animalForm.alergii,
-                      }).eq("id", animal.id);
-                    }
-                    setAnimal((a: any) => ({ ...a, nume: animalForm.numeAnimal, rasa: animalForm.rasa, greutate: Number(animalForm.greutate), varsta: Number(animalForm.varsta), alergii: animalForm.alergii }));
-                    salveaza("Profil animăluț actualizat!");
-                  }} style={{ ...btnPrimary, marginTop: 4 }}>Salvează modificările</button>
-                </div>
+                )}
+
+                {animale.map(a => {
+                  const isEditing = editingAnimalId === a.id;
+                  const sp = specieInfo(a.specie);
+                  return (
+                    <div key={a.id} style={{ background: c.surface, borderRadius: 16, padding: "18px 20px", border: a.id === selectedAnimalId && animale.length > 1 ? "2px solid #FF6B00" : `1.5px solid ${c.border}` }}>
+                      {!isEditing ? (
+                        <>
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
+                            <div style={{ width: 56, height: 56, borderRadius: 14, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{sp.icon}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 17, fontWeight: 900, color: c.text }}>{a.nume}</div>
+                              <div style={{ fontSize: 13, color: c.muted, marginTop: 4 }}>{sp.label} · {sexLabel(a.sex)} · {a.rasa}</div>
+                              <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>⚖️ {a.greutate} kg · 🎂 {a.varsta} ani · 💊 {a.alergii || "Fără alergii"}</div>
+                            </div>
+                            <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap" }}>
+                              {animale.length > 1 && a.id !== selectedAnimalId && (
+                                <button onClick={() => setSelectedAnimalId(a.id)} style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", background: c.orangeAccent, border: "1.5px solid #FF6B00", padding: "7px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Selectează</button>
+                              )}
+                              {animale.length > 1 && a.id === selectedAnimalId && (
+                                <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: "#FF6B00", padding: "7px 12px", borderRadius: 50, alignSelf: "center" }}>✓ Activ</span>
+                              )}
+                              <button onClick={() => {
+                                setEditingAnimalId(a.id);
+                                setAnimalForm({ numeAnimal: a.nume || "", specie: a.specie || "caine", sex: a.sex || "", rasa: a.rasa || "", greutate: String(a.greutate || ""), varsta: String(a.varsta || ""), alergii: a.alergii || "" });
+                              }} style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, padding: "7px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✏️ Editează</button>
+                              <button onClick={async () => {
+                                if (!confirm(`Sigur ștergi profilul lui ${a.nume}?`)) return;
+                                await supabase.from("animale").delete().eq("id", a.id);
+                                setAnimale(prev => prev.filter(x => x.id !== a.id));
+                                if (selectedAnimalId === a.id) setSelectedAnimalId(null);
+                                salveaza("Animal șters");
+                              }} style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.08)", border: "none", padding: "7px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>🗑️</button>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp} onCancel={() => setEditingAnimalId(null)} onSave={async () => {
+                          await supabase.from("animale").update({
+                            nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex,
+                            rasa: animalForm.rasa, greutate: Number(animalForm.greutate),
+                            varsta: Number(animalForm.varsta), alergii: animalForm.alergii,
+                          }).eq("id", a.id);
+                          setAnimale(prev => prev.map(x => x.id === a.id ? { ...x, nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex, rasa: animalForm.rasa, greutate: Number(animalForm.greutate), varsta: Number(animalForm.varsta), alergii: animalForm.alergii } : x));
+                          setEditingAnimalId(null);
+                          salveaza("Profil actualizat!");
+                        }} />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
+              {showAddAnimal ? (
+                <div style={{ background: c.surface, borderRadius: 16, padding: "20px", border: "2px dashed #FF6B00" }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00", marginBottom: 14 }}>➕ Animal nou</div>
+                  <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp} onCancel={() => { setShowAddAnimal(false); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" }); }} onSave={async () => {
+                    if (!animalForm.numeAnimal.trim() || !animalForm.sex) { salveaza("Completează numele și sexul"); return; }
+                    const { data: nou } = await supabase.from("animale").insert({
+                      user_id: userId, nume: animalForm.numeAnimal.trim(), specie: animalForm.specie, sex: animalForm.sex,
+                      rasa: animalForm.rasa.trim(), greutate: Number(animalForm.greutate) || 0,
+                      varsta: Number(animalForm.varsta) || 0, alergii: animalForm.alergii.trim(),
+                    }).select("*").single();
+                    if (nou) {
+                      setAnimale(prev => [...prev, nou]);
+                      if (!selectedAnimalId) setSelectedAnimalId(nou.id);
+                    }
+                    setShowAddAnimal(false);
+                    setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" });
+                    salveaza("Animal adăugat!");
+                  }} />
+                </div>
+              ) : (
+                <button onClick={() => { setShowAddAnimal(true); setEditingAnimalId(null); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" }); }}
+                  style={{ width: "100%", padding: "14px", borderRadius: 12, border: "1.5px dashed #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  + Adaugă animal nou
+                </button>
+              )}
             </div>
           )}
 
@@ -683,12 +771,12 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0 }: { chil
 
   const TAB_LABELS: Record<Tab, string> = {
     saloane: "Saloane", programari: "Programările mele", profil: "Profilul meu",
-    animal: "Animăluțul meu", notificari: "Notificări", setari: "Setări cont", ajutor: "Ajutor",
+    animal: "Animalele mele", notificari: "Notificări", setari: "Setări cont", ajutor: "Ajutor",
   };
 
   const items: { icon: string; label: string; sub: string; t: Tab }[] = [
     { icon: "👤", label: "Profilul meu", sub: "Nume, email, telefon", t: "profil" },
-    { icon: "🐾", label: "Animăluțul meu", sub: "Editează profil", t: "animal" },
+    { icon: "🐾", label: "Animalele mele", sub: "Adaugă / editează profiluri", t: "animal" },
     { icon: "📅", label: "Programările mele", sub: "Vezi toate programările", t: "programari" },
     { icon: "🔔", label: "Notificări", sub: "Setări SMS / email", t: "notificari" },
     { icon: "🔒", label: "Setări cont", sub: "Schimbă parola", t: "setari" },
@@ -871,4 +959,61 @@ function Tag({ label, color, bg }: { label: string; color: string; bg: string })
 function SectionTitle({ children }: { children: React.ReactNode }) {
   const { c } = useContext(ThemeCtx);
   return <h3 style={{ fontSize: 15, fontWeight: 800, color: c.text2, marginBottom: 12, marginTop: 0 }}>{children}</h3>;
+}
+
+function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel }: { form: any; setForm: (f: any) => void; c: any; inp: React.CSSProperties; onSave: () => void; onCancel: () => void }) {
+  const set = (k: string, v: string) => setForm((f: any) => ({ ...f, [k]: v }));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Nume</label>
+        <input value={form.numeAnimal} onChange={e => set("numeAnimal", e.target.value)} placeholder="Max" style={inp} />
+      </div>
+      <div>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Specie</label>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 100px), 1fr))", gap: 6 }}>
+          {SPECII.map(s => (
+            <button key={s.val} type="button" onClick={() => set("specie", s.val)}
+              style={{ padding: "8px 6px", borderRadius: 10, border: form.specie === s.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: form.specie === s.val ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <span style={{ fontSize: 18 }}>{s.icon}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: form.specie === s.val ? "#FF6B00" : c.text2 }}>{s.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Sex</label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {[{ val: "mascul", label: "Mascul", icon: "♂️" }, { val: "femela", label: "Femelă", icon: "♀️" }].map(s => (
+            <button key={s.val} type="button" onClick={() => set("sex", s.val)}
+              style={{ padding: "10px", borderRadius: 10, border: form.sex === s.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: form.sex === s.val ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 13, fontWeight: 800, color: form.sex === s.val ? "#FF6B00" : c.text2 }}>
+              <span style={{ fontSize: 16 }}>{s.icon}</span> {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Rasa</label>
+        <input value={form.rasa} onChange={e => set("rasa", e.target.value)} placeholder="Ex: Bichon Frisé, Persan..." style={inp} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Greutate (kg)</label>
+          <input value={form.greutate} onChange={e => set("greutate", e.target.value)} type="number" placeholder="8.5" style={inp} />
+        </div>
+        <div>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Vârstă (ani)</label>
+          <input value={form.varsta} onChange={e => set("varsta", e.target.value)} type="number" placeholder="3" style={inp} />
+        </div>
+      </div>
+      <div>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Alergii / Sensibilități</label>
+        <input value={form.alergii} onChange={e => set("alergii", e.target.value)} placeholder='Fără alergii' style={inp} />
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+        <button onClick={onCancel} style={{ flex: 1, padding: "12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Anulează</button>
+        <button onClick={onSave} style={{ flex: 2, padding: "12px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 16px rgba(255,107,0,.35)" }}>Salvează</button>
+      </div>
+    </div>
+  );
 }
