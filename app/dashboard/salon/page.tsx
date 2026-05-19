@@ -66,6 +66,10 @@ export default function DashboardSalon() {
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
+  const [pozaUrl, setPozaUrl] = useState<string | null>(null);
+  const [galerie, setGalerie] = useState<string[]>([]);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingGalerie, setUploadingGalerie] = useState(false);
   const [servicii, setServicii] = useState<Serviciu[]>([
     { id: 1, nume: "Tuns complet", pret: "80", durata: "60" },
     { id: 2, nume: "Baita + uscare", pret: "50", durata: "40" },
@@ -127,6 +131,8 @@ export default function DashboardSalon() {
           telefon: salonRow.telefon || "",
           descriere: salonRow.descriere || "",
         });
+        if (salonRow.poza_url) setPozaUrl(salonRow.poza_url);
+        if (salonRow.galerie && Array.isArray(salonRow.galerie)) setGalerie(salonRow.galerie);
         if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
         if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
         setAbonament({ plan: salonRow.plan || "starter" });
@@ -277,6 +283,50 @@ export default function DashboardSalon() {
     }
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
+
+  async function uploadCover(file: File) {
+    if (!salonData?.id) return;
+    setUploadingCover(true);
+    const ext = file.name.split(".").pop();
+    const path = `${salonData.user_id}/cover.${ext}`;
+    const { error: upErr } = await supabase.storage.from("saloane").upload(path, file, { upsert: true });
+    if (upErr) { salveaza("Eroare la upload!"); setUploadingCover(false); return; }
+    const { data: urlData } = supabase.storage.from("saloane").getPublicUrl(path);
+    const url = `${urlData.publicUrl}?t=${Date.now()}`;
+    await supabase.from("saloane").update({ poza_url: url }).eq("id", salonData.id);
+    setPozaUrl(url);
+    setSalonData((s: any) => ({ ...s, poza_url: url }));
+    setUploadingCover(false);
+    salveaza("Poza de prezentare actualizată!");
+  }
+
+  async function uploadGalerie(files: FileList) {
+    if (!salonData?.id) return;
+    setUploadingGalerie(true);
+    const newUrls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split(".").pop();
+      const path = `${salonData.user_id}/gallery/${Date.now()}_${i}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("saloane").upload(path, file, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from("saloane").getPublicUrl(path);
+        newUrls.push(urlData.publicUrl);
+      }
+    }
+    const updated = [...galerie, ...newUrls];
+    await supabase.from("saloane").update({ galerie: updated }).eq("id", salonData.id);
+    setGalerie(updated);
+    setUploadingGalerie(false);
+    salveaza(`${newUrls.length} poze adăugate în galerie!`);
+  }
+
+  async function stergeGalerie(url: string) {
+    const updated = galerie.filter(u => u !== url);
+    await supabase.from("saloane").update({ galerie: updated }).eq("id", salonData.id);
+    setGalerie(updated);
+    salveaza("Poza ștearsă din galerie!");
+  }
 
   return (
     <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
@@ -462,19 +512,80 @@ export default function DashboardSalon() {
 
             {/* PROFIL SALON */}
             {tab === "profil-salon" && (
-              <div style={{ maxWidth: 540 }}>
-                <PageHeader icon="🏪" title="Profilul salonului" sub="Actualizeaza datele publice ale salonului" />
+              <div style={{ maxWidth: 560 }}>
+                <PageHeader icon="🏪" title="Profilul salonului" sub="Actualizează datele publice ale salonului" />
+
+                {/* POZA DE PREZENTARE */}
+                <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14 }}>📷 Poza de prezentare</div>
+                  <div style={{ position: "relative", width: "100%", height: 200, borderRadius: 14, overflow: "hidden", background: c.surface2, border: `1.5px dashed ${c.border}`, marginBottom: 14 }}>
+                    {pozaUrl ? (
+                      <img src={pozaUrl} alt="Cover salon" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                        <span style={{ fontSize: 40 }}>📷</span>
+                        <span style={{ fontSize: 13, color: c.muted, fontWeight: 600 }}>Nicio poză încărcată</span>
+                      </div>
+                    )}
+                  </div>
+                  <label style={{ display: "inline-block", cursor: "pointer" }}>
+                    <div style={{ padding: "10px 20px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "inline-block" }}>
+                      {uploadingCover ? "Se încarcă..." : pozaUrl ? "✏️ Schimbă poza" : "📤 Încarcă poza"}
+                    </div>
+                    <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingCover}
+                      onChange={e => { if (e.target.files?.[0]) uploadCover(e.target.files[0]); }} />
+                  </label>
+                  <div style={{ fontSize: 11, color: c.muted, marginTop: 8 }}>JPG, PNG, WEBP — max 5MB. Această poză apare pe cardul salonului tău.</div>
+                </div>
+
+                {/* GALERIE */}
+                <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text2 }}>🖼️ Galerie salon ({galerie.length}/10)</div>
+                    {galerie.length < 10 && (
+                      <label style={{ cursor: "pointer" }}>
+                        <div style={{ padding: "8px 16px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                          {uploadingGalerie ? "Se încarcă..." : "+ Adaugă poze"}
+                        </div>
+                        <input type="file" accept="image/*" multiple style={{ display: "none" }} disabled={uploadingGalerie}
+                          onChange={e => { if (e.target.files?.length) uploadGalerie(e.target.files); }} />
+                      </label>
+                    )}
+                  </div>
+                  {galerie.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "32px 0", color: c.muted, fontSize: 13 }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>🖼️</div>
+                      Nicio poză în galerie. Adaugă poze din salonul tău!
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10 }}>
+                      {galerie.map((url, i) => (
+                        <div key={i} style={{ position: "relative", borderRadius: 10, overflow: "hidden", aspectRatio: "1", background: c.surface2 }}>
+                          <img src={url} alt={`Galerie ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          <button onClick={() => stergeGalerie(url)}
+                            style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(239,68,68,.9)", border: "none", color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Nunito, sans-serif" }}>
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: c.muted, marginTop: 10 }}>Clienții văd galeria când intră pe profilul salonului tău. Max 10 poze.</div>
+                </div>
+
+                {/* DATE SALON */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 16 }}>📋 Date salon</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {[{ key: "numeSalon", label: "Numele salonului", placeholder: "Paws & Style" }, { key: "adresa", label: "Adresa", placeholder: "Str. Florilor nr. 12" }, { key: "oras", label: "Orasul", placeholder: "Bucuresti" }, { key: "telefon", label: "Telefon public", placeholder: "07XX XXX XXX" }].map(f => (
+                    {[{ key: "numeSalon", label: "Numele salonului", placeholder: "Paws & Style" }, { key: "adresa", label: "Adresa", placeholder: "Str. Florilor nr. 12" }, { key: "oras", label: "Orașul", placeholder: "București" }, { key: "telefon", label: "Telefon public", placeholder: "07XX XXX XXX" }].map(f => (
                       <div key={f.key}>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>{f.label}</label>
                         <input value={(profilSalon as any)[f.key]} onChange={e => setProfilSalon(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={inp} />
                       </div>
                     ))}
                     <div>
-                      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Descriere scurta</label>
-                      <textarea value={profilSalon.descriere} onChange={e => setProfilSalon(p => ({ ...p, descriere: e.target.value }))} rows={3} placeholder="Salon specializat in..." style={{ ...inp, resize: "vertical" }} />
+                      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Descriere scurtă</label>
+                      <textarea value={profilSalon.descriere} onChange={e => setProfilSalon(p => ({ ...p, descriere: e.target.value }))} rows={3} placeholder="Salon specializat în..." style={{ ...inp, resize: "vertical" } as React.CSSProperties} />
                     </div>
                     <button onClick={async () => {
                       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -489,7 +600,7 @@ export default function DashboardSalon() {
                         setSalonData((s: any) => ({ ...s, nume: profilSalon.numeSalon, adresa: profilSalon.adresa, oras: profilSalon.oras, telefon: profilSalon.telefon, descriere: profilSalon.descriere }));
                       }
                       salveaza("Profil salon actualizat!");
-                    }} style={btnPrimary}>Salveaza modificarile</button>
+                    }} style={btnPrimary}>Salvează modificările</button>
                   </div>
                 </div>
               </div>
