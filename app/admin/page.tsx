@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
-import { generateMockData, type MockData } from "../../lib/adminMockData";
+import { generateMockData, type MockData, type MockClient, type MockSalon, type MockProgramare } from "../../lib/adminMockData";
+import { supabase } from "../../lib/supabase";
 
 type Tab = "overview" | "stapani" | "saloane" | "programari" | "abonamente" | "reviews" | "tichete" | "marketing" | "setari";
 
@@ -27,46 +28,31 @@ export default function AdminDashboard() {
   const [data, setData] = useState<MockData | null>(null);
 
   useEffect(() => {
-    const sess = localStorage.getItem("calyhub_admin_session");
-    if (!sess) { router.replace("/admin/login"); return; }
-    try {
-      const { expiresAt } = JSON.parse(sess);
-      if (expiresAt < Date.now()) {
-        localStorage.removeItem("calyhub_admin_session");
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.replace("/admin/login"); return; }
+
+      const { data: profil } = await supabase.from("profiluri").select("rol").eq("id", user.id).single();
+      if (profil?.rol !== "admin") {
+        await supabase.auth.signOut();
         router.replace("/admin/login");
         return;
       }
-    } catch {
-      router.replace("/admin/login");
-      return;
-    }
 
-    const saved = localStorage.getItem("calyhub_admin_mockdata");
-    if (saved) {
-      try { setData(JSON.parse(saved)); }
-      catch { const d = generateMockData(); localStorage.setItem("calyhub_admin_mockdata", JSON.stringify(d)); setData(d); }
-    } else {
-      const d = generateMockData();
-      localStorage.setItem("calyhub_admin_mockdata", JSON.stringify(d));
-      setData(d);
-    }
-    setAuthChecked(true);
+      const merged = await fetchAdminData();
+      setData(merged);
+      setAuthChecked(true);
+    })();
   }, [router]);
 
-  function logout() {
-    localStorage.removeItem("calyhub_admin_session");
+  async function logout() {
+    await supabase.auth.signOut();
     router.push("/admin/login");
   }
-  function regenerateData() {
-    if (!confirm("Regenerezi datele mock? Toate modificările tale vor fi pierdute.")) return;
-    const d = generateMockData();
-    localStorage.setItem("calyhub_admin_mockdata", JSON.stringify(d));
-    setData(d);
-  }
-  function clearMockData() {
-    if (!confirm("Ștergi TOATE datele mock? Panoul va fi gol până se conectează backend-ul real.")) return;
-    localStorage.removeItem("calyhub_admin_mockdata");
-    setData({ clienti: [], saloane: [], programari: [], reviews: [], tichete: [], istoricFinanciar: [] });
+  async function regenerateData() {
+    if (!confirm("Reîncarcă datele din Supabase?")) return;
+    const merged = await fetchAdminData();
+    setData(merged);
   }
 
   if (!authChecked || !data) {
@@ -82,8 +68,7 @@ export default function AdminDashboard() {
             <span style={{ background: "#FF6B00", color: "#fff", padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>🔒 Admin</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button onClick={regenerateData} style={btnGhost}>🔄 Regenerează date</button>
-            <button onClick={clearMockData} style={{ ...btnGhost, color: "#F87171" }}>🗑️ Șterge mock</button>
+            <button onClick={regenerateData} style={btnGhost}>🔄 Reîncarcă date</button>
             <button onClick={logout} style={btnLogout}>Deconectare</button>
           </div>
         </div>
@@ -115,6 +100,92 @@ export default function AdminDashboard() {
       <Footer variant="admin" />
     </div>
   );
+}
+
+async function fetchAdminData(): Promise<MockData> {
+  const base = generateMockData();
+
+  const { data: profiluriRaw } = await supabase.from("profiluri").select("id, nume, telefon, tip, created_at");
+  const { data: animaleRaw } = await supabase.from("animale").select("user_id");
+  const { data: saloaneRaw } = await supabase.from("saloane").select("id, user_id, nume, oras, telefon, created_at");
+  const { data: programariRaw } = await supabase.from("programari").select("id, user_id, salon_id, data, ora, status, pret, serviciu");
+  const { data: usersRaw } = await supabase.from("profiluri").select("id");
+
+  const emailMap = new Map<string, string>();
+  const profMap = new Map<string, any>();
+  (profiluriRaw || []).forEach((p: any) => profMap.set(p.id, p));
+
+  const animaleCount = new Map<string, number>();
+  (animaleRaw || []).forEach((a: any) => animaleCount.set(a.user_id, (animaleCount.get(a.user_id) || 0) + 1));
+
+  const programariCountByUser = new Map<string, number>();
+  (programariRaw || []).forEach((p: any) => programariCountByUser.set(p.user_id, (programariCountByUser.get(p.user_id) || 0) + 1));
+
+  const programariCountBySalon = new Map<string, number>();
+  (programariRaw || []).forEach((p: any) => programariCountBySalon.set(p.salon_id, (programariCountBySalon.get(p.salon_id) || 0) + 1));
+
+  const clientiReali: MockClient[] = (profiluriRaw || [])
+    .filter((p: any) => p.tip === "client")
+    .map((p: any) => ({
+      id: p.id,
+      nume: p.nume || "Client",
+      email: emailMap.get(p.id) || "—",
+      telefon: p.telefon || "—",
+      oras: "—",
+      dataInregistrare: p.created_at || new Date().toISOString(),
+      nrAnimale: animaleCount.get(p.id) || 0,
+      nrProgramari: programariCountByUser.get(p.id) || 0,
+      status: "activ" as const,
+    }));
+
+  const saloaneReale: MockSalon[] = (saloaneRaw || []).map((s: any) => {
+    const owner = profMap.get(s.user_id);
+    return {
+      id: s.id,
+      nume: s.nume || "Salon",
+      oras: s.oras || "—",
+      email: emailMap.get(s.user_id) || "—",
+      telefon: s.telefon || owner?.telefon || "—",
+      plan: "starter" as const,
+      nrAngajati: 1,
+      nrProgramariLuna: programariCountBySalon.get(s.id) || 0,
+      rating: 0,
+      dataInregistrare: s.created_at || new Date().toISOString(),
+      status: "activ" as const,
+    };
+  });
+
+  const salonMap = new Map<string, any>();
+  saloaneReale.forEach(s => salonMap.set(String(s.id), s));
+
+  const programariReale: MockProgramare[] = (programariRaw || []).map((p: any) => {
+    const owner = profMap.get(p.user_id);
+    const salon = salonMap.get(String(p.salon_id));
+    const statusMap: Record<string, MockProgramare["status"]> = {
+      "confirmat": "confirmata",
+      "în așteptare": "in_asteptare",
+      "in asteptare": "in_asteptare",
+      "finalizat": "finalizata",
+      "anulat": "anulata",
+    };
+    return {
+      id: p.id,
+      client: owner?.nume || "Client",
+      salon: salon?.nume || "Salon",
+      oras: salon?.oras || "—",
+      serviciu: p.serviciu || "—",
+      pret: Number(p.pret) || 0,
+      data: p.data ? new Date(`${p.data}T${p.ora || "00:00"}:00`).toISOString() : new Date().toISOString(),
+      status: statusMap[p.status] || "in_asteptare",
+    };
+  });
+
+  return {
+    ...base,
+    clienti: clientiReali,
+    saloane: saloaneReale,
+    programari: programariReale,
+  };
 }
 
 const btnGhost: React.CSSProperties = { background: "transparent", color: "#9CA3AF", border: "1px solid #2A2A2A", padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" };
