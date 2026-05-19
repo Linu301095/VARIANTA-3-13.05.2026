@@ -459,7 +459,9 @@ export default function DashboardClient() {
                     return (
                       <button key={a.id} onClick={() => setSelectedAnimalId(a.id)}
                         style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                        <span style={{ fontSize: 22 }}>{sp.icon}</span>
+                        {a.poza_url
+                          ? <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}><img src={a.poza_url} alt={a.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                          : <span style={{ fontSize: 22 }}>{sp.icon}</span>}
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{a.nume}</div>
                           <div style={{ fontSize: 11, color: c.xmuted }}>{a.rasa}, {a.greutate}kg</div>
@@ -662,7 +664,9 @@ export default function DashboardClient() {
                       {!isEditing ? (
                         <>
                           <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
-                            <div style={{ width: 56, height: 56, borderRadius: 14, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{sp.icon}</div>
+                            {a.poza_url
+                              ? <div style={{ width: 56, height: 56, borderRadius: 14, overflow: "hidden", flexShrink: 0, border: `1.5px solid ${c.border}` }}><img src={a.poza_url} alt={a.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                              : <div style={{ width: 56, height: 56, borderRadius: 14, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{sp.icon}</div>}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 17, fontWeight: 900, color: c.text }}>{a.nume}</div>
                               <div style={{ fontSize: 13, color: c.muted, marginTop: 4 }}>{sp.label} · {sexLabel(a.sex)} · {a.rasa}</div>
@@ -690,7 +694,10 @@ export default function DashboardClient() {
                           </div>
                         </>
                       ) : (
-                        <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp} onCancel={() => setEditingAnimalId(null)} onSave={async () => {
+                        <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp}
+                          animalId={a.id} userId={userId} animalPoza={a.poza_url}
+                          onPhotoChange={(url) => setAnimale(prev => prev.map(x => x.id === a.id ? { ...x, poza_url: url } : x))}
+                          onCancel={() => setEditingAnimalId(null)} onSave={async () => {
                           await supabase.from("animale").update({
                             nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex,
                             rasa: animalForm.rasa, greutate: Number(animalForm.greutate),
@@ -1065,11 +1072,59 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h3 style={{ fontSize: 15, fontWeight: 800, color: c.text2, marginBottom: 12, marginTop: 0 }}>{children}</h3>;
 }
 
-function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel }: { form: any; setForm: (f: any) => void; c: any; inp: React.CSSProperties; onSave: () => void; onCancel: () => void }) {
+function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, userId, animalPoza, onPhotoChange }: { form: any; setForm: (f: any) => void; c: any; inp: React.CSSProperties; onSave: () => void; onCancel: () => void; animalId?: string; userId?: string; animalPoza?: string | null; onPhotoChange?: (url: string | null) => void }) {
   const [rasaLibera, setRasaLibera] = useState(false);
+  const [uploadingPoza, setUploadingPoza] = useState(false);
   const set = (k: string, v: string) => setForm((f: any) => ({ ...f, [k]: v }));
+
+  async function handlePhotoUpload(file: File) {
+    if (!animalId || !userId) return;
+    setUploadingPoza(true);
+    const ext = file.name.split(".").pop();
+    const path = `${userId}/${animalId}.${ext}`;
+    const { error } = await supabase.storage.from("animale").upload(path, file, { upsert: true });
+    if (!error) {
+      const { data } = supabase.storage.from("animale").getPublicUrl(path);
+      const url = `${data.publicUrl}?t=${Date.now()}`;
+      await supabase.from("animale").update({ poza_url: url }).eq("id", animalId);
+      onPhotoChange?.(url);
+    }
+    setUploadingPoza(false);
+  }
+
+  async function handlePhotoDelete() {
+    if (!animalId) return;
+    await supabase.from("animale").update({ poza_url: null }).eq("id", animalId);
+    onPhotoChange?.(null);
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {animalId && (
+        <div>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 8 }}>Poză animal (opțional)</label>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 72, height: 72, borderRadius: 14, overflow: "hidden", background: c.surface2, border: `1.5px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {animalPoza
+                ? <img src={animalPoza} alt="Poza animal" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <span style={{ fontSize: 28 }}>🐾</span>}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <label style={{ cursor: "pointer" }}>
+                <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingPoza} onChange={e => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }} />
+                <span style={{ display: "inline-block", padding: "8px 16px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  {uploadingPoza ? "Se încarcă..." : animalPoza ? "📷 Schimbă poza" : "📷 Adaugă poză"}
+                </span>
+              </label>
+              {animalPoza && (
+                <button type="button" onClick={handlePhotoDelete} style={{ padding: "8px 16px", borderRadius: 50, border: "none", background: "rgba(239,68,68,.1)", color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                  🗑️ Șterge poza
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div>
         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Nume</label>
         <input value={form.numeAnimal} onChange={e => set("numeAnimal", e.target.value)} placeholder="Max" style={inp} />
