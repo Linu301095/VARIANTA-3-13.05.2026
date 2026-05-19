@@ -20,7 +20,7 @@ const SALOANE = [
   { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string };
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[] };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -52,6 +52,8 @@ function mapSalonDB(s: any, i: number): SalonItem {
     badgeIcon: p.badgeIcon,
     culoare: p.culoare,
     bg: p.bg,
+    poza_url: s.poza_url || null,
+    galerie: Array.isArray(s.galerie) ? s.galerie : [],
   };
 }
 
@@ -193,7 +195,7 @@ export default function DashboardClient() {
 
       const { data: dbSaloane } = await supabase
         .from("saloane")
-        .select("id, nume, oras, servicii")
+        .select("id, nume, oras, servicii, poza_url, galerie")
         .order("created_at", { ascending: false });
 
       if (dbSaloane && dbSaloane.length > 0) {
@@ -388,16 +390,38 @@ export default function DashboardClient() {
         <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite}>
           <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
             <button onClick={() => { setSalonSelectat(null); setRezervare(null); }} style={btnBack}>← Înapoi</button>
-            <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `2px solid ${salon.culoare}`, marginBottom: 20, boxShadow: c.cardShadow }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
-                  <h2 style={{ fontSize: 22, fontWeight: 900, color: c.text, margin: "0 0 6px" }}>{salon.nume}</h2>
-                  <div style={{ fontSize: 13, color: c.muted }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
+            <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, marginBottom: 20, boxShadow: c.cardShadow, overflow: "hidden" }}>
+              {salon.poza_url && (
+                <div style={{ height: 200, overflow: "hidden", position: "relative" }}>
+                  <img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.6) 100%)" }} />
+                  <span style={{ position: "absolute", bottom: 12, left: 16, fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "4px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
                 </div>
-                <div style={{ textAlign: "right" }}><div style={{ fontSize: 24, fontWeight: 900, color: c.text }}>⭐ {salon.rating}</div><div style={{ fontSize: 12, color: c.xmuted }}>{salon.recenzii} recenzii</div></div>
+              )}
+              <div style={{ padding: "20px 24px" }}>
+                {!salon.poza_url && <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>}
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h2 style={{ fontSize: 22, fontWeight: 900, color: c.text, margin: "0 0 6px" }}>{salon.nume}</h2>
+                    <div style={{ fontSize: 13, color: c.muted }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 24, fontWeight: 900, color: c.text }}>⭐ {salon.rating}</div><div style={{ fontSize: 12, color: c.xmuted }}>{salon.recenzii} recenzii</div></div>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14 }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
               </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14 }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
+              {/* GALERIE */}
+              {salon.galerie && salon.galerie.length > 0 && (
+                <div style={{ padding: "0 24px 20px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>🖼️ Galerie salon</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 8 }}>
+                    {salon.galerie.map((url, i) => (
+                      <div key={i} style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "1", background: c.surface2 }}>
+                        <img src={url} alt={`Galerie ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {animale.length > 1 && (
@@ -915,13 +939,28 @@ function CardSalon({ salon, onSelect }: { salon: SalonItem; onSelect: () => void
   const { c, theme } = useContext(ThemeCtx);
   return (
     <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
-      <div style={{ height: 4, background: salon.culoare }} />
-      <div style={{ padding: "18px 20px 20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {salon.rating}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({salon.recenzii})</span></div>
+      {/* Cover photo sau bara colorată */}
+      {salon.poza_url ? (
+        <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
+          <img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.45) 100%)" }} />
+          <span style={{ position: "absolute", bottom: 10, left: 12, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
         </div>
-        <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600 }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div></div>
+      ) : (
+        <div style={{ height: 4, background: salon.culoare }} />
+      )}
+
+      <div style={{ padding: "18px 20px 20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+        {!salon.poza_url && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {salon.rating}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({salon.recenzii})</span></div>
+          </div>
+        )}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600 }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div></div>
+          {salon.poza_url && <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {salon.rating}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({salon.recenzii})</span></div>}
+        </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${c.border2}` }}>
           <div><div style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>de la</div><div style={{ fontSize: 18, fontWeight: 900, color: c.text }}>{salon.pretDe > 0 ? `${salon.pretDe} RON` : "—"}</div></div>
