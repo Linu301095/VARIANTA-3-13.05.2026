@@ -651,6 +651,7 @@ export default function DashboardClient() {
                           if (sel) { border = salon.culoare; bg = theme === "dark" ? `${salon.culoare}26` : salon.bg; color = salon.culoare; }
                           else if (slot.trecut) { bg = c.surface3; color = c.xmuted; border = c.border; }
                           else if (slot.ocupat) { bg = theme === "dark" ? "rgba(239,68,68,.12)" : "#FEF2F2"; border = "#FECACA"; color = "#EF4444"; }
+                          else { bg = theme === "dark" ? "rgba(16,185,129,.18)" : "#D1FAE5"; border = "#10B981"; color = "#065F46"; }
                           return (
                             <button key={slot.ora} disabled={disabled} onClick={() => !disabled && setRezervare(r => ({ ...r!, ora: slot.ora }))}
                               style={{ padding: "11px 6px", borderRadius: 10, border: `${sel ? 2 : 1.5}px solid ${border}`, background: bg, fontSize: 13, fontWeight: 700, color, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", position: "relative", textDecoration: slot.ocupat ? "line-through" : "none", opacity: slot.trecut ? 0.5 : 1 }}>
