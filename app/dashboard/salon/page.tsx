@@ -21,13 +21,45 @@ type ProgramareSalon = {
 
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
 
-type Tab = "agenda" | "statistici" | "notificari" | "profil-salon" | "servicii" | "echipa" | "abonament" | "setari" | "ajutor";
+type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "abonament" | "setari" | "ajutor";
 type Serviciu = { id: number; nume: string; pret: string; durata: string };
 type Groomer = { id: number; nume: string; specialitate: string };
+type ProgramZi = { activ: boolean; start: string; end: string };
+type ProgramSaptamanal = Record<string, ProgramZi>;
+type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null };
 
 const AZI = new Date();
 const ZILE = ["Lun", "Mar", "Mie", "Joi", "Vin", "Sam", "Dum"];
 const LUNA = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const PROGRAM_DEFAULT: ProgramSaptamanal = {
+  "1": { activ: true, start: "09:00", end: "18:00" },
+  "2": { activ: true, start: "09:00", end: "18:00" },
+  "3": { activ: true, start: "09:00", end: "18:00" },
+  "4": { activ: true, start: "09:00", end: "18:00" },
+  "5": { activ: true, start: "09:00", end: "18:00" },
+  "6": { activ: false, start: "10:00", end: "14:00" },
+  "0": { activ: false, start: "10:00", end: "14:00" },
+};
+const ZILE_LABEL: Record<string, string> = { "1": "Luni", "2": "Marți", "3": "Miercuri", "4": "Joi", "5": "Vineri", "6": "Sâmbătă", "0": "Duminică" };
+const ZILE_ORDINE = ["1", "2", "3", "4", "5", "6", "0"];
+const STEP_SLOT = 30;
+
+function timeToMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
+function minToTime(m: number) { const h = Math.floor(m / 60), mm = m % 60; return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`; }
+function genereazaSloturiZi(prog: ProgramZi, step = STEP_SLOT): string[] {
+  if (!prog.activ) return [];
+  const startM = timeToMin(prog.start), endM = timeToMin(prog.end);
+  const out: string[] = [];
+  for (let m = startM; m + step <= endM; m += step) out.push(minToTime(m));
+  return out;
+}
+function suprapunere(slot: string, durataSlot: number, p: { ora: string; durata: number | null }) {
+  const slotS = timeToMin(slot), slotE = slotS + durataSlot;
+  const pS = timeToMin(p.ora), pE = pS + (p.durata || 60);
+  return slotS < pE && slotE > pS;
+}
+function isoData(d: Date) { return d.toISOString().slice(0, 10); }
 
 /* ── Color palette ── */
 const C = {
@@ -81,6 +113,13 @@ export default function DashboardSalon() {
     { id: 1, nume: "Maria Ionescu", specialitate: "Rase mici" },
     { id: 2, nume: "Andrei Pop", specialitate: "Rase mari" },
   ]);
+  const [program, setProgram] = useState<ProgramSaptamanal>(PROGRAM_DEFAULT);
+  const [zilaSelectata, setZilaSelectata] = useState<string>(() => isoData(new Date()));
+  const [sloturiZi, setSloturiZi] = useState<SlotProgramare[]>([]);
+  const [modalBlocare, setModalBlocare] = useState<{ slot: string; durata: number } | null>(null);
+  const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
+  const [numeBlocare, setNumeBlocare] = useState("");
+  const [durataBlocare, setDurataBlocare] = useState(60);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 600px)");
@@ -136,6 +175,9 @@ export default function DashboardSalon() {
         });
         if (salonRow.poza_url) setPozaUrl(salonRow.poza_url);
         if (salonRow.galerie && Array.isArray(salonRow.galerie)) setGalerie(salonRow.galerie);
+        if (salonRow.program && typeof salonRow.program === "object" && Object.keys(salonRow.program).length > 0) {
+          setProgram({ ...PROGRAM_DEFAULT, ...salonRow.program });
+        }
         if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
         if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
         setAbonament({ plan: salonRow.plan || "starter" });
@@ -158,7 +200,7 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, user_id, animal_id")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata")
         .eq("salon_id", salonId)
         .neq("status", "anulat")
         .order("data", { ascending: true })
@@ -183,11 +225,16 @@ export default function DashboardSalon() {
         const specieIcon = animal?.specie === "pisica" ? "🐱" : animal?.specie === "iepure" ? "🐰" : animal?.specie === "pasare" ? "🐦" : animal?.specie === "rozator" ? "🐹" : animal?.specie === "reptila" ? "🦎" : animal?.specie === "altele" ? "✨" : "🐶";
         const sexIcon = animal?.sex === "femela" ? "♀️" : animal?.sex === "mascul" ? "♂️" : "";
         const detalii = [animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null, sexIcon].filter(Boolean).join(", ");
+        const esteApp = !p.sursa || p.sursa === "app";
+        const clientNume = esteApp ? (profil?.nume || "—") : (p.nume_client_extern || (p.sursa === "telefonic" ? "📞 Client telefonic" : p.sursa === "walkin" ? "🚶 Walk-in" : "⏸ Indisponibil"));
+        const animalText = esteApp
+          ? (animal?.nume ? `${specieIcon} ${animal.nume}${detalii ? ` (${detalii})` : ""}` : "—")
+          : (p.sursa === "blocaj" ? "—" : "Adăugat manual");
         return {
           id: p.id,
           user_id: p.user_id,
-          client: profil?.nume || "—",
-          animal: animal?.nume ? `${specieIcon} ${animal.nume}${detalii ? ` (${detalii})` : ""}` : "—",
+          client: clientNume,
+          animal: animalText,
           serviciu: p.serviciu,
           ora: p.ora,
           data: p.data,
@@ -250,7 +297,7 @@ export default function DashboardSalon() {
   const SUB_TABS: Tab[] = ["profil-salon", "servicii", "echipa", "abonament", "setari", "ajutor"];
   const isSubTab = SUB_TABS.includes(tab);
   const TAB_LABELS: Record<Tab, string> = {
-    agenda: "Agenda", statistici: "Statistici", notificari: "Notificări",
+    agenda: "Agenda", statistici: "Statistici", program: "Program", notificari: "Notificări",
     "profil-salon": "Profilul salonului", servicii: "Serviciile mele",
     echipa: "Echipa mea", abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
   };
@@ -286,6 +333,57 @@ export default function DashboardSalon() {
     }
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
+
+  async function salveazaProgram() {
+    if (!salonData?.id) return;
+    const { error } = await supabase.from("saloane").update({ program }).eq("id", salonData.id);
+    if (error) { salveaza("Eroare la salvare orar"); console.error(error); return; }
+    salveaza("Orar salvat!");
+  }
+
+  async function loadSloturiZi(salonId: string, zi: string) {
+    const { data } = await supabase
+      .from("programari")
+      .select("id, ora, durata, status, sursa, serviciu, nume_client_extern")
+      .eq("salon_id", salonId)
+      .eq("data", zi)
+      .neq("status", "anulat");
+    setSloturiZi((data as SlotProgramare[]) || []);
+  }
+
+  useEffect(() => {
+    if (salonData?.id && tab === "program") loadSloturiZi(salonData.id, zilaSelectata);
+  }, [salonData?.id, zilaSelectata, tab]);
+
+  async function blocheazaSlot() {
+    if (!salonData?.id || !userId || !modalBlocare) return;
+    const sursa = tipBlocare;
+    const serviciu = tipBlocare === "blocaj" ? "Pauză / Indisponibil" : tipBlocare === "walkin" ? "Walk-in" : "Programare telefonică";
+    const { data: nou, error } = await supabase.from("programari").insert({
+      user_id: userId,
+      salon_id: salonData.id,
+      serviciu,
+      pret: 0,
+      data: zilaSelectata,
+      ora: modalBlocare.slot,
+      durata: durataBlocare,
+      status: "confirmat",
+      sursa,
+      nume_client_extern: numeBlocare.trim() || null,
+    }).select("id, ora, durata, status, sursa, serviciu, nume_client_extern").single();
+    if (error || !nou) { salveaza("Eroare la blocare"); console.error(error); return; }
+    setSloturiZi(s => [...s, nou as SlotProgramare]);
+    setModalBlocare(null);
+    setNumeBlocare("");
+    salveaza("Slot blocat");
+  }
+
+  async function deblocheazaSlot(id: string) {
+    const { error } = await supabase.from("programari").delete().eq("id", id);
+    if (error) { salveaza("Eroare la deblocare"); return; }
+    setSloturiZi(s => s.filter(x => x.id !== id));
+    salveaza("Slot deblocat");
+  }
 
   async function uploadAvatar(file: File) {
     if (!userId) return;
@@ -389,7 +487,7 @@ export default function DashboardSalon() {
             {/* Center: main tab buttons (only when not in sub-tab) */}
             {!isSubTab && (
               <div style={{ display: "flex", alignItems: "center", gap: 2, flex: "0 1 auto", overflow: "hidden" }}>
-                {([["statistici", "📊", "Statistici"], ["agenda", "📅", "Agenda"], ["notificari", "🔔", `Notificări${necitite > 0 ? ` (${necitite})` : ""}`]] as const).map(([t, icon, label]) => (
+                {([["statistici", "📊", "Statistici"], ["agenda", "📅", "Agenda"], ["program", "🕐", "Program"], ["notificari", "🔔", `Notificări${necitite > 0 ? ` (${necitite})` : ""}`]] as const).map(([t, icon, label]) => (
                   <button key={t} onClick={() => setTab(t)}
                     style={{ padding: isMobile ? "7px 10px" : "7px 16px", borderRadius: 50, border: "none", background: tab === t ? "#FF6B00" : "transparent", color: tab === t ? "#fff" : c.muted, fontSize: isMobile ? 18 : 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0, transition: "all .15s", position: "relative" }}>
                     {isMobile ? icon : label}
@@ -534,6 +632,167 @@ export default function DashboardSalon() {
                 </div>
               </div>
             )}
+
+            {/* PROGRAM */}
+            {tab === "program" && (() => {
+              const zileLista: { iso: string; eticheta: string; numeZi: string }[] = [];
+              const azi0 = new Date(); azi0.setHours(0, 0, 0, 0);
+              for (let i = 0; i < 14; i++) {
+                const d = new Date(azi0); d.setDate(azi0.getDate() + i);
+                const dowIdx = d.getDay();
+                const dowKey = String(dowIdx);
+                const numeZiScurt = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"][dowIdx];
+                zileLista.push({ iso: isoData(d), eticheta: `${numeZiScurt} ${d.getDate()} ${LUNA[d.getMonth()]}`, numeZi: ZILE_LABEL[dowKey] });
+              }
+              const dowSel = new Date(zilaSelectata + "T00:00:00").getDay();
+              const programZiSel = program[String(dowSel)];
+              const sloturiPosibile = programZiSel ? genereazaSloturiZi(programZiSel) : [];
+              const aziIso = isoData(new Date());
+              const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+
+              return (
+                <div style={{ maxWidth: 900 }}>
+                  <PageHeader icon="🕐" title="Program & disponibilitate" sub="Setează orarul săptămânal și gestionează sloturile" />
+
+                  {/* ORAR SĂPTĂMÂNAL */}
+                  <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 20 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 16 }}>📅 Orar săptămânal</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {ZILE_ORDINE.map(k => {
+                        const z = program[k];
+                        return (
+                          <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${c.border2}`, flexWrap: "wrap" }}>
+                            <button onClick={() => setProgram(p => ({ ...p, [k]: { ...p[k], activ: !p[k].activ } }))}
+                              style={{ width: 44, height: 24, borderRadius: 12, border: "none", background: z.activ ? "#FF6B00" : c.surface3, cursor: "pointer", position: "relative", flexShrink: 0 }}>
+                              <span style={{ position: "absolute", top: 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,.2)", transition: "left .2s", left: z.activ ? 22 : 2 }} />
+                            </button>
+                            <div style={{ width: 90, fontSize: 14, fontWeight: 700, color: c.text }}>{ZILE_LABEL[k]}</div>
+                            {z.activ ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <input type="time" value={z.start} onChange={e => setProgram(p => ({ ...p, [k]: { ...p[k], start: e.target.value } }))}
+                                  style={{ padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontFamily: "Nunito, sans-serif", fontSize: 13 }} />
+                                <span style={{ color: c.muted, fontWeight: 700 }}>→</span>
+                                <input type="time" value={z.end} onChange={e => setProgram(p => ({ ...p, [k]: { ...p[k], end: e.target.value } }))}
+                                  style={{ padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontFamily: "Nunito, sans-serif", fontSize: 13 }} />
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>Închis</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button onClick={salveazaProgram} style={{ ...btnPrimary, marginTop: 18 }}>Salvează orarul</button>
+                  </div>
+
+                  {/* GESTIONARE SLOTURI */}
+                  <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 20 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 12 }}>🗓️ Gestionează sloturi (următoarele 14 zile)</div>
+                    <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 12, marginBottom: 16 }}>
+                      {zileLista.map(z => {
+                        const sel = z.iso === zilaSelectata;
+                        return (
+                          <button key={z.iso} onClick={() => setZilaSelectata(z.iso)}
+                            style={{ padding: "10px 14px", borderRadius: 12, border: sel ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: sel ? c.orangeAccent : c.surface, color: sel ? "#FF6B00" : c.text, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
+                            {z.eticheta}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {!programZiSel || !programZiSel.activ ? (
+                      <div style={{ padding: "28px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface2, borderRadius: 14, border: `1.5px dashed ${c.border}` }}>
+                        Salon închis în această zi. Modifică orarul săptămânal pentru a deschide.
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginBottom: 10, display: "flex", gap: 14, flexWrap: "wrap" }}>
+                          <span>🟢 Liber</span><span>🟠 Rezervat (CalyHub)</span><span>🔴 Blocat manual</span>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
+                          {sloturiPosibile.map(slot => {
+                            const ocupare = sloturiZi.find(p => suprapunere(slot, STEP_SLOT, p));
+                            const eTrecut = zilaSelectata === aziIso && timeToMin(slot) <= nowMin;
+                            let bg = c.surface2, border = c.border, color = c.text, label = slot;
+                            if (eTrecut && !ocupare) {
+                              bg = c.surface3; color = c.xmuted; label = `${slot} ·`;
+                            } else if (ocupare) {
+                              if (ocupare.sursa === "app") { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFF3EA"; border = "#FF6B00"; color = "#FF6B00"; }
+                              else { bg = theme === "dark" ? "rgba(239,68,68,.18)" : "#FEF2F2"; border = "#EF4444"; color = "#EF4444"; }
+                            } else {
+                              bg = theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5"; border = "#10B981"; color = "#10B981";
+                            }
+                            const ocupaPrimulSlot = ocupare && ocupare.ora === slot;
+                            return (
+                              <button key={slot} disabled={eTrecut && !ocupare} onClick={() => {
+                                if (ocupare && ocupaPrimulSlot && ocupare.sursa !== "app") {
+                                  if (confirm(`Deblochezi slotul ${ocupare.ora}?`)) deblocheazaSlot(ocupare.id);
+                                } else if (!ocupare && !eTrecut) {
+                                  setModalBlocare({ slot, durata: 60 });
+                                  setDurataBlocare(60);
+                                  setTipBlocare("telefonic");
+                                  setNumeBlocare("");
+                                }
+                              }}
+                                style={{ padding: "10px 6px", borderRadius: 10, border: `1.5px solid ${border}`, background: bg, color, fontSize: 12, fontWeight: 800, cursor: (eTrecut && !ocupare) ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", textAlign: "center", opacity: eTrecut && !ocupare ? 0.5 : 1 }}>
+                                <div>{label}</div>
+                                {ocupare && ocupaPrimulSlot && (
+                                  <div style={{ fontSize: 10, fontWeight: 600, marginTop: 2, opacity: .85 }}>
+                                    {ocupare.sursa === "app" ? "App" : ocupare.sursa === "telefonic" ? `📞 ${ocupare.nume_client_extern || "Telefonic"}` : ocupare.sursa === "walkin" ? `🚶 ${ocupare.nume_client_extern || "Walk-in"}` : "⏸ Pauză"}
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* MODAL BLOCARE */}
+                  {modalBlocare && (
+                    <div onClick={() => setModalBlocare(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+                      <div onClick={e => e.stopPropagation()} style={{ background: c.surface, borderRadius: 20, padding: "26px", maxWidth: 420, width: "100%", boxShadow: c.shadow }}>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 6 }}>Blochează slot {modalBlocare.slot}</div>
+                        <div style={{ fontSize: 13, color: c.muted, marginBottom: 18 }}>Slotul nu va mai apărea disponibil pentru clienții din aplicație.</div>
+
+                        <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 8 }}>Tip blocare</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 16 }}>
+                          {[{ v: "telefonic", l: "📞 Telefonic" }, { v: "walkin", l: "🚶 Walk-in" }, { v: "blocaj", l: "⏸ Pauză" }].map(o => (
+                            <button key={o.v} onClick={() => setTipBlocare(o.v as any)}
+                              style={{ padding: "10px 6px", borderRadius: 10, border: tipBlocare === o.v ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: tipBlocare === o.v ? c.orangeAccent : c.surface, color: tipBlocare === o.v ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                              {o.l}
+                            </button>
+                          ))}
+                        </div>
+
+                        {tipBlocare !== "blocaj" && (
+                          <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 6 }}>Nume client (opțional)</div>
+                            <input value={numeBlocare} onChange={e => setNumeBlocare(e.target.value)} placeholder="Ex: Maria, Bibi" style={inp} />
+                          </div>
+                        )}
+
+                        <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 8 }}>Durată</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 22 }}>
+                          {[30, 60, 90, 120].map(d => (
+                            <button key={d} onClick={() => setDurataBlocare(d)}
+                              style={{ padding: "10px", borderRadius: 10, border: durataBlocare === d ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: durataBlocare === d ? c.orangeAccent : c.surface, color: durataBlocare === d ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                              {d} min
+                            </button>
+                          ))}
+                        </div>
+
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={() => setModalBlocare(null)} style={{ flex: 1, padding: "12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Anulează</button>
+                          <button onClick={blocheazaSlot} style={{ flex: 2, ...btnPrimary }}>Blochează</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* PROFIL SALON */}
             {tab === "profil-salon" && (
