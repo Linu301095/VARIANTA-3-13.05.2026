@@ -384,8 +384,13 @@ export default function DashboardSalon() {
   }
 
   async function deblocheazaSlot(id: string) {
-    const { error } = await supabase.from("programari").delete().eq("id", id);
-    if (error) { salveaza("Eroare la deblocare"); return; }
+    const { data: deleted, error } = await supabase.from("programari").delete().eq("id", id).select();
+    if (error) { salveaza("Eroare la deblocare: " + error.message); console.error(error); return; }
+    if (!deleted || deleted.length === 0) {
+      salveaza("Ștergere blocată de RLS — rulează SQL-ul pentru politica DELETE");
+      console.error("DELETE returned 0 rows — RLS policy missing for programari.delete");
+      return;
+    }
     setSloturiZi(s => s.filter(x => x.id !== id));
     salveaza("Slot deblocat");
   }
