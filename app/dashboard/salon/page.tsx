@@ -953,7 +953,7 @@ export default function DashboardSalon() {
                         ) : (
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 16, fontWeight: 800, color: c.text, marginBottom: 6 }}>✂️ {s.nume || "Serviciu fără nume"}</div>
+                              <div style={{ fontSize: 16, fontWeight: 800, color: c.text, marginBottom: 6 }}>{s.nume || "Serviciu fără nume"}</div>
                               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                                 {s.pret && <span style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, padding: "4px 12px", borderRadius: 50 }}>{s.pret} RON</span>}
                                 {s.durata && <span style={{ fontSize: 13, fontWeight: 700, color: c.text2, background: c.surface2, padding: "4px 12px", borderRadius: 50 }}>⏱ {s.durata} min</span>}
