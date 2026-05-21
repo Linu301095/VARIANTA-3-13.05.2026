@@ -310,7 +310,7 @@ export default function DashboardClient() {
         .neq("status", "anulat");
       setOcupariSalon((rows as any[]) || []);
     })();
-  }, [rezervare?.serviciu, salonSelectat]);
+  }, [rezervare?.serviciu, salonSelectat, dataSelectata]);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
