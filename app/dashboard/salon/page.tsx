@@ -728,13 +728,15 @@ export default function DashboardSalon() {
                             const ocupare = sloturiZi.find(p => suprapunere(slot, STEP_SLOT, p));
                             const eTrecut = zilaSelectata === aziIso && timeToMin(slot) <= nowMin;
                             let bg = c.surface2, border = c.border, color = c.text, label = slot;
+                            let etichetaLiber = false;
                             if (eTrecut && !ocupare) {
                               bg = c.surface3; color = c.xmuted; label = `${slot} ·`;
                             } else if (ocupare) {
                               if (ocupare.sursa === "app") { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFF3EA"; border = "#FF6B00"; color = "#FF6B00"; }
                               else { bg = theme === "dark" ? "rgba(239,68,68,.18)" : "#FEF2F2"; border = "#EF4444"; color = "#EF4444"; }
                             } else {
-                              bg = theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5"; border = "#10B981"; color = "#10B981";
+                              bg = theme === "dark" ? "rgba(16,185,129,.18)" : "#D1FAE5"; border = "#10B981"; color = "#065F46";
+                              etichetaLiber = true;
                             }
                             const ocupaPrimulSlot = ocupare && ocupare.ora === slot;
                             return (
@@ -754,6 +756,9 @@ export default function DashboardSalon() {
                                   <div style={{ fontSize: 10, fontWeight: 600, marginTop: 2, opacity: .85 }}>
                                     {ocupare.sursa === "app" ? "App" : ocupare.sursa === "telefonic" ? `📞 ${ocupare.nume_client_extern || "Telefonic"}` : ocupare.sursa === "walkin" ? `🚶 ${ocupare.nume_client_extern || "Walk-in"}` : "⏸ Pauză"}
                                   </div>
+                                )}
+                                {etichetaLiber && (
+                                  <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2, opacity: .8 }}>✓ Liber</div>
                                 )}
                               </button>
                             );
