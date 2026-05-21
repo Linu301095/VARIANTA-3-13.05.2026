@@ -96,7 +96,7 @@ const ZILE_SCURT = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
 const LUNA_SCURT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function timeToMinC(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 function minToTimeC(m: number) { const h = Math.floor(m / 60), mm = m % 60; return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`; }
-function isoDataC(d: Date) { return d.toISOString().slice(0, 10); }
+function isoDataC(d: Date) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function genereazaSloturiClient(prog: ProgramZiC, durata: number, step = 30): string[] {
   if (!prog.activ) return [];
   const startM = timeToMinC(prog.start), endM = timeToMinC(prog.end);
@@ -295,6 +295,22 @@ export default function DashboardClient() {
       setDataSelectata(isoDataC(azi));
     })();
   }, [salonSelectat]);
+
+  useEffect(() => {
+    if (!salonSelectat || !rezervare?.serviciu) return;
+    (async () => {
+      const azi = new Date(); azi.setHours(0, 0, 0, 0);
+      const peste14 = new Date(azi); peste14.setDate(azi.getDate() + 15);
+      const { data: rows } = await supabase
+        .from("programari")
+        .select("ora, durata, data")
+        .eq("salon_id", salonSelectat)
+        .gte("data", isoDataC(azi))
+        .lt("data", isoDataC(peste14))
+        .neq("status", "anulat");
+      setOcupariSalon((rows as any[]) || []);
+    })();
+  }, [rezervare?.serviciu, salonSelectat]);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;

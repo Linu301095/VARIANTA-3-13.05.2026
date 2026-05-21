@@ -59,7 +59,7 @@ function suprapunere(slot: string, durataSlot: number, p: { ora: string; durata:
   const pS = timeToMin(p.ora), pE = pS + (p.durata || 60);
   return slotS < pE && slotE > pS;
 }
-function isoData(d: Date) { return d.toISOString().slice(0, 10); }
+function isoData(d: Date) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 const ORE_OPTIUNI: string[] = (() => {
   const out: string[] = [];
   for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 30) out.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
