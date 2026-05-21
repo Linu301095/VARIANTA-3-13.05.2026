@@ -184,6 +184,7 @@ export default function DashboardClient() {
   const [dataSelectata, setDataSelectata] = useState<string>(() => isoDataC(new Date()));
   const [programSalon, setProgramSalon] = useState<ProgramSaptC | null>(null);
   const [ocupariSalon, setOcupariSalon] = useState<{ ora: string; durata: number | null; data: string }[]>([]);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
 
   useEffect(() => {
@@ -489,7 +490,7 @@ export default function DashboardClient() {
             <button onClick={() => { setSalonSelectat(null); setRezervare(null); }} style={btnBack}>← Înapoi</button>
             <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, marginBottom: 20, boxShadow: c.cardShadow, overflow: "hidden" }}>
               {salon.poza_url && (
-                <div style={{ height: 200, overflow: "hidden", position: "relative" }}>
+                <div onClick={() => setLightboxIdx(0)} style={{ height: 200, overflow: "hidden", position: "relative", cursor: "zoom-in" }}>
                   <img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.6) 100%)" }} />
                   <span style={{ position: "absolute", bottom: 12, left: 16, fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "4px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
@@ -512,7 +513,7 @@ export default function DashboardClient() {
                   <div style={{ fontSize: 12, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>🖼️ Galerie salon</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 8 }}>
                     {salon.galerie.map((url, i) => (
-                      <div key={i} style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "1", background: c.surface2 }}>
+                      <div key={i} onClick={() => setLightboxIdx(salon.poza_url ? i + 1 : i)} style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "1", background: c.surface2, cursor: "zoom-in" }}>
                         <img src={url} alt={`Galerie ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       </div>
                     ))}
@@ -520,6 +521,39 @@ export default function DashboardClient() {
                 </div>
               )}
             </div>
+
+            {/* LIGHTBOX */}
+            {lightboxIdx !== null && (() => {
+              const toateImg: string[] = [];
+              if (salon.poza_url) toateImg.push(salon.poza_url);
+              if (salon.galerie) toateImg.push(...salon.galerie);
+              if (toateImg.length === 0) return null;
+              const idx = Math.max(0, Math.min(lightboxIdx, toateImg.length - 1));
+              const prev = () => setLightboxIdx((idx - 1 + toateImg.length) % toateImg.length);
+              const next = () => setLightboxIdx((idx + 1) % toateImg.length);
+              return (
+                <div onClick={() => setLightboxIdx(null)}
+                  style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.92)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+                  <button onClick={(e) => { e.stopPropagation(); setLightboxIdx(null); }}
+                    style={{ position: "absolute", top: 16, right: 16, width: 44, height: 44, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 22, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
+                  {toateImg.length > 1 && (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); prev(); }}
+                        style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 24, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>‹</button>
+                      <button onClick={(e) => { e.stopPropagation(); next(); }}
+                        style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 24, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>›</button>
+                    </>
+                  )}
+                  <img onClick={(e) => e.stopPropagation()} src={toateImg[idx]} alt={`Galerie ${idx + 1}`}
+                    style={{ maxWidth: "92vw", maxHeight: "85vh", objectFit: "contain", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,.6)" }} />
+                  {toateImg.length > 1 && (
+                    <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.15)", color: "#fff", padding: "6px 14px", borderRadius: 50, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif" }}>
+                      {idx + 1} / {toateImg.length}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {animale.length > 1 && (
               <>
