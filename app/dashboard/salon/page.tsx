@@ -761,6 +761,10 @@ export default function DashboardSalon() {
                         </div>
                       </>
                     )}
+                    <button onClick={() => salonData?.id && loadSloturiZi(salonData.id, zilaSelectata)}
+                      style={{ ...btnPrimary, marginTop: 16, background: "#FF6B00" }}>
+                      Salvează gestionarea
+                    </button>
                   </div>
 
                   {/* MODAL BLOCARE */}
