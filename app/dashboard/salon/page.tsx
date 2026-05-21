@@ -60,6 +60,11 @@ function suprapunere(slot: string, durataSlot: number, p: { ora: string; durata:
   return slotS < pE && slotE > pS;
 }
 function isoData(d: Date) { return d.toISOString().slice(0, 10); }
+const ORE_OPTIUNI: string[] = (() => {
+  const out: string[] = [];
+  for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 30) out.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  return out;
+})();
 
 /* ── Color palette ── */
 const C = {
@@ -669,11 +674,15 @@ export default function DashboardSalon() {
                             <div style={{ width: 90, fontSize: 14, fontWeight: 700, color: c.text }}>{ZILE_LABEL[k]}</div>
                             {z.activ ? (
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <input type="time" value={z.start} onChange={e => setProgram(p => ({ ...p, [k]: { ...p[k], start: e.target.value } }))}
-                                  style={{ padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontFamily: "Nunito, sans-serif", fontSize: 13 }} />
+                                <select value={z.start} onChange={e => setProgram(p => ({ ...p, [k]: { ...p[k], start: e.target.value } }))}
+                                  style={{ padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontFamily: "Nunito, sans-serif", fontSize: 13, cursor: "pointer" }}>
+                                  {ORE_OPTIUNI.map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
                                 <span style={{ color: c.muted, fontWeight: 700 }}>→</span>
-                                <input type="time" value={z.end} onChange={e => setProgram(p => ({ ...p, [k]: { ...p[k], end: e.target.value } }))}
-                                  style={{ padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontFamily: "Nunito, sans-serif", fontSize: 13 }} />
+                                <select value={z.end} onChange={e => setProgram(p => ({ ...p, [k]: { ...p[k], end: e.target.value } }))}
+                                  style={{ padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontFamily: "Nunito, sans-serif", fontSize: 13, cursor: "pointer" }}>
+                                  {ORE_OPTIUNI.map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
                               </div>
                             ) : (
                               <span style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>Închis</span>
