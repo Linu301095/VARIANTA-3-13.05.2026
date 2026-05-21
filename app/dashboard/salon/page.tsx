@@ -761,7 +761,11 @@ export default function DashboardSalon() {
                         </div>
                       </>
                     )}
-                    <button onClick={() => salonData?.id && loadSloturiZi(salonData.id, zilaSelectata)}
+                    <button onClick={async () => {
+                      if (!salonData?.id) return;
+                      await loadSloturiZi(salonData.id, zilaSelectata);
+                      salveaza("Gestionare salvată!");
+                    }}
                       style={{ ...btnPrimary, marginTop: 16, background: "#FF6B00" }}>
                       Salvează gestionarea
                     </button>

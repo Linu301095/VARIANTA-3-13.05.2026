@@ -595,17 +595,18 @@ export default function DashboardClient() {
 
               const dowSel = String(new Date(dataSelectata + "T00:00:00").getDay());
               const progZiSel = progEf[dowSel];
-              const sloturiZiSel: string[] = [];
+              const sloturiZiSel: { ora: string; ocupat: boolean; trecut: boolean }[] = [];
               if (progZiSel?.activ) {
                 const slots = genereazaSloturiClient(progZiSel, durataSv);
                 for (const s of slots) {
                   const start = timeToMinC(s);
                   const end = start + durataSv;
-                  if (dataSelectata === aziIso && start <= nowMin) continue;
+                  const trecut = dataSelectata === aziIso && start <= nowMin;
                   const ocupat = ocupariSalon.some(o => o.data === dataSelectata && suprapunereC(start, end, o.ora, o.durata));
-                  if (!ocupat) sloturiZiSel.push(s);
+                  sloturiZiSel.push({ ora: s, ocupat, trecut });
                 }
               }
+              const sloturiLibere = sloturiZiSel.filter(s => !s.ocupat && !s.trecut);
 
               return (
                 <>
@@ -629,15 +630,37 @@ export default function DashboardClient() {
                   <SectionTitle>Alege ora</SectionTitle>
                   {sloturiZiSel.length === 0 ? (
                     <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
-                      Nu sunt sloturi libere în ziua aleasă. Încearcă altă zi.
+                      Salonul nu lucrează în ziua aleasă.
+                    </div>
+                  ) : sloturiLibere.length === 0 ? (
+                    <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
+                      Toate sloturile sunt ocupate în ziua aleasă. Încearcă altă zi.
                     </div>
                   ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 24 }}>
-                      {sloturiZiSel.map(ora => {
-                        const sel = rezervare?.ora === ora;
-                        return <button key={ora} onClick={() => setRezervare(r => ({ ...r!, ora }))} style={{ padding: "11px 6px", borderRadius: 10, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, fontSize: 13, fontWeight: 700, color: sel ? salon.culoare : c.text2, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>{ora}</button>;
-                      })}
-                    </div>
+                    <>
+                      <div style={{ fontSize: 11, color: c.muted, marginBottom: 10, display: "flex", gap: 14, flexWrap: "wrap", fontWeight: 700 }}>
+                        <span style={{ color: "#10B981" }}>● Liber</span>
+                        <span style={{ color: "#EF4444" }}>● Ocupat</span>
+                        <span style={{ color: c.xmuted }}>● Trecut</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 24 }}>
+                        {sloturiZiSel.map(slot => {
+                          const sel = rezervare?.ora === slot.ora;
+                          const disabled = slot.ocupat || slot.trecut;
+                          let bg = c.surface, border = c.border, color = c.text2, label = slot.ora;
+                          if (sel) { border = salon.culoare; bg = theme === "dark" ? `${salon.culoare}26` : salon.bg; color = salon.culoare; }
+                          else if (slot.trecut) { bg = c.surface3; color = c.xmuted; border = c.border; }
+                          else if (slot.ocupat) { bg = theme === "dark" ? "rgba(239,68,68,.12)" : "#FEF2F2"; border = "#FECACA"; color = "#EF4444"; }
+                          return (
+                            <button key={slot.ora} disabled={disabled} onClick={() => !disabled && setRezervare(r => ({ ...r!, ora: slot.ora }))}
+                              style={{ padding: "11px 6px", borderRadius: 10, border: `${sel ? 2 : 1.5}px solid ${border}`, background: bg, fontSize: 13, fontWeight: 700, color, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", position: "relative", textDecoration: slot.ocupat ? "line-through" : "none", opacity: slot.trecut ? 0.5 : 1 }}>
+                              {label}
+                              {slot.ocupat && !sel && <div style={{ fontSize: 9, fontWeight: 700, marginTop: 2, opacity: .8 }}>🔒 Ocupat</div>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
                   )}
                 </>
               );
