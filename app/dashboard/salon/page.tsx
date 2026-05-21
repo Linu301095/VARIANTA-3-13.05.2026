@@ -125,6 +125,7 @@ export default function DashboardSalon() {
   const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
   const [numeBlocare, setNumeBlocare] = useState("");
   const [durataBlocare, setDurataBlocare] = useState(60);
+  const [editingServiciuId, setEditingServiciuId] = useState<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 600px)");
@@ -922,30 +923,65 @@ export default function DashboardSalon() {
               <div style={{ maxWidth: 580 }}>
                 <PageHeader icon="✂️" title="Serviciile mele" sub="Gestioneaza serviciile oferite de salon" />
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-                  {servicii.map((s, i) => (
-                    <div key={s.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>Serviciul {i + 1}</div>
-                        <button onClick={() => setServicii(sv => sv.filter(x => x.id !== s.id))} style={{ fontSize: 12, color: c.xmuted, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕ Sterge</button>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        <input value={s.nume} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, nume: e.target.value } : x))} placeholder="Denumire serviciu" style={inp} />
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 10 }}>
-                          <input value={s.pret} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, pret: e.target.value } : x))} type="number" placeholder="Pret (RON)" style={inp} />
-                          <input value={s.durata} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, durata: e.target.value } : x))} type="number" placeholder="Durata (min)" style={inp} />
-                        </div>
-                      </div>
+                  {servicii.length === 0 && (
+                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
+                      Nu ai servicii configurate. Apasă "+ Adaugă serviciu" pentru a începe.
                     </div>
-                  ))}
+                  )}
+                  {servicii.map((s) => {
+                    const eEdit = editingServiciuId === s.id;
+                    return (
+                      <div key={s.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: eEdit ? "2px solid #FF6B00" : `1.5px solid ${c.border}` }}>
+                        {eEdit ? (
+                          <>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>✏️ Editezi serviciul</div>
+                              <button onClick={() => setServicii(sv => sv.filter(x => x.id !== s.id))} style={{ fontSize: 12, color: "#EF4444", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontWeight: 700 }}>🗑️ Șterge</button>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              <input value={s.nume} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, nume: e.target.value } : x))} placeholder="Denumire serviciu" style={inp} />
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 10 }}>
+                                <input value={s.pret} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, pret: e.target.value } : x))} type="number" placeholder="Preț (RON)" style={inp} />
+                                <input value={s.durata} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, durata: e.target.value } : x))} type="number" placeholder="Durată (min)" style={inp} />
+                              </div>
+                              <button onClick={() => setEditingServiciuId(null)}
+                                style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "#10B981", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", alignSelf: "flex-start" }}>
+                                ✓ Gata
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 16, fontWeight: 800, color: c.text, marginBottom: 6 }}>✂️ {s.nume || "Serviciu fără nume"}</div>
+                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                {s.pret && <span style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, padding: "4px 12px", borderRadius: 50 }}>{s.pret} RON</span>}
+                                {s.durata && <span style={{ fontSize: 13, fontWeight: 700, color: c.text2, background: c.surface2, padding: "4px 12px", borderRadius: 50 }}>⏱ {s.durata} min</span>}
+                              </div>
+                            </div>
+                            <button onClick={() => setEditingServiciuId(s.id)}
+                              style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                              ✏️ Editează
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <button onClick={() => setServicii(sv => [...sv, { id: Date.now(), nume: "", pret: "", durata: "" }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga serviciu</button>
+                <button onClick={() => {
+                  const nou = { id: Date.now(), nume: "", pret: "", durata: "" };
+                  setServicii(sv => [...sv, nou]);
+                  setEditingServiciuId(nou.id);
+                }} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adaugă serviciu</button>
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
                   if (authUser) {
                     await supabase.from("saloane").update({ servicii }).eq("user_id", authUser.id);
                   }
+                  setEditingServiciuId(null);
                   salveaza("Servicii actualizate!");
-                }} style={btnPrimary}>Salveaza serviciile</button>
+                }} style={btnPrimary}>Salvează serviciile</button>
               </div>
             )}
 
