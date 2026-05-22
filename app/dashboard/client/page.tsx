@@ -1155,7 +1155,7 @@ function FAQ({ items }: { items: { q: string; r: string }[] }) {
 function CardSalon({ salon, onSelect }: { salon: SalonItem; onSelect: () => void }) {
   const { c, theme } = useContext(ThemeCtx);
   return (
-    <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
+    <div style={{ background: c.surface, borderRadius: 20, border: "2px solid #FF6B00", overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
       {/* Cover photo sau bara colorată */}
       {salon.poza_url ? (
         <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
