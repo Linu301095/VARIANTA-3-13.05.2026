@@ -55,7 +55,7 @@ export default function CumFunctioneaza() {
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
           <nav style={{ display: "flex", gap: 8 }}>
             <Link href="/login" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
-            <Link href="/register" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare</Link>
+            <Link href="/register" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
       </header>
@@ -100,7 +100,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* MOCKUP CLIENT REAL — profil animal + istoric vizite */}
-            <div className="mockup-card" style={{ background: "#FAFAFA", borderRadius: 24, padding: "32px", border: "1.5px solid #FFB890", marginBottom: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
+            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "2.5px solid #FF6B00", boxShadow: "0 4px 20px rgba(255,107,0,.08)", marginBottom: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Contul Mariei</div>
                 <h3 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A", marginBottom: 10 }}>Salonul știe tot înainte să ajungi</h3>
@@ -195,7 +195,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* MOCKUP SALON REAL — agenda zilei cu programări + stats */}
-            <div className="mockup-card" style={{ background: "#FAFAFA", borderRadius: 24, padding: "32px", border: "1.5px solid #FFB890", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
+            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "2.5px solid #FF6B00", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Salon PetStyle Cluj</div>
@@ -279,7 +279,7 @@ export default function CumFunctioneaza() {
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>🐾 Creează cont</Link>
-            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}>✂️ Înregistrează salonul</Link>
+            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}>✂️ Înregistrează salonul gratuit</Link>
           </div>
         </section>
       </main>

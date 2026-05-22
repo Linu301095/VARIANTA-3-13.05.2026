@@ -31,7 +31,7 @@ export default function HomePage() {
           </Link>
           <nav style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <Link href="/login" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
-            <Link href="/register" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare</Link>
+            <Link href="/register" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
       </header>
@@ -160,7 +160,7 @@ export default function HomePage() {
               </div>
 
               {/* MINI-MOCKUP: Profil animal */}
-              <div className="mockup-card" style={{ marginTop: 28, background: "#FAFAFA", borderRadius: 20, padding: "28px 28px", border: "1.5px solid #EBEBEB", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "center" }}>
+              <div className="mockup-card" style={{ marginTop: 28, background: "#fff", borderRadius: 20, padding: "28px 28px", border: "2.5px solid #FF6B00", boxShadow: "0 4px 20px rgba(255,107,0,.08)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Exemplu profil animal</div>
                   <h4 style={{ fontSize: 18, fontWeight: 900, color: "#1A1A1A", marginBottom: 8 }}>Salonul vede totul dintr-o privire</h4>
@@ -210,7 +210,7 @@ export default function HomePage() {
               </div>
 
               {/* MINI-MOCKUP: Prețuri per talie */}
-              <div className="mockup-card" style={{ marginTop: 28, background: "#FAFAFA", borderRadius: 20, padding: "28px 28px", border: "1.5px solid #FFDCC6", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "center" }}>
+              <div className="mockup-card" style={{ marginTop: 28, background: "#fff", borderRadius: 20, padding: "28px 28px", border: "2.5px solid #FF6B00", boxShadow: "0 4px 20px rgba(255,107,0,.08)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Exemplu serviciu</div>
                   <h4 style={{ fontSize: 18, fontWeight: 900, color: "#1A1A1A", marginBottom: 8 }}>Tuns complet — 3 prețuri reale</h4>
@@ -239,10 +239,10 @@ export default function HomePage() {
             </div>
 
             {/* STATS REALE — fapte verificabile */}
-            <div style={{ background: "#FAFAFA", borderRadius: 24, padding: "36px 28px", border: "1.5px solid #EBEBEB" }}>
+            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "36px 28px", border: "2.5px solid #FF6B00", boxShadow: "0 4px 24px rgba(255,107,0,.1)" }}>
               <div style={{ textAlign: "center", marginBottom: 24 }}>
-                <h3 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A" }}>Fapte despre CalyHub — nu promisiuni</h3>
-                <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 6 }}>Tot ce e listat aici e deja implementat și funcționează acum în platformă.</p>
+                <h3 style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A" }}>Tot ce funcționează deja în CalyHub</h3>
+                <p style={{ fontSize: 13.5, color: "#6B7280", marginTop: 8 }}>Toate funcționalitățile de mai jos sunt active acum, în platformă. Le poți folosi azi.</p>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
                 {[
@@ -337,7 +337,7 @@ export default function HomePage() {
           <p style={{ fontSize: 16, color: "rgba(255,255,255,.6)", marginBottom: 36 }}>Stăpâni — programare în 10 secunde.<br />Saloane — primele 3 luni gratuite.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>🐾 Programează acum</Link>
-            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}>✂️ Înregistrează salonul</Link>
+            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}>✂️ Înregistrează salonul gratuit</Link>
           </div>
         </section>
       </main>
