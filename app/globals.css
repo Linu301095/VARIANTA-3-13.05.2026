@@ -252,3 +252,58 @@ label:hover {
   color: #FFB07A !important;
   opacity: 1;
 }
+
+/* ---------- Step / Benefit card hover animations ---------- */
+.step-card {
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  will-change: transform;
+}
+.step-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 12px 32px rgba(255, 107, 0, .18);
+}
+.step-card:hover .step-num {
+  color: #FFE0CC !important;
+  transform: scale(1.05);
+}
+.step-card:hover .step-icon {
+  transform: scale(1.12) rotate(-3deg);
+}
+.step-num {
+  transition: color .25s ease, transform .25s ease;
+}
+.step-icon {
+  transition: transform .25s ease;
+  display: inline-block;
+}
+
+.benefit-card {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.benefit-card:hover {
+  transform: translateY(-2px);
+  border-color: #FF6B00 !important;
+  box-shadow: 0 6px 20px rgba(255, 107, 0, .12);
+}
+
+.mockup-card {
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.mockup-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 107, 0, .15);
+}
+
+@media (max-width: 640px), (hover: none) {
+  .step-card:hover,
+  .benefit-card:hover,
+  .mockup-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .step-card:hover .step-num,
+  .step-card:hover .step-icon {
+    transform: none;
+    color: inherit;
+  }
+}
