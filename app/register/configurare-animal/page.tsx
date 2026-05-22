@@ -32,7 +32,7 @@ const SPECII = [
 export default function ConfigurareAnimal() {
   const router = useRouter();
   const [step, setStep] = useState<"form" | "success">("form");
-  const [form, setForm] = useState({ specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "", numeAnimal: "" });
+  const [form, setForm] = useState({ specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "", numeAnimal: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [rasaLibera, setRasaLibera] = useState(false);
@@ -48,6 +48,7 @@ export default function ConfigurareAnimal() {
     if (!form.specie) e.specie = "Alege specia";
     if (!form.sex) e.sex = "Alege sexul";
     if (!form.rasa.trim()) e.rasa = "Câmp obligatoriu";
+    if (!form.talie) e.talie = "Alege talia";
     if (!form.greutate.trim()) e.greutate = "Câmp obligatoriu";
     else if (isNaN(Number(form.greutate)) || Number(form.greutate) <= 0) e.greutate = "Valoare invalidă";
     if (!form.varsta.trim()) e.varsta = "Câmp obligatoriu";
@@ -72,6 +73,7 @@ export default function ConfigurareAnimal() {
         specie: form.specie,
         sex: form.sex,
         rasa: form.rasa.trim(),
+        talie: form.talie,
         greutate: Number(form.greutate),
         varsta: Number(form.varsta),
         alergii: form.alergii.trim(),
@@ -105,6 +107,7 @@ export default function ConfigurareAnimal() {
                 [`${SPECII.find(s => s.val === form.specie)?.icon || "🐾"} Specie`, SPECII.find(s => s.val === form.specie)?.label || "—"],
                 ["⚥ Sex", form.sex === "mascul" ? "♂️ Mascul" : form.sex === "femela" ? "♀️ Femelă" : "—"],
                 ["🐾 Rasă", form.rasa],
+                ["📏 Talie", form.talie === "mica" ? "Mică" : form.talie === "medie" ? "Medie" : form.talie === "mare" ? "Mare" : "—"],
                 ["⚖️ Greutate", `${form.greutate} kg`],
                 ["🎂 Vârstă", `${form.varsta} ani`],
                 ["💊 Alergii", form.alergii],
@@ -213,6 +216,25 @@ export default function ConfigurareAnimal() {
                   </div>
                 )}
                 {errors.rasa && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.rasa}</div>}
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Talie *</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  {[
+                    { val: "mica", label: "Mică", desc: "sub 10 kg", icon: "🐕‍🦺" },
+                    { val: "medie", label: "Medie", desc: "10–25 kg", icon: "🐕" },
+                    { val: "mare", label: "Mare", desc: "peste 25 kg", icon: "🐺" },
+                  ].map(t => (
+                    <button key={t.val} type="button" onClick={() => set("talie", t.val)}
+                      style={{ padding: "10px 6px", borderRadius: 12, border: form.talie === t.val ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", background: form.talie === t.val ? "#FFF3EA" : "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                      <span style={{ fontSize: 20 }}>{t.icon}</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: form.talie === t.val ? "#FF6B00" : "#374151" }}>{t.label}</span>
+                      <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}>{t.desc}</span>
+                    </button>
+                  ))}
+                </div>
+                {errors.talie && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.talie}</div>}
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
