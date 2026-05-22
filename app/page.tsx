@@ -254,7 +254,7 @@ export default function HomePage() {
                   { icon: "🎁", titlu: "14 zile trial fără card", desc: "Salonul testează tot, fără să ofere date bancare." },
                 ].map(f => (
                   <div key={f.titlu} className="benefit-card" style={{ background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1.5px solid #EBEBEB", display: "flex", gap: 12 }}>
-                    <span style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
+                    <span className="benefit-icon" style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
                     <div>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: "#1A1A1A", marginBottom: 3 }}>{f.titlu}</div>
                       <div style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.55 }}>{f.desc}</div>
