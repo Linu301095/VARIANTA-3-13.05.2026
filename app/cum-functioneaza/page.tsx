@@ -100,7 +100,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* MOCKUP CLIENT REAL — profil animal + istoric vizite */}
-            <div className="mockup-card" style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFE0CC 100%)", borderRadius: 24, padding: "32px", border: "1.5px solid #FFDCC6", marginBottom: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
+            <div className="mockup-card" style={{ background: "linear-gradient(135deg, #FFDCC6 0%, #FFCFAA 100%)", borderRadius: 24, padding: "32px", border: "1.5px solid #FFB890", marginBottom: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Contul Mariei</div>
                 <h3 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A", marginBottom: 10 }}>Salonul știe tot înainte să ajungi</h3>
@@ -114,7 +114,7 @@ export default function CumFunctioneaza() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {/* Card profil animal */}
-                <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 16px rgba(255,107,0,.1)" }}>
+                <div style={{ background: "#FFF3EA", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 16px rgba(255,107,0,.1)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
                     <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 }}>🐕</div>
                     <div>
@@ -129,7 +129,7 @@ export default function CumFunctioneaza() {
                   </div>
                 </div>
                 {/* Istoric vizite */}
-                <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #EBEBEB" }}>
+                <div style={{ background: "#FFF3EA", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6" }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Ultimele vizite</div>
                   {[
                     { data: "12 Mai 2026", salon: "Salon PetStyle Cluj", serviciu: "Tuns + Spălat", pret: "180 RON" },
@@ -195,7 +195,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* MOCKUP SALON REAL — agenda zilei cu programări + stats */}
-            <div className="mockup-card" style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFE0CC 100%)", borderRadius: 24, padding: "32px", border: "1.5px solid #FFDCC6", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
+            <div className="mockup-card" style={{ background: "linear-gradient(135deg, #FFDCC6 0%, #FFCFAA 100%)", borderRadius: 24, padding: "32px", border: "1.5px solid #FFB890", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Salon PetStyle Cluj</div>
@@ -218,7 +218,7 @@ export default function CumFunctioneaza() {
                   </div>
                 </div>
                 {/* Lista programări */}
-                <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6" }}>
+                <div style={{ background: "#FFF3EA", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6" }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Vineri 23 Mai — programări</div>
                   {[
                     { ora: "09:00", client: "Maria P.", animal: "Rex", rasa: "Golden", talie: "Mare", serviciu: "Tuns + Spălat", pret: "180 RON", status: "confirmat" },

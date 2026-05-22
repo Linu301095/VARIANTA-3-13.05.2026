@@ -57,7 +57,7 @@ export default function HomePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
 
             {/* Card Stăpân */}
-            <div style={{ background: "#fff", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
+            <div style={{ background: "#FFF3EA", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>🐾</div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un animal de companie</div>
@@ -66,7 +66,7 @@ export default function HomePage() {
               <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>Găsești salonul potrivit în câteva secunde, alegi ora și primești reminder automat înainte de vizită.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
                 {[["500+", "Saloane disponibile în platformă"], ["10s", "Timp mediu de programare"], ["4.9★", "Rating mediu saloane partenere"]].map(([val, label]) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FFF3EA", borderRadius: 12, padding: "11px 14px" }}>
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FFE0CC", borderRadius: 12, padding: "11px 14px" }}>
                     <span style={{ fontSize: 17, fontWeight: 900, color: "#FF6B00", minWidth: 52 }}>{val}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
@@ -82,7 +82,7 @@ export default function HomePage() {
             </div>
 
             {/* Card Salon */}
-            <div style={{ background: "#fff", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
+            <div style={{ background: "#FFF3EA", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>✂️</div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un salon de grooming</div>
@@ -91,7 +91,7 @@ export default function HomePage() {
               <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>Primești programări online non-stop, reduci neprezentările și urmărești statisticile salonului în timp real.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
                 {[["-70%", "Reducere neprezentări clienți"], ["3h", "Economisite zilnic față de telefon"], ["+40%", "Creștere clienți noi lunar"]].map(([val, label]) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FFF3EA", borderRadius: 12, padding: "11px 14px" }}>
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FFE0CC", borderRadius: 12, padding: "11px 14px" }}>
                     <span style={{ fontSize: 17, fontWeight: 900, color: "#FF6B00", minWidth: 52 }}>{val}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
@@ -166,7 +166,7 @@ export default function HomePage() {
                   <h4 style={{ fontSize: 18, fontWeight: 900, color: "#1A1A1A", marginBottom: 8 }}>Salonul vede totul dintr-o privire</h4>
                   <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.6 }}>Fără să mai întrebe rasa, talia, alergiile. Tot ce trebuie să știe e deja acolo — așa pregătesc vizita perfectă.</p>
                 </div>
-                <div style={{ background: "#fff", borderRadius: 16, padding: "18px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 14px rgba(255,107,0,.1)" }}>
+                <div style={{ background: "#FFF3EA", borderRadius: 16, padding: "18px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 14px rgba(255,107,0,.1)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                     <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>🐕</div>
                     <div>
@@ -210,13 +210,13 @@ export default function HomePage() {
               </div>
 
               {/* MINI-MOCKUP: Prețuri per talie */}
-              <div className="mockup-card" style={{ marginTop: 28, background: "linear-gradient(135deg, #FFF3EA 0%, #FFE0CC 100%)", borderRadius: 20, padding: "28px 28px", border: "1.5px solid #FFDCC6", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "center" }}>
+              <div className="mockup-card" style={{ marginTop: 28, background: "linear-gradient(135deg, #FFDCC6 0%, #FFCFAA 100%)", borderRadius: 20, padding: "28px 28px", border: "1.5px solid #FFDCC6", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Exemplu serviciu</div>
                   <h4 style={{ fontSize: 18, fontWeight: 900, color: "#1A1A1A", marginBottom: 8 }}>Tuns complet — 3 prețuri reale</h4>
                   <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.6 }}>Nu mai pierzi clienți pentru că prețul afișat părea prea mic. Fiecare talie are preț și durată corectă — clientul vede exact ce plătește.</p>
                 </div>
-                <div style={{ background: "#fff", borderRadius: 16, padding: "18px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 14px rgba(255,107,0,.1)" }}>
+                <div style={{ background: "#FFF3EA", borderRadius: 16, padding: "18px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 14px rgba(255,107,0,.1)" }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: "#1A1A1A", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
                     <span>✂️</span><span>Tuns complet câine</span>
                   </div>
@@ -226,7 +226,7 @@ export default function HomePage() {
                       { icon: "🐕", label: "Medie", pret: "120 RON", durata: "60 min" },
                       { icon: "🐺", label: "Mare", pret: "180 RON", durata: "90 min" },
                     ].map(t => (
-                      <div key={t.label} style={{ background: "#FFF3EA", borderRadius: 12, padding: "10px 8px", textAlign: "center", border: "1.5px solid #FFDCC6" }}>
+                      <div key={t.label} style={{ background: "#FFE0CC", borderRadius: 12, padding: "10px 8px", textAlign: "center", border: "2px solid #FF6B00" }}>
                         <div style={{ fontSize: 20 }}>{t.icon}</div>
                         <div style={{ fontSize: 11, fontWeight: 800, color: "#9CA3AF", marginTop: 2 }}>{t.label}</div>
                         <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00", marginTop: 4 }}>{t.pret}</div>
@@ -239,7 +239,7 @@ export default function HomePage() {
             </div>
 
             {/* STATS REALE — fapte verificabile */}
-            <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFE0CC 100%)", borderRadius: 24, padding: "36px 28px", border: "1.5px solid #FFDCC6" }}>
+            <div style={{ background: "linear-gradient(135deg, #FFDCC6 0%, #FFCFAA 100%)", borderRadius: 24, padding: "36px 28px", border: "1.5px solid #FFB890" }}>
               <div style={{ textAlign: "center", marginBottom: 24 }}>
                 <h3 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A" }}>Fapte despre CalyHub — nu promisiuni</h3>
                 <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 6 }}>Tot ce e listat aici e deja implementat și funcționează acum în platformă.</p>
@@ -253,7 +253,7 @@ export default function HomePage() {
                   { icon: "📊", titlu: "Statistici live salon", desc: "Încasări, populare servicii, distribuție talii — automate." },
                   { icon: "🎁", titlu: "14 zile trial fără card", desc: "Salonul testează tot, fără să ofere date bancare." },
                 ].map(f => (
-                  <div key={f.titlu} className="benefit-card" style={{ background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1.5px solid #FFDCC6", display: "flex", gap: 12 }}>
+                  <div key={f.titlu} className="benefit-card" style={{ background: "#FFF3EA", borderRadius: 14, padding: "16px 18px", border: "1.5px solid #FFDCC6", display: "flex", gap: 12 }}>
                     <span className="benefit-icon" style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</span>
                     <div>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: "#1A1A1A", marginBottom: 3 }}>{f.titlu}</div>
