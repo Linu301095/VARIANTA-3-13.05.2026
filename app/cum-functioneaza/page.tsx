@@ -16,29 +16,31 @@ export const metadata: Metadata = {
 };
 
 const STEPS_CLIENT = [
-  { nr: "01", icon: "📝", titlu: "Creează cont gratuit", desc: "Înregistrează-te în 2 minute cu emailul sau contul Google. Adaugi profilul animăluțului: rasă, vârstă, alergii — salonul îl cunoaște deja." },
-  { nr: "02", icon: "🔍", titlu: "Alege salonul potrivit", desc: "Filtrează după locație, servicii și rating. Citești recenzii reale de la alți stăpâni și vezi prețurile înainte să rezervi." },
-  { nr: "03", icon: "📅", titlu: "Rezervă în 10 secunde", desc: "Alegi ziua, ora și serviciul. Confirmi — gata. Primești reminder SMS automat cu 24h înainte de vizită." },
+  { nr: "01", icon: "📝", titlu: "Cont gratuit + profil animal complet", desc: "Te înregistrezi în 2 minute. Adaugi rasă, talie (Mică/Medie/Mare), vârstă, kg, alergii și poză. Salonul te cunoaște deja înainte să intri pe ușă." },
+  { nr: "02", icon: "🔍", titlu: "Alegi salonul potrivit", desc: "Filtrezi după oraș, serviciu și preț. Vezi prețuri exacte per talia animalului tău, galerie foto reală a salonului și orar live." },
+  { nr: "03", icon: "📅", titlu: "Rezervi în 10 secunde", desc: "Sloturi 30min vizibile live — verde liber, portocaliu rezervat, roșu blocat. Alegi, confirmi, primești notificare instant în aplicație." },
+  { nr: "04", icon: "🐾", titlu: "Istoric salvat automat", desc: "Toate vizitele se salvează: serviciu, preț, salon, dată. Animăluțul tău are dosar propriu, ca la doctor. Plus poză și recenzii ulterioare." },
 ];
 
 const STEPS_SALON = [
-  { nr: "01", icon: "🏪", titlu: "Înregistrează salonul", desc: "Completezi datele firmei, serviciile oferite și echipa în câteva minute. Profilul salonului apare instant pe CalyHub." },
-  { nr: "02", icon: "⚙️", titlu: "Configurează calendarul", desc: "Setezi programul de lucru, durata serviciilor și capacitatea zilnică. Totul se gestionează din panoul de control." },
-  { nr: "03", icon: "💰", titlu: "Primești programări automat", desc: "Clienții rezervă direct online, 24/7. Tu accepți, confirmi și primești plata — fără telefoane, fără pierderi de timp." },
+  { nr: "01", icon: "🏪", titlu: "Înregistrezi salonul", desc: "Datele firmei, copertă, galerie până la 10 foto, echipa, descriere. Profilul salonului apare instant în lista clienților din oraș." },
+  { nr: "02", icon: "⚙️", titlu: "Configurezi calendarul", desc: "Orar săptămânal pe zile (deschis/închis), blocaje manuale pentru programări telefonice, walk-in sau pauze. Sloturi 30min anti-dublă-rezervare." },
+  { nr: "03", icon: "💰", titlu: "Prețuri per talie — unic în România", desc: "Preț și durată diferite pentru Mică/Medie/Mare. Reflectă exact cum lucrezi: un câine mare cere mai mult timp și șampon. Clientul vede prețul corect pentru talia lui." },
+  { nr: "04", icon: "📊", titlu: "Statistici live + istoric per client", desc: "Încasări azi/lună, top servicii, distribuție clienți pe talii, istoric vizite per client. Toate calculate automat din programări — fără Excel." },
 ];
 
 const BENEFICII_CLIENT = [
-  { icon: "⏰", titlu: "Programări 24/7", desc: "Fără să suni, fără să aștepți. Rezervi oricând, de pe orice dispozitiv." },
-  { icon: "📱", titlu: "Reminder automat", desc: "SMS cu 24h înainte. Nu mai uiți nicio programare." },
-  { icon: "🐾", titlu: "Profil animăluț salvat", desc: "Salonul știe deja rasa, vârsta și alergiile. Fiecare vizită e personalizată." },
-  { icon: "⭐", titlu: "Recenzii verificate", desc: "Alegi în cunoștință de cauză. Rating-urile sunt lăsate doar de clienți reali." },
+  { icon: "🐾", titlu: "Profil animal cu talie", desc: "Singura platformă din RO care salvează talia (Mică/Medie/Mare) — pentru prețuri corecte." },
+  { icon: "📅", titlu: "Sloturi vizibile live", desc: "Vezi exact ce e liber și ce e ocupat. Fără surprize, fără telefoane." },
+  { icon: "🔔", titlu: "Notificări real-time", desc: "Salonul te confirmă instant. Notificare în aplicație în sub 1 secundă." },
+  { icon: "📜", titlu: "Istoric vizite salvat", desc: "Toate vizitele animăluțului tău, cu serviciu, preț, salon și dată — accesibile oricând." },
 ];
 
 const BENEFICII_SALON = [
-  { icon: "📉", titlu: "-70% neprezentări", desc: "Reminder SMS automat reduce drastic clienții care nu se prezintă." },
-  { icon: "🕐", titlu: "3h economisite/zi", desc: "Zero timp pierdut cu programările prin telefon. Calendarul se umple singur." },
-  { icon: "📊", titlu: "Statistici în timp real", desc: "Urmărești încasările, serviciile populare și clienții noi din panoul de control." },
-  { icon: "🌙", titlu: "Programări și noaptea", desc: "Calendarul tău e activ non-stop. Primești rezervări inclusiv când dormi." },
+  { icon: "💰", titlu: "Prețuri per talie", desc: "3 prețuri per serviciu — niciun client nu se mai ceartă că prețul afișat era mai mic." },
+  { icon: "🚫", titlu: "Anti-dublă-rezervare", desc: "Blocaj manual pentru programări telefonice. Calendarul nu se mai suprapune." },
+  { icon: "📊", titlu: "Statistici automate", desc: "Încasări azi, populare servicii, distribuție talii — calculate live din DB." },
+  { icon: "🎁", titlu: "14 zile trial fără card", desc: "Testezi totul. Decizi după. Niciun risc, niciun angajament." },
 ];
 
 export default function CumFunctioneaza() {
@@ -82,9 +84,9 @@ export default function CumFunctioneaza() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, marginBottom: 48 }}>
               {STEPS_CLIENT.map(s => (
-                <div key={s.nr} style={{ background: "#fff", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#FFF3EA", lineHeight: 1 }}>{s.nr}</div>
-                  <div style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
+                <div key={s.nr} className="step-card" style={{ background: "#fff", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
+                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#FFF3EA", lineHeight: 1 }}>{s.nr}</div>
+                  <div className="step-icon" style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
                   <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{s.titlu}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{s.desc}</p>
                 </div>
@@ -92,7 +94,7 @@ export default function CumFunctioneaza() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
               {BENEFICII_CLIENT.map(b => (
-                <div key={b.titlu} style={{ background: "#fff", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #EBEBEB", display: "flex", gap: 14 }}>
+                <div key={b.titlu} className="benefit-card" style={{ background: "#fff", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #EBEBEB", display: "flex", gap: 14 }}>
                   <span style={{ fontSize: 26, flexShrink: 0 }}>{b.icon}</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 4 }}>{b.titlu}</div>
@@ -124,9 +126,9 @@ export default function CumFunctioneaza() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, marginBottom: 48 }}>
               {STEPS_SALON.map(s => (
-                <div key={s.nr} style={{ background: "#FAFAFA", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{s.nr}</div>
-                  <div style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
+                <div key={s.nr} className="step-card" style={{ background: "#FAFAFA", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
+                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{s.nr}</div>
+                  <div className="step-icon" style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
                   <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{s.titlu}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{s.desc}</p>
                 </div>
@@ -134,7 +136,7 @@ export default function CumFunctioneaza() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
               {BENEFICII_SALON.map(b => (
-                <div key={b.titlu} style={{ background: "#FAFAFA", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #EBEBEB", display: "flex", gap: 14 }}>
+                <div key={b.titlu} className="benefit-card" style={{ background: "#FAFAFA", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #EBEBEB", display: "flex", gap: 14 }}>
                   <span style={{ fontSize: 26, flexShrink: 0 }}>{b.icon}</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 4 }}>{b.titlu}</div>
