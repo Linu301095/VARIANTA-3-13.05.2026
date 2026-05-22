@@ -123,6 +123,72 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* CUM FUNCȚIONEAZĂ — 3 PAȘI */}
+        <section style={{ background: "#fff", padding: "72px 20px", borderTop: "1px solid #EBEBEB" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>Cum funcționează</div>
+              <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15 }}>Simplu pentru stăpâni.<br /><span style={{ color: "#FF6B00" }}>Profitabil pentru saloane.</span></h2>
+            </div>
+
+            {/* Pentru stăpâni */}
+            <div style={{ marginBottom: 56 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🐾</div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2 }}>Ai un animal de companie</div>
+                  <h3 style={{ fontSize: "clamp(18px,2.2vw,24px)", fontWeight: 900, color: "#1A1A1A" }}>Rezervi în 3 pași</h3>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+                {[
+                  { nr: "01", icon: "📝", titlu: "Creează cont gratuit", desc: "Înregistrează-te în 2 minute. Adaugi profilul animăluțului: rasă, vârstă, alergii — salonul îl cunoaște deja." },
+                  { nr: "02", icon: "🔍", titlu: "Alege salonul potrivit", desc: "Filtrează după locație, servicii și rating. Citești recenzii reale și vezi prețurile înainte să rezervi." },
+                  { nr: "03", icon: "📅", titlu: "Rezervă în 10 secunde", desc: "Alegi ziua, ora și serviciul. Confirmi — gata. Primești reminder cu 24h înainte de vizită." },
+                ].map(s => (
+                  <div key={s.nr} style={{ background: "#fff", borderRadius: 20, padding: "26px 24px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
+                    <div style={{ position: "absolute", top: 16, right: 20, fontSize: 38, fontWeight: 900, color: "#FFF3EA", lineHeight: 1 }}>{s.nr}</div>
+                    <div style={{ fontSize: 30, marginBottom: 12 }}>{s.icon}</div>
+                    <h4 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{s.titlu}</h4>
+                    <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65 }}>{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pentru saloane */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>✂️</div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2 }}>Ai un salon de grooming</div>
+                  <h3 style={{ fontSize: "clamp(18px,2.2vw,24px)", fontWeight: 900, color: "#1A1A1A" }}>Îți umpli calendarul în 3 pași</h3>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+                {[
+                  { nr: "01", icon: "🏪", titlu: "Înregistrează salonul", desc: "Completezi datele firmei, serviciile oferite și echipa în câteva minute. Profilul apare instant pe CalyHub." },
+                  { nr: "02", icon: "⚙️", titlu: "Configurează calendarul", desc: "Setezi programul de lucru, durata serviciilor și capacitatea zilnică — totul din panoul de control." },
+                  { nr: "03", icon: "💰", titlu: "Primești programări automat", desc: "Clienții rezervă direct online, 24/7. Tu accepți, confirmi — fără telefoane, fără pierderi de timp." },
+                ].map(s => (
+                  <div key={s.nr} style={{ background: "#FAFAFA", borderRadius: 20, padding: "26px 24px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
+                    <div style={{ position: "absolute", top: 16, right: 20, fontSize: 38, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{s.nr}</div>
+                    <div style={{ fontSize: 30, marginBottom: 12 }}>{s.icon}</div>
+                    <h4 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{s.titlu}</h4>
+                    <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65 }}>{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: 40 }}>
+              <Link href="/cum-functioneaza" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 700, color: "#FF6B00", textDecoration: "none" }}>
+                Vezi detalii complete →
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* SECTION STĂPÂNI */}
         <section style={{ background: "#fff", padding: "72px 20px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
