@@ -295,11 +295,12 @@ label:hover {
 }
 
 .mockup-card {
-  transition: transform .28s ease, box-shadow .28s ease;
+  transition: transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .32s ease, border-color .32s ease;
 }
 .mockup-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 16px 40px rgba(255, 107, 0, .18);
+  transform: translateY(-10px) scale(1.012);
+  box-shadow: 0 24px 56px rgba(255, 107, 0, .25);
+  border-color: #E05A00 !important;
 }
 
 @media (max-width: 640px), (hover: none) {
