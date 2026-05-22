@@ -255,43 +255,51 @@ label:hover {
 
 /* ---------- Step / Benefit card hover animations ---------- */
 .step-card {
-  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1), box-shadow .28s ease, border-color .28s ease;
   will-change: transform;
 }
 .step-card:hover {
-  transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 12px 32px rgba(255, 107, 0, .18);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 20px 48px rgba(255, 107, 0, .22);
+  border-color: #FF6B00 !important;
 }
 .step-card:hover .step-num {
-  color: #FFE0CC !important;
-  transform: scale(1.05);
+  color: #FFCFAA !important;
+  transform: scale(1.1);
 }
 .step-card:hover .step-icon {
-  transform: scale(1.12) rotate(-3deg);
+  transform: scale(1.22) rotate(-6deg);
 }
 .step-num {
-  transition: color .25s ease, transform .25s ease;
+  transition: color .28s ease, transform .28s ease;
 }
 .step-icon {
-  transition: transform .25s ease;
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1);
   display: inline-block;
 }
 
 .benefit-card {
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
 }
 .benefit-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   border-color: #FF6B00 !important;
-  box-shadow: 0 6px 20px rgba(255, 107, 0, .12);
+  box-shadow: 0 10px 28px rgba(255, 107, 0, .15);
+}
+.benefit-card:hover .benefit-icon {
+  transform: scale(1.18);
+}
+.benefit-icon {
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1);
+  display: inline-block;
 }
 
 .mockup-card {
-  transition: transform .25s ease, box-shadow .25s ease;
+  transition: transform .28s ease, box-shadow .28s ease;
 }
 .mockup-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(255, 107, 0, .15);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(255, 107, 0, .18);
 }
 
 @media (max-width: 640px), (hover: none) {
@@ -302,7 +310,8 @@ label:hover {
     box-shadow: none;
   }
   .step-card:hover .step-num,
-  .step-card:hover .step-icon {
+  .step-card:hover .step-icon,
+  .benefit-card:hover .benefit-icon {
     transform: none;
     color: inherit;
   }
