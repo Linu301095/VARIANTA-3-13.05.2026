@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useContext, createContext } from "react";
+import React, { useState, useEffect, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
@@ -12,6 +12,7 @@ type ProgramareSalon = {
   user_id: string;
   client: string;
   animal: string;
+  talie?: string | null;
   serviciu: string;
   ora: string;
   data: string;
@@ -22,7 +23,8 @@ type ProgramareSalon = {
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
 
 type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "abonament" | "setari" | "ajutor";
-type Serviciu = { id: number; nume: string; pret: string; durata: string };
+type PreturiTalie = { mica: string; medie: string; mare: string };
+type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 type Groomer = { id: number; nume: string; specialitate: string };
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
@@ -59,7 +61,7 @@ function suprapunere(slot: string, durataSlot: number, p: { ora: string; durata:
   const pS = timeToMin(p.ora), pE = pS + (p.durata || 60);
   return slotS < pE && slotE > pS;
 }
-function isoData(d: Date) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function isoData(d: Date) { return d.toISOString().slice(0, 10); }
 const ORE_OPTIUNI: string[] = (() => {
   const out: string[] = [];
   for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 30) out.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
@@ -120,12 +122,12 @@ export default function DashboardSalon() {
   ]);
   const [program, setProgram] = useState<ProgramSaptamanal>(PROGRAM_DEFAULT);
   const [zilaSelectata, setZilaSelectata] = useState<string>(() => isoData(new Date()));
+  const [filtruTalie, setFiltruTalie] = useState<"toate" | "mica" | "medie" | "mare">("toate");
   const [sloturiZi, setSloturiZi] = useState<SlotProgramare[]>([]);
   const [modalBlocare, setModalBlocare] = useState<{ slot: string; durata: number } | null>(null);
   const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
   const [numeBlocare, setNumeBlocare] = useState("");
   const [durataBlocare, setDurataBlocare] = useState(60);
-  const [editingServiciuId, setEditingServiciuId] = useState<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 600px)");
@@ -206,7 +208,7 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal")
         .eq("salon_id", salonId)
         .neq("status", "anulat")
         .order("data", { ascending: true })
@@ -219,7 +221,7 @@ export default function DashboardSalon() {
 
       const [{ data: profiles }, { data: animals }] = await Promise.all([
         userIds.length > 0 ? supabase.from("profiluri").select("id, nume").in("id", userIds) : Promise.resolve({ data: [] }),
-        animalIds.length > 0 ? supabase.from("animale").select("id, nume, specie, sex, rasa, greutate").in("id", animalIds) : Promise.resolve({ data: [] }),
+        animalIds.length > 0 ? supabase.from("animale").select("id, nume, specie, sex, rasa, greutate, talie").in("id", animalIds) : Promise.resolve({ data: [] }),
       ]);
 
       const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
@@ -230,7 +232,9 @@ export default function DashboardSalon() {
         const animal = animalMap[p.animal_id];
         const specieIcon = animal?.specie === "pisica" ? "🐱" : animal?.specie === "iepure" ? "🐰" : animal?.specie === "pasare" ? "🐦" : animal?.specie === "rozator" ? "🐹" : animal?.specie === "reptila" ? "🦎" : animal?.specie === "altele" ? "✨" : "🐶";
         const sexIcon = animal?.sex === "femela" ? "♀️" : animal?.sex === "mascul" ? "♂️" : "";
-        const detalii = [animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null, sexIcon].filter(Boolean).join(", ");
+        const talieEf = p.talie_animal || animal?.talie;
+        const talieTxt = talieEf === "mica" ? "🐕‍🦺 Mică" : talieEf === "medie" ? "🐕 Medie" : talieEf === "mare" ? "🐺 Mare" : null;
+        const detalii = [animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null, talieTxt, sexIcon].filter(Boolean).join(", ");
         const esteApp = !p.sursa || p.sursa === "app";
         const clientNume = esteApp ? (profil?.nume || "—") : (p.nume_client_extern || (p.sursa === "telefonic" ? "📞 Client telefonic" : p.sursa === "walkin" ? "🚶 Walk-in" : "⏸ Indisponibil"));
         const animalText = esteApp
@@ -241,6 +245,7 @@ export default function DashboardSalon() {
           user_id: p.user_id,
           client: clientNume,
           animal: animalText,
+          talie: talieEf || null,
           serviciu: p.serviciu,
           ora: p.ora,
           data: p.data,
@@ -385,13 +390,8 @@ export default function DashboardSalon() {
   }
 
   async function deblocheazaSlot(id: string) {
-    const { data: deleted, error } = await supabase.from("programari").delete().eq("id", id).select();
-    if (error) { salveaza("Eroare la deblocare: " + error.message); console.error(error); return; }
-    if (!deleted || deleted.length === 0) {
-      salveaza("Ștergere blocată de RLS — rulează SQL-ul pentru politica DELETE");
-      console.error("DELETE returned 0 rows — RLS policy missing for programari.delete");
-      return;
-    }
+    const { error } = await supabase.from("programari").delete().eq("id", id);
+    if (error) { salveaza("Eroare la deblocare"); return; }
     setSloturiZi(s => s.filter(x => x.id !== id));
     salveaza("Slot deblocat");
   }
@@ -521,19 +521,34 @@ export default function DashboardSalon() {
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
             {/* AGENDA */}
-            {tab === "agenda" && (
+            {tab === "agenda" && (() => {
+              const programariFiltrate = filtruTalie === "toate" ? programari : programari.filter(p => p.talie === filtruTalie);
+              return (
               <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
                   <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>{ZILE[(AZI.getDay() + 6) % 7]}, {AZI.getDate()} {LUNA[AZI.getMonth()]} {AZI.getFullYear()}</h2>
-                  <div style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>{programari.length} programari</div>
+                  <div style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>{programariFiltrate.length} programari{filtruTalie !== "toate" ? ` (din ${programari.length})` : ""}</div>
+                </div>
+                <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+                  {[
+                    { val: "toate", label: "Toate", icon: "📋" },
+                    { val: "mica", label: "Mică", icon: "🐕‍🦺" },
+                    { val: "medie", label: "Medie", icon: "🐕" },
+                    { val: "mare", label: "Mare", icon: "🐺" },
+                  ].map(t => (
+                    <button key={t.val} onClick={() => setFiltruTalie(t.val as any)}
+                      style={{ padding: "7px 14px", borderRadius: 50, border: filtruTalie === t.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruTalie === t.val ? c.orangeAccent : c.surface, color: filtruTalie === t.val ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                      <span>{t.icon}</span> {t.label}
+                    </button>
+                  ))}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {programari.length === 0 && (
+                  {programariFiltrate.length === 0 && (
                     <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
-                      Nu ai programări încă. Clienții te vor găsi în aplicație și pot rezerva.
+                      {filtruTalie === "toate" ? "Nu ai programări încă. Clienții te vor găsi în aplicație și pot rezerva." : `Nicio programare cu talie ${filtruTalie === "mica" ? "Mică" : filtruTalie === "medie" ? "Medie" : "Mare"}.`}
                     </div>
                   )}
-                  {programari.map(p => {
+                  {programariFiltrate.map(p => {
                     const nou = p.status === "în așteptare";
                     return (
                       <div key={p.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -559,17 +574,59 @@ export default function DashboardSalon() {
                   })}
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* STATISTICI */}
-            {tab === "statistici" && (
+            {tab === "statistici" && (() => {
+              const aziIso = isoData(new Date());
+              const now = new Date();
+              const lunaCurenta = now.getMonth(), anulCurent = now.getFullYear();
+              const isFinalizata = (p: ProgramareSalon) => p.status === "confirmat" || p.status === "finalizat";
+              const confirmate = programari.filter(isFinalizata);
+              const azi = programari.filter(p => p.data === aziIso);
+              const aziConfirmate = azi.filter(isFinalizata);
+              const incasariAzi = aziConfirmate.reduce((s, p) => s + (p.pret || 0), 0);
+              const lunaProgr = programari.filter(p => {
+                const d = new Date(p.data); return d.getMonth() === lunaCurenta && d.getFullYear() === anulCurent;
+              });
+              const clientiLuna = new Set(lunaProgr.map(p => p.user_id).filter(Boolean)).size;
+              const incasariLuna = lunaProgr.filter(isFinalizata).reduce((s, p) => s + (p.pret || 0), 0);
+              const servCount: Record<string, number> = {};
+              confirmate.forEach(p => { if (p.serviciu) servCount[p.serviciu] = (servCount[p.serviciu] || 0) + 1; });
+              const totalServ = Object.values(servCount).reduce((a, b) => a + b, 0);
+              const serviciiPop = Object.entries(servCount).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([nume, cnt], i) => ({
+                nume, pct: totalServ > 0 ? Math.round((cnt / totalServ) * 100) : 0, cnt,
+                col: ["#FF6B00", "#8B5CF6", "#10B981", "#F59E0B", "#EF4444"][i],
+              }));
+              const talieCount = { mica: 0, medie: 0, mare: 0, necunoscuta: 0 };
+              confirmate.forEach(p => {
+                if (p.talie === "mica") talieCount.mica++;
+                else if (p.talie === "medie") talieCount.medie++;
+                else if (p.talie === "mare") talieCount.mare++;
+                else talieCount.necunoscuta++;
+              });
+              const totalTalie = talieCount.mica + talieCount.medie + talieCount.mare + talieCount.necunoscuta;
+              const LUNI_SCURT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"];
+              const ultimeleLuni: { luna: string; val: number }[] = [];
+              for (let i = 5; i >= 0; i--) {
+                const dt = new Date(anulCurent, lunaCurenta - i, 1);
+                const m = dt.getMonth(), y = dt.getFullYear();
+                const val = programari.filter(p => {
+                  const d = new Date(p.data);
+                  return d.getMonth() === m && d.getFullYear() === y && isFinalizata(p);
+                }).reduce((s, p) => s + (p.pret || 0), 0);
+                ultimeleLuni.push({ luna: LUNI_SCURT[m], val });
+              }
+              const maxLunar = Math.max(...ultimeleLuni.map(x => x.val), 1);
+              return (
               <div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 28 }}>
                   {[
-                    { icon: "💰", label: "Incasari azi", valoare: "840 RON", sub: "+12% fata de ieri", color: "#10B981" },
-                    { icon: "📅", label: "Programari azi", valoare: `${programari.length}`, sub: `${programari.filter(p => p.status === "în așteptare").length} noi · ${programari.filter(p => p.status === "confirmat").length} confirmate`, color: "#FF6B00" },
-                    { icon: "👥", label: "Clienti luna asta", valoare: "43", sub: "+8 fata de luna trecuta", color: "#8B5CF6" },
-                    { icon: "⭐", label: "Rating mediu", valoare: "4.9", sub: "127 recenzii total", color: "#F59E0B" },
+                    { icon: "💰", label: "Incasari azi", valoare: `${incasariAzi} RON`, sub: `${aziConfirmate.length} programări confirmate azi`, color: "#10B981" },
+                    { icon: "📅", label: "Programari azi", valoare: `${azi.length}`, sub: `${azi.filter(p => p.status === "în așteptare").length} noi · ${aziConfirmate.length} confirmate`, color: "#FF6B00" },
+                    { icon: "👥", label: "Clienti luna asta", valoare: `${clientiLuna}`, sub: `${incasariLuna} RON încasați`, color: "#8B5CF6" },
+                    { icon: "⭐", label: "Rating mediu", valoare: "—", sub: "În curând (recenzii)", color: "#F59E0B" },
                   ].map(card => (
                     <div key={card.label} style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
                       <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
@@ -582,27 +639,56 @@ export default function DashboardSalon() {
                 <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 20 }}>Statistici lunare</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
                   <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Incasari lunare (RON)</div>
-                    {[["Ian", 3200], ["Feb", 2800], ["Mar", 4100], ["Apr", 3900], ["Mai", 4800]].map(([luna, val]) => (
-                      <div key={luna as string} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Incasari ultimele 6 luni (RON)</div>
+                    {ultimeleLuni.map(({ luna, val }) => (
+                      <div key={luna} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                         <div style={{ width: 36, fontSize: 12, fontWeight: 700, color: c.muted }}>{luna}</div>
-                        <div style={{ flex: 1, height: 8, background: c.surface3, borderRadius: 4 }}><div style={{ height: "100%", width: `${(val as number) / 50}%`, background: "#FF6B00", borderRadius: 4 }} /></div>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: c.text, width: 50, textAlign: "right" }}>{val}</div>
+                        <div style={{ flex: 1, height: 8, background: c.surface3, borderRadius: 4 }}><div style={{ height: "100%", width: `${(val / maxLunar) * 100}%`, background: "#FF6B00", borderRadius: 4 }} /></div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: c.text, width: 60, textAlign: "right" }}>{val}</div>
                       </div>
                     ))}
                   </div>
                   <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Servicii populare</div>
-                    {[["Tuns complet", 42, "#FF6B00"], ["Tuns + Baita", 31, "#8B5CF6"], ["Baita + uscare", 18, "#10B981"], ["Styling", 9, "#F59E0B"]].map(([s, pct, col]) => (
-                      <div key={s as string} style={{ marginBottom: 14 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 13, fontWeight: 700, color: c.text2 }}>{s}</span><span style={{ fontSize: 13, fontWeight: 800, color: col as string }}>{pct}%</span></div>
-                        <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${pct}%`, background: col as string, borderRadius: 3 }} /></div>
+                    {serviciiPop.length === 0 ? (
+                      <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Niciun serviciu efectuat încă.</div>
+                    ) : serviciiPop.map(s => (
+                      <div key={s.nume} style={{ marginBottom: 14 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 13, fontWeight: 700, color: c.text2 }}>{s.nume}</span><span style={{ fontSize: 13, fontWeight: 800, color: s.col }}>{s.pct}%</span></div>
+                        <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${s.pct}%`, background: s.col, borderRadius: 3 }} /></div>
                       </div>
                     ))}
                   </div>
+                  <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Distribuție pe talie</div>
+                    {totalTalie === 0 ? (
+                      <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare efectuată încă.</div>
+                    ) : (
+                      <>
+                        {[
+                          { key: "mica", label: "🐕‍🦺 Mică", cnt: talieCount.mica, col: "#10B981" },
+                          { key: "medie", label: "🐕 Medie", cnt: talieCount.medie, col: "#FF6B00" },
+                          { key: "mare", label: "🐺 Mare", cnt: talieCount.mare, col: "#8B5CF6" },
+                          ...(talieCount.necunoscuta > 0 ? [{ key: "necunoscuta", label: "📏 Necunoscută", cnt: talieCount.necunoscuta, col: "#9CA3AF" }] : []),
+                        ].map(t => {
+                          const pct = Math.round((t.cnt / totalTalie) * 100);
+                          return (
+                            <div key={t.key} style={{ marginBottom: 14 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: c.text2 }}>{t.label}</span>
+                                <span style={{ fontSize: 13, fontWeight: 800, color: t.col }}>{t.cnt} ({pct}%)</span>
+                              </div>
+                              <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${pct}%`, background: t.col, borderRadius: 3 }} /></div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* NOTIFICARI */}
             {tab === "notificari" && (
@@ -729,15 +815,13 @@ export default function DashboardSalon() {
                             const ocupare = sloturiZi.find(p => suprapunere(slot, STEP_SLOT, p));
                             const eTrecut = zilaSelectata === aziIso && timeToMin(slot) <= nowMin;
                             let bg = c.surface2, border = c.border, color = c.text, label = slot;
-                            let etichetaLiber = false;
                             if (eTrecut && !ocupare) {
                               bg = c.surface3; color = c.xmuted; label = `${slot} ·`;
                             } else if (ocupare) {
                               if (ocupare.sursa === "app") { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFF3EA"; border = "#FF6B00"; color = "#FF6B00"; }
                               else { bg = theme === "dark" ? "rgba(239,68,68,.18)" : "#FEF2F2"; border = "#EF4444"; color = "#EF4444"; }
                             } else {
-                              bg = theme === "dark" ? "rgba(16,185,129,.18)" : "#D1FAE5"; border = "#10B981"; color = "#065F46";
-                              etichetaLiber = true;
+                              bg = theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5"; border = "#10B981"; color = "#10B981";
                             }
                             const ocupaPrimulSlot = ocupare && ocupare.ora === slot;
                             return (
@@ -758,23 +842,12 @@ export default function DashboardSalon() {
                                     {ocupare.sursa === "app" ? "App" : ocupare.sursa === "telefonic" ? `📞 ${ocupare.nume_client_extern || "Telefonic"}` : ocupare.sursa === "walkin" ? `🚶 ${ocupare.nume_client_extern || "Walk-in"}` : "⏸ Pauză"}
                                   </div>
                                 )}
-                                {etichetaLiber && (
-                                  <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2, opacity: .8 }}>✓ Liber</div>
-                                )}
                               </button>
                             );
                           })}
                         </div>
                       </>
                     )}
-                    <button onClick={async () => {
-                      if (!salonData?.id) return;
-                      await loadSloturiZi(salonData.id, zilaSelectata);
-                      salveaza("Gestionare salvată!");
-                    }}
-                      style={{ ...btnPrimary, marginTop: 16, background: "#FF6B00" }}>
-                      Salvează gestionarea
-                    </button>
                   </div>
 
                   {/* MODAL BLOCARE */}
@@ -923,65 +996,64 @@ export default function DashboardSalon() {
               <div style={{ maxWidth: 580 }}>
                 <PageHeader icon="✂️" title="Serviciile mele" sub="Gestioneaza serviciile oferite de salon" />
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-                  {servicii.length === 0 && (
-                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
-                      Nu ai servicii configurate. Apasă "+ Adaugă serviciu" pentru a începe.
-                    </div>
-                  )}
-                  {servicii.map((s) => {
-                    const eEdit = editingServiciuId === s.id;
+                  {servicii.map((s, i) => {
+                    const preturi = s.preturi || { mica: s.pret || "", medie: s.pret || "", mare: s.pret || "" };
+                    const durate = s.durate || { mica: s.durata || "", medie: s.durata || "", mare: s.durata || "" };
+                    const TALII = [
+                      { key: "mica" as const, label: "Mică", icon: "🐕‍🦺" },
+                      { key: "medie" as const, label: "Medie", icon: "🐕" },
+                      { key: "mare" as const, label: "Mare", icon: "🐺" },
+                    ];
                     return (
-                      <div key={s.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: eEdit ? "2px solid #FF6B00" : `1.5px solid ${c.border}` }}>
-                        {eEdit ? (
-                          <>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                              <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>✏️ Editezi serviciul</div>
-                              <button onClick={() => setServicii(sv => sv.filter(x => x.id !== s.id))} style={{ fontSize: 12, color: "#EF4444", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontWeight: 700 }}>🗑️ Șterge</button>
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                              <input value={s.nume} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, nume: e.target.value } : x))} placeholder="Denumire serviciu" style={inp} />
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 10 }}>
-                                <input value={s.pret} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, pret: e.target.value } : x))} type="number" placeholder="Preț (RON)" style={inp} />
-                                <input value={s.durata} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, durata: e.target.value } : x))} type="number" placeholder="Durată (min)" style={inp} />
-                              </div>
-                              <button onClick={() => setEditingServiciuId(null)}
-                                style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "#10B981", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", alignSelf: "flex-start" }}>
-                                ✓ Gata
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 16, fontWeight: 800, color: c.text, marginBottom: 6 }}>{s.nume || "Serviciu fără nume"}</div>
-                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                {s.pret && <span style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, padding: "4px 12px", borderRadius: 50 }}>{s.pret} RON</span>}
-                                {s.durata && <span style={{ fontSize: 13, fontWeight: 700, color: c.text2, background: c.surface2, padding: "4px 12px", borderRadius: 50 }}>⏱ {s.durata} min</span>}
-                              </div>
-                            </div>
-                            <button onClick={() => setEditingServiciuId(s.id)}
-                              style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
-                              ✏️ Editează
-                            </button>
-                          </div>
-                        )}
+                    <div key={s.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>Serviciul {i + 1}</div>
+                        <button onClick={() => setServicii(sv => sv.filter(x => x.id !== s.id))} style={{ fontSize: 12, color: c.xmuted, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕ Sterge</button>
                       </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <input value={s.nume} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, nume: e.target.value } : x))} placeholder="Denumire serviciu" style={inp} />
+                        <div style={{ fontSize: 12, color: c.muted, fontWeight: 700, marginTop: 4 }}>Preț și durată pe talie (lasă gol dacă nu oferi pentru o talie):</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "70px 1fr 1fr", gap: 8, alignItems: "center" }}>
+                          <div></div>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textAlign: "center" }}>Preț (RON)</div>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textAlign: "center" }}>Durată (min)</div>
+                          {TALII.map(t => (
+                            <React.Fragment key={t.key}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 800, color: c.text2 }}>
+                                <span style={{ fontSize: 16 }}>{t.icon}</span> {t.label}
+                              </div>
+                              <input value={preturi[t.key]} onChange={e => {
+                                const val = e.target.value;
+                                setServicii(sv => sv.map(x => {
+                                  if (x.id !== s.id) return x;
+                                  const p = { ...(x.preturi || { mica: x.pret || "", medie: x.pret || "", mare: x.pret || "" }), [t.key]: val };
+                                  return { ...x, preturi: p, pret: p.medie || p.mica || p.mare || "" };
+                                }));
+                              }} type="number" placeholder="—" style={{ ...inp, padding: "8px 10px", fontSize: 13 }} />
+                              <input value={durate[t.key]} onChange={e => {
+                                const val = e.target.value;
+                                setServicii(sv => sv.map(x => {
+                                  if (x.id !== s.id) return x;
+                                  const d = { ...(x.durate || { mica: x.durata || "", medie: x.durata || "", mare: x.durata || "" }), [t.key]: val };
+                                  return { ...x, durate: d, durata: d.medie || d.mica || d.mare || "" };
+                                }));
+                              }} type="number" placeholder="—" style={{ ...inp, padding: "8px 10px", fontSize: 13 }} />
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                     );
                   })}
                 </div>
-                <button onClick={() => {
-                  const nou = { id: Date.now(), nume: "", pret: "", durata: "" };
-                  setServicii(sv => [...sv, nou]);
-                  setEditingServiciuId(nou.id);
-                }} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adaugă serviciu</button>
+                <button onClick={() => setServicii(sv => [...sv, { id: Date.now(), nume: "", pret: "", durata: "", preturi: { mica: "", medie: "", mare: "" }, durate: { mica: "", medie: "", mare: "" } }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga serviciu</button>
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
                   if (authUser) {
                     await supabase.from("saloane").update({ servicii }).eq("user_id", authUser.id);
                   }
-                  setEditingServiciuId(null);
                   salveaza("Servicii actualizate!");
-                }} style={btnPrimary}>Salvează serviciile</button>
+                }} style={btnPrimary}>Salveaza serviciile</button>
               </div>
             )}
 

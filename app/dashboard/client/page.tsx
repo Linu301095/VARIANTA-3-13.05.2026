@@ -34,7 +34,13 @@ function mapSalonDB(s: any, i: number): SalonItem {
   const serviciiArr = Array.isArray(s.servicii) ? s.servicii : [];
   const serviciiComplete: Serviciu[] = serviciiArr
     .filter((sv: any) => sv?.nume)
-    .map((sv: any) => ({ nume: sv.nume, pret: String(sv.pret || ""), durata: String(sv.durata || "") }));
+    .map((sv: any) => ({
+      nume: sv.nume,
+      pret: String(sv.pret || ""),
+      durata: String(sv.durata || ""),
+      preturi: sv.preturi ? { mica: String(sv.preturi.mica || ""), medie: String(sv.preturi.medie || ""), mare: String(sv.preturi.mare || "") } : undefined,
+      durate: sv.durate ? { mica: String(sv.durate.mica || ""), medie: String(sv.durate.medie || ""), mare: String(sv.durate.mare || "") } : undefined,
+    }));
   const preturi = serviciiComplete.map(sv => Number(sv.pret)).filter(n => !isNaN(n) && n > 0);
   const pretDe = preturi.length > 0 ? Math.min(...preturi) : 0;
   const numeServicii = serviciiComplete.map(sv => sv.nume).slice(0, 3);
@@ -109,6 +115,15 @@ function suprapunereC(slotStart: number, slotEnd: number, ora: string, durata: n
   return slotStart < pE && slotEnd > pS;
 }
 function sexLabel(val?: string) { return val === "mascul" ? "♂️ Mascul" : val === "femela" ? "♀️ Femelă" : "—"; }
+function talieLabel(val?: string) { return val === "mica" ? "Mică" : val === "medie" ? "Medie" : val === "mare" ? "Mare" : "—"; }
+function talieIcon(val?: string) { return val === "mica" ? "🐕‍🦺" : val === "medie" ? "🐕" : val === "mare" ? "🐺" : "📏"; }
+function getPretDurata(serviciu: any, talie?: string): { pret: string; durata: string } {
+  if (!serviciu) return { pret: "", durata: "" };
+  const t = (talie === "mica" || talie === "medie" || talie === "mare") ? talie : "medie";
+  const p = serviciu.preturi?.[t] || serviciu.pret || "";
+  const d = serviciu.durate?.[t] || serviciu.durata || "";
+  return { pret: String(p), durata: String(d) };
+}
 type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat";
 type Programare = {
   id: string;
@@ -120,7 +135,8 @@ type Programare = {
   status: StatusProgramare;
   pret: number;
 };
-type Serviciu = { nume: string; pret: string; durata: string };
+type PreturiTalie = { mica: string; medie: string; mare: string };
+type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 
 /* ── Color palette ── */
 const C = {
@@ -177,7 +193,7 @@ export default function DashboardClient() {
   const [notificari, setNotificari] = useState<Notificare[]>([]);
   const [userId, setUserId] = useState("");
   const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "" });
-  const [animalForm, setAnimalForm] = useState({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" });
+  const [animalForm, setAnimalForm] = useState({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "" });
   const [savedMsg, setSavedMsg] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -395,8 +411,9 @@ export default function DashboardClient() {
     if (!authUser) { setConfirmareError("Trebuie să fii conectat"); setConfirmareLoading(false); return; }
 
     const serviciuSelectat = salon.serviciiComplete.find(s => s.nume === rezervare.serviciu);
-    const pretNumeric = Number(serviciuSelectat?.pret) || 0;
-    const durataNumeric = Number(serviciuSelectat?.durata) || 60;
+    const { pret: pretStr, durata: durataStr } = getPretDurata(serviciuSelectat, animal?.talie);
+    const pretNumeric = Number(pretStr) || 0;
+    const durataNumeric = Number(durataStr) || 60;
     const dataIso = dataSelectata;
 
     const { data: nou, error } = await supabase
@@ -408,6 +425,7 @@ export default function DashboardClient() {
         serviciu: rezervare.serviciu,
         pret: pretNumeric,
         durata: durataNumeric,
+        talie_animal: animal?.talie || null,
         data: dataIso,
         ora: rezervare.ora,
         status: "în așteptare",
@@ -586,13 +604,25 @@ export default function DashboardClient() {
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                {animal?.talie && (
+                  <div style={{ fontSize: 12, color: c.muted, marginBottom: 4 }}>
+                    Prețurile afișate sunt pentru talie <strong style={{ color: c.text }}>{talieIcon(animal.talie)} {talieLabel(animal.talie)}</strong> ({animal.nume})
+                  </div>
+                )}
+                {!animal?.talie && (
+                  <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 4 }}>
+                    ⚠️ {animal?.nume || "Animalul"} nu are talie setată. Mergi la „Animalele mele" și alege talia pentru a vedea prețurile corecte.
+                  </div>
+                )}
                 {salon.serviciiComplete.map(s => {
                   const sel = rezervare?.serviciu === s.nume;
+                  const { pret, durata } = getPretDurata(s, animal?.talie);
+                  if (!pret && !durata) return null;
                   return (
                     <button key={s.nume} onClick={() => setRezervare(r => ({ ...r!, salonId: salon.id, serviciu: s.nume, ora: r?.ora || "" }))}
                       style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                      <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{s.durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {s.durata} min</div>}</div>
-                      {s.pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{s.pret} RON</div>}
+                      <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
+                      {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{pret} RON</div>}
                     </button>
                   );
                 })}
@@ -601,7 +631,8 @@ export default function DashboardClient() {
 
             {rezervare?.serviciu && (() => {
               const serviciuObj = salon.serviciiComplete.find(s => s.nume === rezervare.serviciu);
-              const durataSv = Number(serviciuObj?.durata) || 60;
+              const { durata: durataResolved } = getPretDurata(serviciuObj, animal?.talie);
+              const durataSv = Number(durataResolved) || 60;
               const progEf = programSalon || PROGRAM_DEFAULT_C;
               const aziDate = new Date(); aziDate.setHours(0, 0, 0, 0);
               const aziIso = isoDataC(aziDate);
@@ -879,7 +910,7 @@ export default function DashboardClient() {
                               )}
                               <button onClick={() => {
                                 setEditingAnimalId(a.id);
-                                setAnimalForm({ numeAnimal: a.nume || "", specie: a.specie || "caine", sex: a.sex || "", rasa: a.rasa || "", greutate: String(a.greutate || ""), varsta: String(a.varsta || ""), alergii: a.alergii || "" });
+                                setAnimalForm({ numeAnimal: a.nume || "", specie: a.specie || "caine", sex: a.sex || "", rasa: a.rasa || "", talie: a.talie || "", greutate: String(a.greutate || ""), varsta: String(a.varsta || ""), alergii: a.alergii || "" });
                               }} style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, padding: "7px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✏️ Editează</button>
                               <button onClick={async () => {
                                 if (!confirm(`Sigur ștergi profilul lui ${a.nume}?`)) return;
@@ -898,10 +929,10 @@ export default function DashboardClient() {
                           onCancel={() => setEditingAnimalId(null)} onSave={async () => {
                           await supabase.from("animale").update({
                             nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex,
-                            rasa: animalForm.rasa, greutate: Number(animalForm.greutate),
+                            rasa: animalForm.rasa, talie: animalForm.talie || null, greutate: Number(animalForm.greutate),
                             varsta: Number(animalForm.varsta), alergii: animalForm.alergii,
                           }).eq("id", a.id);
-                          setAnimale(prev => prev.map(x => x.id === a.id ? { ...x, nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex, rasa: animalForm.rasa, greutate: Number(animalForm.greutate), varsta: Number(animalForm.varsta), alergii: animalForm.alergii } : x));
+                          setAnimale(prev => prev.map(x => x.id === a.id ? { ...x, nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex, rasa: animalForm.rasa, talie: animalForm.talie, greutate: Number(animalForm.greutate), varsta: Number(animalForm.varsta), alergii: animalForm.alergii } : x));
                           setEditingAnimalId(null);
                           salveaza("Profil actualizat!");
                         }} />
@@ -914,11 +945,11 @@ export default function DashboardClient() {
               {showAddAnimal ? (
                 <div style={{ background: c.surface, borderRadius: 16, padding: "20px", border: "2px dashed #FF6B00" }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00", marginBottom: 14 }}>➕ Animal nou</div>
-                  <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp} onCancel={() => { setShowAddAnimal(false); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" }); }} onSave={async () => {
+                  <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp} onCancel={() => { setShowAddAnimal(false); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "" }); }} onSave={async () => {
                     if (!animalForm.numeAnimal.trim() || !animalForm.sex) { salveaza("Completează numele și sexul"); return; }
                     const { data: nou } = await supabase.from("animale").insert({
                       user_id: userId, nume: animalForm.numeAnimal.trim(), specie: animalForm.specie, sex: animalForm.sex,
-                      rasa: animalForm.rasa.trim(), greutate: Number(animalForm.greutate) || 0,
+                      rasa: animalForm.rasa.trim(), talie: animalForm.talie || null, greutate: Number(animalForm.greutate) || 0,
                       varsta: Number(animalForm.varsta) || 0, alergii: animalForm.alergii.trim(),
                     }).select("*").single();
                     if (nou) {
@@ -926,12 +957,12 @@ export default function DashboardClient() {
                       if (!selectedAnimalId) setSelectedAnimalId(nou.id);
                     }
                     setShowAddAnimal(false);
-                    setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" });
+                    setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "" });
                     salveaza("Animal adăugat!");
                   }} />
                 </div>
               ) : (
-                <button onClick={() => { setShowAddAnimal(true); setEditingAnimalId(null); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", greutate: "", varsta: "", alergii: "" }); }}
+                <button onClick={() => { setShowAddAnimal(true); setEditingAnimalId(null); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "" }); }}
                   style={{ width: "100%", padding: "14px", borderRadius: 12, border: "1.5px dashed #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                   + Adaugă animal nou
                 </button>
@@ -1198,7 +1229,7 @@ function FAQ({ items }: { items: { q: string; r: string }[] }) {
 function CardSalon({ salon, onSelect }: { salon: SalonItem; onSelect: () => void }) {
   const { c, theme } = useContext(ThemeCtx);
   return (
-    <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
+    <div style={{ background: c.surface, borderRadius: 20, border: "2px solid #FF6B00", overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
       {/* Cover photo sau bara colorată */}
       {salon.poza_url ? (
         <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
@@ -1375,6 +1406,23 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
             </button>
           </div>
         )}
+      </div>
+      <div>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Talie</label>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          {[
+            { val: "mica", label: "Mică", desc: "sub 10 kg", icon: "🐕‍🦺" },
+            { val: "medie", label: "Medie", desc: "10–25 kg", icon: "🐕" },
+            { val: "mare", label: "Mare", desc: "peste 25 kg", icon: "🐺" },
+          ].map(t => (
+            <button key={t.val} type="button" onClick={() => set("talie", t.val)}
+              style={{ padding: "8px 4px", borderRadius: 10, border: form.talie === t.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: form.talie === t.val ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+              <span style={{ fontSize: 18 }}>{t.icon}</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: form.talie === t.val ? "#FF6B00" : c.text2 }}>{t.label}</span>
+              <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}>{t.desc}</span>
+            </button>
+          ))}
+        </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <div>
