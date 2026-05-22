@@ -49,7 +49,7 @@ const BENEFICII_SALON = [
 
 export default function CumFunctioneaza() {
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
@@ -77,7 +77,7 @@ export default function CumFunctioneaza() {
         </section>
 
         {/* PENTRU STĂPÂNI */}
-        <section style={{ padding: "72px 20px", background: "#FAFAFA" }}>
+        <section style={{ padding: "72px 20px", background: "#fff" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
               <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 }}>🐾</div>
@@ -90,8 +90,8 @@ export default function CumFunctioneaza() {
             {/* 4 Pași client */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24, marginBottom: 48 }}>
               {STEPS_CLIENT.map(s => (
-                <div key={s.nr} className="step-card" style={{ background: "#fff", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden", boxShadow: "0 2px 10px rgba(255,107,0,.07)" }}>
-                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#FFF3EA", lineHeight: 1 }}>{s.nr}</div>
+                <div key={s.nr} className="step-card" style={{ background: "#FFF3EA", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden", boxShadow: "0 2px 10px rgba(255,107,0,.07)" }}>
+                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#FFDCC6", lineHeight: 1 }}>{s.nr}</div>
                   <div className="step-icon" style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
                   <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{s.titlu}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{s.desc}</p>
@@ -100,7 +100,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* MOCKUP CLIENT REAL — profil animal + istoric vizite */}
-            <div className="mockup-card" style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FAFAFA 100%)", borderRadius: 24, padding: "32px", border: "1.5px solid #FFDCC6", marginBottom: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
+            <div className="mockup-card" style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFE0CC 100%)", borderRadius: 24, padding: "32px", border: "1.5px solid #FFDCC6", marginBottom: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Contul Mariei</div>
                 <h3 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A", marginBottom: 10 }}>Salonul știe tot înainte să ajungi</h3>
@@ -151,7 +151,7 @@ export default function CumFunctioneaza() {
             {/* Beneficii client — 6 carduri */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
               {BENEFICII_CLIENT.map(b => (
-                <div key={b.titlu} className="benefit-card" style={{ background: "#fff", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #EBEBEB", display: "flex", gap: 14 }}>
+                <div key={b.titlu} className="benefit-card" style={{ background: "#FFF3EA", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #FFDCC6", display: "flex", gap: 14 }}>
                   <span className="benefit-icon" style={{ fontSize: 26, flexShrink: 0 }}>{b.icon}</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 4 }}>{b.titlu}</div>
@@ -185,8 +185,8 @@ export default function CumFunctioneaza() {
             {/* 4 Pași salon */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24, marginBottom: 48 }}>
               {STEPS_SALON.map(s => (
-                <div key={s.nr} className="step-card" style={{ background: "#FAFAFA", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
-                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{s.nr}</div>
+                <div key={s.nr} className="step-card" style={{ background: "#FFF3EA", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
+                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#FFDCC6", lineHeight: 1 }}>{s.nr}</div>
                   <div className="step-icon" style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
                   <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{s.titlu}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{s.desc}</p>
@@ -195,7 +195,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* MOCKUP SALON REAL — agenda zilei cu programări + stats */}
-            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "1.5px solid #FFDCC6", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
+            <div className="mockup-card" style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFE0CC 100%)", borderRadius: 24, padding: "32px", border: "1.5px solid #FFDCC6", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Salon PetStyle Cluj</div>
@@ -218,7 +218,7 @@ export default function CumFunctioneaza() {
                   </div>
                 </div>
                 {/* Lista programări */}
-                <div style={{ background: "#FAFAFA", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #EBEBEB" }}>
+                <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6" }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Vineri 23 Mai — programări</div>
                   {[
                     { ora: "09:00", client: "Maria P.", animal: "Rex", rasa: "Golden", talie: "Mare", serviciu: "Tuns + Spălat", pret: "180 RON", status: "confirmat" },
@@ -252,7 +252,7 @@ export default function CumFunctioneaza() {
             {/* Beneficii salon — 6 carduri */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
               {BENEFICII_SALON.map(b => (
-                <div key={b.titlu} className="benefit-card" style={{ background: "#FAFAFA", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #EBEBEB", display: "flex", gap: 14 }}>
+                <div key={b.titlu} className="benefit-card" style={{ background: "#FFF3EA", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #FFDCC6", display: "flex", gap: 14 }}>
                   <span className="benefit-icon" style={{ fontSize: 26, flexShrink: 0 }}>{b.icon}</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 4 }}>{b.titlu}</div>
