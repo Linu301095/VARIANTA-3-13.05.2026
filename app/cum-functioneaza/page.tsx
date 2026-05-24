@@ -44,7 +44,7 @@ const BENEFICII_SALON = [
   { icon: "📊", titlu: "Statistici live — fără Excel", desc: "Încasări azi și pe lună, top servicii, câți câini mari vs mici, ore de vârf — calculate automat din fiecare programare." },
   { icon: "👤", titlu: "Dosar per client, mereu la îndemână", desc: "Istoricul complet al fiecărui client: câte vizite, ce servicii, ce animale, ce alergii. Nu mai cauți prin caiet sau WhatsApp." },
   { icon: "📱", titlu: "Calendar mobil, oricând, oriunde", desc: "Accepți, refuzi, blochezi sloturi direct de pe telefon — inclusiv duminică noaptea când clientul face rezervarea." },
-  { icon: "🎁", titlu: "14 zile trial complet gratuit", desc: "Testezi toate funcționalitățile, cu programări reale. Fără card, fără angajament. Anulezi cu un click dacă nu e pentru tine." },
+  { icon: "🎁", titlu: "3 luni complet gratuite", desc: "Testezi toate funcționalitățile, cu programări reale. Fără card, fără angajament. Anulezi cu un click dacă nu e pentru tine." },
 ];
 
 export default function CumFunctioneaza() {
@@ -275,7 +275,7 @@ export default function CumFunctioneaza() {
           <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Gata să începi?</h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginBottom: 32, lineHeight: 1.7 }}>
             Stăpâni — programare în 10 secunde, profil animal gata.<br />
-            Saloane — primele 14 zile gratuit, fără card.
+            Saloane — primele 3 luni gratuite, fără card.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>🐾 Creează cont</Link>
