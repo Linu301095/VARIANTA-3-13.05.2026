@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
 import ResetTheme from "../components/ResetTheme";
@@ -26,8 +25,11 @@ export default function HomePage() {
       {/* HEADER */}
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/">
-            <Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority />
+          <Link href="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+            <span style={{ fontFamily: "'Nunito', system-ui, sans-serif", fontSize: 26, fontWeight: 900, lineHeight: 1, letterSpacing: -0.5 }}>
+              <span style={{ background: "#FF6B00", color: "#fff", borderRadius: 8, padding: "3px 9px" }}>Caly</span>
+              <span style={{ color: "#1A1A1A" }}>Hub</span>
+            </span>
           </Link>
           <nav style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <Link href="/login" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
@@ -125,7 +127,7 @@ export default function HomePage() {
 
         {/* CUM FUNCȚIONEAZĂ — BUTON CĂTRE PAGINA DEDICATĂ */}
         <section style={{ background: "#fff", padding: "40px 20px 8px", textAlign: "center" }}>
-          <Link href="/cum-functioneaza" style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 32px", borderRadius: 50, background: "#fff", border: "2px solid #FF6B00", color: "#FF6B00", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 4px 16px rgba(255,107,0,.12)" }}>
+          <Link href="/cum-functioneaza" style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 32px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
             Vezi cum funcționează CalyHub
             <span style={{ fontSize: 20 }}>→</span>
           </Link>
