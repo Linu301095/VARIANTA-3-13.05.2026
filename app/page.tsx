@@ -126,7 +126,7 @@ export default function HomePage() {
         {/* CUM FUNCȚIONEAZĂ — BUTON CĂTRE PAGINA DEDICATĂ */}
         <section style={{ background: "#fff", padding: "40px 20px 8px", textAlign: "center" }}>
           <Link href="/cum-functioneaza" style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 32px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
-            Vezi cum funcționează&nbsp;<span style={{ color: "#fff" }}>Caly</span><span style={{ color: "#1A1A1A" }}>Hub</span>
+            Vezi cum funcționează&nbsp;<span style={{ display: "inline" }}><span style={{ color: "#fff" }}>Caly</span><span style={{ color: "#1A1A1A" }}>Hub</span></span>
             <span style={{ fontSize: 20 }}>→</span>
           </Link>
         </section>
