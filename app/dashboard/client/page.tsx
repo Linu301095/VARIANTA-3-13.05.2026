@@ -198,6 +198,10 @@ export default function DashboardClient() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [dataSelectata, setDataSelectata] = useState<string>(() => isoDataC(new Date()));
+  const [anulareModal, setAnulareModal] = useState<Programare | null>(null);
+  const [motivAnulare, setMotivAnulare] = useState("");
+  const [anulareLoading, setAnulareLoading] = useState(false);
+  const [anulareError, setAnulareError] = useState("");
   const [programSalon, setProgramSalon] = useState<ProgramSaptC | null>(null);
   const [ocupariSalon, setOcupariSalon] = useState<{ ora: string; durata: number | null; data: string }[]>([]);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
@@ -253,8 +257,29 @@ export default function DashboardClient() {
         setSaloaneList(dbSaloane.map(mapSalonDB));
       }
 
+      await autoFinalizeaza(authUser.id);
       await loadProgramari(authUser.id);
       await loadNotificari(authUser.id);
+    }
+
+    async function autoFinalizeaza(userId: string) {
+      const now = new Date();
+      const aziIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const minActuale = now.getHours() * 60 + now.getMinutes();
+      const { data } = await supabase
+        .from("programari")
+        .select("id, data, ora, durata, sursa")
+        .eq("user_id", userId)
+        .eq("status", "confirmat");
+      if (!data || data.length === 0) return;
+      const expirate = data.filter((p: any) => {
+        if (p.sursa === "blocaj") return false;
+        if (p.data < aziIso) return true;
+        if (p.data === aziIso) return timeToMinC(p.ora) + (p.durata || 60) <= minActuale;
+        return false;
+      }).map((p: any) => p.id);
+      if (expirate.length === 0) return;
+      await supabase.from("programari").update({ status: "finalizat" }).in("id", expirate);
     }
 
     async function loadNotificari(uid: string) {
@@ -372,6 +397,30 @@ export default function DashboardClient() {
     router.push("/login");
   }
 
+  async function confirmaAnulare() {
+    if (!anulareModal) return;
+    const motiv = motivAnulare.trim();
+    if (motiv.length < 5) { setAnulareError("Te rugăm să scrii un motiv (minim 5 caractere)."); return; }
+    setAnulareError("");
+    setAnulareLoading(true);
+    const prog = anulareModal;
+    const { error } = await supabase.from("programari").update({ status: "anulat", motiv_anulare: motiv }).eq("id", prog.id);
+    if (error) { setAnulareError("Nu am putut anula. Încearcă din nou."); setAnulareLoading(false); return; }
+    setProgramari(pr => pr.map(x => x.id === prog.id ? { ...x, status: "anulat" } : x));
+    const { data: salonRow } = await supabase.from("saloane").select("user_id").eq("id", prog.salon_id).single();
+    if (salonRow?.user_id) {
+      await supabase.from("notificari").insert({
+        user_id: salonRow.user_id,
+        tip: "anulat",
+        mesaj: `⚠️ ${user?.nume || "Un client"} a anulat programarea — ${prog.serviciu}, ${formatData(prog.data)} ${prog.ora}. Motiv: ${motiv}`,
+        programare_id: prog.id,
+      });
+    }
+    setAnulareLoading(false);
+    setAnulareModal(null);
+    setMotivAnulare("");
+  }
+
   const c = C[theme];
   const prenume = user?.nume?.split(" ")[0] || "Utilizator";
   const necitite = notificari.filter(n => !n.citit).length;
@@ -409,6 +458,13 @@ export default function DashboardClient() {
 
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) { setConfirmareError("Trebuie să fii conectat"); setConfirmareLoading(false); return; }
+
+    const { data: salonRow } = await supabase.from("saloane").select("user_id, clienti_blocati").eq("id", salon.id).single();
+    if (Array.isArray(salonRow?.clienti_blocati) && salonRow.clienti_blocati.includes(authUser.id)) {
+      setConfirmareError("Acest salon nu acceptă momentan programări de la tine. Te rugăm să contactezi salonul direct.");
+      setConfirmareLoading(false);
+      return;
+    }
 
     const serviciuSelectat = salon.serviciiComplete.find(s => s.nume === rezervare.serviciu);
     const { pret: pretStr, durata: durataStr } = getPretDurata(serviciuSelectat, animal?.talie);
@@ -453,7 +509,6 @@ export default function DashboardClient() {
     }, ...prev]);
 
     // Notificare pentru proprietarul salonului
-    const { data: salonRow } = await supabase.from("saloane").select("user_id").eq("id", salon.id).single();
     if (salonRow?.user_id) {
       await supabase.from("notificari").insert({
         user_id: salonRow.user_id,
@@ -799,10 +854,12 @@ export default function DashboardClient() {
               {viitoare.length > 0 && (<>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Viitoare</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-                  {viitoare.map(p => <CardProgramare key={p.id} p={p} onAnuleaza={async id => {
-                    await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
-                    setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x));
-                  }} />)}
+                  {viitoare.map(p => <CardProgramare key={p.id} p={p}
+                    onAnuleazaConfirmat={prog => { setAnulareModal(prog); setMotivAnulare(""); setAnulareError(""); }}
+                    onRetrageCerere={async id => {
+                      await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
+                      setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x));
+                    }} />)}
                 </div>
               </>)}
               {trecute.length > 0 && (<>
@@ -1058,7 +1115,7 @@ export default function DashboardClient() {
             <div style={{ maxWidth: 620 }}>
               <PageHeader icon="❓" title="Ajutor" sub="Răspunsuri la cele mai frecvente întrebări" />
               <FAQ items={[
-                { q: "Cum anulez o programare?", r: "Mergi la Programările mele, găsești programarea activă și dai click pe Anulează. Poți anula cu cel puțin 2 ore înainte." },
+                { q: "Cum anulez o programare?", r: "Mergi la Programările mele, găsești programarea confirmată și dai click pe Anulează. Poți anula cu cel puțin 12 ore înainte și trebuie să scrii un scurt motiv pentru salon." },
                 { q: "Pot schimba ora programării?", r: "Momentan poți anula și face o programare nouă. Funcția de reprogramare va fi disponibilă în curând." },
                 { q: "Primesc reminder înainte de programare?", r: "Da, primești SMS cu 24 de ore înainte dacă ai notificările SMS activate din meniul Notificări." },
                 { q: "Cum adaug un al doilea animăluț?", r: "Suportul pentru mai mulți animăluți va fi disponibil în versiunea următoare a aplicației." },
@@ -1072,6 +1129,24 @@ export default function DashboardClient() {
           )}
 
         </div>
+
+        {anulareModal && (
+          <div onClick={() => !anulareLoading && setAnulareModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 1000 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: c.surface, borderRadius: 20, padding: "26px 24px", maxWidth: 440, width: "100%", boxShadow: "0 12px 48px rgba(0,0,0,.3)" }}>
+              <div style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 6 }}>Anulezi programarea?</div>
+              <div style={{ fontSize: 13, color: c.muted, marginBottom: 16 }}>{anulareModal.salon_nume} · {anulareModal.serviciu}<br />📅 {formatData(anulareModal.data)} · 🕐 {anulareModal.ora}</div>
+              <label style={{ fontSize: 13, fontWeight: 700, color: c.text2, display: "block", marginBottom: 6 }}>Scrie un motiv pentru salon <span style={{ color: "#EF4444" }}>*</span></label>
+              <textarea value={motivAnulare} onChange={e => { setMotivAnulare(e.target.value); if (anulareError) setAnulareError(""); }}
+                placeholder="Ex: a apărut o urgență, nu mai pot ajunge la ora stabilită…" rows={3}
+                style={{ ...inp, resize: "vertical", minHeight: 70 }} />
+              {anulareError && <div style={{ fontSize: 12.5, color: "#EF4444", fontWeight: 700, marginTop: 8 }}>{anulareError}</div>}
+              <div style={{ display: "flex", gap: 10, marginTop: 18, justifyContent: "flex-end" }}>
+                <button onClick={() => setAnulareModal(null)} disabled={anulareLoading} style={{ padding: "11px 20px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Renunță</button>
+                <button onClick={confirmaAnulare} disabled={anulareLoading} style={{ padding: "11px 22px", borderRadius: 50, border: "none", background: "#EF4444", color: "#fff", fontSize: 14, fontWeight: 800, cursor: anulareLoading ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", opacity: anulareLoading ? .7 : 1 }}>{anulareLoading ? "Se anulează…" : "Confirmă anularea"}</button>
+              </div>
+            </div>
+          </div>
+        )}
       </Shell>
     </ThemeCtx.Provider>
   );
@@ -1269,9 +1344,12 @@ function formatData(iso: string): string {
   } catch { return iso; }
 }
 
-function CardProgramare({ p, onAnuleaza }: { p: Programare; onAnuleaza?: (id: string) => void }) {
+function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere }: { p: Programare; onAnuleazaConfirmat?: (p: Programare) => void; onRetrageCerere?: (id: string) => void }) {
   const { theme, c } = useContext(ThemeCtx);
   const st = statusStyle(theme)[p.status];
+  const oreRamase = (new Date(`${p.data}T${p.ora}:00`).getTime() - Date.now()) / 3600000;
+  const poateAnula = oreRamase >= 12;
+  const anulBtn: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "4px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" };
   return (
     <div style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", boxShadow: c.cardShadow }}>
       <div style={{ width: 46, height: 46, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>✂️</div>
@@ -1283,8 +1361,13 @@ function CardProgramare({ p, onAnuleaza }: { p: Programare; onAnuleaza?: (id: st
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
         <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: st.bg, padding: "4px 12px", borderRadius: 50 }}>{st.label}</span>
         {p.pret > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{p.pret} RON</div>}
-        {onAnuleaza && (p.status === "confirmat" || p.status === "în așteptare") && (
-          <button onClick={() => onAnuleaza(p.id)} style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "4px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Anulează</button>
+        {onRetrageCerere && p.status === "în așteptare" && (
+          <button onClick={() => onRetrageCerere(p.id)} style={anulBtn}>Anulează</button>
+        )}
+        {onAnuleazaConfirmat && p.status === "confirmat" && (
+          poateAnula
+            ? <button onClick={() => onAnuleazaConfirmat(p)} style={anulBtn}>Anulează</button>
+            : <span style={{ fontSize: 10.5, fontWeight: 700, color: c.xmuted, textAlign: "right", lineHeight: 1.3 }}>🔒 Anulare blocată<br />(sub 12h)</span>
         )}
       </div>
     </div>
