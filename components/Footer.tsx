@@ -107,12 +107,9 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
       <footer style={wrapperSm}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
-          <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
-            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Programările mele</Link>
-            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Profil</Link>
-            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Notificări</Link>
-            <Link href="/dashboard/client" className="footer-link" style={linkStyleSm}>Ajutor</Link>
-            <a href="mailto:support@calyhub.ro" className="footer-link" style={linkStyleSm}>support@calyhub.ro</a>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,.5)", fontWeight: 700 }}>❓ Ajutor pentru clienți</span>
+            <a href="mailto:support@calyhub.ro" className="footer-link" style={linkStyleSm}>✉️ support@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub</div>
         </div>
@@ -126,12 +123,9 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
       <footer style={wrapperSm}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
-          <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
-            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Agenda</Link>
-            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Servicii</Link>
-            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Echipa</Link>
-            <Link href="/dashboard/salon" className="footer-link" style={linkStyleSm}>Abonament</Link>
-            <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42" }}>⚡ Suport prioritar</a>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,.5)", fontWeight: 700 }}>❓ Ajutor pentru salon</span>
+            <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42" }}>✉️ parteneri@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub · Partener</div>
         </div>
