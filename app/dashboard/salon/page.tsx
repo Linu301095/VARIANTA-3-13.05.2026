@@ -1026,7 +1026,7 @@ export default function DashboardSalon() {
                                   setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
                                 }
                               }}
-                                style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                                style={{ background: n.citit ? c.surface : (theme === "dark" ? "rgba(255,107,0,0.24)" : "rgba(255,107,0,0.16)"), borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
                                 <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "programare_noua" ? "🔔" : n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "ℹ️"}</div>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
