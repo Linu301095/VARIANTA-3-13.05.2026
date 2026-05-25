@@ -1022,13 +1022,31 @@ export default function DashboardClient() {
               {profilSalonTab === "contact" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {salon.adresa && (
-                    <div style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Adresă</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>📍 {salon.adresa}, {salon.oras}</div>
-                      <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ display: "inline-block", marginTop: 12, fontSize: 13, fontWeight: 800, color: salon.culoare, textDecoration: "none", border: `1.5px solid ${salon.culoare}`, borderRadius: 50, padding: "6px 16px" }}>
-                        🗺️ Deschide în Maps
-                      </a>
+                    <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
+                      {/* Embedded map */}
+                      <div style={{ position: "relative", height: 200 }}>
+                        <iframe
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(salon.adresa + ", " + salon.oras)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                          style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          title="Locație salon"
+                        />
+                        {/* Tap overlay to open maps */}
+                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ position: "absolute", inset: 0, zIndex: 1 }} aria-label="Deschide în Maps" />
+                      </div>
+                      {/* Address bar below map */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Adresă</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>📍 {salon.adresa}, {salon.oras}</div>
+                        </div>
+                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#fff", background: salon.culoare, textDecoration: "none", borderRadius: 50, padding: "8px 14px", whiteSpace: "nowrap" }}>
+                          Deschide →
+                        </a>
+                      </div>
                     </div>
                   )}
                   {salon.telefon && (
