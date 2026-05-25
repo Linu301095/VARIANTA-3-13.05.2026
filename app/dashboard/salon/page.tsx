@@ -22,7 +22,15 @@ type ProgramareSalon = {
 
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
 
-type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "abonament" | "setari" | "ajutor";
+type VizitaIstoric = { id: string; serviciu: string; pret: number; data: string; ora: string; status: StatusProg };
+type AnimalIstoric = {
+  id: string; nume: string; specie: string; sex: string; rasa: string;
+  greutate: number | null; talie: string | null; varsta: number | null;
+  alergii: string; poza_url: string | null; stapanNume: string; stapanTelefon: string | null;
+  vizite: VizitaIstoric[]; totalCheltuit: number; ultimaVizita: string | null;
+};
+
+type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 type Groomer = { id: number; nume: string; specialitate: string };
@@ -66,6 +74,12 @@ function isoData(d: Date) {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+function specieIcon(specie?: string) {
+  return specie === "pisica" ? "🐱" : specie === "iepure" ? "🐰" : specie === "pasare" ? "🐦" : specie === "rozator" ? "🐹" : specie === "reptila" ? "🦎" : specie === "altele" ? "✨" : "🐶";
+}
+function talieLabel(t?: string | null) {
+  return t === "mica" ? "🐕‍🦺 Mică" : t === "medie" ? "🐕 Medie" : t === "mare" ? "🐺 Mare" : null;
 }
 const ORE_OPTIUNI: string[] = (() => {
   const out: string[] = [];
@@ -128,6 +142,9 @@ export default function DashboardSalon() {
   const [program, setProgram] = useState<ProgramSaptamanal>(PROGRAM_DEFAULT);
   const [zilaSelectata, setZilaSelectata] = useState<string>(() => isoData(new Date()));
   const [filtruTalie, setFiltruTalie] = useState<"toate" | "mica" | "medie" | "mare">("toate");
+  const [animaleIstoric, setAnimaleIstoric] = useState<AnimalIstoric[]>([]);
+  const [cautareAnimal, setCautareAnimal] = useState("");
+  const [animalDeschis, setAnimalDeschis] = useState<string | null>(null);
   const [sloturiZi, setSloturiZi] = useState<SlotProgramare[]>([]);
   const [modalBlocare, setModalBlocare] = useState<{ slot: string; durata: number } | null>(null);
   const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
@@ -196,8 +213,68 @@ export default function DashboardSalon() {
         setAbonament({ plan: salonRow.plan || "starter" });
 
         await loadProgramari(salonRow.id);
+        await loadAnimaleIstoric(salonRow.id);
         await loadNotificari(authUser.id);
       }
+    }
+
+    async function loadAnimaleIstoric(salonId: string) {
+      const { data } = await supabase
+        .from("programari")
+        .select("id, serviciu, pret, data, ora, status, animal_id, user_id, sursa")
+        .eq("salon_id", salonId)
+        .in("status", ["finalizat", "confirmat"])
+        .not("animal_id", "is", null)
+        .order("data", { ascending: false });
+
+      if (!data || data.length === 0) { setAnimaleIstoric([]); return; }
+
+      const aziIso = isoData(new Date());
+      const istoric = data.filter((p: any) => {
+        const esteApp = !p.sursa || p.sursa === "app";
+        if (!esteApp) return false;
+        if (p.status === "finalizat") return true;
+        if (p.status === "confirmat" && p.data < aziIso) return true;
+        return false;
+      });
+      if (istoric.length === 0) { setAnimaleIstoric([]); return; }
+
+      const animalIds = [...new Set(istoric.map((p: any) => p.animal_id))];
+      const userIds = [...new Set(istoric.map((p: any) => p.user_id).filter(Boolean))];
+
+      const [{ data: animals }, { data: profiles }] = await Promise.all([
+        supabase.from("animale").select("id, nume, specie, sex, rasa, greutate, talie, varsta, alergii, poza_url, user_id").in("id", animalIds),
+        userIds.length > 0 ? supabase.from("profiluri").select("id, nume, telefon").in("id", userIds) : Promise.resolve({ data: [] }),
+      ]);
+
+      const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
+      const animalMap = Object.fromEntries((animals || []).map((a: any) => [a.id, a]));
+
+      const grupat: Record<string, AnimalIstoric> = {};
+      for (const p of istoric) {
+        const a = animalMap[p.animal_id];
+        if (!a) continue;
+        if (!grupat[p.animal_id]) {
+          const prof = profileMap[a.user_id] || profileMap[p.user_id];
+          grupat[p.animal_id] = {
+            id: a.id, nume: a.nume, specie: a.specie, sex: a.sex, rasa: a.rasa,
+            greutate: a.greutate ?? null, talie: a.talie ?? null, varsta: a.varsta ?? null,
+            alergii: a.alergii || "", poza_url: a.poza_url || null,
+            stapanNume: prof?.nume || "—", stapanTelefon: prof?.telefon || null,
+            vizite: [], totalCheltuit: 0, ultimaVizita: null,
+          };
+        }
+        grupat[p.animal_id].vizite.push({ id: p.id, serviciu: p.serviciu, pret: Number(p.pret) || 0, data: p.data, ora: p.ora, status: p.status as StatusProg });
+        grupat[p.animal_id].totalCheltuit += Number(p.pret) || 0;
+      }
+
+      const lista = Object.values(grupat).map(a => {
+        a.vizite.sort((x, y) => (x.data < y.data ? 1 : x.data > y.data ? -1 : (x.ora < y.ora ? 1 : -1)));
+        a.ultimaVizita = a.vizite[0]?.data || null;
+        return a;
+      });
+      lista.sort((a, b) => ((a.ultimaVizita || "") < (b.ultimaVizita || "") ? 1 : -1));
+      setAnimaleIstoric(lista);
     }
 
     async function loadNotificari(uid: string) {
@@ -310,12 +387,12 @@ export default function DashboardSalon() {
 
   const numeSalon = salonData?.nume || "Salonul tau";
   const numeComplet = user?.nume?.split(" ")[0] || "Manager";
-  const SUB_TABS: Tab[] = ["profil-salon", "servicii", "echipa", "abonament", "setari", "ajutor"];
+  const SUB_TABS: Tab[] = ["profil-salon", "servicii", "echipa", "animale", "abonament", "setari", "ajutor"];
   const isSubTab = SUB_TABS.includes(tab);
   const TAB_LABELS: Record<Tab, string> = {
     agenda: "Agenda", statistici: "Statistici", program: "Program", notificari: "Notificări",
     "profil-salon": "Profilul salonului", servicii: "Serviciile mele",
-    echipa: "Echipa mea", abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
+    echipa: "Echipa mea", animale: "Istoric animale", abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
   };
   const necitite = notificari.filter(n => !n.citit).length;
 
@@ -579,6 +656,78 @@ export default function DashboardSalon() {
                   })}
                 </div>
               </div>
+              );
+            })()}
+
+            {/* ISTORIC ANIMALE */}
+            {tab === "animale" && (() => {
+              const q = cautareAnimal.trim().toLowerCase();
+              const lista = q
+                ? animaleIstoric.filter(a => a.nume.toLowerCase().includes(q) || a.stapanNume.toLowerCase().includes(q) || (a.rasa || "").toLowerCase().includes(q))
+                : animaleIstoric;
+              return (
+                <div>
+                  <PageHeader icon="🐾" title="Istoric animale" sub="Fișa completă a fiecărui animal care a fost la salonul tău" />
+                  <div style={{ marginBottom: 16 }}>
+                    <input value={cautareAnimal} onChange={e => setCautareAnimal(e.target.value)} placeholder="Caută după nume animal, stăpân sau rasă…" style={inp} />
+                  </div>
+                  {animaleIstoric.length === 0 ? (
+                    <div style={{ padding: "40px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
+                      🐾 Niciun animal în istoric încă.<br />Vizitele apar aici după ce programările din aplicație au fost confirmate și au trecut.
+                    </div>
+                  ) : lista.length === 0 ? (
+                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14 }}>Niciun rezultat pentru &bdquo;{cautareAnimal}&rdquo;.</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {lista.map(a => {
+                        const deschis = animalDeschis === a.id;
+                        return (
+                          <div key={a.id} style={{ background: c.surface, borderRadius: 16, border: deschis ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, overflow: "hidden" }}>
+                            <button onClick={() => setAnimalDeschis(deschis ? null : a.id)}
+                              style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                              <div style={{ width: 50, height: 50, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0, overflow: "hidden" }}>
+                                {a.poza_url ? <img src={a.poza_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : specieIcon(a.specie)}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{specieIcon(a.specie)} {a.nume}</div>
+                                <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>{[a.rasa, talieLabel(a.talie), a.greutate ? `${a.greutate}kg` : null].filter(Boolean).join(" · ")}</div>
+                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>👤 {a.stapanNume}</div>
+                              </div>
+                              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 900, color: "#FF6B00" }}>{a.vizite.length} {a.vizite.length === 1 ? "vizită" : "vizite"}</div>
+                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>{a.totalCheltuit} RON total</div>
+                              </div>
+                              <span style={{ fontSize: 11, color: c.xmuted, transform: deschis ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }}>▼</span>
+                            </button>
+                            {deschis && (
+                              <div style={{ borderTop: `1px solid ${c.border}`, padding: "14px 18px", background: c.surface2 }}>
+                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+                                  {talieLabel(a.talie) && <span style={{ background: c.orangeAccent, color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>{talieLabel(a.talie)}</span>}
+                                  {a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀️ Femelă" : "♂️ Mascul"}</span>}
+                                  {a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
+                                  {a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>📞 {a.stapanTelefon}</span>}
+                                  {a.alergii && <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>⚠️ {a.alergii}</span>}
+                                </div>
+                                <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Istoric vizite</div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                  {a.vizite.map(v => (
+                                    <div key={v.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: c.surface, borderRadius: 10, border: `1px solid ${c.border}` }}>
+                                      <div>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: c.text }}>✂️ {v.serviciu}</div>
+                                        <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>{new Date(v.data).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })} · {v.ora}</div>
+                                      </div>
+                                      <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00" }}>{v.pret} RON</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })()}
 
@@ -1234,6 +1383,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
     { icon: "🏪", label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
     { icon: "✂️", label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
     { icon: "👥", label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
+    { icon: "🐾", label: "Istoric animale", sub: "Fișa fiecărui animal programat", t: "animale" },
     { icon: "📊", label: "Statistici", sub: "Vezi rapoarte detaliate", t: "statistici" },
     { icon: "💳", label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
     { icon: "🔒", label: "Setari cont", sub: "Schimba parola", t: "setari" },
