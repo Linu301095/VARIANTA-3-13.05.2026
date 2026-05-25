@@ -24,9 +24,9 @@ type SalonItem = { id: string | number; nume: string; oras: string; rating: numb
 
 const PALETA_SALOANE = [
   { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { badge: "Nou",       badgeIcon: "🆕", culoare: "#8B5CF6", bg: "#F5F3FF" },
-  { badge: "Popular",   badgeIcon: "🔥", culoare: "#10B981", bg: "#ECFDF5" },
-  { badge: "Premium",   badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
+  { badge: "Nou",       badgeIcon: "🆕", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { badge: "Popular",   badgeIcon: "🔥", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { badge: "Premium",   badgeIcon: "👑", culoare: "#FF6B00", bg: "#FFF3EA" },
 ];
 
 function mapSalonDB(s: any, i: number): SalonItem {
