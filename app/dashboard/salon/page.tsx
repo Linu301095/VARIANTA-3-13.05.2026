@@ -991,28 +991,55 @@ export default function DashboardSalon() {
                     </button>
                   )}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
                   {notificari.length === 0 && (
                     <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
                       Nu ai notificări încă.
                     </div>
                   )}
-                  {notificari.map(n => (
-                    <div key={n.id} onClick={async () => {
-                      if (!n.citit) {
-                        await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
-                        setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
-                      }
-                    }}
-                      style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                      <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "programare_noua" ? "🔔" : n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "ℹ️"}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
-                        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
-                      </div>
-                      {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
-                    </div>
-                  ))}
+                  {(() => {
+                    const grupNotif: { data: string; items: Notificare[] }[] = [];
+                    for (const n of notificari) {
+                      const d = isoData(new Date(n.created_at));
+                      let g = grupNotif.find(x => x.data === d);
+                      if (!g) { g = { data: d, items: [] }; grupNotif.push(g); }
+                      g.items.push(n);
+                    }
+                    return grupNotif.map(g => {
+                      const et = etichetaZi(g.data);
+                      const necititeZi = g.items.filter(n => !n.citit).length;
+                      return (
+                        <div key={g.data}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, position: "sticky", top: 66, background: c.pageBg, padding: "6px 0", zIndex: 5 }}>
+                            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                              {et.prefix && <span style={{ fontSize: 14, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
+                              <span style={{ fontSize: 13.5, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
+                            </div>
+                            <div style={{ flex: 1, height: 1, background: c.border }} />
+                            {necititeZi > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: "#FF6B00", padding: "1px 8px", borderRadius: 50 }}>{necititeZi}</span>}
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            {g.items.map(n => (
+                              <div key={n.id} onClick={async () => {
+                                if (!n.citit) {
+                                  await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
+                                  setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+                                }
+                              }}
+                                style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                                <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "programare_noua" ? "🔔" : n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "ℹ️"}</div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
+                                  <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
+                                </div>
+                                {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             )}
