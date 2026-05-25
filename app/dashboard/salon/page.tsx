@@ -97,6 +97,12 @@ function specieIcon(specie?: string) {
 function talieLabel(t?: string | null) {
   return t === "mica" ? "🐕‍🦺 Mică" : t === "medie" ? "🐕 Medie" : t === "mare" ? "🐺 Mare" : null;
 }
+function areAlergii(s?: string | null) {
+  if (!s) return false;
+  const norm = s.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const negative = ["", "fara", "fara alergii", "nu", "nu are", "niciuna", "niciun", "nimic", "n/a", "na", "-", "--", "no", "none", "0"];
+  return !negative.includes(norm);
+}
 const ORE_OPTIUNI: string[] = (() => {
   const out: string[] = [];
   for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 30) out.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
@@ -816,7 +822,7 @@ export default function DashboardSalon() {
                                   {a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀️ Femelă" : "♂️ Mascul"}</span>}
                                   {a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
                                   {a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>📞 {a.stapanNume} · {a.stapanTelefon}</span>}
-                                  {a.alergii
+                                  {areAlergii(a.alergii)
                                     ? <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>⚠️ Alergii: {a.alergii}</span>
                                     : <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>✅ Fără alergii</span>
                                   }
