@@ -20,7 +20,7 @@ const SALOANE = [
   { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[] };
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -60,6 +60,11 @@ function mapSalonDB(s: any, i: number): SalonItem {
     bg: p.bg,
     poza_url: s.poza_url || null,
     galerie: Array.isArray(s.galerie) ? s.galerie : [],
+    echipa: Array.isArray(s.echipa) ? s.echipa : [],
+    program: s.program || null,
+    adresa: s.adresa || "",
+    telefon: s.telefon || "",
+    descriere: s.descriere || "",
   };
 }
 
@@ -205,6 +210,9 @@ export default function DashboardClient() {
   const [programSalon, setProgramSalon] = useState<ProgramSaptC | null>(null);
   const [ocupariSalon, setOcupariSalon] = useState<{ ora: string; durata: number | null; data: string }[]>([]);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [profilSalonTab, setProfilSalonTab] = useState<"servicii" | "specialisti" | "recenzii" | "contact">("servicii");
+  const [groomerSelectat, setGroomerSelectat] = useState<string | null>(null);
+  const [rezervareActiva, setRezervareActiva] = useState(false);
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
 
   useEffect(() => {
@@ -250,7 +258,7 @@ export default function DashboardClient() {
 
       const { data: dbSaloane } = await supabase
         .from("saloane")
-        .select("id, nume, oras, servicii, poza_url, galerie")
+        .select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere")
         .order("created_at", { ascending: false });
 
       if (dbSaloane && dbSaloane.length > 0) {
@@ -486,6 +494,7 @@ export default function DashboardClient() {
         ora: rezervare.ora,
         status: "în așteptare",
         sursa: "app",
+        groomer: groomerSelectat || null,
       })
       .select("id")
       .single();
@@ -544,8 +553,8 @@ export default function DashboardClient() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setTab("programari"); }} style={btnSecondary}>Vezi programările mele</button>
-                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); }} style={btnPrimary}>← Înapoi la saloane</button>
+                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setProfilSalonTab("servicii"); setTab("programari"); }} style={btnSecondary}>Vezi programările mele</button>
+                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setProfilSalonTab("servicii"); }} style={btnPrimary}>← Înapoi la saloane</button>
               </div>
             </div>
           </div>
@@ -556,248 +565,520 @@ export default function DashboardClient() {
 
   /* ── Profil salon view ── */
   if (salonSelectat && salon) {
-    return (
-      <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
-          <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
-            <button onClick={() => { setSalonSelectat(null); setRezervare(null); }} style={btnBack}>← Înapoi</button>
-            <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, marginBottom: 20, boxShadow: c.cardShadow, overflow: "hidden" }}>
-              {salon.poza_url && (
-                <div onClick={() => setLightboxIdx(0)} style={{ height: 200, overflow: "hidden", position: "relative", cursor: "zoom-in" }}>
-                  <img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.6) 100%)" }} />
-                  <span style={{ position: "absolute", bottom: 12, left: 16, fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "4px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
-                </div>
-              )}
-              <div style={{ padding: "20px 24px" }}>
-                {!salon.poza_url && <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>}
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h2 style={{ fontSize: 22, fontWeight: 900, color: c.text, margin: "0 0 6px" }}>{salon.nume}</h2>
-                    <div style={{ fontSize: 13, color: c.muted }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 24, fontWeight: 900, color: c.text }}>⭐ {salon.rating}</div><div style={{ fontSize: 12, color: c.xmuted }}>{salon.recenzii} recenzii</div></div>
-                </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14 }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
-              </div>
-              {/* GALERIE */}
-              {salon.galerie && salon.galerie.length > 0 && (
-                <div style={{ padding: "0 24px 20px" }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>🖼️ Galerie salon</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 8 }}>
-                    {salon.galerie.map((url, i) => (
-                      <div key={i} onClick={() => setLightboxIdx(salon.poza_url ? i + 1 : i)} style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "1", background: c.surface2, cursor: "zoom-in" }}>
-                        <img src={url} alt={`Galerie ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+    const MOCK_RECENZII = [
+      { nume: "Andreea M.", rating: 5, text: "Super experiență! Câinele meu arată impecabil după tunsoare. Personalul e foarte atent cu animalele.", data: "acum 3 zile" },
+      { nume: "Bogdan T.", rating: 5, text: "Recomand cu toată inima. Au grijă de Pufi ca și cum ar fi al lor. Programarea online e super ușoară.", data: "acum 1 săptămână" },
+      { nume: "Maria P.", rating: 4, text: "Servicii de calitate, prețuri corecte. Am revenit de 3 ori și de fiecare dată am fost mulțumită.", data: "acum 2 săptămâni" },
+      { nume: "Cristian V.", rating: 5, text: "Profesionalism maxim! Pisica mea e extrem de agitată, dar groomerul știa exact cum s-o liniștească.", data: "acum 3 săptămâni" },
+    ];
+
+    /* Helper: lightbox overlay (used in both profile and booking views) */
+    const Lightbox = lightboxIdx !== null ? (() => {
+      const toateImg: string[] = [];
+      if (salon.poza_url) toateImg.push(salon.poza_url);
+      if (salon.galerie) toateImg.push(...salon.galerie);
+      if (toateImg.length === 0) return null;
+      const idx = Math.max(0, Math.min(lightboxIdx, toateImg.length - 1));
+      const prev = () => setLightboxIdx((idx - 1 + toateImg.length) % toateImg.length);
+      const next = () => setLightboxIdx((idx + 1) % toateImg.length);
+      return (
+        <div onClick={() => setLightboxIdx(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.92)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <button onClick={(e) => { e.stopPropagation(); setLightboxIdx(null); }}
+            style={{ position: "absolute", top: 16, right: 16, width: 44, height: 44, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 22, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
+          {toateImg.length > 1 && (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); prev(); }}
+                style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 24, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>‹</button>
+              <button onClick={(e) => { e.stopPropagation(); next(); }}
+                style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 24, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>›</button>
+            </>
+          )}
+          <img onClick={(e) => e.stopPropagation()} src={toateImg[idx]} alt={`Galerie ${idx + 1}`}
+            style={{ maxWidth: "92vw", maxHeight: "85vh", objectFit: "contain", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,.6)" }} />
+          {toateImg.length > 1 && (
+            <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.15)", color: "#fff", padding: "6px 14px", borderRadius: 50, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif" }}>
+              {idx + 1} / {toateImg.length}
             </div>
+          )}
+        </div>
+      );
+    })() : null;
 
-            {/* LIGHTBOX */}
-            {lightboxIdx !== null && (() => {
-              const toateImg: string[] = [];
-              if (salon.poza_url) toateImg.push(salon.poza_url);
-              if (salon.galerie) toateImg.push(...salon.galerie);
-              if (toateImg.length === 0) return null;
-              const idx = Math.max(0, Math.min(lightboxIdx, toateImg.length - 1));
-              const prev = () => setLightboxIdx((idx - 1 + toateImg.length) % toateImg.length);
-              const next = () => setLightboxIdx((idx + 1) % toateImg.length);
+    /* Helper: calendar + slots section (shared logic) */
+    const CalendarSlots = (serviciu: string) => {
+      const serviciuObj = salon.serviciiComplete.find(s => s.nume === serviciu);
+      const { durata: durataResolved } = getPretDurata(serviciuObj, animal?.talie);
+      const durataSv = Number(durataResolved) || 60;
+      const progEf = programSalon || PROGRAM_DEFAULT_C;
+      const aziDate = new Date(); aziDate.setHours(0, 0, 0, 0);
+      const aziIso = isoDataC(aziDate);
+      const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+
+      const zileLista: { iso: string; ziScurt: string; zi: number; luna: string; libere: number }[] = [];
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(aziDate); d.setDate(aziDate.getDate() + i);
+        const iso = isoDataC(d);
+        const dow = String(d.getDay());
+        const programZi = progEf[dow];
+        let libere = 0;
+        if (programZi?.activ) {
+          const slots = genereazaSloturiClient(programZi, durataSv);
+          for (const s of slots) {
+            const start = timeToMinC(s);
+            const end = start + durataSv;
+            if (iso === aziIso && start <= nowMin) continue;
+            const ocupat = ocupariSalon.some(o => o.data === iso && suprapunereC(start, end, o.ora, o.durata));
+            if (!ocupat) libere++;
+          }
+        }
+        zileLista.push({ iso, ziScurt: ZILE_SCURT[d.getDay()], zi: d.getDate(), luna: LUNA_SCURT[d.getMonth()], libere });
+      }
+
+      const dowSel = String(new Date(dataSelectata + "T00:00:00").getDay());
+      const progZiSel = progEf[dowSel];
+      const sloturiZiSel: { ora: string; ocupat: boolean; trecut: boolean }[] = [];
+      if (progZiSel?.activ) {
+        const slots = genereazaSloturiClient(progZiSel, durataSv);
+        for (const s of slots) {
+          const start = timeToMinC(s);
+          const end = start + durataSv;
+          const trecut = dataSelectata === aziIso && start <= nowMin;
+          const ocupat = ocupariSalon.some(o => o.data === dataSelectata && suprapunereC(start, end, o.ora, o.durata));
+          sloturiZiSel.push({ ora: s, ocupat, trecut });
+        }
+      }
+      const sloturiLibere = sloturiZiSel.filter(s => !s.ocupat && !s.trecut);
+
+      return (
+        <>
+          <SectionTitle>Alege ziua</SectionTitle>
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 18, scrollbarWidth: "thin" }}>
+            {zileLista.map(z => {
+              const sel = z.iso === dataSelectata;
+              const indisp = z.libere === 0;
               return (
-                <div onClick={() => setLightboxIdx(null)}
-                  style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.92)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-                  <button onClick={(e) => { e.stopPropagation(); setLightboxIdx(null); }}
-                    style={{ position: "absolute", top: 16, right: 16, width: 44, height: 44, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 22, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
-                  {toateImg.length > 1 && (
-                    <>
-                      <button onClick={(e) => { e.stopPropagation(); prev(); }}
-                        style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 24, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>‹</button>
-                      <button onClick={(e) => { e.stopPropagation(); next(); }}
-                        style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 24, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>›</button>
-                    </>
-                  )}
-                  <img onClick={(e) => e.stopPropagation()} src={toateImg[idx]} alt={`Galerie ${idx + 1}`}
-                    style={{ maxWidth: "92vw", maxHeight: "85vh", objectFit: "contain", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,.6)" }} />
-                  {toateImg.length > 1 && (
-                    <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.15)", color: "#fff", padding: "6px 14px", borderRadius: 50, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif" }}>
-                      {idx + 1} / {toateImg.length}
-                    </div>
-                  )}
-                </div>
+                <button key={z.iso} disabled={indisp} onClick={() => { setDataSelectata(z.iso); setRezervare(r => ({ ...r!, ora: "" })); }}
+                  style={{ padding: "10px 12px", borderRadius: 12, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: indisp ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0, textAlign: "center", minWidth: 68, opacity: indisp ? 0.4 : 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: sel ? salon.culoare : c.muted, textTransform: "uppercase" }}>{z.ziScurt}</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: sel ? salon.culoare : c.text, margin: "2px 0" }}>{z.zi}</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: sel ? salon.culoare : c.xmuted }}>{z.luna}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: indisp ? "#EF4444" : "#10B981", marginTop: 4 }}>{indisp ? "Plin" : `${z.libere} libere`}</div>
+                </button>
               );
-            })()}
+            })}
+          </div>
 
-            {animale.length > 1 && (
-              <>
-                <SectionTitle>Pentru cine programezi?</SectionTitle>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, marginBottom: 24 }}>
-                  {animale.map(a => {
-                    const sel = a.id === selectedAnimalId;
-                    const sp = specieInfo(a.specie);
-                    return (
-                      <button key={a.id} onClick={() => setSelectedAnimalId(a.id)}
-                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                        {a.poza_url
-                          ? <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}><img src={a.poza_url} alt={a.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
-                          : <span style={{ fontSize: 22 }}>{sp.icon}</span>}
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{a.nume}</div>
-                          <div style={{ fontSize: 11, color: c.xmuted }}>{a.rasa}, {a.greutate}kg</div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            <SectionTitle>Alege serviciul</SectionTitle>
-            {salon.serviciiComplete.length === 0 ? (
-              <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
-                Salonul nu a configurat încă servicii.
+          <SectionTitle>Alege ora</SectionTitle>
+          {sloturiZiSel.length === 0 ? (
+            <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
+              Salonul nu lucrează în ziua aleasă.
+            </div>
+          ) : sloturiLibere.length === 0 ? (
+            <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
+              Toate sloturile sunt ocupate în ziua aleasă. Încearcă altă zi.
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 11, color: c.muted, marginBottom: 10, display: "flex", gap: 14, flexWrap: "wrap", fontWeight: 700 }}>
+                <span style={{ color: "#10B981" }}>● Liber</span>
+                <span style={{ color: "#EF4444" }}>● Ocupat</span>
+                <span style={{ color: c.xmuted }}>● Trecut</span>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                {animal?.talie && (
-                  <div style={{ fontSize: 12, color: c.muted, marginBottom: 4 }}>
-                    Prețurile afișate sunt pentru talie <strong style={{ color: c.text }}>{talieIcon(animal.talie)} {talieLabel(animal.talie)}</strong> ({animal.nume})
-                  </div>
-                )}
-                {!animal?.talie && (
-                  <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 4 }}>
-                    ⚠️ {animal?.nume || "Animalul"} nu are talie setată. Mergi la „Animalele mele" și alege talia pentru a vedea prețurile corecte.
-                  </div>
-                )}
-                {salon.serviciiComplete.map(s => {
-                  const sel = rezervare?.serviciu === s.nume;
-                  const { pret, durata } = getPretDurata(s, animal?.talie);
-                  if (!pret && !durata) return null;
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 24 }}>
+                {sloturiZiSel.map(slot => {
+                  const sel = rezervare?.ora === slot.ora;
+                  const disabled = slot.ocupat || slot.trecut;
+                  let bg = c.surface, border = c.border, color = c.text2;
+                  if (sel) { border = salon.culoare; bg = theme === "dark" ? `${salon.culoare}26` : salon.bg; color = salon.culoare; }
+                  else if (slot.trecut) { bg = c.surface3; color = c.xmuted; border = c.border; }
+                  else if (slot.ocupat) { bg = theme === "dark" ? "rgba(239,68,68,.12)" : "#FEF2F2"; border = "#FECACA"; color = "#EF4444"; }
+                  else { bg = theme === "dark" ? "rgba(16,185,129,.18)" : "#D1FAE5"; border = "#10B981"; color = "#065F46"; }
                   return (
-                    <button key={s.nume} onClick={() => setRezervare(r => ({ ...r!, salonId: salon.id, serviciu: s.nume, ora: r?.ora || "" }))}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                      <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
-                      {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{pret} RON</div>}
+                    <button key={slot.ora} disabled={disabled} onClick={() => !disabled && setRezervare(r => ({ ...r!, ora: slot.ora }))}
+                      style={{ padding: "11px 6px", borderRadius: 10, border: `${sel ? 2 : 1.5}px solid ${border}`, background: bg, fontSize: 13, fontWeight: 700, color, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", position: "relative", textDecoration: slot.ocupat ? "line-through" : "none", opacity: slot.trecut ? 0.5 : 1 }}>
+                      {slot.ora}
+                      {slot.ocupat && !sel && <div style={{ fontSize: 9, fontWeight: 700, marginTop: 2, opacity: .8 }}>🔒 Ocupat</div>}
                     </button>
                   );
                 })}
               </div>
-            )}
+            </>
+          )}
+        </>
+      );
+    };
 
-            {rezervare?.serviciu && (() => {
-              const serviciuObj = salon.serviciiComplete.find(s => s.nume === rezervare.serviciu);
-              const { durata: durataResolved } = getPretDurata(serviciuObj, animal?.talie);
-              const durataSv = Number(durataResolved) || 60;
-              const progEf = programSalon || PROGRAM_DEFAULT_C;
-              const aziDate = new Date(); aziDate.setHours(0, 0, 0, 0);
-              const aziIso = isoDataC(aziDate);
-              const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+    /* ── Booking view (when rezervareActiva) ── */
+    if (rezervareActiva) {
+      return (
+        <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
+          <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+            <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
+              <button onClick={() => { setRezervareActiva(false); setRezervare(null); }} style={btnBack}>← Înapoi la profil</button>
 
-              const zileLista: { iso: string; ziScurt: string; zi: number; luna: string; libere: number }[] = [];
-              for (let i = 0; i < 14; i++) {
-                const d = new Date(aziDate); d.setDate(aziDate.getDate() + i);
-                const iso = isoDataC(d);
-                const dow = String(d.getDay());
-                const programZi = progEf[dow];
-                let libere = 0;
-                if (programZi?.activ) {
-                  const slots = genereazaSloturiClient(programZi, durataSv);
-                  for (const s of slots) {
-                    const start = timeToMinC(s);
-                    const end = start + durataSv;
-                    if (iso === aziIso && start <= nowMin) continue;
-                    const ocupat = ocupariSalon.some(o => o.data === iso && suprapunereC(start, end, o.ora, o.durata));
-                    if (!ocupat) libere++;
-                  }
-                }
-                zileLista.push({ iso, ziScurt: ZILE_SCURT[d.getDay()], zi: d.getDate(), luna: LUNA_SCURT[d.getMonth()], libere });
-              }
+              {/* Salon mini-header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
+                {salon.poza_url
+                  ? <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                  : <span style={{ fontSize: 28, flexShrink: 0 }}>✂️</span>}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{salon.nume}</div>
+                  <div style={{ fontSize: 12, color: c.muted }}>📍 {salon.oras}</div>
+                </div>
+                {groomerSelectat && (
+                  <div style={{ marginLeft: "auto", background: theme === "dark" ? `${salon.culoare}26` : salon.bg, border: `1px solid ${salon.culoare}`, borderRadius: 50, padding: "4px 12px", fontSize: 12, fontWeight: 800, color: salon.culoare, flexShrink: 0 }}>
+                    👤 {groomerSelectat}
+                  </div>
+                )}
+              </div>
 
-              const dowSel = String(new Date(dataSelectata + "T00:00:00").getDay());
-              const progZiSel = progEf[dowSel];
-              const sloturiZiSel: { ora: string; ocupat: boolean; trecut: boolean }[] = [];
-              if (progZiSel?.activ) {
-                const slots = genereazaSloturiClient(progZiSel, durataSv);
-                for (const s of slots) {
-                  const start = timeToMinC(s);
-                  const end = start + durataSv;
-                  const trecut = dataSelectata === aziIso && start <= nowMin;
-                  const ocupat = ocupariSalon.some(o => o.data === dataSelectata && suprapunereC(start, end, o.ora, o.durata));
-                  sloturiZiSel.push({ ora: s, ocupat, trecut });
-                }
-              }
-              const sloturiLibere = sloturiZiSel.filter(s => !s.ocupat && !s.trecut);
-
-              return (
+              {animale.length > 1 && (
                 <>
-                  <SectionTitle>Alege ziua</SectionTitle>
-                  <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 18, scrollbarWidth: "thin" }}>
-                    {zileLista.map(z => {
-                      const sel = z.iso === dataSelectata;
-                      const indisp = z.libere === 0;
+                  <SectionTitle>Pentru cine programezi?</SectionTitle>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, marginBottom: 24 }}>
+                    {animale.map(a => {
+                      const sel = a.id === selectedAnimalId;
+                      const sp = specieInfo(a.specie);
                       return (
-                        <button key={z.iso} disabled={indisp} onClick={() => { setDataSelectata(z.iso); setRezervare(r => ({ ...r!, ora: "" })); }}
-                          style={{ padding: "10px 12px", borderRadius: 12, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: indisp ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0, textAlign: "center", minWidth: 68, opacity: indisp ? 0.4 : 1 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: sel ? salon.culoare : c.muted, textTransform: "uppercase" }}>{z.ziScurt}</div>
-                          <div style={{ fontSize: 18, fontWeight: 900, color: sel ? salon.culoare : c.text, margin: "2px 0" }}>{z.zi}</div>
-                          <div style={{ fontSize: 10, fontWeight: 600, color: sel ? salon.culoare : c.xmuted }}>{z.luna}</div>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: indisp ? "#EF4444" : "#10B981", marginTop: 4 }}>{indisp ? "Plin" : `${z.libere} libere`}</div>
+                        <button key={a.id} onClick={() => setSelectedAnimalId(a.id)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                          {a.poza_url
+                            ? <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}><img src={a.poza_url} alt={a.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                            : <span style={{ fontSize: 22 }}>{sp.icon}</span>}
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{a.nume}</div>
+                            <div style={{ fontSize: 11, color: c.xmuted }}>{a.rasa}, {a.greutate}kg</div>
+                          </div>
                         </button>
                       );
                     })}
                   </div>
+                </>
+              )}
 
-                  <SectionTitle>Alege ora</SectionTitle>
-                  {sloturiZiSel.length === 0 ? (
-                    <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
-                      Salonul nu lucrează în ziua aleasă.
+              <SectionTitle>Alege serviciul</SectionTitle>
+              {salon.serviciiComplete.length === 0 ? (
+                <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
+                  Salonul nu a configurat încă servicii.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                  {animal?.talie && (
+                    <div style={{ fontSize: 12, color: c.muted, marginBottom: 4 }}>
+                      Prețurile afișate sunt pentru talie <strong style={{ color: c.text }}>{talieIcon(animal.talie)} {talieLabel(animal.talie)}</strong> ({animal.nume})
                     </div>
-                  ) : sloturiLibere.length === 0 ? (
-                    <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
-                      Toate sloturile sunt ocupate în ziua aleasă. Încearcă altă zi.
+                  )}
+                  {!animal?.talie && (
+                    <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 4 }}>
+                      ⚠️ {animal?.nume || "Animalul"} nu are talie setată. Mergi la „Animalele mele" și alege talia pentru a vedea prețurile corecte.
+                    </div>
+                  )}
+                  {salon.serviciiComplete.map(s => {
+                    const sel = rezervare?.serviciu === s.nume;
+                    const { pret, durata } = getPretDurata(s, animal?.talie);
+                    if (!pret && !durata) return null;
+                    return (
+                      <button key={s.nume} onClick={() => setRezervare(r => ({ ...r!, salonId: salon.id, serviciu: s.nume, ora: r?.ora || "" }))}
+                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                        <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
+                        {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{pret} RON</div>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {rezervare?.serviciu && CalendarSlots(rezervare.serviciu)}
+
+              {confirmareError && (
+                <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center", marginBottom: 12 }}>
+                  ⚠️ {confirmareError}
+                </div>
+              )}
+              {rezervare?.serviciu && rezervare?.ora && (
+                <button onClick={creazaProgramare} disabled={confirmareLoading}
+                  style={{ ...btnPrimary, width: "100%", background: confirmareLoading ? "#FFB07A" : "#FF6B00", cursor: confirmareLoading ? "default" : "pointer" }}>
+                  {confirmareLoading ? "Se salvează..." : "Confirmă programarea →"}
+                </button>
+              )}
+            </div>
+            <Footer variant="client" onAjutor={() => { setTab("ajutor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+            {Lightbox}
+          </Shell>
+        </ThemeCtx.Provider>
+      );
+    }
+
+    /* ── Profile view (4 tabs) ── */
+    const ZILE_RO = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă"];
+    const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent((salon.adresa || "") + ", " + salon.oras)}`;
+
+    return (
+      <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+          <div style={{ maxWidth: 640, margin: "0 auto" }}>
+
+            {/* Cover photo */}
+            <div style={{ position: "relative", height: 220, background: c.surface2, overflow: "hidden" }}>
+              {salon.poza_url
+                ? <img src={salon.poza_url} alt={salon.nume} onClick={() => setLightboxIdx(0)} style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "zoom-in" }} />
+                : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64 }}>✂️</div>}
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.7) 100%)", pointerEvents: "none" }} />
+              <button onClick={() => { setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setProfilSalonTab("servicii"); }}
+                style={{ position: "absolute", top: 14, left: 14, background: "rgba(0,0,0,.45)", border: "none", borderRadius: 50, padding: "6px 14px", fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", backdropFilter: "blur(4px)" }}>
+                ← Înapoi
+              </button>
+              <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, pointerEvents: "none" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <div>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
+                    <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "6px 0 2px", textShadow: "0 1px 4px rgba(0,0,0,.4)" }}>{salon.nume}</h2>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)" }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>⭐ {salon.rating}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.75)" }}>{salon.recenzii} recenzii</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Thumbnail gallery strip */}
+            {salon.galerie && salon.galerie.length > 0 && (
+              <div style={{ display: "flex", gap: 8, padding: "12px 18px", overflowX: "auto", scrollbarWidth: "none", background: c.surface, borderBottom: `1px solid ${c.border}` }}>
+                {salon.galerie.map((url, i) => (
+                  <div key={i} onClick={() => setLightboxIdx(salon.poza_url ? i + 1 : i)} style={{ width: 68, height: 68, borderRadius: 10, overflow: "hidden", flexShrink: 0, border: `1.5px solid ${c.border}`, cursor: "zoom-in" }}>
+                    <img src={url} alt={`Foto ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Tabs */}
+            <div style={{ display: "flex", borderBottom: `1px solid ${c.border}`, background: c.surface, position: "sticky", top: 0, zIndex: 10 }}>
+              {(["servicii", "specialisti", "recenzii", "contact"] as const).map(t => {
+                const labels: Record<string, string> = { servicii: "Servicii", specialisti: "Specialiști", recenzii: "Recenzii", contact: "Contact" };
+                const active = profilSalonTab === t;
+                return (
+                  <button key={t} onClick={() => setProfilSalonTab(t)}
+                    style={{ flex: 1, padding: "14px 4px", border: "none", borderBottom: active ? `3px solid ${salon.culoare}` : "3px solid transparent", background: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 13, fontWeight: active ? 900 : 700, color: active ? salon.culoare : c.muted, transition: "all .15s" }}>
+                    {labels[t]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tab content */}
+            <div style={{ padding: "20px 18px 100px" }}>
+
+              {/* ── SERVICII ── */}
+              {profilSalonTab === "servicii" && (
+                <>
+                  {salon.serviciiComplete.length === 0 ? (
+                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14 }}>
+                      Salonul nu a configurat încă servicii.
                     </div>
                   ) : (
                     <>
-                      <div style={{ fontSize: 11, color: c.muted, marginBottom: 10, display: "flex", gap: 14, flexWrap: "wrap", fontWeight: 700 }}>
-                        <span style={{ color: "#10B981" }}>● Liber</span>
-                        <span style={{ color: "#EF4444" }}>● Ocupat</span>
-                        <span style={{ color: c.xmuted }}>● Trecut</span>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 24 }}>
-                        {sloturiZiSel.map(slot => {
-                          const sel = rezervare?.ora === slot.ora;
-                          const disabled = slot.ocupat || slot.trecut;
-                          let bg = c.surface, border = c.border, color = c.text2, label = slot.ora;
-                          if (sel) { border = salon.culoare; bg = theme === "dark" ? `${salon.culoare}26` : salon.bg; color = salon.culoare; }
-                          else if (slot.trecut) { bg = c.surface3; color = c.xmuted; border = c.border; }
-                          else if (slot.ocupat) { bg = theme === "dark" ? "rgba(239,68,68,.12)" : "#FEF2F2"; border = "#FECACA"; color = "#EF4444"; }
-                          else { bg = theme === "dark" ? "rgba(16,185,129,.18)" : "#D1FAE5"; border = "#10B981"; color = "#065F46"; }
+                      {animal?.talie && (
+                        <div style={{ fontSize: 12, color: c.muted, marginBottom: 14, padding: "8px 12px", background: c.surface2, borderRadius: 10 }}>
+                          Prețuri pentru talie <strong style={{ color: c.text }}>{talieIcon(animal.talie)} {talieLabel(animal.talie)}</strong> ({animal.nume})
+                        </div>
+                      )}
+                      {!animal?.talie && animale.length > 0 && (
+                        <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 14, padding: "8px 12px", background: "rgba(239,68,68,.07)", borderRadius: 10 }}>
+                          ⚠️ {animal?.nume || "Animalul"} nu are talie setată — mergi la „Animalele mele" pentru prețuri corecte.
+                        </div>
+                      )}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {salon.serviciiComplete.map(s => {
+                          const { pret, durata } = getPretDurata(s, animal?.talie);
+                          if (!pret && !durata) return null;
                           return (
-                            <button key={slot.ora} disabled={disabled} onClick={() => !disabled && setRezervare(r => ({ ...r!, ora: slot.ora }))}
-                              style={{ padding: "11px 6px", borderRadius: 10, border: `${sel ? 2 : 1.5}px solid ${border}`, background: bg, fontSize: 13, fontWeight: 700, color, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", position: "relative", textDecoration: slot.ocupat ? "line-through" : "none", opacity: slot.trecut ? 0.5 : 1 }}>
-                              {label}
-                              {slot.ocupat && !sel && <div style={{ fontSize: 9, fontWeight: 700, marginTop: 2, opacity: .8 }}>🔒 Ocupat</div>}
-                            </button>
+                            <div key={s.nume} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 18px", borderRadius: 16, border: `1.5px solid ${c.border}`, background: c.surface }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{s.nume}</div>
+                                {durata && <div style={{ fontSize: 12, color: c.muted, marginTop: 3 }}>⏱ {durata} min</div>}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                                {pret && <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare }}>{pret} RON</div>}
+                                <button onClick={() => {
+                                  setRezervare({ salonId: salon.id, serviciu: s.nume, ora: "" });
+                                  setRezervareActiva(true);
+                                }}
+                                  style={{ background: salon.culoare, color: "#fff", border: "none", borderRadius: 50, padding: "8px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap" }}>
+                                  Programează
+                                </button>
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
                     </>
                   )}
                 </>
-              );
-            })()}
-            {confirmareError && (
-              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center", marginBottom: 12 }}>
-                ⚠️ {confirmareError}
-              </div>
-            )}
-            {rezervare?.serviciu && rezervare?.ora && (
-              <button onClick={creazaProgramare} disabled={confirmareLoading}
-                style={{ ...btnPrimary, width: "100%", background: confirmareLoading ? "#FFB07A" : "#FF6B00", cursor: confirmareLoading ? "default" : "pointer" }}>
-                {confirmareLoading ? "Se salvează..." : "Confirmă programarea →"}
+              )}
+
+              {/* ── SPECIALIȘTI ── */}
+              {profilSalonTab === "specialisti" && (
+                <>
+                  {(!salon.echipa || salon.echipa.length === 0) ? (
+                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14 }}>
+                      Salonul nu a adăugat încă membri ai echipei.
+                    </div>
+                  ) : salon.echipa.length === 1 ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
+                        {salon.echipa[0].poza && (
+                          <div style={{ height: 180, overflow: "hidden" }}>
+                            <img src={salon.echipa[0].poza} alt={salon.echipa[0].nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        )}
+                        <div style={{ padding: "18px 20px" }}>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: c.text }}>{salon.echipa[0].nume}</div>
+                          {salon.echipa[0].rol && <div style={{ fontSize: 13, color: salon.culoare, fontWeight: 700, marginTop: 4 }}>{salon.echipa[0].rol}</div>}
+                          {salon.echipa[0].descriere && <div style={{ fontSize: 13, color: c.muted, marginTop: 10, lineHeight: 1.6 }}>{salon.echipa[0].descriere}</div>}
+                        </div>
+                      </div>
+                      <button onClick={() => { setGroomerSelectat(salon.echipa![0].nume); setRezervareActiva(true); }}
+                        style={{ ...btnPrimary, width: "100%", background: salon.culoare }}>
+                        Programează cu {salon.echipa[0].nume} →
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                      <div style={{ fontSize: 13, color: c.muted, marginBottom: 4 }}>Alege specialistul preferat și programează-te direct cu el.</div>
+                      {salon.echipa.map((m: { nume: string; rol?: string; poza?: string; descriere?: string }, idx: number) => (
+                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 16px" }}>
+                          {m.poza
+                            ? <div style={{ width: 56, height: 56, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}><img src={m.poza} alt={m.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                            : <div style={{ width: 56, height: 56, borderRadius: 14, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>✂️</div>}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{m.nume}</div>
+                            {m.rol && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.rol}</div>}
+                            {m.descriere && <div style={{ fontSize: 12, color: c.muted, marginTop: 4, lineHeight: 1.5 }}>{m.descriere}</div>}
+                          </div>
+                          <button onClick={() => { setGroomerSelectat(m.nume); setRezervareActiva(true); }}
+                            style={{ background: salon.culoare, color: "#fff", border: "none", borderRadius: 50, padding: "8px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                            Alege
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* ── RECENZII ── */}
+              {profilSalonTab === "recenzii" && (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 20, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, padding: "20px 22px", marginBottom: 20 }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 48, fontWeight: 900, color: c.text, lineHeight: 1 }}>4.8</div>
+                      <div style={{ fontSize: 20, marginTop: 4 }}>⭐⭐⭐⭐⭐</div>
+                      <div style={{ fontSize: 12, color: c.muted, marginTop: 4 }}>din {MOCK_RECENZII.length} recenzii</div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {[5, 4, 3, 2, 1].map(stea => {
+                        const cnt = MOCK_RECENZII.filter(r => r.rating === stea).length;
+                        const pct = Math.round((cnt / MOCK_RECENZII.length) * 100);
+                        return (
+                          <div key={stea} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                            <span style={{ fontSize: 11, color: c.muted, fontWeight: 700, minWidth: 12 }}>{stea}</span>
+                            <span style={{ fontSize: 11 }}>⭐</span>
+                            <div style={{ flex: 1, height: 6, background: c.border, borderRadius: 99, overflow: "hidden" }}>
+                              <div style={{ width: `${pct}%`, height: "100%", background: "#FF6B00", borderRadius: 99 }} />
+                            </div>
+                            <span style={{ fontSize: 11, color: c.muted, minWidth: 22 }}>{cnt}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {MOCK_RECENZII.map((r, i) => (
+                      <div key={i} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ width: 38, height: 38, borderRadius: 50, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: salon.culoare, flexShrink: 0 }}>
+                              {r.nume.charAt(0)}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{r.nume}</div>
+                              <div style={{ fontSize: 11, color: c.muted }}>{r.data}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 14 }}>{"⭐".repeat(r.rating)}</div>
+                        </div>
+                        <p style={{ fontSize: 13, color: c.text2, lineHeight: 1.65, margin: 0 }}>{r.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* ── CONTACT ── */}
+              {profilSalonTab === "contact" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {salon.adresa && (
+                    <div style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Adresă</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>📍 {salon.adresa}, {salon.oras}</div>
+                      <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-block", marginTop: 12, fontSize: 13, fontWeight: 800, color: salon.culoare, textDecoration: "none", border: `1.5px solid ${salon.culoare}`, borderRadius: 50, padding: "6px 16px" }}>
+                        🗺️ Deschide în Maps
+                      </a>
+                    </div>
+                  )}
+                  {salon.telefon && (
+                    <div style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Telefon</div>
+                      <a href={`tel:${salon.telefon}`} style={{ fontSize: 16, fontWeight: 900, color: c.text, textDecoration: "none" }}>📞 {salon.telefon}</a>
+                    </div>
+                  )}
+                  <div style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Program</div>
+                    {salon.program ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {ZILE_RO.map((zi, idx) => {
+                          const entry = salon.program?.[String(idx)];
+                          const eAzi = idx === new Date().getDay();
+                          return (
+                            <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: idx < 6 ? `1px solid ${c.border}` : "none" }}>
+                              <span style={{ fontSize: 13, fontWeight: eAzi ? 900 : 700, color: eAzi ? salon.culoare : c.text }}>{zi}{eAzi ? " (azi)" : ""}</span>
+                              {entry?.activ
+                                ? <span style={{ fontSize: 13, fontWeight: 700, color: eAzi ? salon.culoare : c.text2 }}>{entry.start} – {entry.end}</span>
+                                : <span style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>Închis</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 13, color: c.muted }}>Programul nu este disponibil momentan.</div>
+                    )}
+                  </div>
+                  {!salon.adresa && !salon.telefon && (
+                    <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14 }}>
+                      Informațiile de contact nu sunt completate încă.
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+            {/* Sticky bottom CTA */}
+            <div style={{ position: "sticky", bottom: 0, background: theme === "dark" ? "rgba(18,18,18,.96)" : "rgba(255,255,255,.96)", backdropFilter: "blur(8px)", borderTop: `1px solid ${c.border}`, padding: "14px 18px", zIndex: 20 }}>
+              <button onClick={() => { setRezervare(null); setRezervareActiva(true); }}
+                style={{ ...btnPrimary, width: "100%", background: "#FF6B00", fontSize: 15 }}>
+                Programează-te acum →
               </button>
-            )}
+            </div>
+
           </div>
+          <Footer variant="client" onAjutor={() => { setTab("ajutor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+          {Lightbox}
         </Shell>
       </ThemeCtx.Provider>
     );
