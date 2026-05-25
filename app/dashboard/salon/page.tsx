@@ -678,6 +678,10 @@ export default function DashboardSalon() {
                 if (!g) { g = { data: p.data, items: [] }; grupuri.push(g); }
                 g.items.push(p);
               }
+              const aziIso = isoData(new Date());
+              const viitoare = grupuri.filter(g => g.data >= aziIso).sort((a, b) => a.data < b.data ? -1 : 1);
+              const trecute = grupuri.filter(g => g.data < aziIso).sort((a, b) => a.data > b.data ? -1 : 1);
+              const grupuriSortate = [...viitoare, ...trecute];
               return (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
@@ -703,7 +707,7 @@ export default function DashboardSalon() {
                   </div>
                 )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-                  {grupuri.map(g => {
+                  {grupuriSortate.map(g => {
                     const et = etichetaZi(g.data);
                     return (
                     <div key={g.data}>
