@@ -735,7 +735,7 @@ export default function DashboardSalon() {
                                 {anulat && p.motivAnulare && (
                                   <div style={{ fontSize: 12, color: "#EF4444", marginTop: 6, background: "rgba(239,68,68,.08)", padding: "6px 10px", borderRadius: 8, fontWeight: 600 }}>💬 Motiv anulare: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>
                                 )}
-                                {p.esteApp && p.user_id && (
+                                {p.esteApp && p.user_id && anulat && (
                                   <button onClick={() => toggleBlocClient(p.user_id)} style={{ marginTop: 8, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                                     {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
                                   </button>
