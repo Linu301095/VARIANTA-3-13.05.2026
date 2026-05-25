@@ -18,6 +18,7 @@ type ProgramareSalon = {
   data: string;
   pret: number;
   status: StatusProg;
+  esteApp: boolean;
 };
 
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
@@ -26,7 +27,7 @@ type VizitaIstoric = { id: string; serviciu: string; pret: number; data: string;
 type AnimalIstoric = {
   id: string; nume: string; specie: string; sex: string; rasa: string;
   greutate: number | null; talie: string | null; varsta: number | null;
-  alergii: string; poza_url: string | null; stapanNume: string; stapanTelefon: string | null;
+  alergii: string; poza_url: string | null; stapanNume: string; stapanTelefon: string | null; stapanUserId: string | null;
   vizite: VizitaIstoric[]; totalCheltuit: number; ultimaVizita: string | null;
 };
 
@@ -145,6 +146,8 @@ export default function DashboardSalon() {
   const [animaleIstoric, setAnimaleIstoric] = useState<AnimalIstoric[]>([]);
   const [cautareAnimal, setCautareAnimal] = useState("");
   const [animalDeschis, setAnimalDeschis] = useState<string | null>(null);
+  const [clientiBlocati, setClientiBlocati] = useState<string[]>([]);
+  const [abateriMap, setAbateriMap] = useState<Record<string, number>>({});
   const [sloturiZi, setSloturiZi] = useState<SlotProgramare[]>([]);
   const [modalBlocare, setModalBlocare] = useState<{ slot: string; durata: number } | null>(null);
   const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
@@ -211,11 +214,46 @@ export default function DashboardSalon() {
         if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
         if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
         setAbonament({ plan: salonRow.plan || "starter" });
+        if (Array.isArray(salonRow.clienti_blocati)) setClientiBlocati(salonRow.clienti_blocati);
 
+        await autoFinalizeaza(salonRow.id);
         await loadProgramari(salonRow.id);
+        await loadAbateri(salonRow.id);
         await loadAnimaleIstoric(salonRow.id);
         await loadNotificari(authUser.id);
       }
+    }
+
+    async function loadAbateri(salonId: string) {
+      const { data } = await supabase
+        .from("programari")
+        .select("user_id")
+        .eq("salon_id", salonId)
+        .eq("status", "anulat")
+        .not("motiv_anulare", "is", null);
+      const map: Record<string, number> = {};
+      (data || []).forEach((p: any) => { if (p.user_id) map[p.user_id] = (map[p.user_id] || 0) + 1; });
+      setAbateriMap(map);
+    }
+
+    async function autoFinalizeaza(salonId: string) {
+      const now = new Date();
+      const aziIso = isoData(now);
+      const minActuale = now.getHours() * 60 + now.getMinutes();
+      const { data } = await supabase
+        .from("programari")
+        .select("id, data, ora, durata, sursa")
+        .eq("salon_id", salonId)
+        .eq("status", "confirmat");
+      if (!data || data.length === 0) return;
+      const expirate = data.filter((p: any) => {
+        if (p.sursa === "blocaj") return false;
+        if (p.data < aziIso) return true;
+        if (p.data === aziIso) return timeToMin(p.ora) + (p.durata || 60) <= minActuale;
+        return false;
+      }).map((p: any) => p.id);
+      if (expirate.length === 0) return;
+      await supabase.from("programari").update({ status: "finalizat" }).in("id", expirate);
     }
 
     async function loadAnimaleIstoric(salonId: string) {
@@ -260,7 +298,7 @@ export default function DashboardSalon() {
             id: a.id, nume: a.nume, specie: a.specie, sex: a.sex, rasa: a.rasa,
             greutate: a.greutate ?? null, talie: a.talie ?? null, varsta: a.varsta ?? null,
             alergii: a.alergii || "", poza_url: a.poza_url || null,
-            stapanNume: prof?.nume || "—", stapanTelefon: prof?.telefon || null,
+            stapanNume: prof?.nume || "—", stapanTelefon: prof?.telefon || null, stapanUserId: a.user_id || p.user_id || null,
             vizite: [], totalCheltuit: 0, ultimaVizita: null,
           };
         }
@@ -333,6 +371,7 @@ export default function DashboardSalon() {
           data: p.data,
           pret: Number(p.pret) || 0,
           status: p.status as StatusProg,
+          esteApp,
         };
       }));
     }
@@ -426,6 +465,16 @@ export default function DashboardSalon() {
     }
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
+
+  async function toggleBlocClient(clientUserId: string) {
+    if (!salonData?.id || !clientUserId) return;
+    const blocat = clientiBlocati.includes(clientUserId);
+    const noua = blocat ? clientiBlocati.filter(id => id !== clientUserId) : [...clientiBlocati, clientUserId];
+    const { error } = await supabase.from("saloane").update({ clienti_blocati: noua }).eq("id", salonData.id);
+    if (error) { salveaza("Eroare la salvare"); console.error(error); return; }
+    setClientiBlocati(noua);
+    salveaza(blocat ? "Client deblocat" : "Client blocat — nu mai poate rezerva");
+  }
 
   async function salveazaProgram() {
     if (!salonData?.id) return;
@@ -632,14 +681,25 @@ export default function DashboardSalon() {
                   )}
                   {programariFiltrate.map(p => {
                     const nou = p.status === "în așteptare";
+                    const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
+                    const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
                     return (
-                      <div key={p.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                      <div key={p.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: blocat ? "2px solid #EF4444" : nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                         <div style={{ width: 52, height: 52, borderRadius: 12, background: nou ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: nou ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.client}</div>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                            {p.client}
+                            {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50 }}>🔴 Blocat</span>}
+                            {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50 }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
+                          </div>
                           <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.animal}</div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
                           <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>📅 {new Date(p.data).toLocaleDateString("ro-RO", { day: "numeric", month: "long" })}</div>
+                          {p.esteApp && p.user_id && (
+                            <button onClick={() => toggleBlocClient(p.user_id)} style={{ marginTop: 8, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                              {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
+                            </button>
+                          )}
                         </div>
                         {nou ? (
                           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
@@ -720,6 +780,20 @@ export default function DashboardSalon() {
                                     </div>
                                   ))}
                                 </div>
+                                {a.stapanUserId && (() => {
+                                  const blocat = clientiBlocati.includes(a.stapanUserId);
+                                  const abateri = abateriMap[a.stapanUserId] || 0;
+                                  return (
+                                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${c.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "space-between" }}>
+                                      <div style={{ fontSize: 12, color: c.muted, fontWeight: 700 }}>
+                                        {blocat ? <span style={{ color: "#EF4444" }}>🔴 Client blocat — nu poate rezerva</span> : abateri > 0 ? <span style={{ color: "#D97706" }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"} cu motiv</span> : <span>✓ Fără anulări</span>}
+                                      </div>
+                                      <button onClick={() => toggleBlocClient(a.stapanUserId!)} style={{ padding: "7px 16px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                        {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
