@@ -43,6 +43,7 @@ const BENEFICII_SALON = [
   { icon: "🚫", titlu: "Zero dublă-rezervare, garantat", desc: "Blochezi manual sloturi pentru programări telefonice, walk-in sau pauze. Calendarul online se umple doar în ce mai e liber." },
   { icon: "📊", titlu: "Statistici live — fără Excel", desc: "Încasări azi și pe lună, top servicii, câți câini mari vs mici, ore de vârf — calculate automat din fiecare programare." },
   { icon: "👤", titlu: "Dosar per client, mereu la îndemână", desc: "Istoricul complet al fiecărui client: câte vizite, ce servicii, ce animale, ce alergii. Nu mai cauți prin caiet sau WhatsApp." },
+  { icon: "🛡️", titlu: "Protecție împotriva clienților neserioși", desc: "Vezi exact cine anulează des și, dacă un client îți strică agenda cu anulări repetate, îl blochezi cu un click — nu mai poate rezerva la tine. Timpul tău e protejat de no-show-uri." },
   { icon: "📱", titlu: "Calendar mobil, oricând, oriunde", desc: "Accepți, refuzi, blochezi sloturi direct de pe telefon — inclusiv duminică noaptea când clientul face rezervarea." },
   { icon: "🎁", titlu: "3 luni complet gratuite", desc: "Testezi toate funcționalitățile, cu programări reale. Fără card, fără angajament. Anulezi cu un click dacă nu e pentru tine." },
 ];
