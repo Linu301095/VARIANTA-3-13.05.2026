@@ -870,7 +870,7 @@ export default function DashboardClient() {
             </div>
 
             {/* Tab content */}
-            <div style={{ padding: "20px 18px 100px" }}>
+            <div style={{ padding: "20px 18px 32px" }}>
 
               {/* ── SERVICII ── */}
               {profilSalonTab === "servicii" && (
@@ -1086,13 +1086,6 @@ export default function DashboardClient() {
 
             </div>
 
-            {/* Sticky bottom CTA */}
-            <div style={{ position: "sticky", bottom: 0, background: theme === "dark" ? "rgba(18,18,18,.96)" : "rgba(255,255,255,.96)", backdropFilter: "blur(8px)", borderTop: `1px solid ${c.border}`, padding: "14px 18px", zIndex: 20 }}>
-              <button onClick={() => { setRezervare(null); setRezervareActiva(true); }}
-                style={{ ...btnPrimary, width: "100%", background: "#FF6B00", fontSize: 15 }}>
-                Programează-te acum →
-              </button>
-            </div>
 
           </div>
           <Footer variant="client" onAjutor={() => { setTab("ajutor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
