@@ -1529,7 +1529,7 @@ export default function DashboardSalon() {
           </div>
         </main>
 
-        <Footer variant="salon" />
+        <Footer variant="salon" onAjutor={() => setTab("ajutor")} />
       </div>
     </ThemeCtx.Provider>
   );

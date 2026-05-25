@@ -1267,7 +1267,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
         </div>
       </header>
       <main style={{ flex: 1 }}>{children}</main>
-      <Footer variant="client" />
+      <Footer variant="client" onAjutor={() => { onNav("ajutor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
     </div>
   );
 }

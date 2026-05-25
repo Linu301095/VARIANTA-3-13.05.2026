@@ -35,7 +35,7 @@ function SocialIcons() {
   );
 }
 
-export default function Footer({ variant = "full" }: { variant?: Variant }) {
+export default function Footer({ variant = "full", onAjutor }: { variant?: Variant; onAjutor?: () => void }) {
   /* ----- FULL (landing page) — 4 coloane ----- */
   if (variant === "full") {
     return (
@@ -108,7 +108,7 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,.5)", fontWeight: 700 }}>❓ Ajutor pentru clienți</span>
+            <button onClick={onAjutor} style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontWeight: 800, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0 }}>❓ Ajutor pentru clienți</button>
             <a href="mailto:support@calyhub.ro" className="footer-link" style={linkStyleSm}>✉️ support@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub</div>
@@ -124,7 +124,7 @@ export default function Footer({ variant = "full" }: { variant?: Variant }) {
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,.5)", fontWeight: 700 }}>❓ Ajutor pentru salon</span>
+            <button onClick={onAjutor} style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontWeight: 800, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0 }}>❓ Ajutor pentru salon</button>
             <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42" }}>✉️ parteneri@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub · Partener</div>
