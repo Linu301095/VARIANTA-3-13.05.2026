@@ -815,8 +815,11 @@ export default function DashboardSalon() {
                                   {talieLabel(a.talie) && <span style={{ background: c.orangeAccent, color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>{talieLabel(a.talie)}</span>}
                                   {a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀️ Femelă" : "♂️ Mascul"}</span>}
                                   {a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
-                                  {a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>📞 {a.stapanTelefon}</span>}
-                                  {a.alergii && <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>⚠️ {a.alergii}</span>}
+                                  {a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>📞 {a.stapanNume} · {a.stapanTelefon}</span>}
+                                  {a.alergii
+                                    ? <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>⚠️ Alergii: {a.alergii}</span>
+                                    : <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>✅ Fără alergii</span>
+                                  }
                                 </div>
                                 <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Istoric vizite</div>
                                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
