@@ -28,7 +28,7 @@ type VizitaIstoric = { id: string; serviciu: string; pret: number; data: string;
 type AnimalIstoric = {
   id: string; nume: string; specie: string; sex: string; rasa: string;
   greutate: number | null; talie: string | null; varsta: number | null;
-  alergii: string; poza_url: string | null; stapanNume: string; stapanTelefon: string | null; stapanUserId: string | null;
+  alergii: string; vaccinat: boolean; poza_url: string | null; stapanNume: string; stapanTelefon: string | null; stapanUserId: string | null;
   vizite: VizitaIstoric[]; totalCheltuit: number; ultimaVizita: string | null;
 };
 
@@ -302,7 +302,7 @@ export default function DashboardSalon() {
       const userIds = [...new Set(istoric.map((p: any) => p.user_id).filter(Boolean))];
 
       const [{ data: animals }, { data: profiles }] = await Promise.all([
-        supabase.from("animale").select("id, nume, specie, sex, rasa, greutate, talie, varsta, alergii, poza_url, user_id").in("id", animalIds),
+        supabase.from("animale").select("id, nume, specie, sex, rasa, greutate, talie, varsta, alergii, vaccinat, poza_url, user_id").in("id", animalIds),
         userIds.length > 0 ? supabase.from("profiluri").select("id, nume, telefon").in("id", userIds) : Promise.resolve({ data: [] }),
       ]);
 
@@ -318,7 +318,7 @@ export default function DashboardSalon() {
           grupat[p.animal_id] = {
             id: a.id, nume: a.nume, specie: a.specie, sex: a.sex, rasa: a.rasa,
             greutate: a.greutate ?? null, talie: a.talie ?? null, varsta: a.varsta ?? null,
-            alergii: a.alergii || "", poza_url: a.poza_url || null,
+            alergii: a.alergii || "", vaccinat: a.vaccinat || false, poza_url: a.poza_url || null,
             stapanNume: prof?.nume || "—", stapanTelefon: prof?.telefon || null, stapanUserId: a.user_id || p.user_id || null,
             vizite: [], totalCheltuit: 0, ultimaVizita: null,
           };
@@ -825,6 +825,10 @@ export default function DashboardSalon() {
                                   {areAlergii(a.alergii)
                                     ? <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>⚠️ Alergii: {a.alergii}</span>
                                     : <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>✅ Fără alergii</span>
+                                  }
+                                  {a.vaccinat
+                                    ? <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>💉 Vaccinat</span>
+                                    : <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>❌ Nevaccinat</span>
                                   }
                                 </div>
                                 <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Istoric vizite</div>
