@@ -928,23 +928,23 @@ export default function DashboardClient() {
                       Salonul nu a adăugat încă membri ai echipei.
                     </div>
                   ) : salon.echipa.length === 1 ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                      <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
-                        {salon.echipa[0].poza && (
-                          <div style={{ height: 180, overflow: "hidden" }}>
-                            <img src={salon.echipa[0].poza} alt={salon.echipa[0].nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                      {salon.echipa.map((m: { nume: string; rol?: string; poza?: string; descriere?: string }, idx: number) => (
+                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 16px" }}>
+                          {m.poza
+                            ? <div style={{ width: 56, height: 56, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}><img src={m.poza} alt={m.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                            : <div style={{ width: 56, height: 56, borderRadius: 14, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>✂️</div>}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{m.nume}</div>
+                            {m.rol && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.rol}</div>}
+                            {m.descriere && <div style={{ fontSize: 12, color: c.muted, marginTop: 4, lineHeight: 1.5 }}>{m.descriere}</div>}
                           </div>
-                        )}
-                        <div style={{ padding: "18px 20px" }}>
-                          <div style={{ fontSize: 18, fontWeight: 900, color: c.text }}>{salon.echipa[0].nume}</div>
-                          {salon.echipa[0].rol && <div style={{ fontSize: 13, color: salon.culoare, fontWeight: 700, marginTop: 4 }}>{salon.echipa[0].rol}</div>}
-                          {salon.echipa[0].descriere && <div style={{ fontSize: 13, color: c.muted, marginTop: 10, lineHeight: 1.6 }}>{salon.echipa[0].descriere}</div>}
+                          <button onClick={() => { setGroomerSelectat(m.nume); setRezervareActiva(true); }}
+                            style={{ background: salon.culoare, color: "#fff", border: "none", borderRadius: 50, padding: "8px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                            Alege
+                          </button>
                         </div>
-                      </div>
-                      <button onClick={() => { setGroomerSelectat(salon.echipa![0].nume); setRezervareActiva(true); }}
-                        style={{ ...btnPrimary, width: "100%", background: salon.culoare }}>
-                        Programează cu {salon.echipa[0].nume} →
-                      </button>
+                      ))}
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
