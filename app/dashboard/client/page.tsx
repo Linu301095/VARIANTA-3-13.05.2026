@@ -105,6 +105,17 @@ const PROGRAM_DEFAULT_C: ProgramSaptC = {
 };
 const ZILE_SCURT = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
 const LUNA_SCURT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const ZILE_FULL_C = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă"];
+const LUNA_FULL_C = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
+function etichetaZiC(dataIso: string) {
+  const azi = new Date(); azi.setHours(0, 0, 0, 0);
+  const ieri = new Date(azi); ieri.setDate(ieri.getDate() - 1);
+  const d = new Date(`${dataIso}T00:00:00`);
+  const baza = `${ZILE_FULL_C[d.getDay()]}, ${d.getDate()} ${LUNA_FULL_C[d.getMonth()]}`;
+  if (dataIso === isoDataC(azi)) return { prefix: "Azi", rest: baza, azi: true };
+  if (dataIso === isoDataC(ieri)) return { prefix: "Ieri", rest: baza, azi: false };
+  return { prefix: "", rest: baza, azi: false };
+}
 function timeToMinC(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 function minToTimeC(m: number) { const h = Math.floor(m / 60), mm = m % 60; return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`; }
 function isoDataC(d: Date) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
@@ -1628,28 +1639,55 @@ export default function DashboardClient() {
                   </button>
                 )}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 22, marginBottom: 24 }}>
                 {notificari.length === 0 && (
                   <div style={{ padding: "28px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
                     Nu ai notificări încă.
                   </div>
                 )}
-                {notificari.map(n => (
-                  <div key={n.id} onClick={async () => {
-                    if (!n.citit) {
-                      await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
-                      setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
-                    }
-                  }}
-                    style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                    <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "🔔"}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
-                      <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
-                    </div>
-                    {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
-                  </div>
-                ))}
+                {(() => {
+                  const grupNotif: { data: string; items: Notificare[] }[] = [];
+                  for (const n of notificari) {
+                    const d = isoDataC(new Date(n.created_at));
+                    let g = grupNotif.find(x => x.data === d);
+                    if (!g) { g = { data: d, items: [] }; grupNotif.push(g); }
+                    g.items.push(n);
+                  }
+                  return grupNotif.map(g => {
+                    const et = etichetaZiC(g.data);
+                    const necititeZi = g.items.filter(n => !n.citit).length;
+                    return (
+                      <div key={g.data}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                            {et.prefix && <span style={{ fontSize: 14, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
+                            <span style={{ fontSize: 13.5, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
+                          </div>
+                          <div style={{ flex: 1, height: 1, background: c.border }} />
+                          {necititeZi > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: "#FF6B00", padding: "1px 8px", borderRadius: 50 }}>{necititeZi}</span>}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {g.items.map(n => (
+                            <div key={n.id} onClick={async () => {
+                              if (!n.citit) {
+                                await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
+                                setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+                              }
+                            }}
+                              style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                              <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "🔔"}</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
+                                <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
+                              </div>
+                              {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
               <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 12 }}>Preferințe notificări</div>
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}`, display: "flex", flexDirection: "column", gap: 0 }}>
