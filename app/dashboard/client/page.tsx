@@ -216,6 +216,7 @@ export default function DashboardClient() {
   const [cautare, setCautare] = useState("");
   const [filtruOras, setFiltruOras] = useState("");
   const [orasDropdown, setOrasDropdown] = useState(false);
+  const [orasInput, setOrasInput] = useState("");
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState("");
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
@@ -1196,7 +1197,18 @@ export default function DashboardClient() {
                   <span style={{ fontSize: 10, opacity: .6 }}>{orasDropdown ? "▲" : "▼"}</span>
                 </button>
                 {orasDropdown && (
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 50, minWidth: 200, overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 50, minWidth: 240, maxHeight: 340, overflowY: "auto" }}>
+                    {/* Câmp scriere oraș */}
+                    <div style={{ padding: 10, borderBottom: `1px solid ${c.border2}`, position: "sticky", top: 0, background: c.surface, zIndex: 1 }}>
+                      <input
+                        autoFocus
+                        value={orasInput}
+                        onChange={e => setOrasInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && orasInput.trim()) { setFiltruOras(orasInput.trim()); setGeoError(""); setOrasInput(""); setOrasDropdown(false); } }}
+                        placeholder="Alege orașul..."
+                        style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none" }}
+                      />
+                    </div>
                     {/* Locația ta — GPS live */}
                     <button onClick={detecteazaLocatia} disabled={geoLoading} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: geoLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 15 }}>{geoLoading ? "⏳" : "🧭"}</span>
@@ -1206,15 +1218,20 @@ export default function DashboardClient() {
                       <div style={{ padding: "8px 18px", fontSize: 11, fontWeight: 600, color: "#EF4444", background: theme === "dark" ? "rgba(239,68,68,.1)" : "#FEF2F2", borderBottom: `1px solid ${c.border2}` }}>{geoError}</div>
                     )}
                     {filtruOras && (
-                      <button onClick={() => { setFiltruOras(""); setGeoError(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                      <button onClick={() => { setFiltruOras(""); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
                         ✕ Toate orașele
                       </button>
                     )}
-                    {oraseleDisponibile.map(o => (
-                      <button key={o} onClick={() => { setFiltruOras(o); setGeoError(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruOras === o ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruOras === o ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruOras === o ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                    {oraseleDisponibile.filter(o => o.toLowerCase().includes(orasInput.toLowerCase().trim())).map(o => (
+                      <button key={o} onClick={() => { setFiltruOras(o); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruOras === o ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruOras === o ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruOras === o ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
                         📍 {o}
                       </button>
                     ))}
+                    {orasInput.trim() && oraseleDisponibile.filter(o => o.toLowerCase().includes(orasInput.toLowerCase().trim())).length === 0 && (
+                      <button onClick={() => { setFiltruOras(orasInput.trim()); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                        🔍 Caută „{orasInput.trim()}"
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
