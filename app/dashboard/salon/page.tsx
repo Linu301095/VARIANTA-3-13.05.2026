@@ -137,6 +137,7 @@ export default function DashboardSalon() {
   const router = useRouter();
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [salonData, setSalonData] = useState<any>(null);
+  const [ratingSalon, setRatingSalon] = useState<{ medie: number; nr: number }>({ medie: 0, nr: 0 });
   const [abonament, setAbonament] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("statistici");
@@ -520,6 +521,16 @@ export default function DashboardSalon() {
   useEffect(() => {
     if (salonData?.id && tab === "program") loadSloturiZi(salonData.id, zilaSelectata);
   }, [salonData?.id, zilaSelectata, tab]);
+
+  useEffect(() => {
+    if (!salonData?.id) return;
+    (async () => {
+      const { data } = await supabase.from("recenzii").select("rating").eq("salon_id", salonData.id);
+      if (!data || data.length === 0) { setRatingSalon({ medie: 0, nr: 0 }); return; }
+      const suma = (data as any[]).reduce((s, r) => s + r.rating, 0);
+      setRatingSalon({ medie: suma / data.length, nr: data.length });
+    })();
+  }, [salonData?.id]);
 
   async function blocheazaSlot() {
     if (!salonData?.id || !userId || !modalBlocare) return;
@@ -917,7 +928,7 @@ export default function DashboardSalon() {
                     { icon: "💰", label: "Incasari azi", valoare: `${incasariAzi} RON`, sub: `${aziConfirmate.length} programări confirmate azi`, color: "#10B981" },
                     { icon: "📅", label: "Programari azi", valoare: `${azi.length}`, sub: `${azi.filter(p => p.status === "în așteptare").length} noi · ${aziConfirmate.length} confirmate`, color: "#FF6B00" },
                     { icon: "👥", label: "Clienti luna asta", valoare: `${clientiLuna}`, sub: `${incasariLuna} RON încasați`, color: "#8B5CF6" },
-                    { icon: "⭐", label: "Rating mediu", valoare: "—", sub: "În curând (recenzii)", color: "#F59E0B" },
+                    { icon: "⭐", label: "Rating mediu", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B" },
                   ].map(card => (
                     <div key={card.label} style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
                       <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>

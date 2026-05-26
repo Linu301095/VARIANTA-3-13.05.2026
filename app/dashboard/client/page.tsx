@@ -142,6 +142,23 @@ type Programare = {
 };
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
+type RecenzieUI = { id: string; user_id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null };
+
+function timpRelativ(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const zile = Math.floor(diff / 86400000);
+  if (zile <= 0) return "azi";
+  if (zile === 1) return "acum 1 zi";
+  if (zile < 7) return `acum ${zile} zile`;
+  const sapt = Math.floor(zile / 7);
+  if (sapt === 1) return "acum 1 săptămână";
+  if (sapt < 5) return `acum ${sapt} săptămâni`;
+  const luni = Math.floor(zile / 30);
+  if (luni === 1) return "acum 1 lună";
+  if (luni < 12) return `acum ${luni} luni`;
+  const ani = Math.floor(zile / 365);
+  return ani === 1 ? "acum 1 an" : `acum ${ani} ani`;
+}
 
 /* ── Color palette ── */
 const C = {
@@ -220,6 +237,13 @@ export default function DashboardClient() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState("");
   const [esteMobil, setEsteMobil] = useState(false);
+  const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
+  const [recenziiLoading, setRecenziiLoading] = useState(false);
+  const [ratinguriSaloane, setRatinguriSaloane] = useState<Record<string, { medie: number; nr: number }>>({});
+  const [recenzieRating, setRecenzieRating] = useState(0);
+  const [recenzieText, setRecenzieText] = useState("");
+  const [recenzieLoading, setRecenzieLoading] = useState(false);
+  const [recenzieError, setRecenzieError] = useState("");
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
 
   useEffect(() => {
@@ -369,6 +393,48 @@ export default function DashboardClient() {
     loadUser();
   }, []);
 
+  // Agregare rating pentru toate saloanele (carduri)
+  useEffect(() => {
+    if (saloaneList.length === 0) return;
+    (async () => {
+      const { data } = await supabase.from("recenzii").select("salon_id, rating");
+      if (!data) return;
+      const acc: Record<string, { suma: number; nr: number }> = {};
+      for (const r of data as any[]) {
+        const k = String(r.salon_id);
+        if (!acc[k]) acc[k] = { suma: 0, nr: 0 };
+        acc[k].suma += r.rating; acc[k].nr += 1;
+      }
+      const out: Record<string, { medie: number; nr: number }> = {};
+      for (const k in acc) out[k] = { medie: acc[k].suma / acc[k].nr, nr: acc[k].nr };
+      setRatinguriSaloane(out);
+    })();
+  }, [saloaneList]);
+
+  // Încarcă recenziile salonului selectat
+  useEffect(() => {
+    if (!salonSelectat) { setRecenziiSalon([]); return; }
+    setRecenzieRating(0); setRecenzieText(""); setRecenzieError("");
+    (async () => {
+      setRecenziiLoading(true);
+      const { data: recs } = await supabase
+        .from("recenzii")
+        .select("id, user_id, rating, text, created_at")
+        .eq("salon_id", salonSelectat)
+        .order("created_at", { ascending: false });
+      if (!recs || recs.length === 0) { setRecenziiSalon([]); setRecenziiLoading(false); return; }
+      const userIds = Array.from(new Set(recs.map((r: any) => r.user_id)));
+      const { data: profile } = await supabase.from("profiluri").select("id, nume, avatar_url").in("id", userIds);
+      const pmap = new Map((profile || []).map((p: any) => [p.id, p]));
+      setRecenziiSalon(recs.map((r: any) => ({
+        id: r.id, user_id: r.user_id, rating: r.rating, text: r.text, created_at: r.created_at,
+        nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
+        avatar_url: pmap.get(r.user_id)?.avatar_url || null,
+      })));
+      setRecenziiLoading(false);
+    })();
+  }, [salonSelectat]);
+
   useEffect(() => {
     if (!salonSelectat) { setProgramSalon(null); setOcupariSalon([]); return; }
     (async () => {
@@ -448,6 +514,30 @@ export default function DashboardClient() {
     await supabase.auth.signOut();
     document.documentElement.dataset.theme = "";
     router.push("/login");
+  }
+
+  async function trimiteRecenzie(salonId: string | number, progId: string | null) {
+    if (recenzieRating < 1) { setRecenzieError("Alege un număr de stele."); return; }
+    if (recenzieText.trim().length < 10) { setRecenzieError("Scrie minim 10 caractere."); return; }
+    setRecenzieError(""); setRecenzieLoading(true);
+    const { data: inserted, error } = await supabase.from("recenzii").insert({
+      salon_id: salonId, user_id: userId, programare_id: progId,
+      rating: recenzieRating, text: recenzieText.trim(),
+    }).select("id, user_id, rating, text, created_at").single();
+    setRecenzieLoading(false);
+    if (error) { setRecenzieError("Nu am putut trimite recenzia. Poate ai recenzat deja."); return; }
+    const noua: RecenzieUI = {
+      id: inserted.id, user_id: inserted.user_id, rating: inserted.rating, text: inserted.text,
+      created_at: inserted.created_at, nume: profilForm.numeComplet || "Client CalyHub", avatar_url: avatarUrl,
+    };
+    setRecenziiSalon(prev => [noua, ...prev]);
+    setRatinguriSaloane(prev => {
+      const k = String(salonId); const cur = prev[k] || { medie: 0, nr: 0 };
+      const nrNou = cur.nr + 1;
+      return { ...prev, [k]: { medie: (cur.medie * cur.nr + recenzieRating) / nrNou, nr: nrNou } };
+    });
+    setRecenzieRating(0); setRecenzieText(""); setSavedMsg("Recenzie trimisă, mulțumim!");
+    setTimeout(() => setSavedMsg(""), 2500);
   }
 
   async function confirmaAnulare() {
@@ -610,12 +700,11 @@ export default function DashboardClient() {
 
   /* ── Profil salon view ── */
   if (salonSelectat && salon) {
-    const MOCK_RECENZII = [
-      { nume: "Andreea M.", rating: 5, text: "Super experiență! Câinele meu arată impecabil după tunsoare. Personalul e foarte atent cu animalele.", data: "acum 3 zile" },
-      { nume: "Bogdan T.", rating: 5, text: "Recomand cu toată inima. Au grijă de Pufi ca și cum ar fi al lor. Programarea online e super ușoară.", data: "acum 1 săptămână" },
-      { nume: "Maria P.", rating: 4, text: "Servicii de calitate, prețuri corecte. Am revenit de 3 ori și de fiecare dată am fost mulțumită.", data: "acum 2 săptămâni" },
-      { nume: "Cristian V.", rating: 5, text: "Profesionalism maxim! Pisica mea e extrem de agitată, dar groomerul știa exact cum s-o liniștească.", data: "acum 3 săptămâni" },
-    ];
+    const nrRecenzii = recenziiSalon.length;
+    const medieRecenzii = nrRecenzii > 0 ? recenziiSalon.reduce((s, r) => s + r.rating, 0) / nrRecenzii : 0;
+    const userAScris = recenziiSalon.some(r => r.user_id === userId);
+    const areProgramareFinalizata = programari.some(p => String(p.salon_id) === String(salonSelectat) && p.status === "finalizat");
+    const poateRecenza = areProgramareFinalizata && !userAScris;
 
     /* Helper: lightbox overlay (used in both profile and booking views) */
     const Lightbox = lightboxIdx !== null ? (() => {
@@ -881,8 +970,12 @@ export default function DashboardClient() {
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)" }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>⭐ {salon.rating}</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.75)" }}>{salon.recenzii} recenzii</div>
+                    {nrRecenzii > 0 ? (<>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>⭐ {medieRecenzii.toFixed(1)}</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,.75)" }}>{nrRecenzii} {nrRecenzii === 1 ? "recenzie" : "recenzii"}</div>
+                    </>) : (
+                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "rgba(255,255,255,.2)", padding: "4px 12px", borderRadius: 50 }}>🆕 Nou</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -902,7 +995,7 @@ export default function DashboardClient() {
             {/* Tabs */}
             <div style={{ display: "flex", borderBottom: `1px solid ${c.border}`, background: c.surface, position: "sticky", top: 0, zIndex: 10 }}>
               {(["servicii", "specialisti", "recenzii", "contact"] as const).map(t => {
-                const labels: Record<string, string> = { servicii: "Servicii", specialisti: "Specialiști", recenzii: "Recenzii", contact: "Contact" };
+                const labels: Record<string, string> = { servicii: "Servicii", specialisti: "Specialiști", recenzii: nrRecenzii > 0 ? `Recenzii (${nrRecenzii})` : "Recenzii", contact: "Contact" };
                 const active = profilSalonTab === t;
                 return (
                   <button key={t} onClick={() => setProfilSalonTab(t)}
@@ -1017,48 +1110,101 @@ export default function DashboardClient() {
               {/* ── RECENZII ── */}
               {profilSalonTab === "recenzii" && (
                 <>
-                  <div style={{ display: "flex", alignItems: "center", gap: 20, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, padding: "20px 22px", marginBottom: 20 }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 48, fontWeight: 900, color: c.text, lineHeight: 1 }}>4.8</div>
-                      <div style={{ fontSize: 20, marginTop: 4 }}>⭐⭐⭐⭐⭐</div>
-                      <div style={{ fontSize: 12, color: c.muted, marginTop: 4 }}>din {MOCK_RECENZII.length} recenzii</div>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      {[5, 4, 3, 2, 1].map(stea => {
-                        const cnt = MOCK_RECENZII.filter(r => r.rating === stea).length;
-                        const pct = Math.round((cnt / MOCK_RECENZII.length) * 100);
-                        return (
-                          <div key={stea} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-                            <span style={{ fontSize: 11, color: c.muted, fontWeight: 700, minWidth: 12 }}>{stea}</span>
-                            <span style={{ fontSize: 11 }}>⭐</span>
-                            <div style={{ flex: 1, height: 6, background: c.border, borderRadius: 99, overflow: "hidden" }}>
-                              <div style={{ width: `${pct}%`, height: "100%", background: "#FF6B00", borderRadius: 99 }} />
-                            </div>
-                            <span style={{ fontSize: 11, color: c.muted, minWidth: 22 }}>{cnt}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {MOCK_RECENZII.map((r, i) => (
-                      <div key={i} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ width: 38, height: 38, borderRadius: 50, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: salon.culoare, flexShrink: 0 }}>
-                              {r.nume.charAt(0)}
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{r.nume}</div>
-                              <div style={{ fontSize: 11, color: c.muted }}>{r.data}</div>
-                            </div>
-                          </div>
-                          <div style={{ fontSize: 14 }}>{"⭐".repeat(r.rating)}</div>
+                  {recenziiLoading ? (
+                    <div style={{ textAlign: "center", padding: "40px 20px", color: c.muted, fontSize: 14, fontWeight: 600 }}>Se încarcă recenziile...</div>
+                  ) : (<>
+                    {/* Sumar rating */}
+                    {nrRecenzii > 0 ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 20, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, padding: "20px 22px", marginBottom: 20 }}>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 48, fontWeight: 900, color: c.text, lineHeight: 1 }}>{medieRecenzii.toFixed(1)}</div>
+                          <div style={{ fontSize: 20, marginTop: 4 }}>{"⭐".repeat(Math.round(medieRecenzii))}</div>
+                          <div style={{ fontSize: 12, color: c.muted, marginTop: 4 }}>din {nrRecenzii} {nrRecenzii === 1 ? "recenzie" : "recenzii"}</div>
                         </div>
-                        <p style={{ fontSize: 13, color: c.text2, lineHeight: 1.65, margin: 0 }}>{r.text}</p>
+                        <div style={{ flex: 1 }}>
+                          {[5, 4, 3, 2, 1].map(stea => {
+                            const cnt = recenziiSalon.filter(r => r.rating === stea).length;
+                            const pct = nrRecenzii > 0 ? Math.round((cnt / nrRecenzii) * 100) : 0;
+                            return (
+                              <div key={stea} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                                <span style={{ fontSize: 11, color: c.muted, fontWeight: 700, minWidth: 12 }}>{stea}</span>
+                                <span style={{ fontSize: 11 }}>⭐</span>
+                                <div style={{ flex: 1, height: 6, background: c.border, borderRadius: 99, overflow: "hidden" }}>
+                                  <div style={{ width: `${pct}%`, height: "100%", background: "#FF6B00", borderRadius: 99 }} />
+                                </div>
+                                <span style={{ fontSize: 11, color: c.muted, minWidth: 22 }}>{cnt}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    ) : (
+                      <div style={{ textAlign: "center", background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, padding: "32px 20px", marginBottom: 20 }}>
+                        <div style={{ fontSize: 40, marginBottom: 10 }}>⭐</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 4 }}>Încă nu există recenzii</div>
+                        <div style={{ fontSize: 13, color: c.muted }}>Fii primul care lasă o părere după o programare finalizată.</div>
+                      </div>
+                    )}
+
+                    {/* Formular adăugare recenzie */}
+                    {poateRecenza && (
+                      <div style={{ background: c.surface, borderRadius: 18, border: `2px solid #FF6B00`, padding: "20px 22px", marginBottom: 20 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: c.text, marginBottom: 12 }}>✍️ Lasă o recenzie</div>
+                        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <button key={s} onClick={() => setRecenzieRating(s)}
+                              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 30, padding: 0, lineHeight: 1, filter: s <= recenzieRating ? "none" : "grayscale(1) opacity(.35)", transition: "filter .1s" }}
+                              aria-label={`${s} stele`}>⭐</button>
+                          ))}
+                        </div>
+                        <textarea
+                          value={recenzieText}
+                          onChange={e => setRecenzieText(e.target.value)}
+                          placeholder="Cum a fost experiența ta? (minim 10 caractere)"
+                          rows={3}
+                          style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: 12, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 14, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none", resize: "vertical", marginBottom: 12 }}
+                        />
+                        {recenzieError && <div style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", marginBottom: 10 }}>{recenzieError}</div>}
+                        <button onClick={() => trimiteRecenzie(salonSelectat, programari.find(p => String(p.salon_id) === String(salonSelectat) && p.status === "finalizat")?.id || null)}
+                          disabled={recenzieLoading}
+                          style={{ ...btnPrimary, opacity: recenzieLoading ? .6 : 1, cursor: recenzieLoading ? "wait" : "pointer" }}>
+                          {recenzieLoading ? "Se trimite..." : "Trimite recenzia"}
+                        </button>
+                      </div>
+                    )}
+                    {!userAScris && !areProgramareFinalizata && (
+                      <div style={{ background: c.orangeAccent, borderRadius: 14, border: `1.5px solid ${c.orangeBorder}`, padding: "14px 16px", marginBottom: 20, fontSize: 13, color: c.text2, fontWeight: 600 }}>
+                        💡 Poți lăsa o recenzie după ce ai o programare finalizată la acest salon.
+                      </div>
+                    )}
+                    {userAScris && (
+                      <div style={{ background: theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5", borderRadius: 14, border: "1.5px solid rgba(16,185,129,.3)", padding: "14px 16px", marginBottom: 20, fontSize: 13, color: "#10B981", fontWeight: 700 }}>
+                        ✓ Ai lăsat deja o recenzie pentru acest salon. Mulțumim!
+                      </div>
+                    )}
+
+                    {/* Lista recenzii */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      {recenziiSalon.map(r => (
+                        <div key={r.id} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              {r.avatar_url
+                                ? <img src={r.avatar_url} alt={r.nume} style={{ width: 38, height: 38, borderRadius: 50, objectFit: "cover", flexShrink: 0 }} />
+                                : <div style={{ width: 38, height: 38, borderRadius: 50, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: salon.culoare, flexShrink: 0 }}>{r.nume.charAt(0)}</div>
+                              }
+                              <div>
+                                <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{r.nume}{r.user_id === userId && <span style={{ fontSize: 11, color: "#FF6B00", fontWeight: 700 }}> · tu</span>}</div>
+                                <div style={{ fontSize: 11, color: c.muted }}>{timpRelativ(r.created_at)}</div>
+                              </div>
+                            </div>
+                            <div style={{ fontSize: 14 }}>{"⭐".repeat(r.rating)}</div>
+                          </div>
+                          <p style={{ fontSize: 13, color: c.text2, lineHeight: 1.65, margin: 0 }}>{r.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>)}
                 </>
               )}
 
@@ -1261,7 +1407,7 @@ export default function DashboardClient() {
                 </div>
                 {saloneFiltrate.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-                    {saloneFiltrate.map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+                    {saloneFiltrate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -1278,11 +1424,11 @@ export default function DashboardClient() {
               <>
                 <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14 }}>📍 Recomandate</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
-                  {saloaneList.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+                  {saloaneList.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
                 <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14 }}>✂️ Toți partenerii CalyHub</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-                  {saloaneList.map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+                  {saloaneList.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
               </>
             )}
@@ -1742,7 +1888,15 @@ function FAQ({ items }: { items: { q: string; r: string }[] }) {
   );
 }
 
-function CardSalon({ salon, onSelect }: { salon: SalonItem; onSelect: () => void }) {
+function RatingBadge({ ratingReal }: { ratingReal?: { medie: number; nr: number } }) {
+  const { c } = useContext(ThemeCtx);
+  if (!ratingReal || ratingReal.nr === 0) {
+    return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 800, color: "#FF6B00" }}>🆕 Nou</div>;
+  }
+  return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {ratingReal.medie.toFixed(1)}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({ratingReal.nr})</span></div>;
+}
+
+function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect: () => void; ratingReal?: { medie: number; nr: number } }) {
   const { c, theme } = useContext(ThemeCtx);
   return (
     <div style={{ background: c.surface, borderRadius: 20, border: "2px solid #FF6B00", overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
@@ -1761,12 +1915,12 @@ function CardSalon({ salon, onSelect }: { salon: SalonItem; onSelect: () => void
         {!salon.poza_url && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {salon.rating}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({salon.recenzii})</span></div>
+            <RatingBadge ratingReal={ratingReal} />
           </div>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600 }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div></div>
-          {salon.poza_url && <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {salon.rating}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({salon.recenzii})</span></div>}
+          {salon.poza_url && <RatingBadge ratingReal={ratingReal} />}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${c.border2}` }}>
