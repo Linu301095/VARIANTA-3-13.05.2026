@@ -1317,7 +1317,7 @@ export default function DashboardClient() {
 
           {/* Bun venit */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10 }}>Bună, {prenume}! 🐾</h1>
+            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10 }}>Bună, {prenume}! {specieInfo(animal?.specie).icon}</h1>
             {animal && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13, flexWrap: "wrap" }}>
                 {animal.poza_url
