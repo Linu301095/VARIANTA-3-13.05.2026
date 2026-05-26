@@ -213,6 +213,10 @@ export default function DashboardClient() {
   const [profilSalonTab, setProfilSalonTab] = useState<"servicii" | "specialisti" | "recenzii" | "contact">("servicii");
   const [groomerSelectat, setGroomerSelectat] = useState<string | null>(null);
   const [rezervareActiva, setRezervareActiva] = useState(false);
+  const [cautare, setCautare] = useState("");
+  const [filtruOras, setFiltruOras] = useState("");
+  const [filtruServiciu, setFiltruServiciu] = useState("");
+  const [filtruPretMax, setFiltruPretMax] = useState(0);
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
 
   useEffect(() => {
@@ -1096,6 +1100,19 @@ export default function DashboardClient() {
   const viitoare = programari.filter(p => p.status === "confirmat" || p.status === "în așteptare");
   const trecute = programari.filter(p => p.status === "finalizat" || p.status === "anulat");
 
+  const oraseleDisponibile = Array.from(new Set(saloaneList.map(s => s.oras.split(",")[0].trim()))).sort();
+  const serviciiDisponibile = Array.from(new Set(saloaneList.flatMap(s => s.servicii))).sort();
+  const pretMaxDisponibil = saloaneList.reduce((max, s) => (s.pretDe > max ? s.pretDe : max), 0);
+
+  const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || filtruPretMax > 0;
+  const saloneFiltrate = saloaneList.filter(s => {
+    if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase())) return false;
+    if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
+    if (filtruServiciu && !s.servicii.some(sv => sv.toLowerCase().includes(filtruServiciu.toLowerCase()))) return false;
+    if (filtruPretMax > 0 && s.pretDe > filtruPretMax) return false;
+    return true;
+  });
+
   return (
     <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
       <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
@@ -1124,17 +1141,101 @@ export default function DashboardClient() {
 
           {/* TAB SALOANE */}
           {tab === "saloane" && (<>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, margin: 0 }}>📍 Recomandate în zona ta</h2>
-              <span style={{ fontSize: 12, color: c.text, fontWeight: 800, background: c.surface, padding: "4px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, fontFamily: "Nunito, sans-serif" }}>📍 București</span>
+            {/* Search bar */}
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 18, pointerEvents: "none" }}>🔍</span>
+              <input
+                value={cautare}
+                onChange={e => setCautare(e.target.value)}
+                placeholder="Caută salon după nume sau oraș..."
+                style={{ width: "100%", boxSizing: "border-box", padding: "13px 16px 13px 46px", borderRadius: 50, border: `1.5px solid ${filtrareActiva ? "#FF6B00" : c.border}`, background: c.surface, color: c.text, fontSize: 14, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none", transition: "border-color .15s" }}
+              />
+              {cautare && (
+                <button onClick={() => setCautare("")} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 18, color: c.muted, lineHeight: 1 }}>✕</button>
+              )}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
-              {saloaneList.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+
+            {/* Filters row */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24, alignItems: "center" }}>
+              {/* Città filter */}
+              <select
+                value={filtruOras}
+                onChange={e => setFiltruOras(e.target.value)}
+                style={{ padding: "8px 14px", borderRadius: 50, border: `1.5px solid ${filtruOras ? "#FF6B00" : c.border}`, background: filtruOras ? "#FFF3EA" : c.surface, color: filtruOras ? "#FF6B00" : c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer", outline: "none" }}
+              >
+                <option value="">📍 Toate orașele</option>
+                {oraseleDisponibile.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+
+              {/* Service filter */}
+              <select
+                value={filtruServiciu}
+                onChange={e => setFiltruServiciu(e.target.value)}
+                style={{ padding: "8px 14px", borderRadius: 50, border: `1.5px solid ${filtruServiciu ? "#FF6B00" : c.border}`, background: filtruServiciu ? "#FFF3EA" : c.surface, color: filtruServiciu ? "#FF6B00" : c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer", outline: "none" }}
+              >
+                <option value="">✂️ Toate serviciile</option>
+                {serviciiDisponibile.map(sv => <option key={sv} value={sv}>{sv}</option>)}
+              </select>
+
+              {/* Price filter chips */}
+              {[0, 50, 80, 100, 150].filter(p => p === 0 || p <= pretMaxDisponibil).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setFiltruPretMax(filtruPretMax === p ? 0 : p)}
+                  style={{ padding: "8px 14px", borderRadius: 50, border: `1.5px solid ${filtruPretMax === p && p > 0 ? "#FF6B00" : c.border}`, background: filtruPretMax === p && p > 0 ? "#FFF3EA" : c.surface, color: filtruPretMax === p && p > 0 ? "#FF6B00" : c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer", whiteSpace: "nowrap" }}
+                >
+                  {p === 0 ? "💰 Orice preț" : `până la ${p} RON`}
+                </button>
+              ))}
+
+              {/* Clear all */}
+              {filtrareActiva && (
+                <button
+                  onClick={() => { setCautare(""); setFiltruOras(""); setFiltruServiciu(""); setFiltruPretMax(0); }}
+                  style={{ padding: "8px 14px", borderRadius: 50, border: "1.5px solid #EF4444", background: "transparent", color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}
+                >
+                  ✕ Șterge filtre
+                </button>
+              )}
             </div>
-            <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 16 }}>✂️ Toți partenerii CalyHub</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-              {saloaneList.map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
-            </div>
+
+            {filtrareActiva ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, margin: 0 }}>
+                    {saloneFiltrate.length > 0 ? `🔍 ${saloneFiltrate.length} salon${saloneFiltrate.length === 1 ? "" : "e"} găsite` : "Niciun salon găsit"}
+                  </h2>
+                </div>
+                {saloneFiltrate.length > 0 ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                    {saloneFiltrate.map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "60px 20px", color: c.xmuted }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: c.text }}>Niciun salon nu corespunde filtrelor</div>
+                    <div style={{ fontSize: 14, color: c.muted, marginBottom: 20 }}>Încearcă să ajustezi criteriile de căutare</div>
+                    <button onClick={() => { setCautare(""); setFiltruOras(""); setFiltruServiciu(""); setFiltruPretMax(0); }} style={{ padding: "10px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                      Arată toate saloanele
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, margin: 0 }}>📍 Recomandate în zona ta</h2>
+                  {oraseleDisponibile.length > 0 && <span style={{ fontSize: 12, color: c.text, fontWeight: 800, background: c.surface, padding: "4px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, fontFamily: "Nunito, sans-serif" }}>📍 {oraseleDisponibile[0]}</span>}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
+                  {saloaneList.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+                </div>
+                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 16 }}>✂️ Toți partenerii CalyHub</h2>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                  {saloaneList.map(s => <CardSalon key={s.id} salon={s} onSelect={() => setSalonSelectat(s.id)} />)}
+                </div>
+              </>
+            )}
           </>)}
 
           {/* TAB PROGRAMARI */}
