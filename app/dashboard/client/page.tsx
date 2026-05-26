@@ -216,7 +216,37 @@ export default function DashboardClient() {
   const [cautare, setCautare] = useState("");
   const [filtruOras, setFiltruOras] = useState("");
   const [orasDropdown, setOrasDropdown] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState("");
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
+
+  function detecteazaLocatia() {
+    setGeoError("");
+    if (!("geolocation" in navigator)) { setGeoError("Geolocația nu e suportată de browser"); return; }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=ro`);
+          const data = await res.json();
+          const oras = data?.address?.city || data?.address?.town || data?.address?.municipality || data?.address?.county || "";
+          if (oras) {
+            setFiltruOras(oras.replace(/^(Municipiul|Sectorul|Orașul)\s+/i, "").trim());
+            setOrasDropdown(false);
+          } else {
+            setGeoError("Nu am putut determina orașul");
+          }
+        } catch {
+          setGeoError("Eroare la detectarea locației");
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      () => { setGeoLoading(false); setGeoError("Acces la locație refuzat"); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
 
   useEffect(() => {
     try {
@@ -1166,14 +1196,22 @@ export default function DashboardClient() {
                   <span style={{ fontSize: 10, opacity: .6 }}>{orasDropdown ? "▲" : "▼"}</span>
                 </button>
                 {orasDropdown && (
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 50, minWidth: 180, overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 50, minWidth: 200, overflow: "hidden" }}>
+                    {/* Locația ta — GPS live */}
+                    <button onClick={detecteazaLocatia} disabled={geoLoading} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: geoLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 15 }}>{geoLoading ? "⏳" : "🧭"}</span>
+                      {geoLoading ? "Se detectează..." : "Locația ta"}
+                    </button>
+                    {geoError && (
+                      <div style={{ padding: "8px 18px", fontSize: 11, fontWeight: 600, color: "#EF4444", background: theme === "dark" ? "rgba(239,68,68,.1)" : "#FEF2F2", borderBottom: `1px solid ${c.border2}` }}>{geoError}</div>
+                    )}
                     {filtruOras && (
-                      <button onClick={() => { setFiltruOras(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                      <button onClick={() => { setFiltruOras(""); setGeoError(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
                         ✕ Toate orașele
                       </button>
                     )}
                     {oraseleDisponibile.map(o => (
-                      <button key={o} onClick={() => { setFiltruOras(o); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruOras === o ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruOras === o ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruOras === o ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                      <button key={o} onClick={() => { setFiltruOras(o); setGeoError(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruOras === o ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruOras === o ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruOras === o ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
                         📍 {o}
                       </button>
                     ))}
