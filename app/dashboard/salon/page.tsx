@@ -1124,7 +1124,7 @@ export default function DashboardSalon() {
                   </div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: statExtins ? 16 : 28 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 28 }}>
                   {cards.map(card => {
                     const deschis = card.clickable && statExtins === card.id;
                     return (
@@ -1135,37 +1135,34 @@ export default function DashboardSalon() {
                       <div style={{ fontSize: 26, fontWeight: 900, color: c.text, lineHeight: 1 }}>{card.valoare}</div>
                       <div style={{ fontSize: 12, color: card.color, fontWeight: 700, marginTop: 6 }}>{card.sub}</div>
                       {card.clickable && <div style={{ position: "absolute", top: 16, right: 16, fontSize: 12, color: c.muted, fontWeight: 800 }}>{deschis ? "▲" : "▼"}</div>}
+                      {deschis && (
+                        <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
+                          {zileBreakdown.length === 0 ? (
+                            <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare în această perioadă.</div>
+                          ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                              {zileBreakdown.map(z => {
+                                const et = etichetaZi(z.data);
+                                const val = card.id === "venituri" ? `${z.venit} RON` : card.id === "programari" ? `${z.nr}` : `${z.clienti}`;
+                                return (
+                                  <div key={z.data} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 12px", borderRadius: 10, background: c.surface2 }}>
+                                    <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+                                      {et.prefix && <span style={{ fontSize: 12, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text, flexShrink: 0 }}>{et.prefix}</span>}
+                                      <span style={{ fontSize: 12, fontWeight: 700, color: et.prefix ? c.muted : c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{et.rest}</span>
+                                    </div>
+                                    <span style={{ fontSize: 14, fontWeight: 900, color: c.text, flexShrink: 0 }}>{val}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     );
                   })}
                 </div>
 
-                {statExtins && (
-                  <div style={{ background: c.surface, borderRadius: 18, border: "2px solid #10B981", padding: "20px 22px", marginBottom: 28 }}>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: c.text, marginBottom: 14 }}>
-                      {statExtins === "venituri" ? "💰 Încasări pe zile" : statExtins === "programari" ? "📅 Programări pe zile" : "👥 Clienți pe zile"} — {perLabel}
-                    </div>
-                    {zileBreakdown.length === 0 ? (
-                      <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare în această perioadă.</div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {zileBreakdown.map(z => {
-                          const et = etichetaZi(z.data);
-                          const val = statExtins === "venituri" ? `${z.venit} RON` : statExtins === "programari" ? `${z.nr}` : `${z.clienti}`;
-                          return (
-                            <div key={z.data} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderRadius: 12, background: c.surface2, border: `1px solid ${c.border}` }}>
-                              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                                {et.prefix && <span style={{ fontSize: 13, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
-                                <span style={{ fontSize: 13, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
-                              </div>
-                              <span style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{val}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
                 <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 20 }}>Statistici detaliate</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
                   <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
