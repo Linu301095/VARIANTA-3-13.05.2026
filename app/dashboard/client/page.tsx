@@ -803,7 +803,6 @@ export default function DashboardClient() {
                 </button>
               )}
             </div>
-            <Footer variant="client" onAjutor={() => { setTab("ajutor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
             {Lightbox}
           </Shell>
         </ThemeCtx.Provider>
@@ -1088,7 +1087,6 @@ export default function DashboardClient() {
 
 
           </div>
-          <Footer variant="client" onAjutor={() => { setTab("ajutor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
           {Lightbox}
         </Shell>
       </ThemeCtx.Provider>
