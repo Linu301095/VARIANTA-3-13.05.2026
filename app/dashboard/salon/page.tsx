@@ -94,6 +94,18 @@ function etichetaZi(dataIso: string) {
 function specieIcon(specie?: string) {
   return specie === "pisica" ? "🐱" : specie === "iepure" ? "🐰" : specie === "pasare" ? "🐦" : specie === "rozator" ? "🐹" : specie === "reptila" ? "🦎" : specie === "altele" ? "✨" : "🐶";
 }
+type PerioadaStat = "azi" | "ieri" | "saptamana" | "luna" | "an" | "custom";
+function intervalPerioada(per: PerioadaStat, cStart: string, cEnd: string): { start: string; end: string; label: string } {
+  const now = new Date();
+  const azi = isoData(now);
+  if (per === "azi") return { start: azi, end: azi, label: "Azi" };
+  if (per === "ieri") { const i = new Date(now); i.setDate(i.getDate() - 1); const iso = isoData(i); return { start: iso, end: iso, label: "Ieri" }; }
+  if (per === "saptamana") { const s = new Date(now); s.setDate(s.getDate() - 6); return { start: isoData(s), end: azi, label: "Ultimele 7 zile" }; }
+  if (per === "luna") { const s = new Date(now); s.setDate(s.getDate() - 29); return { start: isoData(s), end: azi, label: "Ultimele 30 zile" }; }
+  if (per === "an") { const s = new Date(now); s.setFullYear(s.getFullYear() - 1); s.setDate(s.getDate() + 1); return { start: isoData(s), end: azi, label: "Ultimul an" }; }
+  const a = cStart <= cEnd ? cStart : cEnd, b = cStart <= cEnd ? cEnd : cStart;
+  return { start: a, end: b, label: `${a} → ${b}` };
+}
 function talieLabel(t?: string | null) {
   return t === "mica" ? "🐕‍🦺 Mică" : t === "medie" ? "🐕 Medie" : t === "mare" ? "🐺 Mare" : null;
 }
@@ -140,6 +152,13 @@ export default function DashboardSalon() {
   const [ratingSalon, setRatingSalon] = useState<{ medie: number; nr: number }>({ medie: 0, nr: 0 });
   const [recenziiSalon, setRecenziiSalon] = useState<{ id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null }[]>([]);
   const [filtruRecenzii, setFiltruRecenzii] = useState<"toate" | "azi" | "ieri" | "trecut">("toate");
+  const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("luna");
+  const [customStart, setCustomStart] = useState<string>(isoData(new Date()));
+  const [customEnd, setCustomEnd] = useState<string>(isoData(new Date()));
+  const [statExtins, setStatExtins] = useState<"venituri" | "programari" | "clienti" | null>(null);
+  const [raportDeschis, setRaportDeschis] = useState(false);
+  const [raportSel, setRaportSel] = useState({ venituri: true, programari: true, clienti: true, servicii: true, talie: true });
+  const [exportLoading, setExportLoading] = useState(false);
   const [abonament, setAbonament] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("statistici");
@@ -492,6 +511,97 @@ export default function DashboardSalon() {
     }
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
+
+  async function genereazaRaportExcel() {
+    const { start, end, label } = intervalPerioada(perioadaStat, customStart, customEnd);
+    const inRange = (d: string) => d >= start && d <= end;
+    const esteVenit = (p: ProgramareSalon) => p.status === "confirmat" || p.status === "finalizat";
+    const progRange = programari.filter(p => inRange(p.data));
+    const venitRange = progRange.filter(esteVenit);
+    if (progRange.length === 0) { salveaza("Nicio programare în perioada aleasă"); return; }
+    setExportLoading(true);
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.utils.book_new();
+      const numeSalon = salonData?.nume || profilSalon.numeSalon || "Salon";
+
+      const totalVenit = venitRange.reduce((s, p) => s + (p.pret || 0), 0);
+      const clientiUnici = new Set(progRange.map(p => p.user_id).filter(Boolean)).size;
+      const sumar = [
+        ["Raport CalyHub", ""],
+        ["Salon", numeSalon],
+        ["Perioadă", label],
+        ["Interval", `${start} → ${end}`],
+        ["Generat la", new Date().toLocaleString("ro-RO")],
+        ["", ""],
+        ["Total încasări (RON)", totalVenit],
+        ["Total programări", progRange.length],
+        ["Clienți unici", clientiUnici],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumar), "Sumar");
+
+      if (raportSel.venituri) {
+        const perZi: Record<string, { venit: number; nr: number }> = {};
+        venitRange.forEach(p => { (perZi[p.data] ||= { venit: 0, nr: 0 }); perZi[p.data].venit += p.pret || 0; perZi[p.data].nr++; });
+        const rows = Object.entries(perZi).sort((a, b) => a[0] < b[0] ? -1 : 1).map(([data, v]) => ({ Data: data, "Încasări (RON)": v.venit, "Programări": v.nr }));
+        rows.push({ Data: "TOTAL", "Încasări (RON)": totalVenit, "Programări": venitRange.length });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Venituri");
+      }
+
+      if (raportSel.programari) {
+        const rows = progRange.slice().sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : (a.ora < b.ora ? -1 : 1)).map(p => ({
+          Data: p.data, Ora: p.ora, Client: p.client, Animal: p.animal, Serviciu: p.serviciu,
+          "Preț (RON)": p.pret || 0, Status: p.status,
+        }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Programări");
+      }
+
+      if (raportSel.clienti) {
+        const perClient: Record<string, { nume: string; nr: number; total: number }> = {};
+        progRange.forEach(p => {
+          const key = p.user_id || p.client;
+          (perClient[key] ||= { nume: p.client, nr: 0, total: 0 });
+          perClient[key].nr++;
+          if (esteVenit(p)) perClient[key].total += p.pret || 0;
+        });
+        const rows = Object.values(perClient).sort((a, b) => b.total - a.total).map(c => ({ Client: c.nume, "Programări": c.nr, "Total cheltuit (RON)": c.total }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Clienți");
+      }
+
+      if (raportSel.servicii) {
+        const servCount: Record<string, { nr: number; venit: number }> = {};
+        venitRange.forEach(p => { if (p.serviciu) { (servCount[p.serviciu] ||= { nr: 0, venit: 0 }); servCount[p.serviciu].nr++; servCount[p.serviciu].venit += p.pret || 0; } });
+        const totalNr = Object.values(servCount).reduce((a, b) => a + b.nr, 0);
+        const rows = Object.entries(servCount).sort((a, b) => b[1].nr - a[1].nr).map(([nume, v]) => ({
+          Serviciu: nume, "Nr.": v.nr, "Procent (%)": totalNr > 0 ? Math.round((v.nr / totalNr) * 100) : 0, "Venit (RON)": v.venit,
+        }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Servicii");
+      }
+
+      if (raportSel.talie) {
+        const t = { mica: 0, medie: 0, mare: 0, necunoscuta: 0 };
+        venitRange.forEach(p => { if (p.talie === "mica") t.mica++; else if (p.talie === "medie") t.medie++; else if (p.talie === "mare") t.mare++; else t.necunoscuta++; });
+        const tot = t.mica + t.medie + t.mare + t.necunoscuta;
+        const pct = (n: number) => tot > 0 ? Math.round((n / tot) * 100) : 0;
+        const rows = [
+          { Talie: "Mică", "Nr.": t.mica, "Procent (%)": pct(t.mica) },
+          { Talie: "Medie", "Nr.": t.medie, "Procent (%)": pct(t.medie) },
+          { Talie: "Mare", "Nr.": t.mare, "Procent (%)": pct(t.mare) },
+          { Talie: "Necunoscută", "Nr.": t.necunoscuta, "Procent (%)": pct(t.necunoscuta) },
+        ];
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Talie");
+      }
+
+      const slug = numeSalon.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      XLSX.writeFile(wb, `raport-${slug}-${start}_${end}.xlsx`);
+      setRaportDeschis(false);
+    } catch (e) {
+      console.error(e);
+      salveaza("Eroare la generarea raportului");
+    } finally {
+      setExportLoading(false);
+    }
+  }
 
   async function toggleBlocClient(clientUserId: string) {
     if (!salonData?.id || !clientUserId) return;
@@ -895,34 +1005,43 @@ export default function DashboardSalon() {
 
             {/* STATISTICI */}
             {tab === "statistici" && (() => {
-              const aziIso = isoData(new Date());
               const now = new Date();
-              const lunaCurenta = now.getMonth(), anulCurent = now.getFullYear();
+              const { start, end, label: perLabel } = intervalPerioada(perioadaStat, customStart, customEnd);
+              const inRange = (d: string) => d >= start && d <= end;
               const isFinalizata = (p: ProgramareSalon) => p.status === "confirmat" || p.status === "finalizat";
-              const confirmate = programari.filter(isFinalizata);
-              const azi = programari.filter(p => p.data === aziIso);
-              const aziConfirmate = azi.filter(isFinalizata);
-              const incasariAzi = aziConfirmate.reduce((s, p) => s + (p.pret || 0), 0);
-              const lunaProgr = programari.filter(p => {
-                const d = new Date(p.data); return d.getMonth() === lunaCurenta && d.getFullYear() === anulCurent;
+              const progRange = programari.filter(p => inRange(p.data));
+              const venitRange = progRange.filter(isFinalizata);
+              const incasariPer = venitRange.reduce((s, p) => s + (p.pret || 0), 0);
+              const clientiPer = new Set(progRange.map(p => p.user_id).filter(Boolean)).size;
+              const asteptarePer = progRange.filter(p => p.status === "în așteptare").length;
+
+              const zileMap: Record<string, { venit: number; nr: number; clienti: Set<string> }> = {};
+              progRange.forEach(p => {
+                (zileMap[p.data] ||= { venit: 0, nr: 0, clienti: new Set<string>() });
+                zileMap[p.data].nr++;
+                if (p.user_id) zileMap[p.data].clienti.add(p.user_id);
+                if (isFinalizata(p)) zileMap[p.data].venit += p.pret || 0;
               });
-              const clientiLuna = new Set(lunaProgr.map(p => p.user_id).filter(Boolean)).size;
-              const incasariLuna = lunaProgr.filter(isFinalizata).reduce((s, p) => s + (p.pret || 0), 0);
+              const zileBreakdown = Object.entries(zileMap)
+                .map(([data, v]) => ({ data, venit: v.venit, nr: v.nr, clienti: v.clienti.size }))
+                .sort((a, b) => a.data < b.data ? 1 : -1);
+
               const servCount: Record<string, number> = {};
-              confirmate.forEach(p => { if (p.serviciu) servCount[p.serviciu] = (servCount[p.serviciu] || 0) + 1; });
+              venitRange.forEach(p => { if (p.serviciu) servCount[p.serviciu] = (servCount[p.serviciu] || 0) + 1; });
               const totalServ = Object.values(servCount).reduce((a, b) => a + b, 0);
               const serviciiPop = Object.entries(servCount).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([nume, cnt], i) => ({
                 nume, pct: totalServ > 0 ? Math.round((cnt / totalServ) * 100) : 0, cnt,
                 col: ["#FF6B00", "#8B5CF6", "#10B981", "#F59E0B", "#EF4444"][i],
               }));
               const talieCount = { mica: 0, medie: 0, mare: 0, necunoscuta: 0 };
-              confirmate.forEach(p => {
+              venitRange.forEach(p => {
                 if (p.talie === "mica") talieCount.mica++;
                 else if (p.talie === "medie") talieCount.medie++;
                 else if (p.talie === "mare") talieCount.mare++;
                 else talieCount.necunoscuta++;
               });
               const totalTalie = talieCount.mica + talieCount.medie + talieCount.mare + talieCount.necunoscuta;
+              const lunaCurenta = now.getMonth(), anulCurent = now.getFullYear();
               const LUNI_SCURT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"];
               const ultimeleLuni: { luna: string; val: number }[] = [];
               for (let i = 5; i >= 0; i--) {
@@ -935,24 +1054,119 @@ export default function DashboardSalon() {
                 ultimeleLuni.push({ luna: LUNI_SCURT[m], val });
               }
               const maxLunar = Math.max(...ultimeleLuni.map(x => x.val), 1);
+
+              const PERIOADE: { val: PerioadaStat; label: string }[] = [
+                { val: "azi", label: "Azi" }, { val: "ieri", label: "Ieri" },
+                { val: "saptamana", label: "Săptămână" }, { val: "luna", label: "Lună" },
+                { val: "an", label: "An" }, { val: "custom", label: "Interval" },
+              ];
+              const inp: React.CSSProperties = { padding: "8px 12px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", outline: "none" };
+              const SECTIUNI: { key: keyof typeof raportSel; label: string }[] = [
+                { key: "venituri", label: "Venituri" }, { key: "programari", label: "Programări" },
+                { key: "clienti", label: "Clienți" }, { key: "servicii", label: "Servicii populare" },
+                { key: "talie", label: "Distribuție talie" },
+              ];
+              const cards = [
+                { id: "venituri" as const, icon: "💰", label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`, sub: `${venitRange.length} programări`, color: "#10B981", clickable: true },
+                { id: "programari" as const, icon: "📅", label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${venitRange.length} confirmate`, color: "#FF6B00", clickable: true },
+                { id: "clienti" as const, icon: "👥", label: `Clienți ${perLabel.toLowerCase()}`, valoare: `${clientiPer}`, sub: `${incasariPer} RON încasați`, color: "#8B5CF6", clickable: true },
+                { id: null, icon: "⭐", label: "Rating mediu (total)", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B", clickable: false },
+              ];
               return (
               <div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 28 }}>
-                  {[
-                    { icon: "💰", label: "Incasari azi", valoare: `${incasariAzi} RON`, sub: `${aziConfirmate.length} programări confirmate azi`, color: "#10B981" },
-                    { icon: "📅", label: "Programari azi", valoare: `${azi.length}`, sub: `${azi.filter(p => p.status === "în așteptare").length} noi · ${aziConfirmate.length} confirmate`, color: "#FF6B00" },
-                    { icon: "👥", label: "Clienti luna asta", valoare: `${clientiLuna}`, sub: `${incasariLuna} RON încasați`, color: "#8B5CF6" },
-                    { icon: "⭐", label: "Rating mediu", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B" },
-                  ].map(card => (
-                    <div key={card.label} style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
+                {/* Selector perioadă + raport */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {PERIOADE.map(p => (
+                      <button key={p.val} onClick={() => { setPerioadaStat(p.val); setStatExtins(null); }}
+                        style={{ padding: "8px 16px", borderRadius: 50, border: perioadaStat === p.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: perioadaStat === p.val ? "#FF6B00" : c.surface, color: perioadaStat === p.val ? "#fff" : c.text, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => setRaportDeschis(v => !v)}
+                    style={{ ...btnPrimary, padding: "10px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+                    📥 Generează raport Excel
+                  </button>
+                </div>
+
+                {perioadaStat === "custom" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: c.muted }}>De la</span>
+                    <input type="date" value={customStart} max={customEnd} onChange={e => setCustomStart(e.target.value)} style={inp} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: c.muted }}>până la</span>
+                    <input type="date" value={customEnd} min={customStart} max={isoData(new Date())} onChange={e => setCustomEnd(e.target.value)} style={inp} />
+                  </div>
+                )}
+
+                {raportDeschis && (
+                  <div style={{ background: c.surface, borderRadius: 18, border: "2px solid #FF6B00", padding: "20px 22px", marginBottom: 24 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 4 }}>Raport Excel — {perLabel}</div>
+                    <div style={{ fontSize: 12.5, color: c.muted, marginBottom: 16 }}>Bifează ce vrei să incluzi în fișier. Se descarcă un .xlsx cu câte o foaie per secțiune.</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
+                      {SECTIUNI.map(s => {
+                        const activ = raportSel[s.key];
+                        return (
+                          <button key={s.key} onClick={() => setRaportSel(r => ({ ...r, [s.key]: !r[s.key] }))}
+                            style={{ padding: "8px 14px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? "#FFF3EA" : c.surface, color: activ ? "#FF6B00" : c.muted, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                            <span>{activ ? "✓" : "+"}</span> {s.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                      <button onClick={genereazaRaportExcel} disabled={exportLoading || !Object.values(raportSel).some(Boolean)}
+                        style={{ ...btnPrimary, padding: "12px 22px", opacity: (exportLoading || !Object.values(raportSel).some(Boolean)) ? 0.6 : 1, cursor: (exportLoading || !Object.values(raportSel).some(Boolean)) ? "not-allowed" : "pointer" }}>
+                        {exportLoading ? "Se generează…" : "⬇️ Descarcă .xlsx"}
+                      </button>
+                      <span style={{ fontSize: 12.5, color: c.muted }}>{progRange.length} programări în perioadă</span>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: statExtins ? 16 : 28 }}>
+                  {cards.map(card => {
+                    const deschis = card.clickable && statExtins === card.id;
+                    return (
+                    <div key={card.label} onClick={card.clickable ? () => setStatExtins(prev => prev === card.id ? null : card.id) : undefined}
+                      style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: deschis ? "2px solid #10B981" : "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)", cursor: card.clickable ? "pointer" : "default", position: "relative" }}>
                       <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{card.label}</div>
                       <div style={{ fontSize: 26, fontWeight: 900, color: c.text, lineHeight: 1 }}>{card.valoare}</div>
                       <div style={{ fontSize: 12, color: card.color, fontWeight: 700, marginTop: 6 }}>{card.sub}</div>
+                      {card.clickable && <div style={{ position: "absolute", top: 16, right: 16, fontSize: 12, color: c.muted, fontWeight: 800 }}>{deschis ? "▲" : "▼"}</div>}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
-                <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 20 }}>Statistici lunare</h2>
+
+                {statExtins && (
+                  <div style={{ background: c.surface, borderRadius: 18, border: "2px solid #10B981", padding: "20px 22px", marginBottom: 28 }}>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: c.text, marginBottom: 14 }}>
+                      {statExtins === "venituri" ? "💰 Încasări pe zile" : statExtins === "programari" ? "📅 Programări pe zile" : "👥 Clienți pe zile"} — {perLabel}
+                    </div>
+                    {zileBreakdown.length === 0 ? (
+                      <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare în această perioadă.</div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {zileBreakdown.map(z => {
+                          const et = etichetaZi(z.data);
+                          const val = statExtins === "venituri" ? `${z.venit} RON` : statExtins === "programari" ? `${z.nr}` : `${z.clienti}`;
+                          return (
+                            <div key={z.data} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderRadius: 12, background: c.surface2, border: `1px solid ${c.border}` }}>
+                              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                                {et.prefix && <span style={{ fontSize: 13, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
+                                <span style={{ fontSize: 13, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
+                              </div>
+                              <span style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{val}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 20 }}>Statistici detaliate</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
                   <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Incasari ultimele 6 luni (RON)</div>
@@ -965,7 +1179,7 @@ export default function DashboardSalon() {
                     ))}
                   </div>
                   <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Servicii populare</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Servicii populare — {perLabel.toLowerCase()}</div>
                     {serviciiPop.length === 0 ? (
                       <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Niciun serviciu efectuat încă.</div>
                     ) : serviciiPop.map(s => (
@@ -976,7 +1190,7 @@ export default function DashboardSalon() {
                     ))}
                   </div>
                   <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Distribuție pe talie</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Distribuție pe talie — {perLabel.toLowerCase()}</div>
                     {totalTalie === 0 ? (
                       <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare efectuată încă.</div>
                     ) : (
