@@ -227,19 +227,9 @@ export default function DashboardClient() {
     setEsteMobil(mobil);
   }, []);
 
-  async function detecteazaLocatia() {
+  function detecteazaLocatia() {
     setGeoError("");
     if (!("geolocation" in navigator)) { setGeoError("Geolocația nu e suportată de browser"); return; }
-    // Verifică starea permisiunii înainte de a întreba
-    try {
-      if (navigator.permissions) {
-        const status = await navigator.permissions.query({ name: "geolocation" as PermissionName });
-        if (status.state === "denied") {
-          setGeoError("Locația e blocată. Apasă pe 🔒 din bara de adrese → Locație → Permite");
-          return;
-        }
-      }
-    } catch {}
     setGeoLoading(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -262,7 +252,7 @@ export default function DashboardClient() {
       },
       (err) => {
         setGeoLoading(false);
-        if (err.code === 1) setGeoError("Permite accesul la locație din setările telefonului");
+        if (err.code === 1) setGeoError("Activează Serviciile de localizare pentru Safari (Setări → Confidențialitate → Servicii localizare → Safari)");
         else if (err.code === 3) setGeoError("Locația durează prea mult, încearcă din nou");
         else setGeoError("Nu am putut accesa locația");
       },
