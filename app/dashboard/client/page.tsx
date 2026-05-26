@@ -334,6 +334,9 @@ export default function DashboardClient() {
       if (animaleData && animaleData.length > 0) {
         setAnimale(animaleData);
         setSelectedAnimalId(animaleData[0].id);
+      } else if (profile?.tip === "client") {
+        router.push("/register/configurare-animal");
+        return;
       }
 
       const { data: dbSaloane } = await supabase
@@ -1317,7 +1320,7 @@ export default function DashboardClient() {
 
           {/* Bun venit */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10 }}>Bună, {prenume}! {specieInfo(animal?.specie).icon}</h1>
+            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10 }}>Bună, {prenume}! {animal ? specieInfo(animal.specie).icon : <span style={{ filter: theme === "dark" ? "brightness(0) invert(1)" : "brightness(0)", display: "inline-block" }}>🐾</span>}</h1>
             {animal && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13, flexWrap: "wrap" }}>
                 {animal.poza_url
