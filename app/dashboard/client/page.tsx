@@ -20,7 +20,7 @@ const SALOANE = [
   { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }> }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -104,6 +104,7 @@ const PROGRAM_DEFAULT_C: ProgramSaptC = {
   "0": { activ: false, start: "10:00", end: "14:00" },
 };
 const ZILE_SCURT = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
+const ZILE_ORDINE_C = ["1", "2", "3", "4", "5", "6", "0"];
 const LUNA_SCURT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ZILE_FULL_C = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă"];
 const LUNA_FULL_C = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
@@ -236,11 +237,12 @@ export default function DashboardClient() {
   const [anulareLoading, setAnulareLoading] = useState(false);
   const [anulareError, setAnulareError] = useState("");
   const [programSalon, setProgramSalon] = useState<ProgramSaptC | null>(null);
-  const [ocupariSalon, setOcupariSalon] = useState<{ ora: string; durata: number | null; data: string }[]>([]);
+  const [ocupariSalon, setOcupariSalon] = useState<{ ora: string; durata: number | null; data: string; groomer?: string | null }[]>([]);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [profilSalonTab, setProfilSalonTab] = useState<"servicii" | "specialisti" | "recenzii" | "contact">("servicii");
   const [groomerSelectat, setGroomerSelectat] = useState<string | null>(null);
   const [rezervareActiva, setRezervareActiva] = useState(false);
+  const [etapaBooking, setEtapaBooking] = useState<"specialist" | "calendar">("calendar");
   const [cautare, setCautare] = useState("");
   const [filtruOras, setFiltruOras] = useState("");
   const [orasDropdown, setOrasDropdown] = useState(false);
@@ -478,7 +480,7 @@ export default function DashboardClient() {
       const peste14 = new Date(azi); peste14.setDate(azi.getDate() + 15);
       const { data: rows } = await supabase
         .from("programari")
-        .select("ora, durata, data")
+        .select("ora, durata, data, groomer")
         .eq("salon_id", salonSelectat)
         .gte("data", isoDataC(azi))
         .lt("data", isoDataC(peste14))
@@ -702,8 +704,8 @@ export default function DashboardClient() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setProfilSalonTab("servicii"); setTab("programari"); }} style={btnSecondary}>Vezi programările mele</button>
-                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setProfilSalonTab("servicii"); }} style={btnPrimary}>← Înapoi la saloane</button>
+                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setEtapaBooking("calendar"); setProfilSalonTab("servicii"); setTab("programari"); }} style={btnSecondary}>Vezi programările mele</button>
+                <button onClick={() => { setConfirmat(false); setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setEtapaBooking("calendar"); setProfilSalonTab("servicii"); }} style={btnPrimary}>← Înapoi la saloane</button>
               </div>
             </div>
           </div>
@@ -758,7 +760,11 @@ export default function DashboardClient() {
       const serviciuObj = salon.serviciiComplete.find(s => s.nume === serviciu);
       const { durata: durataResolved } = getPretDurata(serviciuObj, animal?.talie);
       const durataSv = Number(durataResolved) || 60;
-      const progEf = programSalon || PROGRAM_DEFAULT_C;
+      const groomerObj = groomerSelectat ? salon.echipa?.find((m: any) => m.nume === groomerSelectat) : null;
+      const progEf = (groomerObj?.orar && Object.keys(groomerObj.orar).length > 0 ? groomerObj.orar : null) || programSalon || PROGRAM_DEFAULT_C;
+      const ocupariEf = groomerSelectat
+        ? ocupariSalon.filter(o => !o.groomer || o.groomer === groomerSelectat)
+        : ocupariSalon;
       const aziDate = new Date(); aziDate.setHours(0, 0, 0, 0);
       const aziIso = isoDataC(aziDate);
       const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
@@ -776,7 +782,7 @@ export default function DashboardClient() {
             const start = timeToMinC(s);
             const end = start + durataSv;
             if (iso === aziIso && start <= nowMin) continue;
-            const ocupat = ocupariSalon.some(o => o.data === iso && suprapunereC(start, end, o.ora, o.durata));
+            const ocupat = ocupariEf.some(o => o.data === iso && suprapunereC(start, end, o.ora, o.durata));
             if (!ocupat) libere++;
           }
         }
@@ -792,7 +798,7 @@ export default function DashboardClient() {
           const start = timeToMinC(s);
           const end = start + durataSv;
           const trecut = dataSelectata === aziIso && start <= nowMin;
-          const ocupat = ocupariSalon.some(o => o.data === dataSelectata && suprapunereC(start, end, o.ora, o.durata));
+          const ocupat = ocupariEf.some(o => o.data === dataSelectata && suprapunereC(start, end, o.ora, o.durata));
           sloturiZiSel.push({ ora: s, ocupat, trecut });
         }
       }
@@ -859,11 +865,70 @@ export default function DashboardClient() {
 
     /* ── Booking view (when rezervareActiva) ── */
     if (rezervareActiva) {
+      /* ── Ecran selecție specialist ── */
+      if (etapaBooking === "specialist") {
+        return (
+          <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
+            <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+              <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
+                <button onClick={() => { setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); }} style={btnBack}>← Înapoi la profil</button>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
+                  {salon.poza_url
+                    ? <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                    : <span style={{ fontSize: 28, flexShrink: 0 }}>✂️</span>}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{salon.nume}</div>
+                    <div style={{ fontSize: 12, color: c.muted }}>✂️ {rezervare?.serviciu}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 900, color: c.text, marginBottom: 4 }}>Alege specialistul</div>
+                <div style={{ fontSize: 12, color: c.muted, marginBottom: 18 }}>Vei vedea programul lui și poți rezerva un slot disponibil.</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {(salon.echipa || []).map((m: any, idx: number) => {
+                    const orarG = m.orar && Object.keys(m.orar).length > 0 ? m.orar : programSalon || PROGRAM_DEFAULT_C;
+                    const zileActive = ZILE_ORDINE_C.filter(k => orarG[k]?.activ);
+                    const ZILE_SCURT_LOC: Record<string, string> = { "1": "Lun", "2": "Mar", "3": "Mie", "4": "Joi", "5": "Vin", "6": "Sâm", "0": "Dum" };
+                    return (
+                      <div key={idx} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
+                          {m.poza
+                            ? <div style={{ width: 52, height: 52, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><img src={m.poza} alt={m.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+                            : <div style={{ width: 52, height: 52, borderRadius: 12, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>✂️</div>}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{m.nume}</div>
+                            {m.specialitate && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.specialitate}</div>}
+                            {m.descriere && <div style={{ fontSize: 12, color: c.muted, marginTop: 4, lineHeight: 1.5 }}>{m.descriere}</div>}
+                          </div>
+                        </div>
+                        {zileActive.length > 0 && (
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+                            {zileActive.map(k => (
+                              <span key={k} style={{ fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, borderRadius: 6, padding: "3px 8px" }}>
+                                {ZILE_SCURT_LOC[k]} {orarG[k].start}–{orarG[k].end}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); }}
+                          style={{ ...btnPrimary, background: salon.culoare, boxShadow: "none", padding: "10px 22px", fontSize: 13, width: "100%" }}>
+                          Alege pe {m.nume} →
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {Lightbox}
+            </Shell>
+          </ThemeCtx.Provider>
+        );
+      }
+
       return (
         <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
           <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
             <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
-              <button onClick={() => { setRezervareActiva(false); setRezervare(null); }} style={btnBack}>← Înapoi la profil</button>
+              <button onClick={() => { setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); setEtapaBooking("calendar"); }} style={btnBack}>← Înapoi la profil</button>
 
               {/* Salon mini-header */}
               <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
@@ -972,7 +1037,7 @@ export default function DashboardClient() {
                 ? <img src={salon.poza_url} alt={salon.nume} onClick={() => setLightboxIdx(0)} style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "zoom-in" }} />
                 : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64 }}>✂️</div>}
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.7) 100%)", pointerEvents: "none" }} />
-              <button onClick={() => { setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setProfilSalonTab("servicii"); }}
+              <button onClick={() => { setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setEtapaBooking("calendar"); setProfilSalonTab("servicii"); }}
                 style={{ position: "absolute", top: 14, left: 14, background: "rgba(0,0,0,.45)", border: "none", borderRadius: 50, padding: "6px 14px", fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", backdropFilter: "blur(4px)" }}>
                 ← Înapoi
               </button>
@@ -1056,6 +1121,8 @@ export default function DashboardClient() {
                                 {pret && <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare }}>{pret} RON</div>}
                                 <button onClick={() => {
                                   setRezervare({ salonId: salon.id, serviciu: s.nume, ora: "" });
+                                  setGroomerSelectat(null);
+                                  setEtapaBooking(salon.echipa && salon.echipa.length > 0 ? "specialist" : "calendar");
                                   setRezervareActiva(true);
                                 }}
                                   style={{ background: salon.culoare, color: "#fff", border: "none", borderRadius: 50, padding: "8px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap" }}>
@@ -1090,7 +1157,7 @@ export default function DashboardClient() {
                             {m.rol && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.rol}</div>}
                             {m.descriere && <div style={{ fontSize: 12, color: c.muted, marginTop: 4, lineHeight: 1.5 }}>{m.descriere}</div>}
                           </div>
-                          <button onClick={() => { setGroomerSelectat(m.nume); setRezervareActiva(true); }}
+                          <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); setRezervareActiva(true); }}
                             style={{ background: salon.culoare, color: "#fff", border: "none", borderRadius: 50, padding: "8px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                             Alege
                           </button>
@@ -1110,7 +1177,7 @@ export default function DashboardClient() {
                             {m.rol && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.rol}</div>}
                             {m.descriere && <div style={{ fontSize: 12, color: c.muted, marginTop: 4, lineHeight: 1.5 }}>{m.descriere}</div>}
                           </div>
-                          <button onClick={() => { setGroomerSelectat(m.nume); setRezervareActiva(true); }}
+                          <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); setRezervareActiva(true); }}
                             style={{ background: salon.culoare, color: "#fff", border: "none", borderRadius: 50, padding: "8px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                             Alege
                           </button>

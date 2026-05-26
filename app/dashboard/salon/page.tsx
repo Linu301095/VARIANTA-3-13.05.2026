@@ -17,6 +17,7 @@ type ProgramareSalon = {
   ora: string;
   data: string;
   pret: number;
+  groomer?: string | null;
   status: StatusProg;
   esteApp: boolean;
   motivAnulare?: string | null;
@@ -35,7 +36,7 @@ type AnimalIstoric = {
 type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type Groomer = { id: number; nume: string; specialitate: string };
+type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal };
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
 type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null };
@@ -191,6 +192,7 @@ export default function DashboardSalon() {
   const [animalDeschis, setAnimalDeschis] = useState<string | null>(null);
   const [clientiBlocati, setClientiBlocati] = useState<string[]>([]);
   const [abateriMap, setAbateriMap] = useState<Record<string, number>>({});
+  const [groomerOrarDeschis, setGroomerOrarDeschis] = useState<Record<number, boolean>>({});
   const [sloturiZi, setSloturiZi] = useState<SlotProgramare[]>([]);
   const [modalBlocare, setModalBlocare] = useState<{ slot: string; durata: number } | null>(null);
   const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
@@ -371,7 +373,7 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data: dataRaw } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, groomer")
         .eq("salon_id", salonId)
         .order("data", { ascending: true })
         .order("ora", { ascending: true });
@@ -418,6 +420,7 @@ export default function DashboardSalon() {
           status: p.status as StatusProg,
           esteApp,
           motivAnulare: p.motiv_anulare || null,
+          groomer: p.groomer || null,
         };
       }));
     }
@@ -1680,27 +1683,66 @@ export default function DashboardSalon() {
             {/* ECHIPA */}
             {tab === "echipa" && (
               <div style={{ maxWidth: 560 }}>
-                <PageHeader icon="👥" title="Echipa mea" sub="Gestioneaza groomerii din salon" />
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-                  {echipa.map(g => (
-                    <div key={g.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                      <div style={{ width: 44, height: 44, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>👤</div>
-                      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, minWidth: 0 }}>
-                        <input value={g.nume} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, nume: e.target.value } : x))} placeholder="Nume groomer" style={inp} />
-                        <input value={g.specialitate} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, specialitate: e.target.value } : x))} placeholder="Specialitate" style={inp} />
+                <PageHeader icon="👥" title="Echipa mea" sub="Gestionează groomerii și orarul fiecăruia" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 16 }}>
+                  {echipa.map(g => {
+                    const orarDeschis = !!groomerOrarDeschis[g.id];
+                    const orarG: ProgramSaptamanal = g.orar || PROGRAM_DEFAULT;
+                    return (
+                      <div key={g.id} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
+                        <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                          <div style={{ width: 44, height: 44, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>👤</div>
+                          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, minWidth: 0 }}>
+                            <input value={g.nume} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, nume: e.target.value } : x))} placeholder="Nume specialist" style={inp} />
+                            <input value={g.specialitate} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, specialitate: e.target.value } : x))} placeholder="Specialitate / rol" style={inp} />
+                          </div>
+                          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                            <button onClick={() => setGroomerOrarDeschis(s => ({ ...s, [g.id]: !s[g.id] }))}
+                              style={{ fontSize: 12, fontWeight: 800, color: orarDeschis ? "#FF6B00" : c.muted, background: orarDeschis ? c.orangeAccent : c.surface2, border: `1.5px solid ${orarDeschis ? "#FF6B00" : c.border}`, padding: "7px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                              🗓 Orar {orarDeschis ? "▲" : "▼"}
+                            </button>
+                            <button onClick={() => setEchipa(ec => ec.filter(x => x.id !== g.id))} style={{ fontSize: 13, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "8px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
+                          </div>
+                        </div>
+                        {orarDeschis && (
+                          <div style={{ borderTop: `1.5px solid ${c.border}`, padding: "16px 20px", background: c.surface2 }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Orar săptămânal — {g.nume || "specialist"}</div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              {ZILE_ORDINE.map(k => {
+                                const zi = orarG[k] || { activ: false, start: "09:00", end: "18:00" };
+                                return (
+                                  <div key={k} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                                    <div style={{ width: 90, fontSize: 13, fontWeight: 700, color: zi.activ ? c.text : c.xmuted }}>{ZILE_LABEL[k]}</div>
+                                    <button onClick={() => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), activ: !zi.activ } } } : x))}
+                                      style={{ padding: "5px 14px", borderRadius: 50, border: zi.activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: zi.activ ? "#FF6B00" : c.surface, color: zi.activ ? "#fff" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                      {zi.activ ? "Activ" : "Inactiv"}
+                                    </button>
+                                    {zi.activ && (<>
+                                      <input type="time" value={zi.start} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), start: e.target.value } } } : x))}
+                                        style={{ padding: "5px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif" }} />
+                                      <span style={{ fontSize: 13, color: c.muted, fontWeight: 700 }}>—</span>
+                                      <input type="time" value={zi.end} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), end: e.target.value } } } : x))}
+                                        style={{ padding: "5px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif" }} />
+                                    </>)}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <button onClick={() => setEchipa(ec => ec.filter(x => x.id !== g.id))} style={{ fontSize: 13, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "8px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>✕</button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-                <button onClick={() => setEchipa(ec => [...ec, { id: Date.now(), nume: "", specialitate: "" }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga groomer</button>
+                <button onClick={() => setEchipa(ec => [...ec, { id: Date.now(), nume: "", specialitate: "", orar: { ...PROGRAM_DEFAULT } }])}
+                  style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>
+                  + Adaugă specialist
+                </button>
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
-                  if (authUser) {
-                    await supabase.from("saloane").update({ echipa }).eq("user_id", authUser.id);
-                  }
-                  salveaza("Echipa actualizata!");
-                }} style={btnPrimary}>Salveaza echipa</button>
+                  if (authUser) await supabase.from("saloane").update({ echipa }).eq("user_id", authUser.id);
+                  salveaza("Echipa salvată!");
+                }} style={btnPrimary}>Salvează echipa</button>
               </div>
             )}
 
