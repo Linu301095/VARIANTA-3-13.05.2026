@@ -138,6 +138,7 @@ export default function DashboardSalon() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [salonData, setSalonData] = useState<any>(null);
   const [ratingSalon, setRatingSalon] = useState<{ medie: number; nr: number }>({ medie: 0, nr: 0 });
+  const [recenziiSalon, setRecenziiSalon] = useState<{ id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null }[]>([]);
   const [abonament, setAbonament] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("statistici");
@@ -525,10 +526,22 @@ export default function DashboardSalon() {
   useEffect(() => {
     if (!salonData?.id) return;
     (async () => {
-      const { data } = await supabase.from("recenzii").select("rating").eq("salon_id", salonData.id);
-      if (!data || data.length === 0) { setRatingSalon({ medie: 0, nr: 0 }); return; }
+      const { data } = await supabase
+        .from("recenzii")
+        .select("id, user_id, rating, text, created_at")
+        .eq("salon_id", salonData.id)
+        .order("created_at", { ascending: false });
+      if (!data || data.length === 0) { setRatingSalon({ medie: 0, nr: 0 }); setRecenziiSalon([]); return; }
       const suma = (data as any[]).reduce((s, r) => s + r.rating, 0);
       setRatingSalon({ medie: suma / data.length, nr: data.length });
+      const userIds = Array.from(new Set((data as any[]).map(r => r.user_id)));
+      const { data: profile } = await supabase.from("profiluri").select("id, nume, avatar_url").in("id", userIds);
+      const pmap = new Map((profile || []).map((p: any) => [p.id, p]));
+      setRecenziiSalon((data as any[]).map(r => ({
+        id: r.id, rating: r.rating, text: r.text, created_at: r.created_at,
+        nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
+        avatar_url: pmap.get(r.user_id)?.avatar_url || null,
+      })));
     })();
   }, [salonData?.id]);
 
@@ -988,6 +1001,39 @@ export default function DashboardSalon() {
                     )}
                   </div>
                 </div>
+
+                {/* RECENZII CLIENȚI */}
+                <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, margin: "32px 0 20px" }}>
+                  ⭐ Recenzii de la clienți{ratingSalon.nr > 0 ? ` (${ratingSalon.nr})` : ""}
+                </h2>
+                {recenziiSalon.length === 0 ? (
+                  <div style={{ background: c.surface, borderRadius: 18, padding: "32px 24px", border: "2px solid #FF6B00", textAlign: "center" }}>
+                    <div style={{ fontSize: 36, marginBottom: 10 }}>💬</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 4 }}>Încă nu ai recenzii</div>
+                    <div style={{ fontSize: 13, color: c.muted }}>Clienții pot lăsa o recenzie după o programare finalizată.</div>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
+                    {recenziiSalon.map(r => (
+                      <div key={r.id} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            {r.avatar_url
+                              ? <img src={r.avatar_url} alt={r.nume} style={{ width: 38, height: 38, borderRadius: 50, objectFit: "cover", flexShrink: 0 }} />
+                              : <div style={{ width: 38, height: 38, borderRadius: 50, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#FF6B00", flexShrink: 0 }}>{r.nume.charAt(0)}</div>
+                            }
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{r.nume}</div>
+                              <div style={{ fontSize: 11, color: c.muted }}>{new Date(r.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 14 }}>{"⭐".repeat(r.rating)}</div>
+                        </div>
+                        <p style={{ fontSize: 13, color: c.text2, lineHeight: 1.65, margin: 0 }}>{r.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               );
             })()}
