@@ -219,7 +219,13 @@ export default function DashboardClient() {
   const [orasInput, setOrasInput] = useState("");
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState("");
+  const [esteMobil, setEsteMobil] = useState(false);
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
+
+  useEffect(() => {
+    const mobil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches);
+    setEsteMobil(mobil);
+  }, []);
 
   function detecteazaLocatia() {
     setGeoError("");
@@ -244,7 +250,12 @@ export default function DashboardClient() {
           setGeoLoading(false);
         }
       },
-      () => { setGeoLoading(false); setGeoError("Acces la locație refuzat"); },
+      (err) => {
+        setGeoLoading(false);
+        if (err.code === 1) setGeoError("Permite accesul la locație din setările telefonului");
+        else if (err.code === 3) setGeoError("Locația durează prea mult, încearcă din nou");
+        else setGeoError("Nu am putut accesa locația");
+      },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
@@ -1209,12 +1220,17 @@ export default function DashboardClient() {
                         style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none" }}
                       />
                     </div>
-                    {/* Locația ta — GPS live */}
-                    <button onClick={detecteazaLocatia} disabled={geoLoading} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: geoLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 15 }}>{geoLoading ? "⏳" : "🧭"}</span>
-                      {geoLoading ? "Se detectează..." : "Locația ta"}
-                    </button>
-                    {geoError && (
+                    {/* Locația ta — GPS live (doar pe telefon) */}
+                    {esteMobil && (
+                      <button onClick={detecteazaLocatia} disabled={geoLoading} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: geoLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                        {geoLoading
+                          ? <span style={{ fontSize: 15 }}>⏳</span>
+                          : <svg width="17" height="17" viewBox="0 0 24 24" fill="#FF6B00" style={{ flexShrink: 0 }}><path d="M21.43 2.57a1 1 0 0 0-1.05-.23L3.4 8.78c-.9.34-.86 1.63.06 1.91l7.11 2.18 2.18 7.11c.28.92 1.57.96 1.91.06l6.44-16.98a1 1 0 0 0-.23-1.05z"/></svg>
+                        }
+                        {geoLoading ? "Se detectează..." : "Locația ta"}
+                      </button>
+                    )}
+                    {esteMobil && geoError && (
                       <div style={{ padding: "8px 18px", fontSize: 11, fontWeight: 600, color: "#EF4444", background: theme === "dark" ? "rgba(239,68,68,.1)" : "#FEF2F2", borderBottom: `1px solid ${c.border2}` }}>{geoError}</div>
                     )}
                     {filtruOras && (
