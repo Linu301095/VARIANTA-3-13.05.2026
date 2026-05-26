@@ -1121,7 +1121,10 @@ export default function DashboardClient() {
             <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10 }}>Bună, {prenume}! 🐾</h1>
             {animal && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 18 }}>{specieInfo(animal.specie).icon}</span>
+                {animal.poza_url
+                  ? <img src={animal.poza_url} alt={animal.nume} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                  : <span style={{ fontSize: 18 }}>{specieInfo(animal.specie).icon}</span>
+                }
                 <span style={{ fontWeight: 800, color: c.text }}>{animal.nume}</span>
                 <span style={{ color: c.border }}>|</span>
                 <span style={{ color: c.muted, fontWeight: 600 }}>{animal.rasa}, {animal.greutate} kg</span>
