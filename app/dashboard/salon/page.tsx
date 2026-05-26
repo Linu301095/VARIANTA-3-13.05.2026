@@ -155,7 +155,7 @@ export default function DashboardSalon() {
   const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("luna");
   const [customStart, setCustomStart] = useState<string>(isoData(new Date()));
   const [customEnd, setCustomEnd] = useState<string>(isoData(new Date()));
-  const [statExtins, setStatExtins] = useState<"venituri" | "programari" | "clienti" | null>(null);
+  const [statExtins, setStatExtins] = useState<"venituri" | "programari" | "clienti" | "rating" | null>(null);
   const [raportDeschis, setRaportDeschis] = useState(false);
   const [raportSel, setRaportSel] = useState({ venituri: true, programari: true, clienti: true, servicii: true, talie: true });
   const [exportLoading, setExportLoading] = useState(false);
@@ -1070,7 +1070,7 @@ export default function DashboardSalon() {
                 { id: "venituri" as const, icon: "💰", label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`, sub: `${venitRange.length} programări`, color: "#10B981", clickable: true },
                 { id: "programari" as const, icon: "📅", label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${venitRange.length} confirmate`, color: "#FF6B00", clickable: true },
                 { id: "clienti" as const, icon: "👥", label: `Clienți ${perLabel.toLowerCase()}`, valoare: `${clientiPer}`, sub: `${incasariPer} RON încasați`, color: "#8B5CF6", clickable: true },
-                { id: null, icon: "⭐", label: "Rating mediu (total)", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B", clickable: false },
+                { id: "rating" as const, icon: "⭐", label: "Rating mediu (total)", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B", clickable: true },
               ];
               return (
               <div>
@@ -1135,7 +1135,7 @@ export default function DashboardSalon() {
                       <div style={{ fontSize: 26, fontWeight: 900, color: c.text, lineHeight: 1 }}>{card.valoare}</div>
                       <div style={{ fontSize: 12, color: card.color, fontWeight: 700, marginTop: 6 }}>{card.sub}</div>
                       {card.clickable && <div style={{ position: "absolute", top: 16, right: 16, fontSize: 12, color: c.muted, fontWeight: 800 }}>{deschis ? "▲" : "▼"}</div>}
-                      {deschis && (
+                      {deschis && card.id !== "rating" && (
                         <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
                           {zileBreakdown.length === 0 ? (
                             <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare în această perioadă.</div>
@@ -1158,6 +1158,71 @@ export default function DashboardSalon() {
                           )}
                         </div>
                       )}
+                      {deschis && card.id === "rating" && (() => {
+                        const aziIso = isoData(new Date());
+                        const ieriD = new Date(); ieriD.setDate(ieriD.getDate() - 1);
+                        const ieriIso = isoData(ieriD);
+                        const numara = (f: typeof filtruRecenzii) => recenziiSalon.filter(r => {
+                          const d = isoData(new Date(r.created_at));
+                          if (f === "azi") return d === aziIso;
+                          if (f === "ieri") return d === ieriIso;
+                          if (f === "trecut") return d < ieriIso;
+                          return true;
+                        }).length;
+                        const recenziiFiltrate = recenziiSalon.filter(r => {
+                          const d = isoData(new Date(r.created_at));
+                          if (filtruRecenzii === "azi") return d === aziIso;
+                          if (filtruRecenzii === "ieri") return d === ieriIso;
+                          if (filtruRecenzii === "trecut") return d < ieriIso;
+                          return true;
+                        });
+                        const optiuni: { val: typeof filtruRecenzii; label: string }[] = [
+                          { val: "toate", label: "Toate" }, { val: "azi", label: "Azi" },
+                          { val: "ieri", label: "Ieri" }, { val: "trecut", label: "Mai vechi" },
+                        ];
+                        return (
+                          <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
+                            {recenziiSalon.length > 0 && (
+                              <div style={{ marginBottom: 14 }}>
+                                <select value={filtruRecenzii} onChange={e => setFiltruRecenzii(e.target.value as typeof filtruRecenzii)}
+                                  style={{ padding: "6px 12px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.surface2, color: c.text, fontSize: 12, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer", outline: "none" }}>
+                                  {optiuni.map(o => <option key={o.val} value={o.val}>{o.label} ({numara(o.val)})</option>)}
+                                </select>
+                              </div>
+                            )}
+                            {recenziiSalon.length === 0 ? (
+                              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                                <div style={{ fontSize: 28, marginBottom: 6 }}>💬</div>
+                                <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 2 }}>Încă nu ai recenzii</div>
+                                <div style={{ fontSize: 12, color: c.muted }}>Clienții pot lăsa o recenzie după o programare finalizată.</div>
+                              </div>
+                            ) : recenziiFiltrate.length === 0 ? (
+                              <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio recenzie în această perioadă.</div>
+                            ) : (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                {recenziiFiltrate.map(r => (
+                                  <div key={r.id} style={{ background: c.surface2, borderRadius: 12, padding: "12px 14px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        {r.avatar_url
+                                          ? <img src={r.avatar_url} alt={r.nume} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                                          : <div style={{ width: 32, height: 32, borderRadius: "50%", background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: "#FF6B00", flexShrink: 0 }}>{r.nume.charAt(0)}</div>
+                                        }
+                                        <div>
+                                          <div style={{ fontSize: 13, fontWeight: 800, color: c.text }}>{r.nume}</div>
+                                          <div style={{ fontSize: 11, color: c.muted }}>{new Date(r.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</div>
+                                        </div>
+                                      </div>
+                                      <div style={{ fontSize: 12 }}>{"⭐".repeat(r.rating)}</div>
+                                    </div>
+                                    <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.text}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                     );
                   })}
@@ -1214,77 +1279,6 @@ export default function DashboardSalon() {
                   </div>
                 </div>
 
-                {/* RECENZII CLIENȚI */}
-                {(() => {
-                  const aziIso = isoData(new Date());
-                  const ieriD = new Date(); ieriD.setDate(ieriD.getDate() - 1);
-                  const ieriIso = isoData(ieriD);
-                  const numara = (f: typeof filtruRecenzii) => recenziiSalon.filter(r => {
-                    const d = isoData(new Date(r.created_at));
-                    if (f === "azi") return d === aziIso;
-                    if (f === "ieri") return d === ieriIso;
-                    if (f === "trecut") return d < ieriIso;
-                    return true;
-                  }).length;
-                  const recenziiFiltrate = recenziiSalon.filter(r => {
-                    const d = isoData(new Date(r.created_at));
-                    if (filtruRecenzii === "azi") return d === aziIso;
-                    if (filtruRecenzii === "ieri") return d === ieriIso;
-                    if (filtruRecenzii === "trecut") return d < ieriIso;
-                    return true;
-                  });
-                  const optiuni: { val: typeof filtruRecenzii; label: string }[] = [
-                    { val: "toate", label: "Toate" },
-                    { val: "azi", label: "Azi" },
-                    { val: "ieri", label: "Ieri" },
-                    { val: "trecut", label: "Mai vechi" },
-                  ];
-                  return (<>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "32px 0 20px", flexWrap: "wrap" }}>
-                      <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, margin: 0 }}>
-                        ⭐ Recenzii de la clienți{ratingSalon.nr > 0 ? ` (${ratingSalon.nr})` : ""}
-                      </h2>
-                      {recenziiSalon.length > 0 && (
-                        <select value={filtruRecenzii} onChange={e => setFiltruRecenzii(e.target.value as typeof filtruRecenzii)}
-                          style={{ padding: "8px 14px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.surface, color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer", outline: "none" }}>
-                          {optiuni.map(o => <option key={o.val} value={o.val}>{o.label} ({numara(o.val)})</option>)}
-                        </select>
-                      )}
-                    </div>
-                    {recenziiSalon.length === 0 ? (
-                      <div style={{ background: c.surface, borderRadius: 18, padding: "32px 24px", border: "2px solid #FF6B00", textAlign: "center" }}>
-                        <div style={{ fontSize: 36, marginBottom: 10 }}>💬</div>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 4 }}>Încă nu ai recenzii</div>
-                        <div style={{ fontSize: 13, color: c.muted }}>Clienții pot lăsa o recenzie după o programare finalizată.</div>
-                      </div>
-                    ) : recenziiFiltrate.length === 0 ? (
-                      <div style={{ background: c.surface, borderRadius: 18, padding: "28px 24px", border: `1.5px dashed ${c.border}`, textAlign: "center", color: c.muted, fontSize: 14 }}>
-                        Nicio recenzie în această perioadă.
-                      </div>
-                    ) : (
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
-                        {recenziiFiltrate.map(r => (
-                          <div key={r.id} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                {r.avatar_url
-                                  ? <img src={r.avatar_url} alt={r.nume} style={{ width: 38, height: 38, borderRadius: 50, objectFit: "cover", flexShrink: 0 }} />
-                                  : <div style={{ width: 38, height: 38, borderRadius: 50, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#FF6B00", flexShrink: 0 }}>{r.nume.charAt(0)}</div>
-                                }
-                                <div>
-                                  <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{r.nume}</div>
-                                  <div style={{ fontSize: 11, color: c.muted }}>{new Date(r.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</div>
-                                </div>
-                              </div>
-                              <div style={{ fontSize: 14 }}>{"⭐".repeat(r.rating)}</div>
-                            </div>
-                            <p style={{ fontSize: 13, color: c.text2, lineHeight: 1.65, margin: 0 }}>{r.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>);
-                })()}
               </div>
               );
             })()}
