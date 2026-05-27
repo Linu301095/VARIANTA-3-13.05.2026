@@ -156,7 +156,7 @@ export default function DashboardSalon() {
   const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("luna");
   const [customStart, setCustomStart] = useState<string>(isoData(new Date()));
   const [customEnd, setCustomEnd] = useState<string>(isoData(new Date()));
-  const [statExtins, setStatExtins] = useState<"venituri" | "programari" | "clienti" | "rating" | null>(null);
+  const [statExtins, setStatExtins] = useState<"venituri" | "programari" | "clienti" | "rating" | "servicii" | "talie" | null>(null);
   const [raportDeschis, setRaportDeschis] = useState(false);
   const [raportSel, setRaportSel] = useState({ venituri: true, programari: true, clienti: true, servicii: true, talie: true });
   const [exportLoading, setExportLoading] = useState(false);
@@ -1039,6 +1039,18 @@ export default function DashboardSalon() {
                 nume, pct: totalServ > 0 ? Math.round((cnt / totalServ) * 100) : 0, cnt,
                 col: ["#FF6B00", "#8B5CF6", "#10B981", "#F59E0B", "#EF4444"][i],
               }));
+              const groomerMap: Record<string, { nr: number; venit: number }> = {};
+              venitRange.forEach(p => {
+                const g = (p.groomer && p.groomer.trim()) ? p.groomer : "Neatribuit";
+                (groomerMap[g] ||= { nr: 0, venit: 0 });
+                groomerMap[g].nr++;
+                groomerMap[g].venit += p.pret || 0;
+              });
+              const groomerProd = Object.entries(groomerMap).sort((a, b) => b[1].nr - a[1].nr).map(([nume, v], i) => ({
+                nume, nr: v.nr, venit: v.venit,
+                pct: venitRange.length > 0 ? Math.round((v.nr / venitRange.length) * 100) : 0,
+                col: ["#FF6B00", "#8B5CF6", "#10B981", "#F59E0B", "#EF4444", "#06B6D4"][i % 6],
+              }));
               const talieCount = { mica: 0, medie: 0, mare: 0, necunoscuta: 0 };
               venitRange.forEach(p => {
                 if (p.talie === "mica") talieCount.mica++;
@@ -1047,6 +1059,17 @@ export default function DashboardSalon() {
                 else talieCount.necunoscuta++;
               });
               const totalTalie = talieCount.mica + talieCount.medie + talieCount.mare + talieCount.necunoscuta;
+              const talieDominanta = totalTalie === 0 ? "—" : ([
+                { label: "Mică", cnt: talieCount.mica }, { label: "Medie", cnt: talieCount.medie },
+                { label: "Mare", cnt: talieCount.mare }, { label: "Necunoscută", cnt: talieCount.necunoscuta },
+              ].sort((a, b) => b.cnt - a.cnt)[0].label);
+              // Delta față de perioada anterioară echivalentă (aceeași durată, imediat înainte)
+              const lenDays = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
+              const prevEndD = new Date(start); prevEndD.setDate(prevEndD.getDate() - 1);
+              const prevStartD = new Date(prevEndD); prevStartD.setDate(prevStartD.getDate() - (lenDays - 1));
+              const prevStartIso = isoData(prevStartD), prevEndIso = isoData(prevEndD);
+              const incasariPrev = programari.filter(p => isFinalizata(p) && p.data >= prevStartIso && p.data <= prevEndIso).reduce((s, p) => s + (p.pret || 0), 0);
+              const deltaPct = incasariPrev > 0 ? Math.round(((incasariPer - incasariPrev) / incasariPrev) * 100) : null;
               const lunaCurenta = now.getMonth(), anulCurent = now.getFullYear();
               const LUNI_SCURT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"];
               const ultimeleLuni: { luna: string; val: number }[] = [];
@@ -1162,6 +1185,25 @@ export default function DashboardSalon() {
                               })}
                             </div>
                           )}
+                          {card.id === "venituri" && (
+                            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1.5px dashed ${c.border}` }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Evoluție lunară (ultimele 6 luni)</span>
+                                {deltaPct !== null && (
+                                  <span style={{ fontSize: 12, fontWeight: 900, color: deltaPct >= 0 ? "#10B981" : "#EF4444", background: deltaPct >= 0 ? "rgba(16,185,129,.12)" : "rgba(239,68,68,.12)", padding: "3px 10px", borderRadius: 50 }}>
+                                    {deltaPct >= 0 ? "▲" : "▼"} {Math.abs(deltaPct)}% vs perioada anterioară
+                                  </span>
+                                )}
+                              </div>
+                              {ultimeleLuni.map(({ luna, val }) => (
+                                <div key={luna} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                                  <div style={{ width: 32, fontSize: 12, fontWeight: 700, color: c.muted, flexShrink: 0 }}>{luna}</div>
+                                  <div style={{ flex: 1, height: 8, background: c.surface3, borderRadius: 4 }}><div style={{ height: "100%", width: `${(val / maxLunar) * 100}%`, background: "#FF6B00", borderRadius: 4 }} /></div>
+                                  <div style={{ fontSize: 12.5, fontWeight: 800, color: c.text, width: 58, textAlign: "right", flexShrink: 0 }}>{val}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                       {deschis && card.id === "rating" && (() => {
@@ -1235,54 +1277,83 @@ export default function DashboardSalon() {
                 </div>
 
                 <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 20 }}>Statistici detaliate</h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-                  <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Incasari ultimele 6 luni (RON)</div>
-                    {ultimeleLuni.map(({ luna, val }) => (
-                      <div key={luna} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                        <div style={{ width: 36, fontSize: 12, fontWeight: 700, color: c.muted }}>{luna}</div>
-                        <div style={{ flex: 1, height: 8, background: c.surface3, borderRadius: 4 }}><div style={{ height: "100%", width: `${(val / maxLunar) * 100}%`, background: "#FF6B00", borderRadius: 4 }} /></div>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: c.text, width: 60, textAlign: "right" }}>{val}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Servicii populare — {perLabel.toLowerCase()}</div>
-                    {serviciiPop.length === 0 ? (
-                      <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Niciun serviciu efectuat încă.</div>
-                    ) : serviciiPop.map(s => (
-                      <div key={s.nume} style={{ marginBottom: 14 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 13, fontWeight: 700, color: c.text2 }}>{s.nume}</span><span style={{ fontSize: 13, fontWeight: 800, color: s.col }}>{s.pct}%</span></div>
-                        <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${s.pct}%`, background: s.col, borderRadius: 3 }} /></div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ background: c.surface, borderRadius: 18, padding: "22px 24px", border: "2px solid #FF6B00" }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Distribuție pe talie — {perLabel.toLowerCase()}</div>
-                    {totalTalie === 0 ? (
-                      <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare efectuată încă.</div>
-                    ) : (
-                      <>
-                        {[
-                          { key: "mica", label: "🐕‍🦺 Mică", cnt: talieCount.mica, col: "#10B981" },
-                          { key: "medie", label: "🐕 Medie", cnt: talieCount.medie, col: "#FF6B00" },
-                          { key: "mare", label: "🐺 Mare", cnt: talieCount.mare, col: "#8B5CF6" },
-                          ...(talieCount.necunoscuta > 0 ? [{ key: "necunoscuta", label: "📏 Necunoscută", cnt: talieCount.necunoscuta, col: "#9CA3AF" }] : []),
-                        ].map(t => {
-                          const pct = Math.round((t.cnt / totalTalie) * 100);
-                          return (
-                            <div key={t.key} style={{ marginBottom: 14 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                                <span style={{ fontSize: 13, fontWeight: 700, color: c.text2 }}>{t.label}</span>
-                                <span style={{ fontSize: 13, fontWeight: 800, color: t.col }}>{t.cnt} ({pct}%)</span>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
+                  {/* CARD SERVICII & GROOMERI */}
+                  {(() => {
+                    const deschis = statExtins === "servicii";
+                    return (
+                      <div onClick={() => setStatExtins(prev => prev === "servicii" ? null : "servicii")}
+                        style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: deschis ? "2px solid #10B981" : "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)", cursor: "pointer", position: "relative" }}>
+                        <div style={{ fontSize: 22, marginBottom: 8 }}>✂️</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Servicii & Groomeri — {perLabel.toLowerCase()}</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: c.text, lineHeight: 1.1 }}>{serviciiPop.length > 0 ? serviciiPop[0].nume : "—"}</div>
+                        <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 700, marginTop: 6 }}>{totalServ} {totalServ === 1 ? "serviciu efectuat" : "servicii efectuate"} · {groomerProd.length} {groomerProd.length === 1 ? "groomer" : "groomeri"}</div>
+                        <div style={{ position: "absolute", top: 16, right: 16, fontSize: 12, color: c.muted, fontWeight: 800 }}>{deschis ? "▲" : "▼"}</div>
+                        {deschis && (
+                          <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Top servicii</div>
+                            {serviciiPop.length === 0 ? (
+                              <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Niciun serviciu efectuat încă.</div>
+                            ) : serviciiPop.map(s => (
+                              <div key={s.nume} style={{ marginBottom: 14 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 13, fontWeight: 700, color: c.text2 }}>{s.nume}</span><span style={{ fontSize: 13, fontWeight: 800, color: s.col }}>{s.cnt}× ({s.pct}%)</span></div>
+                                <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${s.pct}%`, background: s.col, borderRadius: 3 }} /></div>
                               </div>
-                              <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${pct}%`, background: t.col, borderRadius: 3 }} /></div>
-                            </div>
-                          );
-                        })}
-                      </>
-                    )}
-                  </div>
+                            ))}
+                            <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 0.5, margin: "20px 0 12px" }}>Productivitate groomeri</div>
+                            {groomerProd.length === 0 ? (
+                              <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare atribuită încă.</div>
+                            ) : groomerProd.map(g => (
+                              <div key={g.nume} style={{ marginBottom: 14 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                  <span style={{ fontSize: 13, fontWeight: 700, color: g.nume === "Neatribuit" ? c.muted : c.text2 }}>{g.nume === "Neatribuit" ? "👤 Neatribuit" : `✂️ ${g.nume}`}</span>
+                                  <span style={{ fontSize: 13, fontWeight: 800, color: g.col }}>{g.nr} {g.nr === 1 ? "progr." : "progr."} · {g.venit} RON</span>
+                                </div>
+                                <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${g.pct}%`, background: g.col, borderRadius: 3 }} /></div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  {/* CARD DISTRIBUȚIE TALIE */}
+                  {(() => {
+                    const deschis = statExtins === "talie";
+                    return (
+                      <div onClick={() => setStatExtins(prev => prev === "talie" ? null : "talie")}
+                        style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: deschis ? "2px solid #10B981" : "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)", cursor: "pointer", position: "relative" }}>
+                        <div style={{ fontSize: 22, marginBottom: 8 }}>📏</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Distribuție pe talie — {perLabel.toLowerCase()}</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: c.text, lineHeight: 1.1 }}>{talieDominanta}</div>
+                        <div style={{ fontSize: 12, color: "#8B5CF6", fontWeight: 700, marginTop: 6 }}>{totalTalie} {totalTalie === 1 ? "programare" : "programări"}</div>
+                        <div style={{ position: "absolute", top: 16, right: 16, fontSize: 12, color: c.muted, fontWeight: 800 }}>{deschis ? "▲" : "▼"}</div>
+                        {deschis && (
+                          <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
+                            {totalTalie === 0 ? (
+                              <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare efectuată încă.</div>
+                            ) : [
+                              { key: "mica", label: "🐕‍🦺 Mică", cnt: talieCount.mica, col: "#10B981" },
+                              { key: "medie", label: "🐕 Medie", cnt: talieCount.medie, col: "#FF6B00" },
+                              { key: "mare", label: "🐺 Mare", cnt: talieCount.mare, col: "#8B5CF6" },
+                              ...(talieCount.necunoscuta > 0 ? [{ key: "necunoscuta", label: "📏 Necunoscută", cnt: talieCount.necunoscuta, col: "#9CA3AF" }] : []),
+                            ].map(t => {
+                              const pct = Math.round((t.cnt / totalTalie) * 100);
+                              return (
+                                <div key={t.key} style={{ marginBottom: 14 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                    <span style={{ fontSize: 13, fontWeight: 700, color: c.text2 }}>{t.label}</span>
+                                    <span style={{ fontSize: 13, fontWeight: 800, color: t.col }}>{t.cnt} ({pct}%)</span>
+                                  </div>
+                                  <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${pct}%`, background: t.col, borderRadius: 3 }} /></div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
               </div>
