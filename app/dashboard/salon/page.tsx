@@ -1986,6 +1986,9 @@ export default function DashboardSalon() {
 function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null }) {
   const [open, setOpen] = useState(false);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
+  const planNume = (() => {
+    try { const a = JSON.parse(localStorage.getItem("calyhub_abonament") || "{}"); return a.planNume || null; } catch { return null; }
+  })();
 
   const items: { icon: string; label: string; sub: string; t: Tab }[] = [
     { icon: "🏪", label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
@@ -2016,6 +2019,12 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
           <div style={{ padding: "14px 18px", background: c.orangeAccent, borderBottom: `1px solid ${c.orangeBorder}` }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{numeSalon}</div>
             <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2 }}>Cont salon ✂️ · {numeComplet}</div>
+            {planNume && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8, background: "rgba(255,107,0,.12)", borderRadius: 8, padding: "5px 10px" }}>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: "#FF6B00" }}>Plan {planNume}</span>
+                <button onClick={() => { onNav("abonament"); setOpen(false); }} style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", background: "none", border: "1px solid #FF6B00", borderRadius: 50, padding: "2px 9px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Schimbă</button>
+              </div>
+            )}
           </div>
           <div style={{ padding: "6px 0" }}>
             {items.map(item => (

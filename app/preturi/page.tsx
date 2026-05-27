@@ -144,7 +144,7 @@ export default function Preturi() {
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Prețuri simple, fără surprize</div>
             <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15, marginBottom: 18 }}>
-              Un plan pentru fiecare salon.<br /><span style={{ color: "#FF6B00" }}>Mai ieftin decât concurența.</span>
+              Totul pentru salon,<br /><span style={{ color: "#FF6B00" }}>dintr-un singur abonament. ✂️</span>
             </h1>
             <p style={{ fontSize: 17, color: "#6B7280", lineHeight: 1.7, maxWidth: 560, margin: "0 auto" }}>
               O singură subscripție pe tot salonul — nu plătești per angajat. Programări nelimitate, remindere WhatsApp și statistici reale, incluse.
@@ -196,7 +196,7 @@ export default function Preturi() {
 
         {/* CARDURI PLANURI */}
         <section style={{ padding: "32px 20px 16px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20, alignItems: "start" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20, alignItems: "stretch" }}>
             {PLANURI.map(p => {
               const pret = ciclu === "lunar" ? p.pretLunar : p.pretAnual;
               const dark = p.dark;
@@ -205,10 +205,11 @@ export default function Preturi() {
                   background: dark ? "#1A1A1A" : "#fff",
                   borderRadius: 24,
                   padding: "30px 28px",
-                  border: p.recomandat ? "2.5px solid #FF6B00" : dark ? "2.5px solid #1A1A1A" : "2px solid #FFDCC6",
+                  border: p.recomandat ? "2.5px solid #FF6B00" : dark ? "2.5px solid #333" : "2px solid #FFDCC6",
                   position: "relative",
                   boxShadow: p.recomandat ? "0 12px 36px rgba(255,107,0,.18)" : "0 2px 14px rgba(0,0,0,.05)",
-                  transform: p.recomandat ? "scale(1.02)" : "none",
+                  display: "flex",
+                  flexDirection: "column",
                 }}>
                   {p.badge && (
                     <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: p.recomandat ? "#16A34A" : dark ? "#FF6B00" : "#FFDCC6", color: p.recomandat || dark ? "#fff" : "#FF6B00", fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", padding: "5px 16px", borderRadius: 50, whiteSpace: "nowrap" }}>{p.badge}</div>
@@ -228,7 +229,7 @@ export default function Preturi() {
                     {promoActiva ? "Începe gratuit 3 luni" : "Alege " + p.nume}
                   </Link>
                   {p.prefix && <div style={{ fontSize: 12.5, fontWeight: 800, color: dark ? "rgba(255,255,255,.7)" : "#6B7280", marginBottom: 12 }}>{p.prefix}</div>}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
                     {p.features.map(f => (
                       <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: dark ? "rgba(255,255,255,.85)" : "#374151", lineHeight: 1.5 }}>
                         <span style={{ color: dark ? "#FF8C42" : "#FF6B00", fontWeight: 900, flexShrink: 0 }}>✓</span> {f}
@@ -267,17 +268,6 @@ export default function Preturi() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </section>
-
-        {/* DE CE CALYHUB */}
-        <section style={{ padding: "20px 20px 56px" }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", background: "#FFFBF7", border: "2px solid #FFDCC6", borderRadius: 22, padding: "30px 32px" }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>De ce CalyHub</div>
-            <h3 style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A", marginBottom: 12 }}>Plătești doar pentru grooming — nu pentru module pe care nu le folosești</h3>
-            <p style={{ fontSize: 15, color: "#4B5563", lineHeight: 1.7, margin: 0 }}>
-              Alte platforme te pun să plătești pentru grooming + veterinar + hotel la un loc. CalyHub e construit <strong>exclusiv pentru saloane de grooming</strong>: mai simplu, mai ieftin, în română, cu prețuri per talie și booking pe specialist — features pe care concurența nu le are. Începi cu <strong>3 luni gratuite</strong>, fără card.
-            </p>
           </div>
         </section>
 

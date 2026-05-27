@@ -49,13 +49,23 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
             <div style={{ marginTop: 16 }}><SocialIcons /></div>
           </div>
 
-          <nav style={{ display: "flex", flexWrap: "wrap", gap: "12px 24px", alignItems: "center", justifyContent: "flex-end" }}>
-            <Link href="/cum-functioneaza" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Cum funcționează</Link>
-            <Link href="/despre-noi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Despre noi</Link>
-            <Link href="/contact" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Contact</Link>
-            <Link href="/termeni" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Termeni și condiții</Link>
-            <Link href="/confidentialitate" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Confidențialitate</Link>
-          </nav>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "20px 40px", justifyContent: "flex-end" }}>
+            <div>
+              <div style={titleStyle}>Platformă</div>
+              <Link href="/cum-functioneaza" className="footer-link" style={linkStyle}>Cum funcționează</Link>
+              <Link href="/despre-noi" className="footer-link" style={linkStyle}>Despre noi</Link>
+              <Link href="/contact" className="footer-link" style={linkStyle}>Contact</Link>
+              <Link href="/termeni" className="footer-link" style={linkStyle}>Termeni și condiții</Link>
+              <Link href="/confidentialitate" className="footer-link" style={linkStyle}>Confidențialitate</Link>
+            </div>
+            <div>
+              <div style={titleStyle}>Planuri</div>
+              <Link href="/preturi" className="footer-link" style={linkStyle}>🐾 Basic — 69 lei/lună</Link>
+              <Link href="/preturi" className="footer-link" style={linkStyle}>⭐ Pro — 119 lei/lună</Link>
+              <Link href="/preturi" className="footer-link" style={linkStyle}>🚀 Business — 219 lei/lună</Link>
+              <Link href="/preturi" className="footer-link" style={{ ...linkStyle, color: "#fff", opacity: .7, fontWeight: 600 }}>Compară planurile →</Link>
+            </div>
+          </div>
         </div>
 
         <div style={bottomBar}>
