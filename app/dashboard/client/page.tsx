@@ -223,7 +223,7 @@ export default function DashboardClient() {
   const [programari, setProgramari] = useState<Programare[]>([]);
   const [confirmareLoading, setConfirmareLoading] = useState(false);
   const [confirmareError, setConfirmareError] = useState("");
-  const [notifSettings, setNotifSettings] = useState({ sms: true, email: true, newsletter: false });
+  const [notifSettings, setNotifSettings] = useState({ sms: true, newsletter: false });
   const [notificari, setNotificari] = useState<Notificare[]>([]);
   const [userId, setUserId] = useState("");
   const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "" });
@@ -1762,11 +1762,10 @@ export default function DashboardClient() {
               <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 12 }}>Preferințe notificări</div>
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}`, display: "flex", flexDirection: "column", gap: 0 }}>
                 {[
-                  { key: "sms", label: "SMS programări", sub: "Confirmare și reminder cu 24h înainte" },
-                  { key: "email", label: "Email reminder", sub: "Rezumat programare pe email" },
+                  { key: "sms", label: "SMS programări", sub: "Reminder cu 24h înainte de programare" },
                   { key: "newsletter", label: "Newsletter CalyHub", sub: "Oferte și noutăți de la saloane" },
                 ].map((item, i) => (
-                  <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: i < 2 ? `1px solid ${c.border2}` : "none" }}>
+                  <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: i < 1 ? `1px solid ${c.border2}` : "none" }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{item.label}</div>
                       <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>{item.sub}</div>

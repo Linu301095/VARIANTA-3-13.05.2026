@@ -49,7 +49,7 @@ Prin crearea unui cont și utilizarea serviciilor platformei, utilizatorul accep
   },
   {
     titlu: "5. Rezervări și anulări",
-    continut: `5.1. O programare devine confirmată în momentul acceptării ei de către salon în sistem. Clientul primește confirmare prin email și/sau SMS.
+    continut: `5.1. O programare devine confirmată în momentul acceptării ei de către salon în sistem. Clientul primește confirmarea direct în aplicație, printr-o notificare. Cu aproximativ 24 de ore înainte de programare, clientul primește un reminder prin SMS la numărul de telefon din profil.
 
 5.2. Anularea de către client trebuie efectuată cu cel puțin 24 de ore înainte de ora programată. Anulările de ultim moment repetate pot duce la restricționarea accesului la platformă.
 
