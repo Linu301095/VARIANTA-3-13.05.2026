@@ -1,12 +1,15 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
+import { supabase } from "../../../lib/supabase";
+
+const LOCURI_PROMO = 10;
 
 type Plan = {
-  id: "starter" | "pro" | "business";
+  id: "basic" | "pro" | "business";
   nume: string;
   pret: number;
   pretLabel: string;
@@ -18,57 +21,55 @@ type Plan = {
 
 const PLANURI: Plan[] = [
   {
-    id: "starter",
-    nume: "Starter",
-    pret: 0,
-    pretLabel: "Gratuit",
-    badge: "14 zile trial",
-    descriere: "Perfect pentru saloane noi care vor sa testeze platforma",
+    id: "basic",
+    nume: "Basic",
+    pret: 69,
+    pretLabel: "69 RON",
+    descriere: "Pentru groomer singur sau cu un asistent",
     features: [
-      { text: "1 angajat (groomer)", included: true },
-      { text: "Pana la 20 programari/luna", included: true },
-      { text: "Calendar online", included: true },
-      { text: "Notificari email", included: true },
-      { text: "Notificari SMS", included: false },
-      { text: "Statistici detaliate", included: false },
-      { text: "Integrare Google Calendar", included: false },
-      { text: "Suport prioritar", included: false },
+      { text: "Pana la 2 useri (groomer + asistent)", included: true },
+      { text: "Programari nelimitate", included: true },
+      { text: "Preturi per talie + galerie 5 poze", included: true },
+      { text: "Remindere WhatsApp + 30 SMS/luna", included: true },
+      { text: "Statistici esentiale + raport Excel", included: true },
+      { text: "Booking pe specialist", included: false },
+      { text: "Statistici complete (filtre, groomeri)", included: false },
+      { text: "Promovare in oras", included: false },
     ],
   },
   {
     id: "pro",
     nume: "Pro",
-    pret: 99,
-    pretLabel: "99 RON",
+    pret: 119,
+    pretLabel: "119 RON",
     badge: "Cel mai popular",
-    descriere: "Pentru saloane in crestere, cu echipa mica",
+    descriere: "Pentru saloane in crestere, 3-6 persoane",
     recomandat: true,
     features: [
-      { text: "Pana la 5 angajati", included: true },
-      { text: "Programari nelimitate", included: true },
-      { text: "Calendar online", included: true },
-      { text: "Notificari email + SMS", included: true },
-      { text: "Statistici detaliate", included: true },
-      { text: "Integrare Google Calendar", included: true },
-      { text: "Raport lunar PDF", included: true },
-      { text: "Suport prioritar", included: false },
+      { text: "3-6 useri cu orar individual", included: true },
+      { text: "Clientul alege specialistul", included: true },
+      { text: "Galerie 10 poze", included: true },
+      { text: "Statistici complete + productivitate groomeri", included: true },
+      { text: "Raport Excel complet", included: true },
+      { text: "Remindere WhatsApp + 100 SMS/luna", included: true },
+      { text: "Badge Profil verificat", included: true },
+      { text: "Promovare in oras", included: false },
     ],
   },
   {
     id: "business",
     nume: "Business",
-    pret: 199,
-    pretLabel: "199 RON",
-    descriere: "Pentru saloane mari sau cu mai multe locatii",
+    pret: 219,
+    pretLabel: "219 RON",
+    badge: "All-in",
+    descriere: "Pentru saloane mari sau cu mai multi groomeri",
     features: [
-      { text: "Echipa nelimitata", included: true },
-      { text: "Programari nelimitate", included: true },
-      { text: "Multi-locatie", included: true },
-      { text: "Notificari email + SMS", included: true },
-      { text: "Statistici avansate + export", included: true },
-      { text: "Integrare Google Calendar", included: true },
-      { text: "Raport lunar + analiza echipa", included: true },
-      { text: "Suport prioritar 24/7", included: true },
+      { text: "Useri nelimitati + login per groomer", included: true },
+      { text: "Tot ce e in Pro", included: true },
+      { text: "Listare promovata in oras", included: true },
+      { text: "Remindere WhatsApp + SMS nelimitate", included: true },
+      { text: "Multi-locatie (in curand)", included: true },
+      { text: "Suport prioritar 24/7 + manager dedicat", included: true },
     ],
   },
 ];
@@ -77,12 +78,22 @@ export default function AbonamentSalon() {
   const router = useRouter();
   const [ales, setAles] = useState<Plan["id"]>("pro");
   const [loading, setLoading] = useState(false);
+  const [locuriRamase, setLocuriRamase] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { count } = await supabase.from("saloane").select("id", { count: "exact", head: true });
+      if (count !== null && count !== undefined) setLocuriRamase(Math.max(0, LOCURI_PROMO - count));
+    })();
+  }, []);
+
+  const promoActiva = locuriRamase === null || locuriRamase > 0;
 
   function alegePlan() {
     setLoading(true);
     const plan = PLANURI.find(p => p.id === ales)!;
     const dataExpirare = new Date();
-    if (plan.id === "starter") dataExpirare.setDate(dataExpirare.getDate() + 14);
+    if (promoActiva) dataExpirare.setMonth(dataExpirare.getMonth() + 3);
     else dataExpirare.setMonth(dataExpirare.getMonth() + 1);
     localStorage.setItem("calyhub_abonament", JSON.stringify({
       planId: plan.id,
@@ -90,6 +101,7 @@ export default function AbonamentSalon() {
       pret: plan.pret,
       dataStart: new Date().toISOString(),
       dataExpirare: dataExpirare.toISOString(),
+      trialGratuit: promoActiva,
       autoRenew: true,
     }));
     setTimeout(() => router.push("/dashboard/salon"), 700);
@@ -113,6 +125,16 @@ export default function AbonamentSalon() {
               Poti schimba planul oricand din panoul de control. Fara contracte. Fara surprize.
             </p>
           </div>
+
+          {promoActiva && (
+            <div style={{ maxWidth: 640, margin: "0 auto 32px", background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 18, padding: "18px 24px", color: "#fff", textAlign: "center", boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
+              <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 2 }}>🎁 Primele 3 luni GRATUITE</div>
+              <div style={{ fontSize: 13.5, opacity: .95 }}>
+                Ești printre primele {LOCURI_PROMO} saloane înscrise.
+                {locuriRamase !== null && <strong> Au mai rămas {locuriRamase} {locuriRamase === 1 ? "loc" : "locuri"}.</strong>}
+              </div>
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 32 }}>
             {PLANURI.map(p => {
@@ -176,8 +198,8 @@ export default function AbonamentSalon() {
               {loading ? "Se activeaza..." : `Activeaza planul ${PLANURI.find(p => p.id === ales)?.nume} →`}
             </button>
             <div style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", maxWidth: 480, lineHeight: 1.6 }}>
-              {ales === "starter"
-                ? "Trial gratuit 14 zile. Fara card de credit necesar. Anuleaza oricand."
+              {promoActiva
+                ? `Primele 3 luni gratuite. Fara card necesar acum. Apoi ${PLANURI.find(p => p.id === ales)?.pretLabel}/luna — anulezi oricand.`
                 : `Vei fi taxat ${PLANURI.find(p => p.id === ales)?.pretLabel}/luna. Anuleaza oricand din setari.`}
             </div>
           </div>

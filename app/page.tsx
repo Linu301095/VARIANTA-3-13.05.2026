@@ -30,6 +30,7 @@ export default function HomePage() {
             <Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority />
           </Link>
           <nav style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Link href="/preturi" style={{ padding: "9px 14px", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Prețuri</Link>
             <Link href="/login" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
             <Link href="/register" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}>Înregistrare gratuită</Link>
           </nav>
@@ -221,6 +222,7 @@ export default function HomePage() {
                 ✂️ Înregistrează salonul gratuit →
               </Link>
               <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 12 }}>Fără card · Fără comision · Primele 3 luni gratuite</div>
+              <Link href="/preturi" style={{ display: "inline-block", marginTop: 14, fontSize: 14, fontWeight: 800, color: "#FF6B00", textDecoration: "none" }}>Vezi planurile și prețurile →</Link>
             </div>
           </div>
         </section>
