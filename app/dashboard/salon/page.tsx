@@ -876,17 +876,17 @@ export default function DashboardSalon() {
                             <div key={p.id} style={{ background: anulat ? (theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2") : c.surface, borderRadius: 16, padding: "16px 20px", border: anulat ? "1.5px solid rgba(239,68,68,.35)" : blocat ? "2px solid #EF4444" : nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", opacity: anulat ? 0.92 : 1 }}>
                               <div style={{ width: 52, height: 52, borderRadius: 12, background: anulat ? "rgba(239,68,68,.12)" : nou ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: anulat ? "#EF4444" : nou ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap", textDecoration: anulat ? "line-through" : "none" }}>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: anulat ? c.muted : c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                                   {p.client}
-                                  {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50, textDecoration: "none" }}>🔴 Blocat</span>}
-                                  {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50, textDecoration: "none" }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
+                                  {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50 }}>🔴 Blocat</span>}
+                                  {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50 }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
                                 </div>
                                 <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.animal}</div>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: anulat ? c.muted : "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
                                 {anulat && p.motivAnulare && (
-                                  <div style={{ fontSize: 12, color: "#EF4444", marginTop: 6, background: "rgba(239,68,68,.08)", padding: "6px 10px", borderRadius: 8, fontWeight: 600 }}>💬 Motiv anulare: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>
+                                  <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>
                                 )}
-                                {p.esteApp && p.user_id && (abateri > 0 || blocat) && (
+                                {anulat && p.esteApp && p.user_id && (
                                   <button onClick={() => toggleBlocClient(p.user_id)} style={{ marginTop: 8, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                                     {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
                                   </button>
@@ -1731,23 +1731,28 @@ export default function DashboardSalon() {
                         {orarDeschis && (
                           <div style={{ borderTop: `1.5px solid ${c.border}`, padding: "16px 20px", background: c.surface2 }}>
                             <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Orar săptămânal — {g.nume || "specialist"}</div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                               {ZILE_ORDINE.map(k => {
                                 const zi = orarG[k] || { activ: false, start: "09:00", end: "18:00" };
+                                const selStyle: React.CSSProperties = { padding: "6px 8px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" };
                                 return (
-                                  <div key={k} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                                    <div style={{ width: 90, fontSize: 13, fontWeight: 700, color: zi.activ ? c.text : c.xmuted }}>{ZILE_LABEL[k]}</div>
+                                  <div key={k} style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 36 }}>
+                                    <div style={{ width: 80, fontSize: 13, fontWeight: 700, color: zi.activ ? c.text : c.xmuted, flexShrink: 0 }}>{ZILE_LABEL[k]}</div>
                                     <button onClick={() => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), activ: !zi.activ } } } : x))}
-                                      style={{ padding: "5px 14px", borderRadius: 50, border: zi.activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: zi.activ ? "#FF6B00" : c.surface, color: zi.activ ? "#fff" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                      style={{ padding: "5px 12px", borderRadius: 50, border: zi.activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: zi.activ ? "#FF6B00" : c.surface, color: zi.activ ? "#fff" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                                       {zi.activ ? "Activ" : "Inactiv"}
                                     </button>
-                                    {zi.activ && (<>
-                                      <input type="time" value={zi.start} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), start: e.target.value } } } : x))}
-                                        style={{ padding: "5px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif" }} />
-                                      <span style={{ fontSize: 13, color: c.muted, fontWeight: 700 }}>—</span>
-                                      <input type="time" value={zi.end} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), end: e.target.value } } } : x))}
-                                        style={{ padding: "5px 10px", borderRadius: 8, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif" }} />
-                                    </>)}
+                                    {zi.activ && (
+                                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                                        <select value={zi.start} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), start: e.target.value } } } : x))} style={selStyle}>
+                                          {ORE_OPTIUNI.map(o => <option key={o} value={o}>{o}</option>)}
+                                        </select>
+                                        <span style={{ fontSize: 12, color: c.muted, fontWeight: 700 }}>—</span>
+                                        <select value={zi.end} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, orar: { ...(x.orar || PROGRAM_DEFAULT), [k]: { ...(x.orar?.[k] || PROGRAM_DEFAULT[k]), end: e.target.value } } } : x))} style={selStyle}>
+                                          {ORE_OPTIUNI.map(o => <option key={o} value={o}>{o}</option>)}
+                                        </select>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
