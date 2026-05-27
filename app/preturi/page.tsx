@@ -20,7 +20,6 @@ const PLANURI = [
     pretLunar: 69,
     pretAnual: 57,
     badge: null as string | null,
-    dark: false,
     features: [
       "Până la 2 useri (groomer + asistent)",
       "Galerie 5 poze",
@@ -39,7 +38,6 @@ const PLANURI = [
     pretLunar: 119,
     pretAnual: 99,
     badge: "Cel mai popular",
-    dark: false,
     recomandat: true,
     prefix: "Tot ce e în Basic, plus:",
     features: [
@@ -62,7 +60,6 @@ const PLANURI = [
     pretLunar: 219,
     pretAnual: 182,
     badge: "All-in",
-    dark: true,
     prefix: "Tot ce e în Pro, plus:",
     features: [
       "Useri nelimitați + login individual per groomer (în curând)",
@@ -182,12 +179,12 @@ export default function Preturi() {
 
         {/* INCLUS ÎN TOATE */}
         <section style={{ padding: "20px 20px 0" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", background: "#1A1A1A", borderRadius: 22, padding: "26px 30px" }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#FF8C42", textTransform: "uppercase", letterSpacing: 2, marginBottom: 16 }}>Inclus în toate planurile</div>
+          <div style={{ maxWidth: 1100, margin: "0 auto", background: "#FFFBF7", border: "2px solid #FFDCC6", borderRadius: 22, padding: "26px 30px" }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 16 }}>Inclus în toate planurile</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px 24px" }}>
               {INCLUS_TOATE.map(f => (
-                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: "rgba(255,255,255,.85)", lineHeight: 1.5 }}>
-                  <span style={{ color: "#FF8C42", fontWeight: 900, flexShrink: 0 }}>✓</span> {f}
+                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: "#4B5563", lineHeight: 1.5 }}>
+                  <span style={{ color: "#FF6B00", fontWeight: 900, flexShrink: 0 }}>✓</span> {f}
                 </div>
               ))}
             </div>
@@ -199,43 +196,42 @@ export default function Preturi() {
           <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20, alignItems: "stretch" }}>
             {PLANURI.map(p => {
               const pret = ciclu === "lunar" ? p.pretLunar : p.pretAnual;
-              const dark = p.dark;
               return (
-                <div key={p.id} style={{
-                  background: dark ? "#1A1A1A" : "#fff",
+                <div key={p.id} className="plan-card" style={{
+                  background: "#fff",
                   borderRadius: 24,
                   padding: "30px 28px",
-                  border: p.recomandat ? "2.5px solid #FF6B00" : dark ? "2.5px solid #333" : "2px solid #FFDCC6",
+                  border: p.recomandat ? "2.5px solid #FF6B00" : "2px solid #FFDCC6",
                   position: "relative",
                   boxShadow: p.recomandat ? "0 12px 36px rgba(255,107,0,.18)" : "0 2px 14px rgba(0,0,0,.05)",
                   display: "flex",
                   flexDirection: "column",
                 }}>
                   {p.badge && (
-                    <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: p.recomandat ? "#16A34A" : dark ? "#FF6B00" : "#FFDCC6", color: p.recomandat || dark ? "#fff" : "#FF6B00", fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", padding: "5px 16px", borderRadius: 50, whiteSpace: "nowrap" }}>{p.badge}</div>
+                    <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: p.recomandat ? "#16A34A" : "#FF6B00", color: "#fff", fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", padding: "5px 16px", borderRadius: 50, whiteSpace: "nowrap" }}>{p.badge}</div>
                   )}
                   <div style={{ fontSize: 30, marginBottom: 8 }}>{p.icon}</div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: dark ? "#fff" : "#1A1A1A" }}>{p.nume}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A" }}>{p.nume}</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#FF8C42", marginBottom: 6 }}>{p.tagline}</div>
-                  <div style={{ fontSize: 13, color: dark ? "rgba(255,255,255,.6)" : "#9CA3AF", lineHeight: 1.5, marginBottom: 18, minHeight: 38 }}>{p.descriere}</div>
+                  <div style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, marginBottom: 18, minHeight: 38 }}>{p.descriere}</div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
-                    <span style={{ fontSize: 40, fontWeight: 900, color: dark ? "#fff" : "#1A1A1A", lineHeight: 1 }}>{pret}</span>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: dark ? "rgba(255,255,255,.7)" : "#6B7280" }}>lei/lună</span>
+                    <span style={{ fontSize: 40, fontWeight: 900, color: "#1A1A1A", lineHeight: 1 }}>{pret}</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: "#6B7280" }}>lei/lună</span>
                   </div>
-                  <div style={{ fontSize: 12.5, color: dark ? "rgba(255,255,255,.55)" : "#9CA3AF", marginBottom: 20, minHeight: 18 }}>
+                  <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 20, minHeight: 18 }}>
                     {ciclu === "anual" ? `Facturat anual (${pret * 12} lei/an)` : `Sau ${p.pretAnual} lei/lună la plata anuală`}
                   </div>
-                  <Link href="/register" style={{ display: "block", textAlign: "center", padding: "13px", borderRadius: 50, background: p.recomandat ? "#FF6B00" : dark ? "#FF6B00" : "#fff", color: p.recomandat || dark ? "#fff" : "#FF6B00", fontSize: 14.5, fontWeight: 800, textDecoration: "none", border: p.recomandat || dark ? "none" : "2px solid #FF6B00", marginBottom: 22, boxShadow: p.recomandat ? "0 6px 20px rgba(255,107,0,.35)" : "none" }}>
-                    {promoActiva ? "Începe gratuit 3 luni" : "Alege " + p.nume}
-                  </Link>
-                  {p.prefix && <div style={{ fontSize: 12.5, fontWeight: 800, color: dark ? "rgba(255,255,255,.7)" : "#6B7280", marginBottom: 12 }}>{p.prefix}</div>}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
+                  {p.prefix && <div style={{ fontSize: 12.5, fontWeight: 800, color: "#6B7280", marginBottom: 12 }}>{p.prefix}</div>}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1, marginBottom: 24 }}>
                     {p.features.map(f => (
-                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: dark ? "rgba(255,255,255,.85)" : "#374151", lineHeight: 1.5 }}>
-                        <span style={{ color: dark ? "#FF8C42" : "#FF6B00", fontWeight: 900, flexShrink: 0 }}>✓</span> {f}
+                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: "#374151", lineHeight: 1.5 }}>
+                        <span style={{ color: "#FF6B00", fontWeight: 900, flexShrink: 0 }}>✓</span> {f}
                       </div>
                     ))}
                   </div>
+                  <Link href="/register" style={{ display: "block", textAlign: "center", padding: "13px", borderRadius: 50, background: p.recomandat ? "#FF6B00" : "#fff", color: p.recomandat ? "#fff" : "#FF6B00", fontSize: 14.5, fontWeight: 800, textDecoration: "none", border: p.recomandat ? "none" : "2px solid #FF6B00", marginTop: "auto", boxShadow: p.recomandat ? "0 6px 20px rgba(255,107,0,.35)" : "none" }}>
+                    {promoActiva ? "Începe gratuit 3 luni" : "Alege " + p.nume}
+                  </Link>
                 </div>
               );
             })}
@@ -272,15 +268,17 @@ export default function Preturi() {
         </section>
 
         {/* CTA FINAL */}
-        <section style={{ background: "#1A1A1A", padding: "60px 20px", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Gata să-ți crești salonul?</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginBottom: 32, lineHeight: 1.7 }}>
-            {promoActiva ? "Prinde-te în primele 10 saloane cu 3 luni gratuite." : "Începe azi. Fără card, anulezi oricând."}
-          </p>
-          <Link href="/register" style={{ display: "inline-flex", alignItems: "center", padding: "15px 34px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(255,107,0,.45)" }}>
-            ✂️ Înregistrează salonul gratuit →
-          </Link>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,.5)", marginTop: 14 }}>Fără card · Fără comision · Anulezi oricând</div>
+        <section style={{ padding: "20px 20px 64px", textAlign: "center" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 26, padding: "52px 30px", boxShadow: "0 16px 44px rgba(255,107,0,.28)" }}>
+            <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Gata să-ți crești salonul?</h2>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,.92)", marginBottom: 32, lineHeight: 1.7 }}>
+              {promoActiva ? "Prinde-te în primele 10 saloane cu 3 luni gratuite." : "Începe azi. Fără card, anulezi oricând."}
+            </p>
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", padding: "15px 34px", borderRadius: 50, background: "#fff", color: "#FF6B00", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(0,0,0,.18)" }}>
+              ✂️ Înregistrează salonul gratuit →
+            </Link>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", marginTop: 14 }}>Fără card · Fără comision · Anulezi oricând</div>
+          </div>
         </section>
       </main>
 
