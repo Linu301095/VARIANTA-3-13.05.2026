@@ -198,6 +198,7 @@ export default function DashboardSalon() {
   const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
   const [numeBlocare, setNumeBlocare] = useState("");
   const [durataBlocare, setDurataBlocare] = useState(60);
+  const [groomerBlocare, setGroomerBlocare] = useState<string>("toti");
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 600px)");
@@ -674,11 +675,13 @@ export default function DashboardSalon() {
       status: "confirmat",
       sursa,
       nume_client_extern: numeBlocare.trim() || null,
+      groomer: groomerBlocare === "toti" ? null : groomerBlocare,
     }).select("id, ora, durata, status, sursa, serviciu, nume_client_extern").single();
     if (error || !nou) { salveaza("Eroare la blocare"); console.error(error); return; }
     setSloturiZi(s => [...s, nou as SlotProgramare]);
     setModalBlocare(null);
     setNumeBlocare("");
+    setGroomerBlocare("toti");
     salveaza("Slot blocat");
   }
 
@@ -1494,6 +1497,27 @@ export default function DashboardSalon() {
                           <div style={{ marginBottom: 16 }}>
                             <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 6 }}>Nume client (opțional)</div>
                             <input value={numeBlocare} onChange={e => setNumeBlocare(e.target.value)} placeholder="Ex: Maria, Bibi" style={inp} />
+                          </div>
+                        )}
+
+                        {echipa.length > 0 && (
+                          <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 8 }}>Specialist</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              <button onClick={() => setGroomerBlocare("toti")}
+                                style={{ padding: "8px 14px", borderRadius: 50, border: groomerBlocare === "toti" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerBlocare === "toti" ? "#FF6B00" : c.surface, color: groomerBlocare === "toti" ? "#fff" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                Toți
+                              </button>
+                              {echipa.map(g => (
+                                <button key={g.id} onClick={() => setGroomerBlocare(g.nume)}
+                                  style={{ padding: "8px 14px", borderRadius: 50, border: groomerBlocare === g.nume ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerBlocare === g.nume ? c.orangeAccent : c.surface, color: groomerBlocare === g.nume ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                  👤 {g.nume || "Specialist"}
+                                </button>
+                              ))}
+                            </div>
+                            <div style={{ fontSize: 11, color: c.muted, marginTop: 6 }}>
+                              {groomerBlocare === "toti" ? "Blochează slotul pentru toți specialiștii." : `Blochează doar pentru ${groomerBlocare} — ceilalți rămân disponibili.`}
+                            </div>
                           </div>
                         )}
 
