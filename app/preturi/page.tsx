@@ -13,7 +13,6 @@ const LOCURI_PROMO = 10;
 const PLANURI = [
   {
     id: "basic",
-    icon: "🐾",
     nume: "Basic",
     tagline: "Salonul solo",
     descriere: "Pentru groomer singur sau cu un asistent",
@@ -31,7 +30,6 @@ const PLANURI = [
   },
   {
     id: "pro",
-    icon: "⭐",
     nume: "Pro",
     tagline: "Salon cu echipă",
     descriere: "Pentru saloane în creștere, 3-6 persoane",
@@ -53,7 +51,6 @@ const PLANURI = [
   },
   {
     id: "business",
-    icon: "🚀",
     nume: "Business",
     tagline: "Salon mare / lanț",
     descriere: "Pentru saloane mari sau cu mai mulți groomeri",
@@ -210,7 +207,6 @@ export default function Preturi() {
                   {p.badge && (
                     <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: p.recomandat ? "#16A34A" : "#FF6B00", color: "#fff", fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", padding: "5px 16px", borderRadius: 50, whiteSpace: "nowrap" }}>{p.badge}</div>
                   )}
-                  <div style={{ fontSize: 30, marginBottom: 8 }}>{p.icon}</div>
                   <div style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A" }}>{p.nume}</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#FF8C42", marginBottom: 6 }}>{p.tagline}</div>
                   <div style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, marginBottom: 18, minHeight: 38 }}>{p.descriere}</div>
@@ -247,9 +243,9 @@ export default function Preturi() {
                 <thead>
                   <tr style={{ background: "#FFF3EA" }}>
                     <th style={{ textAlign: "left", padding: "14px 18px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>Funcție</th>
-                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>🐾 Basic</th>
-                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#FF6B00" }}>⭐ Pro</th>
-                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>🚀 Business</th>
+                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>Basic</th>
+                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#FF6B00" }}>Pro</th>
+                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>Business</th>
                   </tr>
                 </thead>
                 <tbody>
