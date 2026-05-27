@@ -26,7 +26,7 @@ const STEPS_SALON = [
   { nr: "01", icon: "🏪", titlu: "Înregistrezi salonul", desc: "Datele firmei, copertă, galerie până la 10 foto, echipa, descriere. Profilul salonului apare instant în lista clienților din oraș." },
   { nr: "02", icon: "⚙️", titlu: "Configurezi calendarul", desc: "Orar săptămânal pe zile (deschis/închis), blocaje manuale pentru programări telefonice, walk-in sau pauze. Sloturi 30min anti-dublă-rezervare." },
   { nr: "03", icon: "💰", titlu: "Prețuri per talie — unic în România", desc: "Preț și durată diferite pentru Mică/Medie/Mare. Reflectă exact cum lucrezi: un câine mare cere mai mult timp și șampon. Clientul vede prețul corect pentru talia lui." },
-  { nr: "04", icon: "📊", titlu: "Statistici live + istoric per client", desc: "Încasări azi/lună, top servicii, distribuție clienți pe talii, istoric vizite per client. Toate calculate automat din programări — fără Excel." },
+  { nr: "04", icon: "📊", titlu: "Statistici pe orice perioadă + rapoarte", desc: "Încasări, programări și clienți filtrate pe Azi / Ieri / Săptămână / Lună / An sau interval ales de tine. Evoluție lunară, top servicii, productivitate pe groomer și export Excel cu un click." },
 ];
 
 const BENEFICII_CLIENT = [
@@ -41,7 +41,7 @@ const BENEFICII_CLIENT = [
 const BENEFICII_SALON = [
   { icon: "💰", titlu: "3 prețuri per serviciu, zero negocieri", desc: "Tuns câine mare: 180 RON / 90 min. Câine mic: 80 RON / 45 min. Clientul vede exact prețul lui — nu mai există discuții la casă." },
   { icon: "🚫", titlu: "Zero dublă-rezervare, garantat", desc: "Blochezi manual sloturi pentru programări telefonice, walk-in sau pauze. Calendarul online se umple doar în ce mai e liber." },
-  { icon: "📊", titlu: "Statistici live — fără Excel", desc: "Încasări azi și pe lună, top servicii, câți câini mari vs mici, ore de vârf — calculate automat din fiecare programare." },
+  { icon: "✂️", titlu: "Vezi cine produce în echipă", desc: "Statistici per groomer: câte programări a făcut și cât a încasat fiecare specialist în perioada aleasă. Știi exact cine îți duce salonul — fără să numeri manual." },
   { icon: "👤", titlu: "Dosar per client, mereu la îndemână", desc: "Istoricul complet al fiecărui client: câte vizite, ce servicii, ce animale, ce alergii. Nu mai cauți prin caiet sau WhatsApp." },
   { icon: "🛡️", titlu: "Protecție împotriva clienților neserioși", desc: "Vezi exact cine anulează des și, dacă un client îți strică agenda cu anulări repetate, îl blochezi cu un click — nu mai poate rezerva la tine. Timpul tău e protejat de no-show-uri." },
   { icon: "📱", titlu: "Calendar mobil, oricând, oriunde", desc: "Accepți, refuzi, blochezi sloturi direct de pe telefon — inclusiv duminică noaptea când clientul face rezervarea." },
@@ -247,6 +247,80 @@ export default function CumFunctioneaza() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* SHOWCASE STATISTICI — centrul de control */}
+            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "2.5px solid #FF6B00", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
+              <div style={{ textAlign: "center", marginBottom: 26 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Centrul de statistici</div>
+                <h3 style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A", marginBottom: 8 }}>Afacerea ta, în cifre reale — pe orice perioadă</h3>
+                <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 620, margin: "0 auto" }}>
+                  Apeși un buton și vezi exact cât ai încasat azi, ieri, săptămâna asta sau în orice interval. Plus evoluția lunară, serviciile cele mai cerute, ce produce fiecare groomer și un raport Excel descărcabil instant.
+                </p>
+              </div>
+
+              {/* Chips filtre perioadă */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 26 }}>
+                {["Azi", "Ieri", "Săptămână", "Lună", "An", "Interval"].map(p => (
+                  <span key={p} style={{ padding: "7px 16px", borderRadius: 50, fontSize: 13, fontWeight: 800, border: p === "Lună" ? "2px solid #FF6B00" : "1.5px solid #FFDCC6", background: p === "Lună" ? "#FF6B00" : "#fff", color: p === "Lună" ? "#fff" : "#6B7280" }}>{p}</span>
+                ))}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
+                {/* Evoluție încasări */}
+                <div style={{ background: "#FFFBF7", borderRadius: 18, padding: "20px 22px", border: "1.5px solid #FFDCC6" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1 }}>Evoluție încasări</span>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: "#16A34A", background: "rgba(22,163,74,.12)", padding: "3px 10px", borderRadius: 50 }}>▲ 18% vs luna trecută</span>
+                  </div>
+                  {[
+                    { luna: "Dec", val: 62 }, { luna: "Ian", val: 70 }, { luna: "Feb", val: 58 },
+                    { luna: "Mar", val: 84 }, { luna: "Apr", val: 78 }, { luna: "Mai", val: 100 },
+                  ].map(m => (
+                    <div key={m.luna} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                      <div style={{ width: 30, fontSize: 12, fontWeight: 700, color: "#9CA3AF", flexShrink: 0 }}>{m.luna}</div>
+                      <div style={{ flex: 1, height: 8, background: "#FFEAD9", borderRadius: 4 }}><div style={{ height: "100%", width: `${m.val}%`, background: "#FF6B00", borderRadius: 4 }} /></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Top servicii */}
+                <div style={{ background: "#FFFBF7", borderRadius: 18, padding: "20px 22px", border: "1.5px solid #FFDCC6" }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Top servicii</div>
+                  {[
+                    { nume: "Tuns + Spălat", pct: 42, col: "#FF6B00" },
+                    { nume: "Spălat + Uscat", pct: 28, col: "#8B5CF6" },
+                    { nume: "Tuns complet", pct: 18, col: "#10B981" },
+                    { nume: "Tuns + Unghii", pct: 12, col: "#F59E0B" },
+                  ].map(s => (
+                    <div key={s.nume} style={{ marginBottom: 13 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{s.nume}</span><span style={{ fontSize: 13, fontWeight: 800, color: s.col }}>{s.pct}%</span></div>
+                      <div style={{ height: 6, background: "#FFEAD9", borderRadius: 3 }}><div style={{ height: "100%", width: `${s.pct}%`, background: s.col, borderRadius: 3 }} /></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Productivitate groomeri */}
+                <div style={{ background: "#FFFBF7", borderRadius: 18, padding: "20px 22px", border: "1.5px solid #FFDCC6" }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Productivitate groomeri</div>
+                  {[
+                    { nume: "✂️ Maria", nr: "34 progr.", venit: "4.180 RON", pct: 100, col: "#FF6B00" },
+                    { nume: "✂️ Andrei", nr: "27 progr.", venit: "3.240 RON", pct: 78, col: "#8B5CF6" },
+                    { nume: "✂️ Elena", nr: "19 progr.", venit: "2.110 RON", pct: 54, col: "#10B981" },
+                  ].map(g => (
+                    <div key={g.nume} style={{ marginBottom: 13 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 8 }}><span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{g.nume}</span><span style={{ fontSize: 12, fontWeight: 800, color: g.col, whiteSpace: "nowrap" }}>{g.nr} · {g.venit}</span></div>
+                      <div style={{ height: 6, background: "#FFEAD9", borderRadius: 3 }}><div style={{ height: "100%", width: `${g.pct}%`, background: g.col, borderRadius: 3 }} /></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bara raport Excel */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 24, flexWrap: "wrap" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 14, fontWeight: 800 }}>📥 Descarcă raport Excel</span>
+                <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>Foi separate: venituri, programări, clienți, servicii, distribuție pe talie — pentru contabil sau pentru tine.</span>
               </div>
             </div>
 

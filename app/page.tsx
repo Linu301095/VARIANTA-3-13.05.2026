@@ -181,6 +181,41 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            {/* Teaser statistici & rapoarte */}
+            <div style={{ background: "#FFFBF7", borderRadius: 22, border: "2px solid #FF6B00", padding: "28px 26px", marginBottom: 40, boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 26, alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>📊 Statistici & rapoarte</div>
+                  <h3 style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginBottom: 10 }}>Vezi exact cât produci — pe orice perioadă</h3>
+                  <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, marginBottom: 16 }}>
+                    Încasări, top servicii și productivitatea fiecărui groomer, filtrate pe Azi / Săptămână / Lună / An. Plus raport Excel descărcabil cu un click — gata pentru contabil.
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                    {["Azi", "Săptămână", "Lună", "An", "Interval"].map(p => (
+                      <span key={p} style={{ padding: "6px 14px", borderRadius: 50, fontSize: 12.5, fontWeight: 800, border: p === "Lună" ? "2px solid #FF6B00" : "1.5px solid #FFDCC6", background: p === "Lună" ? "#FF6B00" : "#fff", color: p === "Lună" ? "#fff" : "#6B7280" }}>{p}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ background: "#fff", borderRadius: 16, padding: "18px 20px", border: "1.5px solid #FFDCC6" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1 }}>Încasări — luna asta</span>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: "#16A34A", background: "rgba(22,163,74,.12)", padding: "3px 10px", borderRadius: 50 }}>▲ 18%</span>
+                  </div>
+                  {[
+                    { luna: "Mar", val: 84 }, { luna: "Apr", val: 78 }, { luna: "Mai", val: 100 },
+                  ].map(m => (
+                    <div key={m.luna} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                      <div style={{ width: 30, fontSize: 12, fontWeight: 700, color: "#9CA3AF", flexShrink: 0 }}>{m.luna}</div>
+                      <div style={{ flex: 1, height: 8, background: "#FFEAD9", borderRadius: 4 }}><div style={{ height: "100%", width: `${m.val}%`, background: "#FF6B00", borderRadius: 4 }} /></div>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14, paddingTop: 14, borderTop: "1px solid #F3F4F6" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 12.5, fontWeight: 800 }}>📥 Raport Excel</span>
+                    <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 600 }}>venituri · servicii · groomeri · talie</span>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div style={{ textAlign: "center" }}>
               <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}>
                 ✂️ Înregistrează salonul gratuit →
