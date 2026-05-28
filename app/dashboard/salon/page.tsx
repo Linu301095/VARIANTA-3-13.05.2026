@@ -895,41 +895,43 @@ export default function DashboardSalon() {
                           const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
                           const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
                           return (
-                            <div key={p.id} style={{ background: anulat ? (theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2") : c.surface, borderRadius: 16, padding: "16px 20px", border: anulat ? "1.5px solid rgba(239,68,68,.35)" : blocat ? "2px solid #EF4444" : nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", opacity: anulat ? 0.92 : 1 }}>
-                              <div style={{ width: 52, height: 52, borderRadius: 12, background: anulat ? "rgba(239,68,68,.12)" : nou ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: anulat ? "#EF4444" : nou ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 15, fontWeight: 800, color: anulat ? c.muted : c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-                                  {p.client}
-                                  {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50 }}>🔴 Blocat</span>}
-                                  {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50 }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
-                                </div>
-                                <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.animal}</div>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: anulat ? c.muted : "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
-                                {!anulat && p.observatii && (
-                                  <div style={{ fontSize: 12, color: c.text2, marginTop: 6, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 8, padding: "8px 10px", lineHeight: 1.5 }}>
-                                    <span style={{ fontWeight: 800, color: "#B45309" }}>📝 Observații:</span> {p.observatii}
+                            <div key={p.id} style={{ background: anulat ? (theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2") : c.surface, borderRadius: 16, padding: "16px 20px", border: anulat ? "1.5px solid rgba(239,68,68,.35)" : blocat ? "2px solid #EF4444" : nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", flexDirection: "column", gap: 10, opacity: anulat ? 0.92 : 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                                <div style={{ width: 52, height: 52, borderRadius: 12, background: anulat ? "rgba(239,68,68,.12)" : nou ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: anulat ? "#EF4444" : nou ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 15, fontWeight: 800, color: anulat ? c.muted : c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                                    {p.client}
+                                    {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50 }}>🔴 Blocat</span>}
+                                    {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50 }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
                                   </div>
-                                )}
-                                {anulat && p.motivAnulare && (
-                                  <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>
-                                )}
-                                {anulat && p.esteApp && p.user_id && (
-                                  <button onClick={() => toggleBlocClient(p.user_id)} style={{ marginTop: 8, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                                    {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
-                                  </button>
+                                  <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.animal}</div>
+                                  <div style={{ fontSize: 12, fontWeight: 700, color: anulat ? c.muted : "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
+                                  {anulat && p.motivAnulare && (
+                                    <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>
+                                  )}
+                                  {anulat && p.esteApp && p.user_id && (
+                                    <button onClick={() => toggleBlocClient(p.user_id)} style={{ marginTop: 8, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                      {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
+                                    </button>
+                                  )}
+                                </div>
+                                {nou ? (
+                                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                                    <button onClick={() => respinge(p.id)} style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Refuză</button>
+                                    <button onClick={() => accepta(p.id)} style={{ padding: "9px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 12px rgba(255,107,0,.3)" }}>Acceptă</button>
+                                  </div>
+                                ) : anulat ? (
+                                  <span style={{ fontSize: 12, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✕ Anulat de client</span>
+                                ) : p.status === "confirmat" ? (
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981", background: "rgba(16,185,129,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✓ Confirmat</span>
+                                ) : (
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>{p.status}</span>
                                 )}
                               </div>
-                              {nou ? (
-                                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                                  <button onClick={() => respinge(p.id)} style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Refuză</button>
-                                  <button onClick={() => accepta(p.id)} style={{ padding: "9px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 12px rgba(255,107,0,.3)" }}>Acceptă</button>
+                              {!anulat && p.observatii && (
+                                <div style={{ fontSize: 12, color: c.text2, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 8, padding: "8px 12px", lineHeight: 1.6 }}>
+                                  <span style={{ fontWeight: 800, color: "#B45309" }}>📝 Observații:</span> {p.observatii}
                                 </div>
-                              ) : anulat ? (
-                                <span style={{ fontSize: 12, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✕ Anulat de client</span>
-                              ) : p.status === "confirmat" ? (
-                                <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981", background: "rgba(16,185,129,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✓ Confirmat</span>
-                              ) : (
-                                <span style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>{p.status}</span>
                               )}
                             </div>
                           );
