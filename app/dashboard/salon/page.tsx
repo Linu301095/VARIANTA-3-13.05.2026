@@ -36,7 +36,7 @@ type AnimalIstoric = {
 type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal };
+type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: string[] };
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
 type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null };
@@ -1851,6 +1851,30 @@ export default function DashboardSalon() {
                                 );
                               })}
                             </div>
+                            {servicii.length > 0 && (
+                              <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${c.border}` }}>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Servicii oferite</div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                  {servicii.map(sv => {
+                                    const activ = (g.servicii_oferite ?? []).includes(sv.nume);
+                                    return (
+                                      <button key={sv.id} onClick={() => setEchipa(ec => ec.map(x => {
+                                        if (x.id !== g.id) return x;
+                                        const curr = x.servicii_oferite ?? [];
+                                        const next = curr.includes(sv.nume) ? curr.filter(n => n !== sv.nume) : [...curr, sv.nume];
+                                        return { ...x, servicii_oferite: next };
+                                      }))}
+                                        style={{ padding: "5px 12px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? "#FF6B00" : c.surface, color: activ ? "#fff" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                        {sv.nume}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 8 }}>
+                                  {(g.servicii_oferite ?? []).length === 0 ? "Niciun serviciu selectat — specialistul va apărea pentru toate serviciile." : `${(g.servicii_oferite ?? []).length} ${(g.servicii_oferite ?? []).length === 1 ? "serviciu selectat" : "servicii selectate"}`}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

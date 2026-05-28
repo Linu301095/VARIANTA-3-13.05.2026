@@ -20,7 +20,7 @@ const SALOANE = [
   { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }> }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: string[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -931,7 +931,7 @@ export default function DashboardClient() {
                             ))}
                           </div>
                         )}
-                        <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); }}
+                        <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); setRezervare(r => r ? { ...r, servicii: [], ora: "" } : r); }}
                           style={{ ...btnPrimary, background: salon.culoare, boxShadow: "none", padding: "10px 22px", fontSize: 13, width: "100%" }}>
                           Alege pe {m.nume} →
                         </button>
@@ -1009,7 +1009,25 @@ export default function DashboardClient() {
                       ⚠️ {animal?.nume || "Animalul"} nu are talie setată. Mergi la „Animalele mele" și alege talia pentru a vedea prețurile corecte.
                     </div>
                   )}
-                  {salon.serviciiComplete.map(s => {
+                  {groomerSelectat && (() => {
+                    const groomerObj = salon.echipa?.find(m => m.nume === groomerSelectat);
+                    const svOferite = groomerObj?.servicii_oferite;
+                    if (svOferite && svOferite.length > 0) {
+                      return (
+                        <div style={{ fontSize: 12, color: c.muted, marginBottom: 4 }}>
+                          👤 Servicii disponibile la <strong style={{ color: c.text }}>{groomerSelectat}</strong>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  {salon.serviciiComplete.filter(s => {
+                    if (!groomerSelectat) return true;
+                    const groomerObj = salon.echipa?.find(m => m.nume === groomerSelectat);
+                    const svOferite = groomerObj?.servicii_oferite;
+                    if (!svOferite || svOferite.length === 0) return true;
+                    return svOferite.includes(s.nume);
+                  }).map(s => {
                     const sel = (rezervare?.servicii || []).includes(s.nume);
                     const { pret, durata } = getPretDurata(s, animal?.talie);
                     if (!pret && !durata) return null;
