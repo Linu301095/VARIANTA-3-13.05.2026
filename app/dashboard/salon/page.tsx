@@ -36,7 +36,8 @@ type AnimalIstoric = {
 type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: string[] };
+type ServiciuOferit = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
+type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: (string | ServiciuOferit)[] };
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
 type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null; groomer: string | null };
@@ -1884,25 +1885,94 @@ export default function DashboardSalon() {
                             </div>
                             {servicii.length > 0 && (
                               <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${c.border}` }}>
-                                <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Servicii oferite</div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Servicii oferite și prețuri</div>
+                                <div style={{ fontSize: 11, color: c.muted, marginBottom: 12 }}>
+                                  Bifează serviciile pe care le face {g.nume || "specialistul"}. Prețurile pornesc de la cele ale salonului — modifică-le dacă specialistul are tarife proprii (ex: junior / senior).
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                                   {servicii.map(sv => {
-                                    const activ = (g.servicii_oferite ?? []).includes(sv.nume);
+                                    const oferite = g.servicii_oferite ?? [];
+                                    const idx = oferite.findIndex(o => typeof o === "string" ? o === sv.nume : o.nume === sv.nume);
+                                    const activ = idx >= 0;
+                                    const curent = activ ? oferite[idx] : null;
+                                    const ovObj: ServiciuOferit = typeof curent === "string" ? { nume: sv.nume } : (curent as ServiciuOferit) || { nume: sv.nume };
+                                    const preturiOv = ovObj.preturi || { mica: "", medie: "", mare: "" };
+                                    const durateOv = ovObj.durate || { mica: "", medie: "", mare: "" };
+                                    const preturiBaza = sv.preturi || { mica: sv.pret || "", medie: sv.pret || "", mare: sv.pret || "" };
+                                    const durateBaza = sv.durate || { mica: sv.durata || "", medie: sv.durata || "", mare: sv.durata || "" };
+
+                                    const updateOv = (mut: (o: ServiciuOferit) => ServiciuOferit) => setEchipa(ec => ec.map(x => {
+                                      if (x.id !== g.id) return x;
+                                      const arr = [...(x.servicii_oferite ?? [])];
+                                      const i = arr.findIndex(o => typeof o === "string" ? o === sv.nume : o.nume === sv.nume);
+                                      if (i < 0) return x;
+                                      const obj: ServiciuOferit = typeof arr[i] === "string" ? { nume: sv.nume } : { ...(arr[i] as ServiciuOferit) };
+                                      arr[i] = mut(obj);
+                                      return { ...x, servicii_oferite: arr };
+                                    }));
+
+                                    const TALII_LOC = [
+                                      { key: "mica" as const, label: "Mică", icon: "🐕‍🦺" },
+                                      { key: "medie" as const, label: "Medie", icon: "🐕" },
+                                      { key: "mare" as const, label: "Mare", icon: "🐺" },
+                                    ];
+                                    const inpSmall: React.CSSProperties = { ...inp, padding: "7px 9px", fontSize: 12 };
+
                                     return (
-                                      <button key={sv.id} onClick={() => setEchipa(ec => ec.map(x => {
-                                        if (x.id !== g.id) return x;
-                                        const curr = x.servicii_oferite ?? [];
-                                        const next = curr.includes(sv.nume) ? curr.filter(n => n !== sv.nume) : [...curr, sv.nume];
-                                        return { ...x, servicii_oferite: next };
-                                      }))}
-                                        style={{ padding: "5px 12px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? "#FF6B00" : c.surface, color: activ ? "#fff" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                                        {sv.nume}
-                                      </button>
+                                      <div key={sv.id} style={{ background: c.surface, borderRadius: 12, border: `1.5px solid ${activ ? "#FF6B00" : c.border}`, padding: "12px 14px" }}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: activ ? 12 : 0 }}>
+                                          <div style={{ fontSize: 13, fontWeight: 800, color: c.text }}>{sv.nume || "Serviciu fără nume"}</div>
+                                          <button onClick={() => setEchipa(ec => ec.map(x => {
+                                            if (x.id !== g.id) return x;
+                                            const arr = [...(x.servicii_oferite ?? [])];
+                                            const i = arr.findIndex(o => typeof o === "string" ? o === sv.nume : o.nume === sv.nume);
+                                            if (i >= 0) arr.splice(i, 1);
+                                            else arr.push({ nume: sv.nume });
+                                            return { ...x, servicii_oferite: arr };
+                                          }))}
+                                            style={{ padding: "5px 12px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? "#FF6B00" : c.surface2, color: activ ? "#fff" : c.muted, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                                            {activ ? "✓ Face" : "Nu face"}
+                                          </button>
+                                        </div>
+                                        {activ && (
+                                          <>
+                                            <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr", gap: 6, alignItems: "center", marginBottom: 8 }}>
+                                              <div></div>
+                                              <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, textAlign: "center" }}>Preț (RON)</div>
+                                              <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, textAlign: "center" }}>Durată (min)</div>
+                                              {TALII_LOC.map(t => (
+                                                <React.Fragment key={t.key}>
+                                                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: c.text2 }}>
+                                                    <span style={{ fontSize: 14 }}>{t.icon}</span> {t.label}
+                                                  </div>
+                                                  <div>
+                                                    <input type="number" value={preturiOv[t.key] || ""} placeholder={preturiBaza[t.key] ? `${preturiBaza[t.key]} (salon)` : "—"}
+                                                      onChange={e => updateOv(o => ({ ...o, preturi: { ...(o.preturi || { mica: "", medie: "", mare: "" }), [t.key]: e.target.value } }))}
+                                                      style={inpSmall} />
+                                                  </div>
+                                                  <div>
+                                                    <input type="number" value={durateOv[t.key] || ""} placeholder={durateBaza[t.key] ? `${durateBaza[t.key]} (salon)` : "—"}
+                                                      onChange={e => updateOv(o => ({ ...o, durate: { ...(o.durate || { mica: "", medie: "", mare: "" }), [t.key]: e.target.value } }))}
+                                                      style={inpSmall} />
+                                                  </div>
+                                                </React.Fragment>
+                                              ))}
+                                            </div>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                              <div style={{ fontSize: 10, color: c.xmuted }}>Lasă gol pe o talie → folosește prețul salonului ({preturiBaza.medie || "—"} RON / {durateBaza.medie || "—"} min pe medie).</div>
+                                              <button onClick={() => updateOv(o => ({ nume: o.nume }))}
+                                                style={{ fontSize: 11, fontWeight: 700, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, padding: "4px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                                ↺ Folosește prețurile salonului
+                                              </button>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
                                     );
                                   })}
                                 </div>
-                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 8 }}>
-                                  {(g.servicii_oferite ?? []).length === 0 ? "Niciun serviciu selectat — specialistul va apărea pentru toate serviciile." : `${(g.servicii_oferite ?? []).length} ${(g.servicii_oferite ?? []).length === 1 ? "serviciu selectat" : "servicii selectate"}`}
+                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 10 }}>
+                                  {(g.servicii_oferite ?? []).length === 0 ? "Niciun serviciu bifat — clienții vor vedea toate serviciile salonului la prețurile de bază." : `${(g.servicii_oferite ?? []).length} ${(g.servicii_oferite ?? []).length === 1 ? "serviciu activ" : "servicii active"}`}
                                 </div>
                               </div>
                             )}

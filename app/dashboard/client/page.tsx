@@ -20,7 +20,8 @@ const SALOANE = [
   { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: string[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type ServiciuOferitC = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -148,6 +149,31 @@ function getPretDurata(serviciu: any, talie?: string): { pret: string; durata: s
   const p = serviciu.preturi?.[t] || serviciu.pret || "";
   const d = serviciu.durate?.[t] || serviciu.durata || "";
   return { pret: String(p), durata: String(d) };
+}
+function getOverrideGroomer(groomer: any, numeServiciu: string): ServiciuOferitC | null {
+  if (!groomer || !Array.isArray(groomer.servicii_oferite)) return null;
+  for (const o of groomer.servicii_oferite) {
+    if (typeof o === "string") { if (o === numeServiciu) return { nume: o }; }
+    else if (o && o.nume === numeServiciu) return o;
+  }
+  return null;
+}
+function serviciuPentruGroomer(serviciuSalon: any, groomer: any): any {
+  const ov = getOverrideGroomer(groomer, serviciuSalon.nume);
+  if (!ov) return serviciuSalon;
+  const baza = serviciuSalon.preturi || { mica: serviciuSalon.pret || "", medie: serviciuSalon.pret || "", mare: serviciuSalon.pret || "" };
+  const bazaD = serviciuSalon.durate || { mica: serviciuSalon.durata || "", medie: serviciuSalon.durata || "", mare: serviciuSalon.durata || "" };
+  const preturi = {
+    mica: (ov.preturi?.mica && String(ov.preturi.mica).trim()) || baza.mica || "",
+    medie: (ov.preturi?.medie && String(ov.preturi.medie).trim()) || baza.medie || "",
+    mare: (ov.preturi?.mare && String(ov.preturi.mare).trim()) || baza.mare || "",
+  };
+  const durate = {
+    mica: (ov.durate?.mica && String(ov.durate.mica).trim()) || bazaD.mica || "",
+    medie: (ov.durate?.medie && String(ov.durate.medie).trim()) || bazaD.medie || "",
+    mare: (ov.durate?.mare && String(ov.durate.mare).trim()) || bazaD.mare || "",
+  };
+  return { ...serviciuSalon, preturi, durate, pret: preturi.medie || serviciuSalon.pret || "", durata: durate.medie || serviciuSalon.durata || "" };
 }
 type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat";
 type Programare = {
@@ -633,10 +659,12 @@ export default function DashboardClient() {
       return;
     }
 
+    const groomerObj = groomerSelectat ? salon.echipa?.find(m => m.nume === groomerSelectat) : null;
     let pretNumeric = 0;
     let durataNumeric = 0;
     for (const nume of rezervare.servicii) {
-      const sv = salon.serviciiComplete.find(s => s.nume === nume);
+      const svBaza = salon.serviciiComplete.find(s => s.nume === nume);
+      const sv = groomerObj && svBaza ? serviciuPentruGroomer(svBaza, groomerObj) : svBaza;
       const { pret: pStr, durata: dStr } = getPretDurata(sv, animal?.talie);
       pretNumeric += Number(pStr) || 0;
       durataNumeric += Number(dStr) || 0;
@@ -771,7 +799,12 @@ export default function DashboardClient() {
 
     /* Helper: calendar + slots section (shared logic) */
     const CalendarSlots = (serviciiNume: string[]) => {
-      const serviciiObj = serviciiNume.map(n => salon.serviciiComplete.find(s => s.nume === n)).filter(Boolean) as any[];
+      const groomerObj = groomerSelectat ? salon.echipa?.find((m: any) => m.nume === groomerSelectat) : null;
+      const serviciiObj = serviciiNume.map(n => {
+        const baza = salon.serviciiComplete.find(s => s.nume === n);
+        if (!baza) return null;
+        return groomerObj ? serviciuPentruGroomer(baza, groomerObj) : baza;
+      }).filter(Boolean) as any[];
       let durataSv = 0;
       const durateAll: number[] = [];
       for (const sv of serviciiObj) {
@@ -782,7 +815,6 @@ export default function DashboardClient() {
       }
       if (durataSv === 0) durataSv = 60;
       const stepClient = stepFromDurateC(durateAll);
-      const groomerObj = groomerSelectat ? salon.echipa?.find((m: any) => m.nume === groomerSelectat) : null;
       const progEf = (groomerObj?.orar && Object.keys(groomerObj.orar).length > 0 ? groomerObj.orar : null) || programSalon || PROGRAM_DEFAULT_C;
       const ocupariEf = groomerSelectat
         ? ocupariSalon.filter(o => !o.groomer || o.groomer === groomerSelectat)
@@ -1006,22 +1038,24 @@ export default function DashboardClient() {
                     if (svOferite && svOferite.length > 0) {
                       return (
                         <div style={{ fontSize: 12, color: c.muted, marginBottom: 4 }}>
-                          👤 Servicii disponibile la <strong style={{ color: c.text }}>{groomerSelectat}</strong>
+                          👤 Servicii și prețuri la <strong style={{ color: c.text }}>{groomerSelectat}</strong>
                         </div>
                       );
                     }
                     return null;
                   })()}
-                  {salon.serviciiComplete.filter(s => {
-                    if (!groomerSelectat) return true;
-                    const groomerObj = salon.echipa?.find(m => m.nume === groomerSelectat);
-                    const svOferite = groomerObj?.servicii_oferite;
-                    if (!svOferite || svOferite.length === 0) return true;
-                    return svOferite.includes(s.nume);
-                  }).map(s => {
-                    const sel = (rezervare?.servicii || []).includes(s.nume);
-                    const { pret, durata } = getPretDurata(s, animal?.talie);
-                    if (!pret && !durata) return null;
+                  {(() => {
+                    const groomerObj = groomerSelectat ? salon.echipa?.find(m => m.nume === groomerSelectat) : null;
+                    return salon.serviciiComplete.filter(s => {
+                      if (!groomerObj) return true;
+                      const svOferite = groomerObj.servicii_oferite;
+                      if (!svOferite || svOferite.length === 0) return true;
+                      return !!getOverrideGroomer(groomerObj, s.nume);
+                    }).map(sBaza => {
+                      const s = groomerObj ? serviciuPentruGroomer(sBaza, groomerObj) : sBaza;
+                      const sel = (rezervare?.servicii || []).includes(s.nume);
+                      const { pret, durata } = getPretDurata(s, animal?.talie);
+                      if (!pret && !durata) return null;
                     return (
                       <button key={s.nume} onClick={() => setRezervare(r => {
                         const curr = r?.servicii || [];
@@ -1033,15 +1067,30 @@ export default function DashboardClient() {
                           <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${sel ? salon.culoare : c.border}`, background: sel ? salon.culoare : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, color: "#fff", fontWeight: 900 }}>{sel ? "✓" : ""}</div>
                           <div style={{ minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
                         </div>
-                        {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12, flexShrink: 0 }}>{pret} RON</div>}
+                        {pret && (
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, marginLeft: 12, flexShrink: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare }}>{pret} RON</div>
+                            {groomerObj && (() => {
+                              const { pret: pretBaza } = getPretDurata(sBaza, animal?.talie);
+                              if (pretBaza && pretBaza !== pret) return <div style={{ fontSize: 10, color: c.xmuted, fontWeight: 600 }}>salon: {pretBaza} RON</div>;
+                              return null;
+                            })()}
+                          </div>
+                        )}
                       </button>
                     );
-                  })}
+                  });
+                })()}
                 </div>
               )}
 
               {(() => {
-                const selServ = (rezervare?.servicii || []).map(n => salon.serviciiComplete.find(s => s.nume === n)).filter(Boolean) as any[];
+                const groomerObj = groomerSelectat ? salon.echipa?.find(m => m.nume === groomerSelectat) : null;
+                const selServ = (rezervare?.servicii || []).map(n => {
+                  const baza = salon.serviciiComplete.find(s => s.nume === n);
+                  if (!baza) return null;
+                  return groomerObj ? serviciuPentruGroomer(baza, groomerObj) : baza;
+                }).filter(Boolean) as any[];
                 if (!selServ.length) return null;
                 let totalPret = 0, totalDurata = 0;
                 for (const sv of selServ) {
