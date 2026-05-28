@@ -246,11 +246,11 @@ export default function DashboardSalon() {
       if (!authUser) { router.push("/login"); return; }
       setUserId(authUser.id);
 
-      const { data: profile } = await supabase
-        .from("profiluri")
-        .select("*")
-        .eq("id", authUser.id)
-        .single();
+      // Profil + salon în paralel — câștig vizibil de viteză la logare
+      const [{ data: profile }, { data: salonRow }] = await Promise.all([
+        supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
+        supabase.from("saloane").select("*").eq("user_id", authUser.id).single(),
+      ]);
 
       if (profile) {
         setUser({ ...profile, email: authUser.email });
@@ -261,12 +261,6 @@ export default function DashboardSalon() {
           try { localStorage.setItem("calyhub_theme", "dark"); } catch {}
         }
       }
-
-      const { data: salonRow } = await supabase
-        .from("saloane")
-        .select("*")
-        .eq("user_id", authUser.id)
-        .single();
 
       if (salonRow) {
         setSalonData(salonRow);
@@ -287,11 +281,12 @@ export default function DashboardSalon() {
         setAbonament({ plan: salonRow.plan || "starter" });
         if (Array.isArray(salonRow.clienti_blocati)) setClientiBlocati(salonRow.clienti_blocati);
 
-        await autoFinalizeaza(salonRow.id);
-        await loadProgramari(salonRow.id);
-        await loadAbateri(salonRow.id);
-        await loadAnimaleIstoric(salonRow.id);
-        await loadNotificari(authUser.id);
+        // Toate sub-cererile în paralel — autoFinalizeaza nu blochează UI
+        autoFinalizeaza(salonRow.id);
+        loadProgramari(salonRow.id);
+        loadAbateri(salonRow.id);
+        loadAnimaleIstoric(salonRow.id);
+        loadNotificari(authUser.id);
       }
     }
 
@@ -1391,9 +1386,12 @@ export default function DashboardSalon() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>Notificări</h2>
                   {necitite > 0 && (
-                    <button onClick={async () => {
-                      await supabase.from("notificari").update({ citit: true }).eq("user_id", userId);
+                    <button onClick={() => {
+                      const snapshot = notificari;
                       setNotificari(n => n.map(x => ({ ...x, citit: true })));
+                      supabase.from("notificari").update({ citit: true }).eq("user_id", userId).then(({ error }) => {
+                        if (error) setNotificari(snapshot);
+                      });
                     }} style={{ fontSize: 13, fontWeight: 700, color: "#FF6B00", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                       Marchează toate citite
                     </button>
@@ -1428,10 +1426,12 @@ export default function DashboardSalon() {
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                             {g.items.map(n => (
-                              <div key={n.id} onClick={async () => {
+                              <div key={n.id} onClick={() => {
                                 if (!n.citit) {
-                                  await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
                                   setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+                                  supabase.from("notificari").update({ citit: true }).eq("id", n.id).then(({ error }) => {
+                                    if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
+                                  });
                                 }
                               }}
                                 style={{ background: n.citit ? c.surface : (theme === "dark" ? "rgba(255,107,0,0.24)" : "rgba(255,107,0,0.16)"), borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>

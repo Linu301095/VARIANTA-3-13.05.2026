@@ -345,11 +345,25 @@ export default function DashboardClient() {
       if (!authUser) { router.push("/login"); return; }
       setUserId(authUser.id);
 
-      const { data: profile } = await supabase
-        .from("profiluri")
-        .select("*")
-        .eq("id", authUser.id)
-        .single();
+      // Cache saloane din localStorage pentru afișare instant
+      try {
+        const cached = localStorage.getItem("calyhub_saloane_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) setSaloaneList(parsed);
+        }
+      } catch {}
+
+      // Toate cererile în paralel — câștig major de viteză la logare
+      const [
+        { data: profile },
+        { data: animaleData },
+        { data: dbSaloane },
+      ] = await Promise.all([
+        supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
+        supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
+        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere").order("created_at", { ascending: false }),
+      ]);
 
       if (profile) {
         setUser({ ...profile, email: authUser.email });
@@ -362,12 +376,6 @@ export default function DashboardClient() {
         }
       }
 
-      const { data: animaleData } = await supabase
-        .from("animale")
-        .select("*")
-        .eq("user_id", authUser.id)
-        .order("created_at", { ascending: true });
-
       if (animaleData && animaleData.length > 0) {
         setAnimale(animaleData);
         setSelectedAnimalId(animaleData[0].id);
@@ -376,18 +384,16 @@ export default function DashboardClient() {
         return;
       }
 
-      const { data: dbSaloane } = await supabase
-        .from("saloane")
-        .select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere")
-        .order("created_at", { ascending: false });
-
       if (dbSaloane && dbSaloane.length > 0) {
-        setSaloaneList(dbSaloane.map(mapSalonDB));
+        const mapped = dbSaloane.map(mapSalonDB);
+        setSaloaneList(mapped);
+        try { localStorage.setItem("calyhub_saloane_cache", JSON.stringify(mapped)); } catch {}
       }
 
-      await autoFinalizeaza(authUser.id);
-      await loadProgramari(authUser.id);
-      await loadNotificari(authUser.id);
+      // Restul în paralel; autoFinalizeaza nu blochează UI
+      autoFinalizeaza(authUser.id);
+      loadProgramari(authUser.id);
+      loadNotificari(authUser.id);
     }
 
     async function autoFinalizeaza(userId: string) {
@@ -1807,9 +1813,12 @@ export default function DashboardClient() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <PageHeader icon="🔔" title="Notificări" sub="Activitate recentă a programărilor" />
                 {notificari.filter(n => !n.citit).length > 0 && (
-                  <button onClick={async () => {
-                    await supabase.from("notificari").update({ citit: true }).eq("user_id", userId);
+                  <button onClick={() => {
+                    const snapshot = notificari;
                     setNotificari(n => n.map(x => ({ ...x, citit: true })));
+                    supabase.from("notificari").update({ citit: true }).eq("user_id", userId).then(({ error }) => {
+                      if (error) setNotificari(snapshot);
+                    });
                   }} style={{ fontSize: 13, fontWeight: 700, color: "#FF6B00", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                     Marchează toate citite
                   </button>
@@ -1844,10 +1853,12 @@ export default function DashboardClient() {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           {g.items.map(n => (
-                            <div key={n.id} onClick={async () => {
+                            <div key={n.id} onClick={() => {
                               if (!n.citit) {
-                                await supabase.from("notificari").update({ citit: true }).eq("id", n.id);
                                 setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+                                supabase.from("notificari").update({ citit: true }).eq("id", n.id).then(({ error }) => {
+                                  if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
+                                });
                               }
                             }}
                               style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
