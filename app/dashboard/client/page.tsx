@@ -285,6 +285,10 @@ export default function DashboardClient() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState("");
   const [esteMobil, setEsteMobil] = useState(false);
+  const [observatiiBooking, setObservatiiBooking] = useState("");
+  const [sortareSalon, setSortareSalon] = useState<"recomandat" | "rating" | "alfabetic">("recomandat");
+  const [filtruServiciu, setFiltruServiciu] = useState("");
+  const [filtruServiciuDropdown, setFiltruServiciuDropdown] = useState(false);
   const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
   const [recenziiLoading, setRecenziiLoading] = useState(false);
   const [ratinguriSaloane, setRatinguriSaloane] = useState<Record<string, { medie: number; nr: number }>>({});
@@ -681,6 +685,7 @@ export default function DashboardClient() {
     const serviciuJoined = rezervare.servicii.join(" + ");
     const dataIso = dataSelectata;
 
+    const obsTrim = observatiiBooking.trim();
     const { data: nou, error } = await supabase
       .from("programari")
       .insert({
@@ -696,6 +701,7 @@ export default function DashboardClient() {
         status: "în așteptare",
         sursa: "app",
         groomer: groomerSelectat || null,
+        observatii: obsTrim || null,
       })
       .select("id")
       .single();
@@ -729,6 +735,7 @@ export default function DashboardClient() {
       });
     }
 
+    setObservatiiBooking("");
     setConfirmat(true);
   }
 
@@ -1118,6 +1125,18 @@ export default function DashboardClient() {
 
               {rezervare?.servicii?.length ? CalendarSlots(rezervare.servicii) : null}
 
+              {(rezervare?.servicii?.length ?? 0) > 0 && rezervare?.ora && (
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>
+                    Observații pentru salon <span style={{ fontWeight: 500, color: c.xmuted }}>(opțional)</span>
+                  </label>
+                  <textarea value={observatiiBooking} onChange={e => setObservatiiBooking(e.target.value.slice(0, 500))}
+                    placeholder="Ex: blana foarte încâlcită, e prima vizită, este speriat de uscător..."
+                    rows={3}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: 12, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontFamily: "Nunito, sans-serif", outline: "none", resize: "vertical", minHeight: 72 }} />
+                  <div style={{ fontSize: 11, color: c.xmuted, marginTop: 4, textAlign: "right" }}>{observatiiBooking.length}/500</div>
+                </div>
+              )}
               {confirmareError && (
                 <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center", marginBottom: 12 }}>
                   ⚠️ {confirmareError}
@@ -1482,12 +1501,28 @@ export default function DashboardClient() {
 
   const oraseleDisponibile = Array.from(new Set(saloaneList.map(s => s.oras.split(",")[0].trim()))).sort();
 
-  const filtrareActiva = cautare !== "" || filtruOras !== "";
+  const serviciiDisponibile = Array.from(new Set(saloaneList.flatMap(s => s.servicii))).sort();
+
+  const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || sortareSalon !== "recomandat";
   const saloneFiltrate = saloaneList.filter(s => {
     if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase()) && !s.servicii.some(sv => sv.toLowerCase().includes(cautare.toLowerCase()))) return false;
     if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
+    if (filtruServiciu && !s.servicii.some(sv => sv.toLowerCase() === filtruServiciu.toLowerCase())) return false;
     return true;
   });
+
+  if (sortareSalon === "rating") {
+    saloneFiltrate.sort((a, b) => {
+      const ra = ratinguriSaloane[String(a.id)]?.medie || 0;
+      const rb = ratinguriSaloane[String(b.id)]?.medie || 0;
+      if (rb !== ra) return rb - ra;
+      const na = ratinguriSaloane[String(a.id)]?.nr || 0;
+      const nb = ratinguriSaloane[String(b.id)]?.nr || 0;
+      return nb - na;
+    });
+  } else if (sortareSalon === "alfabetic") {
+    saloneFiltrate.sort((a, b) => a.nume.localeCompare(b.nume, "ro"));
+  }
 
   return (
     <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
@@ -1592,11 +1627,54 @@ export default function DashboardClient() {
               </div>
             </div>
 
+            {/* Sortare + filtru serviciu */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Sortare:</span>
+              {[
+                { val: "recomandat", label: "Recomandate" },
+                { val: "rating", label: "⭐ Rating" },
+                { val: "alfabetic", label: "A–Z" },
+              ].map(opt => (
+                <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
+                  style={{ padding: "7px 14px", borderRadius: 50, border: sortareSalon === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: sortareSalon === opt.val ? "#FFF3EA" : c.surface, color: sortareSalon === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  {opt.label}
+                </button>
+              ))}
+              <div style={{ position: "relative", marginLeft: "auto" }}>
+                <button onClick={() => setFiltruServiciuDropdown(v => !v)}
+                  style={{ padding: "7px 14px", borderRadius: 50, border: filtruServiciu ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruServiciu ? "#FFF3EA" : c.surface, color: filtruServiciu ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span>✂️</span>
+                  <span>{filtruServiciu || "Serviciu"}</span>
+                  <span style={{ fontSize: 10, opacity: .6 }}>{filtruServiciuDropdown ? "▲" : "▼"}</span>
+                </button>
+                {filtruServiciuDropdown && (
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 40, minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
+                    {filtruServiciu && (
+                      <button onClick={() => { setFiltruServiciu(""); setFiltruServiciuDropdown(false); }}
+                        style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                        ✕ Toate serviciile
+                      </button>
+                    )}
+                    {serviciiDisponibile.length === 0 && (
+                      <div style={{ padding: "14px 18px", fontSize: 12, color: c.xmuted, textAlign: "center" }}>Niciun serviciu</div>
+                    )}
+                    {serviciiDisponibile.map(sv => (
+                      <button key={sv} onClick={() => { setFiltruServiciu(sv); setFiltruServiciuDropdown(false); }}
+                        style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruServiciu === sv ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruServiciu === sv ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruServiciu === sv ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                        ✂️ {sv}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {filtrareActiva ? (
               <>
                 <div style={{ fontSize: 13, fontWeight: 700, color: c.muted, marginBottom: 14 }}>
                   {saloneFiltrate.length > 0 ? `${saloneFiltrate.length} salon${saloneFiltrate.length === 1 ? "" : "e"} găsite` : "Niciun salon găsit"}
                   {filtruOras && <span style={{ marginLeft: 8, color: "#FF6B00" }}>în {filtruOras}</span>}
+                  {filtruServiciu && <span style={{ marginLeft: 8, color: "#FF6B00" }}>· {filtruServiciu}</span>}
                 </div>
                 {saloneFiltrate.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>

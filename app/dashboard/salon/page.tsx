@@ -21,6 +21,7 @@ type ProgramareSalon = {
   status: StatusProg;
   esteApp: boolean;
   motivAnulare?: string | null;
+  observatii?: string | null;
 };
 
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
@@ -394,7 +395,7 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data: dataRaw } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, groomer")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, groomer, observatii")
         .eq("salon_id", salonId)
         .order("data", { ascending: true })
         .order("ora", { ascending: true });
@@ -442,6 +443,7 @@ export default function DashboardSalon() {
           esteApp,
           motivAnulare: p.motiv_anulare || null,
           groomer: p.groomer || null,
+          observatii: p.observatii || null,
         };
       }));
     }
@@ -903,6 +905,11 @@ export default function DashboardSalon() {
                                 </div>
                                 <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.animal}</div>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: anulat ? c.muted : "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
+                                {!anulat && p.observatii && (
+                                  <div style={{ fontSize: 12, color: c.text2, marginTop: 6, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 8, padding: "8px 10px", lineHeight: 1.5 }}>
+                                    <span style={{ fontWeight: 800, color: "#B45309" }}>📝 Observații:</span> {p.observatii}
+                                  </div>
+                                )}
                                 {anulat && p.motivAnulare && (
                                   <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>
                                 )}

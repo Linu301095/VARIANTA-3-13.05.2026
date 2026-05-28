@@ -36,6 +36,28 @@ export default function ConfigurareAnimal() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [rasaLibera, setRasaLibera] = useState(false);
+  const [pozaAnimal, setPozaAnimal] = useState<File | null>(null);
+  const [pozaPreview, setPozaPreview] = useState<string | null>(null);
+  const [avatarUser, setAvatarUser] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState("");
+
+  function onSelectPoza(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { setUploadError("Poza animăluțului depășește 5MB"); return; }
+    setUploadError("");
+    setPozaAnimal(f);
+    setPozaPreview(URL.createObjectURL(f));
+  }
+  function onSelectAvatar(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { setUploadError("Avatarul depășește 5MB"); return; }
+    setUploadError("");
+    setAvatarUser(f);
+    setAvatarPreview(URL.createObjectURL(f));
+  }
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }));
@@ -65,7 +87,18 @@ export default function ConfigurareAnimal() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    const { error } = await supabase
+    // Upload avatar utilizator (opțional) — nu blocăm salvarea dacă eșuează
+    if (avatarUser) {
+      const ext = avatarUser.name.split(".").pop() || "jpg";
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarUser, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        await supabase.from("profiluri").update({ avatar_url: urlData.publicUrl }).eq("id", user.id);
+      }
+    }
+
+    const { data: animalNou, error } = await supabase
       .from("animale")
       .insert({
         user_id: user.id,
@@ -77,9 +110,22 @@ export default function ConfigurareAnimal() {
         greutate: Number(form.greutate),
         varsta: Number(form.varsta),
         alergii: form.alergii.trim(),
-      });
+      })
+      .select("id")
+      .single();
 
     if (error) console.error("Animal insert error:", error);
+
+    // Upload poză animal (opțional) — după ce avem id-ul
+    if (animalNou && pozaAnimal) {
+      const ext = pozaAnimal.name.split(".").pop() || "jpg";
+      const path = `${user.id}/${animalNou.id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("animale").upload(path, pozaAnimal, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from("animale").getPublicUrl(path);
+        await supabase.from("animale").update({ poza_url: urlData.publicUrl }).eq("id", animalNou.id);
+      }
+    }
 
     setLoading(false);
     setStep("success");
@@ -156,6 +202,20 @@ export default function ConfigurareAnimal() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Poza ta de profil <span style={{ fontWeight: 500, color: "#9CA3AF" }}>(opțional)</span></label>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <label style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}>
+                    <div style={{ width: 64, height: 64, borderRadius: "50%", background: avatarPreview ? "transparent" : "#FFF3EA", border: "2px dashed #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, overflow: "hidden" }}>
+                      {avatarPreview ? <img src={avatarPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "👤"}
+                    </div>
+                    <input type="file" accept="image/*" onChange={onSelectAvatar} style={{ display: "none" }} />
+                  </label>
+                  <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>
+                    {avatarUser ? <><strong style={{ color: "#FF6B00" }}>✓ Selectat:</strong> {avatarUser.name}</> : "Adaugă o poză cu tine — opțional, o poți schimba oricând din profil."}
+                  </div>
+                </div>
+              </div>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Numele animăluțului *</label>
                 <input value={form.numeAnimal} onChange={e => set("numeAnimal", e.target.value)} type="text" placeholder="Ex: Max, Bella, Luna..." style={errors.numeAnimal ? inpErr : inp} />
@@ -257,14 +317,29 @@ export default function ConfigurareAnimal() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Poze animăluț <span style={{ fontWeight: 500, color: "#9CA3AF" }}>(opțional)</span></label>
-                <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "20px", borderRadius: 12, border: "1.5px dashed #EBEBEB", cursor: "pointer", background: "#FAFAFA" }}>
-                  <span style={{ fontSize: 24 }}>📷</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#6B7280" }}>Click pentru a adăuga poze</span>
-                  <span style={{ fontSize: 12, color: "#9CA3AF" }}>JPG, PNG — max 5MB</span>
-                  <input type="file" accept="image/*" multiple style={{ display: "none" }} />
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Poza animăluțului <span style={{ fontWeight: 500, color: "#9CA3AF" }}>(opțional)</span></label>
+                <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "20px", borderRadius: 12, border: pozaPreview ? "1.5px solid #FF6B00" : "1.5px dashed #EBEBEB", cursor: "pointer", background: pozaPreview ? "#fff" : "#FAFAFA", overflow: "hidden" }}>
+                  {pozaPreview ? (
+                    <>
+                      <img src={pozaPreview} alt="Preview" style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12 }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00" }}>✓ Click pentru a schimba</span>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 24 }}>📷</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#6B7280" }}>Click pentru a adăuga o poză</span>
+                      <span style={{ fontSize: 12, color: "#9CA3AF" }}>JPG, PNG — max 5MB</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" onChange={onSelectPoza} style={{ display: "none" }} />
                 </label>
               </div>
+
+              {uploadError && (
+                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center" }}>
+                  ⚠️ {uploadError}
+                </div>
+              )}
 
               <button onClick={handleSubmit} disabled={loading}
                 style={{ padding: "14px 24px", borderRadius: 50, border: "none", background: loading ? "#FFB07A" : "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading ? "default" : "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif", marginTop: 4 }}>
