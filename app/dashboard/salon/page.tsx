@@ -2143,7 +2143,6 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
     { icon: "✂️", label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
     { icon: "👥", label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
     { icon: "🐾", label: "Istoric animale", sub: "Fișa fiecărui animal programat", t: "animale" },
-    { icon: "📊", label: "Statistici", sub: "Vezi rapoarte detaliate", t: "statistici" },
     { icon: "💳", label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
     { icon: "🔒", label: "Setari cont", sub: "Schimba parola", t: "setari" },
     { icon: "❓", label: "Ajutor", sub: "Support dedicat", t: "ajutor" },
