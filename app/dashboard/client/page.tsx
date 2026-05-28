@@ -907,9 +907,6 @@ export default function DashboardClient() {
                 <div style={{ fontSize: 12, color: c.muted, marginBottom: 18 }}>Vei vedea programul lui și poți rezerva un slot disponibil.</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {(salon.echipa || []).map((m: any, idx: number) => {
-                    const orarG = m.orar && Object.keys(m.orar).length > 0 ? m.orar : programSalon || PROGRAM_DEFAULT_C;
-                    const zileActive = ZILE_ORDINE_C.filter(k => orarG[k]?.activ);
-                    const ZILE_SCURT_LOC: Record<string, string> = { "1": "Lun", "2": "Mar", "3": "Mie", "4": "Joi", "5": "Vin", "6": "Sâm", "0": "Dum" };
                     return (
                       <div key={idx} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
@@ -922,18 +919,9 @@ export default function DashboardClient() {
                             {m.descriere && <div style={{ fontSize: 12, color: c.muted, marginTop: 4, lineHeight: 1.5 }}>{m.descriere}</div>}
                           </div>
                         </div>
-                        {zileActive.length > 0 && (
-                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-                            {zileActive.map(k => (
-                              <span key={k} style={{ fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, borderRadius: 6, padding: "3px 8px" }}>
-                                {ZILE_SCURT_LOC[k]} {orarG[k].start}–{orarG[k].end}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                         <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); setRezervare(r => r ? { ...r, servicii: [], ora: "" } : r); }}
                           style={{ ...btnPrimary, background: salon.culoare, boxShadow: "none", padding: "10px 22px", fontSize: 13, width: "100%" }}>
-                          Alege pe {m.nume} →
+                          Alege →
                         </button>
                       </div>
                     );

@@ -39,7 +39,7 @@ type Serviciu = { id: number; nume: string; pret: string; durata: string; pretur
 type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: string[] };
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
-type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null };
+type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null; groomer: string | null };
 
 const AZI = new Date();
 const ZILE = ["Lun", "Mar", "Mie", "Joi", "Vin", "Sam", "Dum"];
@@ -222,6 +222,7 @@ export default function DashboardSalon() {
   const [numeBlocare, setNumeBlocare] = useState("");
   const [durataBlocare, setDurataBlocare] = useState(60);
   const [groomerBlocare, setGroomerBlocare] = useState<string>("toti");
+  const [groomerProgramTab, setGroomerProgramTab] = useState<string>("toti");
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 600px)");
@@ -650,7 +651,7 @@ export default function DashboardSalon() {
   async function loadSloturiZi(salonId: string, zi: string) {
     const { data } = await supabase
       .from("programari")
-      .select("id, ora, durata, status, sursa, serviciu, nume_client_extern")
+      .select("id, ora, durata, status, sursa, serviciu, nume_client_extern, groomer")
       .eq("salon_id", salonId)
       .eq("data", zi)
       .neq("status", "anulat");
@@ -699,7 +700,7 @@ export default function DashboardSalon() {
       sursa,
       nume_client_extern: numeBlocare.trim() || null,
       groomer: groomerBlocare === "toti" ? null : groomerBlocare,
-    }).select("id, ora, durata, status, sursa, serviciu, nume_client_extern").single();
+    }).select("id, ora, durata, status, sursa, serviciu, nume_client_extern, groomer").single();
     if (error || !nou) { salveaza("Eroare la blocare"); console.error(error); return; }
     setSloturiZi(s => [...s, nou as SlotProgramare]);
     setModalBlocare(null);
@@ -1462,8 +1463,13 @@ export default function DashboardSalon() {
                 zileLista.push({ iso: isoData(d), eticheta: `${numeZiScurt} ${d.getDate()} ${LUNA[d.getMonth()]}`, numeZi: ZILE_LABEL[dowKey] });
               }
               const dowSel = new Date(zilaSelectata + "T00:00:00").getDay();
-              const programZiSel = program[String(dowSel)];
+              const groomerActiv = groomerProgramTab !== "toti" ? echipa.find(g => g.nume === groomerProgramTab) : null;
+              const programEfectiv = groomerActiv?.orar && Object.keys(groomerActiv.orar).length > 0 ? groomerActiv.orar : program;
+              const programZiSel = programEfectiv[String(dowSel)];
               const sloturiPosibile = programZiSel ? genereazaSloturiZi(programZiSel, stepCalendar) : [];
+              const sloturiZiVizibile = groomerProgramTab === "toti"
+                ? sloturiZi
+                : sloturiZi.filter(p => !p.groomer || p.groomer === groomerProgramTab);
               const aziIso = isoData(new Date());
               const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
@@ -1509,6 +1515,30 @@ export default function DashboardSalon() {
                   {/* GESTIONARE SLOTURI */}
                   <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 20 }}>
                     <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 12 }}>🗓️ Gestionează sloturi (următoarele 14 zile)</div>
+
+                    {echipa.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Specialist</div>
+                        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, marginBottom: 14, borderBottom: `1px solid ${c.border2}` }}>
+                          <button onClick={() => setGroomerProgramTab("toti")}
+                            style={{ padding: "8px 14px", borderRadius: 10, border: groomerProgramTab === "toti" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerProgramTab === "toti" ? c.orangeAccent : c.surface, color: groomerProgramTab === "toti" ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
+                            👥 Toți
+                          </button>
+                          {echipa.map(g => (
+                            <button key={g.id} onClick={() => setGroomerProgramTab(g.nume)}
+                              style={{ padding: "8px 14px", borderRadius: 10, border: groomerProgramTab === g.nume ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerProgramTab === g.nume ? c.orangeAccent : c.surface, color: groomerProgramTab === g.nume ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
+                              👤 {g.nume || "Specialist"}
+                            </button>
+                          ))}
+                        </div>
+                        <div style={{ fontSize: 11, color: c.muted, marginBottom: 12 }}>
+                          {groomerProgramTab === "toti"
+                            ? "Vezi sloturile salonului (orar salon, toate programările)."
+                            : `Vezi grila lui ${groomerProgramTab} — orarul lui și doar programările atribuite lui.`}
+                        </div>
+                      </>
+                    )}
+
                     <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 12, marginBottom: 16 }}>
                       {zileLista.map(z => {
                         const sel = z.iso === zilaSelectata;
@@ -1523,7 +1553,7 @@ export default function DashboardSalon() {
 
                     {!programZiSel || !programZiSel.activ ? (
                       <div style={{ padding: "28px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface2, borderRadius: 14, border: `1.5px dashed ${c.border}` }}>
-                        Salon închis în această zi. Modifică orarul săptămânal pentru a deschide.
+                        {groomerProgramTab === "toti" ? "Salon închis în această zi. Modifică orarul săptămânal pentru a deschide." : `${groomerProgramTab} nu lucrează în această zi.`}
                       </div>
                     ) : (
                       <>
@@ -1532,7 +1562,7 @@ export default function DashboardSalon() {
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
                           {sloturiPosibile.map(slot => {
-                            const ocupare = sloturiZi.find(p => suprapunere(slot, stepCalendar, p));
+                            const ocupare = sloturiZiVizibile.find(p => suprapunere(slot, stepCalendar, p));
                             const eTrecut = zilaSelectata === aziIso && timeToMin(slot) <= nowMin;
                             let bg = c.surface2, border = c.border, color = c.text, label = slot;
                             if (eTrecut && !ocupare) {
@@ -1553,6 +1583,7 @@ export default function DashboardSalon() {
                                   setDurataBlocare(60);
                                   setTipBlocare("telefonic");
                                   setNumeBlocare("");
+                                  setGroomerBlocare(groomerProgramTab === "toti" ? "toti" : groomerProgramTab);
                                 }
                               }}
                                 style={{ padding: "10px 6px", borderRadius: 10, border: `1.5px solid ${border}`, background: bg, color, fontSize: 12, fontWeight: 800, cursor: (eTrecut && !ocupare) ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", textAlign: "center", opacity: eTrecut && !ocupare ? 0.5 : 1 }}>
