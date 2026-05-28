@@ -1136,7 +1136,9 @@ export default function DashboardClient() {
 
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}
+          onBack={() => { setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setEtapaBooking("calendar"); setProfilSalonTab("servicii"); }}
+          backLabel={salon.nume}>
           <div style={{ maxWidth: 640, margin: "0 auto" }}>
 
             {/* Cover photo */}
@@ -1145,10 +1147,6 @@ export default function DashboardClient() {
                 ? <img src={salon.poza_url} alt={salon.nume} onClick={() => setLightboxIdx(0)} style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "zoom-in" }} />
                 : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64 }}>✂️</div>}
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.7) 100%)", pointerEvents: "none" }} />
-              <button onClick={() => { setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setEtapaBooking("calendar"); setProfilSalonTab("servicii"); }}
-                style={{ position: "absolute", top: 14, left: 14, background: "rgba(0,0,0,.45)", border: "none", borderRadius: 50, padding: "6px 14px", fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "Nunito, sans-serif", backdropFilter: "blur(4px)" }}>
-                ← Înapoi
-              </button>
               <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, pointerEvents: "none" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                   <div>
