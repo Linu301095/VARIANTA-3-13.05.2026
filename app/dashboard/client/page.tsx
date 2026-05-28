@@ -791,14 +791,15 @@ export default function DashboardClient() {
       const aziIso = isoDataC(aziDate);
       const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
-      const zileLista: { iso: string; ziScurt: string; zi: number; luna: string; libere: number }[] = [];
+      const zileLista: { iso: string; ziScurt: string; zi: number; luna: string; libere: number; inchis: boolean }[] = [];
       for (let i = 0; i < 14; i++) {
         const d = new Date(aziDate); d.setDate(aziDate.getDate() + i);
         const iso = isoDataC(d);
         const dow = String(d.getDay());
         const programZi = progEf[dow];
+        const inchis = !programZi?.activ;
         let libere = 0;
-        if (programZi?.activ) {
+        if (!inchis) {
           const slots = genereazaSloturiClient(programZi, durataSv, stepClient);
           for (const s of slots) {
             const start = timeToMinC(s);
@@ -808,7 +809,7 @@ export default function DashboardClient() {
             if (!ocupat) libere++;
           }
         }
-        zileLista.push({ iso, ziScurt: ZILE_SCURT[d.getDay()], zi: d.getDate(), luna: LUNA_SCURT[d.getMonth()], libere });
+        zileLista.push({ iso, ziScurt: ZILE_SCURT[d.getDay()], zi: d.getDate(), luna: LUNA_SCURT[d.getMonth()], libere, inchis });
       }
 
       const dowSel = String(new Date(dataSelectata + "T00:00:00").getDay());
@@ -832,14 +833,16 @@ export default function DashboardClient() {
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 18, scrollbarWidth: "thin" }}>
             {zileLista.map(z => {
               const sel = z.iso === dataSelectata;
-              const indisp = z.libere === 0;
+              const indisp = z.inchis || z.libere === 0;
+              const eticheta = z.inchis ? "Închis" : z.libere === 0 ? "Plin" : `${z.libere} libere`;
+              const culoareEticheta = z.inchis ? c.xmuted : z.libere === 0 ? "#EF4444" : "#10B981";
               return (
                 <button key={z.iso} disabled={indisp} onClick={() => { setDataSelectata(z.iso); setRezervare(r => ({ ...r!, ora: "" })); }}
-                  style={{ padding: "10px 12px", borderRadius: 12, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: indisp ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0, textAlign: "center", minWidth: 68, opacity: indisp ? 0.4 : 1 }}>
+                  style={{ padding: "10px 12px", borderRadius: 12, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: indisp ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0, textAlign: "center", minWidth: 68, opacity: indisp ? 0.45 : 1 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: sel ? salon.culoare : c.muted, textTransform: "uppercase" }}>{z.ziScurt}</div>
                   <div style={{ fontSize: 18, fontWeight: 900, color: sel ? salon.culoare : c.text, margin: "2px 0" }}>{z.zi}</div>
                   <div style={{ fontSize: 10, fontWeight: 600, color: sel ? salon.culoare : c.xmuted }}>{z.luna}</div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: indisp ? "#EF4444" : "#10B981", marginTop: 4 }}>{indisp ? "Plin" : `${z.libere} libere`}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: sel ? salon.culoare : culoareEticheta, marginTop: 4 }}>{eticheta}</div>
                 </button>
               );
             })}
