@@ -162,7 +162,7 @@ export default function DashboardSalon() {
   const [ratingSalon, setRatingSalon] = useState<{ medie: number; nr: number }>({ medie: 0, nr: 0 });
   const [recenziiSalon, setRecenziiSalon] = useState<{ id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null }[]>([]);
   const [filtruRecenzii, setFiltruRecenzii] = useState<"toate" | "azi" | "ieri" | "trecut">("toate");
-  const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("luna");
+  const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("azi");
   const [customStart, setCustomStart] = useState<string>(isoData(new Date()));
   const [customEnd, setCustomEnd] = useState<string>(isoData(new Date()));
   const [statExtins, setStatExtins] = useState<"venituri" | "programari" | "clienti" | "rating" | "servicii" | "talie" | null>(null);
