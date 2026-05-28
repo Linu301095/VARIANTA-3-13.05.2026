@@ -847,6 +847,15 @@ export default function DashboardSalon() {
                 if (!g) { g = { data: p.data, items: [] }; grupuri.push(g); }
                 g.items.push(p);
               }
+              // Cele „în așteptare" mereu sus (în ordinea orelor), apoi restul tot pe oră
+              for (const g of grupuri) {
+                g.items.sort((a, b) => {
+                  const aAst = a.status === "în așteptare" ? 0 : 1;
+                  const bAst = b.status === "în așteptare" ? 0 : 1;
+                  if (aAst !== bAst) return aAst - bAst;
+                  return a.ora < b.ora ? -1 : a.ora > b.ora ? 1 : 0;
+                });
+              }
               const aziIso = isoData(new Date());
               const viitoare = grupuri.filter(g => g.data >= aziIso).sort((a, b) => a.data < b.data ? -1 : 1);
               const trecute = grupuri.filter(g => g.data < aziIso).sort((a, b) => a.data > b.data ? -1 : 1);
