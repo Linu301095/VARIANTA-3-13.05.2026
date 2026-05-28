@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState, useEffect, useContext, createContext } from "react";
+import React, { useState, useEffect, useMemo, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
@@ -59,6 +59,15 @@ const PROGRAM_DEFAULT: ProgramSaptamanal = {
 const ZILE_LABEL: Record<string, string> = { "1": "Luni", "2": "Marți", "3": "Miercuri", "4": "Joi", "5": "Vineri", "6": "Sâmbătă", "0": "Duminică" };
 const ZILE_ORDINE = ["1", "2", "3", "4", "5", "6", "0"];
 const STEP_SLOT = 30;
+
+function gcdNum(a: number, b: number): number { return b === 0 ? a : gcdNum(b, a % b); }
+function stepFromDurate(durate: number[]): number {
+  const valid = durate.filter(d => d > 0).map(d => Math.round(d / 5) * 5).filter(d => d > 0);
+  if (valid.length === 0) return STEP_SLOT;
+  let g = valid[0];
+  for (let i = 1; i < valid.length; i++) g = gcdNum(g, valid[i]);
+  return Math.min(30, Math.max(5, g));
+}
 
 function timeToMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 function minToTime(m: number) { const h = Math.floor(m / 60), mm = m % 60; return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`; }
@@ -185,6 +194,20 @@ export default function DashboardSalon() {
     { id: 2, nume: "Andrei Pop", specialitate: "Rase mari" },
   ]);
   const [program, setProgram] = useState<ProgramSaptamanal>(PROGRAM_DEFAULT);
+  const stepCalendar = useMemo(() => {
+    const durate: number[] = [];
+    for (const s of servicii) {
+      if (s.durate) {
+        for (const k of ["mica", "medie", "mare"] as const) {
+          const d = Number(s.durate[k]) || 0;
+          if (d > 0) durate.push(d);
+        }
+      }
+      const d0 = Number(s.durata) || 0;
+      if (d0 > 0) durate.push(d0);
+    }
+    return stepFromDurate(durate);
+  }, [servicii]);
   const [zilaSelectata, setZilaSelectata] = useState<string>(() => isoData(new Date()));
   const [filtruTalie, setFiltruTalie] = useState<"toate" | "mica" | "medie" | "mare">("toate");
   const [animaleIstoric, setAnimaleIstoric] = useState<AnimalIstoric[]>([]);
@@ -1440,7 +1463,7 @@ export default function DashboardSalon() {
               }
               const dowSel = new Date(zilaSelectata + "T00:00:00").getDay();
               const programZiSel = program[String(dowSel)];
-              const sloturiPosibile = programZiSel ? genereazaSloturiZi(programZiSel) : [];
+              const sloturiPosibile = programZiSel ? genereazaSloturiZi(programZiSel, stepCalendar) : [];
               const aziIso = isoData(new Date());
               const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
@@ -1509,7 +1532,7 @@ export default function DashboardSalon() {
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
                           {sloturiPosibile.map(slot => {
-                            const ocupare = sloturiZi.find(p => suprapunere(slot, STEP_SLOT, p));
+                            const ocupare = sloturiZi.find(p => suprapunere(slot, stepCalendar, p));
                             const eTrecut = zilaSelectata === aziIso && timeToMin(slot) <= nowMin;
                             let bg = c.surface2, border = c.border, color = c.text, label = slot;
                             if (eTrecut && !ocupare) {

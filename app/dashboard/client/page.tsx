@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useContext, createContext } from "react";
+import { useState, useEffect, useMemo, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
@@ -120,6 +120,14 @@ function etichetaZiC(dataIso: string) {
 function timeToMinC(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 function minToTimeC(m: number) { const h = Math.floor(m / 60), mm = m % 60; return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`; }
 function isoDataC(d: Date) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function gcdNumC(a: number, b: number): number { return b === 0 ? a : gcdNumC(b, a % b); }
+function stepFromDurateC(durate: number[]): number {
+  const valid = durate.filter(d => d > 0).map(d => Math.round(d / 5) * 5).filter(d => d > 0);
+  if (valid.length === 0) return 30;
+  let g = valid[0];
+  for (let i = 1; i < valid.length; i++) g = gcdNumC(g, valid[i]);
+  return Math.min(30, Math.max(5, g));
+}
 function genereazaSloturiClient(prog: ProgramZiC, durata: number, step = 30): string[] {
   if (!prog.activ) return [];
   const startM = timeToMinC(prog.start), endM = timeToMinC(prog.end);
@@ -218,7 +226,7 @@ export default function DashboardClient() {
   const [tab, setTab] = useState<Tab>("saloane");
   const [salonSelectat, setSalonSelectat] = useState<string | number | null>(null);
   const [saloaneList, setSaloaneList] = useState<SalonItem[]>(SALOANE);
-  const [rezervare, setRezervare] = useState<{ salonId: string | number; serviciu: string; ora: string } | null>(null);
+  const [rezervare, setRezervare] = useState<{ salonId: string | number; servicii: string[]; ora: string } | null>(null);
   const [confirmat, setConfirmat] = useState(false);
   const [programari, setProgramari] = useState<Programare[]>([]);
   const [confirmareLoading, setConfirmareLoading] = useState(false);
@@ -474,7 +482,7 @@ export default function DashboardClient() {
   }, [salonSelectat]);
 
   useEffect(() => {
-    if (!salonSelectat || !rezervare?.serviciu) return;
+    if (!salonSelectat || !rezervare?.servicii?.length) return;
     (async () => {
       const azi = new Date(); azi.setHours(0, 0, 0, 0);
       const peste14 = new Date(azi); peste14.setDate(azi.getDate() + 15);
@@ -487,7 +495,7 @@ export default function DashboardClient() {
         .neq("status", "anulat");
       setOcupariSalon((rows as any[]) || []);
     })();
-  }, [rezervare?.serviciu, salonSelectat, dataSelectata]);
+  }, [rezervare?.servicii?.join("|"), salonSelectat, dataSelectata]);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -625,10 +633,16 @@ export default function DashboardClient() {
       return;
     }
 
-    const serviciuSelectat = salon.serviciiComplete.find(s => s.nume === rezervare.serviciu);
-    const { pret: pretStr, durata: durataStr } = getPretDurata(serviciuSelectat, animal?.talie);
-    const pretNumeric = Number(pretStr) || 0;
-    const durataNumeric = Number(durataStr) || 60;
+    let pretNumeric = 0;
+    let durataNumeric = 0;
+    for (const nume of rezervare.servicii) {
+      const sv = salon.serviciiComplete.find(s => s.nume === nume);
+      const { pret: pStr, durata: dStr } = getPretDurata(sv, animal?.talie);
+      pretNumeric += Number(pStr) || 0;
+      durataNumeric += Number(dStr) || 0;
+    }
+    if (durataNumeric === 0) durataNumeric = 60;
+    const serviciuJoined = rezervare.servicii.join(" + ");
     const dataIso = dataSelectata;
 
     const { data: nou, error } = await supabase
@@ -637,7 +651,7 @@ export default function DashboardClient() {
         user_id: authUser.id,
         salon_id: salon.id,
         animal_id: animal?.id || null,
-        serviciu: rezervare.serviciu,
+        serviciu: serviciuJoined,
         pret: pretNumeric,
         durata: durataNumeric,
         talie_animal: animal?.talie || null,
@@ -661,7 +675,7 @@ export default function DashboardClient() {
       id: nou.id,
       salon_id: String(salon.id),
       salon_nume: salon.nume,
-      serviciu: rezervare.serviciu,
+      serviciu: serviciuJoined,
       data: dataIso,
       ora: rezervare.ora,
       status: "în așteptare",
@@ -673,7 +687,7 @@ export default function DashboardClient() {
       await supabase.from("notificari").insert({
         user_id: salonRow.user_id,
         tip: "programare_noua",
-        mesaj: `🐾 ${user?.nume || "Un client"} a solicitat o programare pentru ${animal?.nume || "animăluțul său"} — ${rezervare.serviciu}`,
+        mesaj: `🐾 ${user?.nume || "Un client"} a solicitat o programare pentru ${animal?.nume || "animăluțul său"} — ${serviciuJoined}`,
         programare_id: nou.id,
       });
     }
@@ -697,7 +711,7 @@ export default function DashboardClient() {
               <h1 style={{ fontSize: 24, fontWeight: 900, color: c.text, marginBottom: 10 }}>Programare trimisă!</h1>
               <p style={{ fontSize: 14, color: c.muted, marginBottom: 24, lineHeight: 1.7 }}>Salonul va confirma în curând. Vei primi notificare când se aprobă.</p>
               <div style={{ background: c.surface, border: "2px solid #FF6B00", borderRadius: 20, padding: "20px 24px", marginBottom: 24, textAlign: "left" }}>
-                {[["🏪 Salon", salon.nume], ["✂️ Serviciu", rezervare.serviciu], ["📅 Data", new Date(dataSelectata + "T00:00:00").toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" })], ["🕐 Ora", rezervare.ora], ["🐾 Animal", animal?.nume || "Animăluțul tău"]].map(([k, v]) => (
+                {[["🏪 Salon", salon.nume], ["✂️ Serviciu", rezervare.servicii.join(" + ")], ["📅 Data", new Date(dataSelectata + "T00:00:00").toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" })], ["🕐 Ora", rezervare.ora], ["🐾 Animal", animal?.nume || "Animăluțul tău"]].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "8px 0", borderBottom: `1px solid ${c.border2}` }}>
                     <span style={{ color: c.muted }}>{k}</span><span style={{ fontWeight: 700, color: c.text }}>{v}</span>
                   </div>
@@ -756,10 +770,18 @@ export default function DashboardClient() {
     })() : null;
 
     /* Helper: calendar + slots section (shared logic) */
-    const CalendarSlots = (serviciu: string) => {
-      const serviciuObj = salon.serviciiComplete.find(s => s.nume === serviciu);
-      const { durata: durataResolved } = getPretDurata(serviciuObj, animal?.talie);
-      const durataSv = Number(durataResolved) || 60;
+    const CalendarSlots = (serviciiNume: string[]) => {
+      const serviciiObj = serviciiNume.map(n => salon.serviciiComplete.find(s => s.nume === n)).filter(Boolean) as any[];
+      let durataSv = 0;
+      const durateAll: number[] = [];
+      for (const sv of serviciiObj) {
+        const { durata: dStr } = getPretDurata(sv, animal?.talie);
+        const dNum = Number(dStr) || 0;
+        durataSv += dNum;
+        if (dNum > 0) durateAll.push(dNum);
+      }
+      if (durataSv === 0) durataSv = 60;
+      const stepClient = stepFromDurateC(durateAll);
       const groomerObj = groomerSelectat ? salon.echipa?.find((m: any) => m.nume === groomerSelectat) : null;
       const progEf = (groomerObj?.orar && Object.keys(groomerObj.orar).length > 0 ? groomerObj.orar : null) || programSalon || PROGRAM_DEFAULT_C;
       const ocupariEf = groomerSelectat
@@ -777,7 +799,7 @@ export default function DashboardClient() {
         const programZi = progEf[dow];
         let libere = 0;
         if (programZi?.activ) {
-          const slots = genereazaSloturiClient(programZi, durataSv);
+          const slots = genereazaSloturiClient(programZi, durataSv, stepClient);
           for (const s of slots) {
             const start = timeToMinC(s);
             const end = start + durataSv;
@@ -793,7 +815,7 @@ export default function DashboardClient() {
       const progZiSel = progEf[dowSel];
       const sloturiZiSel: { ora: string; ocupat: boolean; trecut: boolean }[] = [];
       if (progZiSel?.activ) {
-        const slots = genereazaSloturiClient(progZiSel, durataSv);
+        const slots = genereazaSloturiClient(progZiSel, durataSv, stepClient);
         for (const s of slots) {
           const start = timeToMinC(s);
           const end = start + durataSv;
@@ -878,7 +900,7 @@ export default function DashboardClient() {
                     : <span style={{ fontSize: 28, flexShrink: 0 }}>✂️</span>}
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{salon.nume}</div>
-                    <div style={{ fontSize: 12, color: c.muted }}>✂️ {rezervare?.serviciu}</div>
+                    <div style={{ fontSize: 12, color: c.muted }}>✂️ {rezervare?.servicii?.join(" + ")}</div>
                   </div>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 900, color: c.text, marginBottom: 4 }}>Alege specialistul</div>
@@ -988,28 +1010,54 @@ export default function DashboardClient() {
                     </div>
                   )}
                   {salon.serviciiComplete.map(s => {
-                    const sel = rezervare?.serviciu === s.nume;
+                    const sel = (rezervare?.servicii || []).includes(s.nume);
                     const { pret, durata } = getPretDurata(s, animal?.talie);
                     if (!pret && !durata) return null;
                     return (
-                      <button key={s.nume} onClick={() => setRezervare(r => ({ ...r!, salonId: salon.id, serviciu: s.nume, ora: r?.ora || "" }))}
+                      <button key={s.nume} onClick={() => setRezervare(r => {
+                        const curr = r?.servicii || [];
+                        const next = curr.includes(s.nume) ? curr.filter(n => n !== s.nume) : [...curr, s.nume];
+                        return { salonId: salon.id, servicii: next, ora: r?.ora && next.length === curr.length ? r.ora : "" };
+                      })}
                         style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                        <div><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
-                        {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12 }}>{pret} RON</div>}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                          <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${sel ? salon.culoare : c.border}`, background: sel ? salon.culoare : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, color: "#fff", fontWeight: 900 }}>{sel ? "✓" : ""}</div>
+                          <div style={{ minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
+                        </div>
+                        {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12, flexShrink: 0 }}>{pret} RON</div>}
                       </button>
                     );
                   })}
                 </div>
               )}
 
-              {rezervare?.serviciu && CalendarSlots(rezervare.serviciu)}
+              {(() => {
+                const selServ = (rezervare?.servicii || []).map(n => salon.serviciiComplete.find(s => s.nume === n)).filter(Boolean) as any[];
+                if (!selServ.length) return null;
+                let totalPret = 0, totalDurata = 0;
+                for (const sv of selServ) {
+                  const { pret, durata } = getPretDurata(sv, animal?.talie);
+                  totalPret += Number(pret) || 0;
+                  totalDurata += Number(durata) || 0;
+                }
+                return (
+                  <div style={{ background: theme === "dark" ? `${salon.culoare}26` : salon.bg, border: `2px solid ${salon.culoare}`, borderRadius: 14, padding: "12px 16px", marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: salon.culoare }}>
+                      {selServ.length} {selServ.length === 1 ? "serviciu" : "servicii"} · ⏱ {totalDurata} min
+                    </div>
+                    <div style={{ fontSize: 17, fontWeight: 900, color: salon.culoare }}>{totalPret} RON</div>
+                  </div>
+                );
+              })()}
+
+              {rezervare?.servicii?.length ? CalendarSlots(rezervare.servicii) : null}
 
               {confirmareError && (
                 <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center", marginBottom: 12 }}>
                   ⚠️ {confirmareError}
                 </div>
               )}
-              {rezervare?.serviciu && rezervare?.ora && (
+              {(rezervare?.servicii?.length ?? 0) > 0 && rezervare?.ora && (
                 <button onClick={creazaProgramare} disabled={confirmareLoading}
                   style={{ ...btnPrimary, width: "100%", background: confirmareLoading ? "#FFB07A" : "#FF6B00", cursor: confirmareLoading ? "default" : "pointer" }}>
                   {confirmareLoading ? "Se salvează..." : "Confirmă programarea →"}
@@ -1120,7 +1168,7 @@ export default function DashboardClient() {
                               <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                                 {pret && <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare }}>{pret} RON</div>}
                                 <button onClick={() => {
-                                  setRezervare({ salonId: salon.id, serviciu: s.nume, ora: "" });
+                                  setRezervare({ salonId: salon.id, servicii: [s.nume], ora: "" });
                                   setGroomerSelectat(null);
                                   setEtapaBooking(salon.echipa && salon.echipa.length > 0 ? "specialist" : "calendar");
                                   setRezervareActiva(true);
