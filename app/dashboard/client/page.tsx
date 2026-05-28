@@ -185,6 +185,7 @@ type Programare = {
   ora: string;
   status: StatusProgramare;
   pret: number;
+  groomer: string | null;
 };
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
@@ -422,7 +423,7 @@ export default function DashboardClient() {
     async function loadProgramari(userId: string) {
       const { data } = await supabase
         .from("programari")
-        .select("id, salon_id, serviciu, pret, data, ora, status, saloane(nume)")
+        .select("id, salon_id, serviciu, pret, data, ora, status, groomer, saloane(nume)")
         .eq("user_id", userId)
         .order("data", { ascending: false })
         .order("ora", { ascending: false });
@@ -437,6 +438,7 @@ export default function DashboardClient() {
           ora: p.ora,
           status: p.status as StatusProgramare,
           pret: Number(p.pret) || 0,
+          groomer: p.groomer || null,
         })));
       }
     }
@@ -708,6 +710,7 @@ export default function DashboardClient() {
       ora: rezervare.ora,
       status: "în așteptare",
       pret: pretNumeric,
+      groomer: groomerSelectat || null,
     }, ...prev]);
 
     // Notificare pentru proprietarul salonului
@@ -926,9 +929,8 @@ export default function DashboardClient() {
       if (etapaBooking === "specialist") {
         return (
           <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-            <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+            <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl} onBack={() => { setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); }} backLabel="Profil salon">
               <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
-                <button onClick={() => { setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); }} style={btnBack}>← Înapoi la profil</button>
                 <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
                   {salon.poza_url
                     ? <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
@@ -971,9 +973,18 @@ export default function DashboardClient() {
 
       return (
         <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-          <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+          <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}
+            onBack={() => {
+              if (salon.echipa && salon.echipa.length > 0 && groomerSelectat) {
+                setEtapaBooking("specialist");
+                setGroomerSelectat(null);
+                setRezervare(r => r ? { ...r, servicii: [], ora: "" } : r);
+              } else {
+                setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); setEtapaBooking("calendar");
+              }
+            }}
+            backLabel={salon.echipa && salon.echipa.length > 0 ? "Alege specialist" : "Profil salon"}>
             <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
-              <button onClick={() => { setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); setEtapaBooking("calendar"); }} style={btnBack}>← Înapoi la profil</button>
 
               {/* Salon mini-header */}
               <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
@@ -1067,16 +1078,7 @@ export default function DashboardClient() {
                           <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${sel ? salon.culoare : c.border}`, background: sel ? salon.culoare : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, color: "#fff", fontWeight: 900 }}>{sel ? "✓" : ""}</div>
                           <div style={{ minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
                         </div>
-                        {pret && (
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, marginLeft: 12, flexShrink: 0 }}>
-                            <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare }}>{pret} RON</div>
-                            {groomerObj && (() => {
-                              const { pret: pretBaza } = getPretDurata(sBaza, animal?.talie);
-                              if (pretBaza && pretBaza !== pret) return <div style={{ fontSize: 10, color: c.xmuted, fontWeight: 600 }}>salon: {pretBaza} RON</div>;
-                              return null;
-                            })()}
-                          </div>
-                        )}
+                        {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12, flexShrink: 0 }}>{pret} RON</div>}
                       </button>
                     );
                   });
@@ -1953,7 +1955,7 @@ export default function DashboardClient() {
 }
 
 /* ── Shell ── */
-function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUrl }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number; avatarUrl?: string | null }) {
+function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUrl, onBack, backLabel }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number; avatarUrl?: string | null; onBack?: () => void; backLabel?: string }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
@@ -1986,19 +1988,19 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: c.surface, borderBottom: `1px solid ${c.border}`, height: 64 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 16px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            {/* On mobile with sub-tab open, hide logo and show back button instead */}
-            {!(isMobile && tab !== "saloane") && (
+            {/* On mobile with sub-tab or onBack active, hide logo and show back button instead */}
+            {!(isMobile && (tab !== "saloane" || onBack)) && (
               <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
             )}
-            {tab !== "saloane" && (
+            {(tab !== "saloane" || onBack) && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                 {!isMobile && <div style={{ width: 1, height: 22, background: c.border }} />}
-                <button onClick={() => onNav("saloane")}
+                <button onClick={() => { if (onBack) onBack(); else onNav("saloane"); }}
                   style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                   ← Înapoi
                 </button>
                 {!isMobile && (
-                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{TAB_LABELS[tab]}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{backLabel || TAB_LABELS[tab]}</div>
                 )}
               </div>
             )}
@@ -2164,6 +2166,7 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere }: { p: Progra
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.salon_nume}</div>
         <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.serviciu}</div>
+        {p.groomer && <div style={{ fontSize: 12, color: c.muted, marginTop: 3 }}>👤 {p.groomer}</div>}
         <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>📅 {formatData(p.data)} · 🕐 {p.ora}</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
