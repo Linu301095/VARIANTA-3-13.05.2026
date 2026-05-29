@@ -109,7 +109,7 @@ export default function HomePage() {
 
           {/* STATS BAR — fix responsive 2x2 pe mobil */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, marginTop: 56, paddingTop: 36, borderTop: "1px solid #FF6B00" }}>
-            {[["24/7", "Disponibil"], ["0%", "Comision"], ["🐾", "Profil cu istoric"], ["📊", "Statistici reale"]].map(([val, label], i) => (
+            {[["24/7", "Disponibil"], ["0%", "Comision"], ["4 pași", "De la zero la confirmat"], ["Live", "Calendar actualizat instant"]].map(([val, label], i) => (
               <div key={label} style={{
                 textAlign: "center",
                 padding: "16px 8px",
