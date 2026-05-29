@@ -31,21 +31,21 @@ const STEPS_SALON = [
 
 const BENEFICII_CLIENT = [
   { icon: "🐾", titlu: "Profilul animalului tău, complet și mereu la îndemână", desc: "Talia (Mică/Medie/Mare) e salvată în profil, așa că prețul pe care îl vezi e exact cel pentru câinele tău, nu un estimat generic." },
-  { icon: "📅", titlu: "Disponibilitate live, slot 30min", desc: "Verde = liber, portocaliu = rezervat, roșu = blocat. Fără să suni ca să întrebi dacă mai e loc." },
-  { icon: "🔔", titlu: "Confirmare instant, nu pe WhatsApp", desc: "Salonul acceptă sau refuză în câteva minute. Primești notificare direct în aplicație, nu trebuie să aștepți răspuns pe mesaj." },
-  { icon: "📜", titlu: "Dosar complet al animalului", desc: "Rasă, vârstă, alergii, poze, toate vizitele cu serviciu, preț și salon — accesibile oricând, de pe orice dispozitiv." },
-  { icon: "💸", titlu: "Prețuri transparente înainte de rezervare", desc: "Nu mai afli prețul abia la salon. CalyHub îl afișează per talie și per serviciu înainte să confirmi — fără surprize." },
-  { icon: "🎯", titlu: "Un cont pentru toate animalele tale", desc: "Ai 2 câini și o pisică? Un singur cont, profile separate, istoric individual. Tot în același loc." },
+  { icon: "📅", titlu: "Disponibilitate în timp real", desc: "Vezi exact ce ore sunt libere și rezervi pe loc, fără telefoane și fără să aștepți confirmarea pe mesaj." },
+  { icon: "🔔", titlu: "Confirmare rapidă, direct în aplicație", desc: "Salonul îți confirmă programarea în câteva minute, cu notificare direct în cont — fără conversații pe WhatsApp." },
+  { icon: "📜", titlu: "Tot istoricul, într-un singur loc", desc: "Fiecare programare se adaugă automat în dosar: serviciu, preț, salon, dată. Nimic nu se pierde." },
+  { icon: "💸", titlu: "Preț clar, înainte de programare", desc: "Vezi exact cât plătești pentru animalul tău încă din momentul rezervării." },
+  { icon: "🎯", titlu: "Un cont pentru toată familia blănoasă", desc: "Adaugi câte animale vrei, fiecare cu profilul și istoricul lui. Gestionezi totul dintr-un singur loc." },
 ];
 
 const BENEFICII_SALON = [
   { icon: "💰", titlu: "Tarife clare", desc: "Prețuri și durate diferite per talie." },
   { icon: "🚫", titlu: "Calendarul tău, fără suprapuneri", desc: "Controlezi complet disponibilitatea — deschizi sau închizi sloturi oricând, inclusiv pentru programări telefonice sau pauze. Calendarul online reflectă întotdeauna realitatea." },
-  { icon: "✂️", titlu: "Vezi cine produce în echipă", desc: "Statistici per groomer: câte programări a făcut și cât a încasat fiecare specialist în perioada aleasă. Știi exact cine îți duce salonul — fără să numeri manual." },
-  { icon: "👤", titlu: "Dosar per client, mereu la îndemână", desc: "Istoricul complet al fiecărui client: câte vizite, ce servicii, ce animale, ce alergii. Nu mai cauți prin caiet sau WhatsApp." },
-  { icon: "🛡️", titlu: "Protecție împotriva clienților neserioși", desc: "Vezi exact cine anulează des și, dacă un client îți strică agenda cu anulări repetate, îl blochezi cu un click — nu mai poate rezerva la tine. Timpul tău e protejat de no-show-uri." },
-  { icon: "📱", titlu: "Calendar mobil, oricând, oriunde", desc: "Accepți, refuzi, blochezi sloturi direct de pe telefon — inclusiv duminică noaptea când clientul face rezervarea." },
-  { icon: "🎁", titlu: "3 luni complet gratuite", desc: "Testezi toate funcționalitățile, cu programări reale. Fără card, fără angajament. Anulezi cu un click dacă nu e pentru tine." },
+  { icon: "✂️", titlu: "Vezi performanța fiecărui groomer", desc: "Câte programări și ce încasări are fiecare specialist, pe perioada aleasă. Ai imaginea clară a echipei, fără calcule manuale." },
+  { icon: "👤", titlu: "Clienții tăi, organizați", desc: "Acces instant la istoricul fiecărui client: ce animale are, ce servicii a făcut, ce alergii trebuie evitate." },
+  { icon: "🛡️", titlu: "Protecție împotriva anulărilor repetate", desc: "Vezi cine anulează frecvent și poți bloca, cu un click, clienții care îți afectează agenda. Timpul tău rămâne protejat." },
+  { icon: "📱", titlu: "Control total, de pe orice dispozitiv", desc: "Gestionezi calendarul direct din telefon, oricând. Nu trebuie să fii în salon ca să fii la curent." },
+  { icon: "🎁", titlu: "Primele 3 luni, gratuite", desc: "Testezi toate funcțiile cu programări reale. Fără card, fără angajament — anulezi oricând." },
 ];
 
 export default function CumFunctioneaza() {
