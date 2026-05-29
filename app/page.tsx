@@ -263,12 +263,11 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: "center" }}>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}>
                 ✂️ Înregistrează salonul gratuit →
               </Link>
-              <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 12 }}>Fără card · Fără comision · Primele 3 luni gratuite</div>
-              <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 16, padding: "11px 26px", borderRadius: 50, border: "2px solid #FF6B00", background: "#fff", fontSize: 14.5, fontWeight: 800, color: "#FF6B00", textDecoration: "none" }}>📋 Planuri</Link>
+              <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", padding: "14px 28px", borderRadius: 50, border: "2px solid #FF6B00", background: "#fff", fontSize: 15, fontWeight: 800, color: "#FF6B00", textDecoration: "none" }}>Planuri</Link>
             </div>
           </div>
         </section>
