@@ -109,7 +109,7 @@ export default function HomePage() {
 
           {/* STATS BAR — fix responsive 2x2 pe mobil */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, marginTop: 56, paddingTop: 36, borderTop: "1px solid #FF6B00" }}>
-            {[["500+", "Saloane"], ["24/7", "Disponibil"], ["-70%", "Neprezentări"], ["10s", "Programare"]].map(([val, label], i) => (
+            {[["24/7", "Disponibil"], ["0%", "Comision"], ["🐾", "Profil cu istoric"], ["📊", "Statistici reale"]].map(([val, label], i) => (
               <div key={label} style={{
                 textAlign: "center",
                 padding: "16px 8px",
@@ -141,9 +141,9 @@ export default function HomePage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 40 }}>
               {[
                 ["📅", "Programări 24/7", "Fără telefon. Calendar actualizat în timp real."],
-                ["📱", "Reminder SMS automat", "SMS cu o zi înainte. Neprezentările scad cu 70%."],
-                ["🐾", "Profil animăluț unic", "Rasă, vârstă, alergii salvate. Salonul îl cunoaște deja."],
-                ["⭐", "Status Special", "Istoric complet vizite. Animăluțul tău are dosar propriu."],
+                ["📱", "Reminder SMS automat", "Primești un SMS cu o zi înainte. Fără programări uitate."],
+                ["🐾", "Profil animal unic", "Rasă, vârstă, alergii salvate. Salonul îl cunoaște deja."],
+                ["⭐", "Status Special", "Istoric complet vizite. Animalul tău are dosar propriu."],
               ].map(([icon, title, desc]) => (
                 <div key={title as string} className="step-card" style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
                   <div style={{ fontSize: 32, marginBottom: 14 }}>{icon}</div>
