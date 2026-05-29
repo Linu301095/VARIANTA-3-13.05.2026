@@ -169,13 +169,13 @@ export default function HomePage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 40 }}>
               {[
-                ["-70%", "Neprezentări", "Reminder SMS automat cu 24h înainte."],
-                ["3h", "Economisite/zi", "Zero timp pierdut cu telefoanele."],
-                ["+40%", "Clienți noi", "Vizibilitate garantată pe CalyHub."],
-                ["24/7", "Calendar activ", "Programul tău, sub control total: deschizi sau închizi disponibilitatea în câteva secunde, de oriunde."],
+                ["🛡️", "Protecție anulări", "Vezi cine anulează des și blochezi clienții care îți strică agenda."],
+                ["💰", "Prețuri per talie", "Tarif corect pentru fiecare câine — Mică, Medie, Mare. Fără negocieri."],
+                ["👤", "Dosar per client", "Vizite, servicii, animale și alergii — totul despre fiecare client, la îndemână."],
+                ["📱", "Calendar de pe telefon", "Accepți, refuzi sau ajustezi programări de oriunde, oricând."],
               ].map(([stat, title, desc]) => (
                 <div key={title as string} className="step-card" style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
-                  <div style={{ fontSize: 32, fontWeight: 900, color: "#FF6B00", marginBottom: 8 }}>{stat}</div>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>{stat}</div>
                   <h3 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{title}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.6 }}>{desc}</p>
                 </div>
