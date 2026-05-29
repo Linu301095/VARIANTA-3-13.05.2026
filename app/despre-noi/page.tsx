@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 const VALORI = [
-  { icon: "❤️", titlu: "Pasiune pentru animale", desc: "Fiecare decizie de produs o luăm cu animăluțul în minte. Bunăstarea lor nu e o opțiune — e centrul a tot ce construim." },
+  { icon: "❤️", titlu: "Pasiune pentru animale", desc: "Fiecare decizie de produs o luăm cu animalul în minte. Bunăstarea lor nu e o opțiune — e centrul a tot ce construim." },
   { icon: "🌟", titlu: "Standarde înalte", desc: "Vrem ca fiecare salon de pe CalyHub să ofere servicii la cele mai bune standarde. Filtrăm, verificăm, ridicăm ștacheta." },
   { icon: "🤝", titlu: "Parteneriat real", desc: "Saloanele nu sunt simpli furnizori — sunt parteneri în misiunea noastră. Le oferim uneltele ca să crească împreună cu noi." },
   { icon: "🔒", titlu: "Transparență totală", desc: "Prețuri clare, fără comisioane ascunse. Ce vezi este ce primești — pentru toți cei implicați." },
@@ -25,8 +25,8 @@ const VALORI = [
 const CIFRE = [
   { val: "2026", label: "Anul fondării" },
   { val: "🇷🇴", label: "Construit în România" },
-  { val: "100%", label: "Pentru iubitorii de animale" },
-  { val: "∞", label: "Pasiune pentru ce facem" },
+  { val: "0", label: "Comisioane ascunse" },
+  { val: "100%", label: "Dedicat grooming-ului" },
 ];
 
 export default function DespreNoi() {
@@ -74,25 +74,17 @@ export default function DespreNoi() {
               </p>
 
               <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Am observat ani la rând cât de fragmentată e industria. Saloane bune ascunse pe ulițe lăturalnice, fără vizibilitate. Stăpâni care își fac programări prin telefon, uneori sună la 5-6 locuri până găsesc disponibilitate. Animăluți care primesc servicii inconstante pentru că salonul nu are istoricul lor. Pierderi de timp, frustrări, oportunități ratate — și mai ales, animale care nu primesc întotdeauna ce merită.
+                Am observat ani la rând cât de fragmentată e industria. Saloane bune ascunse pe ulițe lăturalnice, fără vizibilitate. Stăpâni care își fac programări prin telefon, uneori sună la 5-6 locuri până găsesc disponibilitate. Animale care primesc servicii inconstante pentru că salonul nu are istoricul lor. Pierderi de timp, frustrări, oportunități ratate — și mai ales, animale care nu primesc întotdeauna ce merită.
               </p>
 
               <div style={{ background: "#FFF3EA", borderLeft: "4px solid #FF6B00", padding: "22px 26px", borderRadius: "0 16px 16px 0", margin: "10px 0" }}>
                 <p style={{ fontSize: 17, color: "#1A1A1A", lineHeight: 1.8, fontWeight: 700, fontStyle: "italic" }}>
-                  „Animăluții noștri merită cele mai bune servicii. Nu mai puțin, nu altceva — cele mai bune."
+                  „Animalul tău merită cele mai bune servicii. Nu mai puțin, nu altceva — cele mai bune."
                 </p>
               </div>
 
               <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Așa s-a născut CalyHub: din convingerea că tehnologia poate fi pusă în slujba binelui — în slujba acestor ființe care ne dau atâta iubire necondiționată. O platformă care să conecteze stăpânii cu cele mai bune saloane, care să ajute saloanele profesioniste să crească și să fie vizibile, și care să ridice ștacheta întregii industrii.
-              </p>
-
-              <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                CalyHub a fost fondat oficial în <strong style={{ color: "#1A1A1A" }}>2026</strong>, dar ideea există de mult mai mult timp. Iar drumul abia începe.
-              </p>
-
-              <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Dacă ești stăpân de animale sau dacă deții un salon și vrei să faci parte din această misiune — bine ai venit. Construim împreună standardul îngrijirii animalelor de mâine.
+                Așa s-a născut CalyHub: din convingerea că tehnologia poate fi pusă în slujba binelui. O platformă care conectează stăpânii cu saloanele potrivite, ajută profesioniștii să crească și ridică ștacheta întregii industrii. Drumul abia începe — și e loc pentru toți cei care vor să facă parte din el.
               </p>
 
               <div style={{ fontSize: 15, color: "#FF6B00", fontWeight: 800, marginTop: 12, fontStyle: "italic" }}>
