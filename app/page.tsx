@@ -42,11 +42,11 @@ export default function HomePage() {
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 20px 80px" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 18px", marginBottom: 20, fontSize: 13, fontWeight: 700, color: "#FF6B00" }}>
-              🐾 500+ saloane · Programare în 10 secunde
+              🐾 Platforma care conectează stăpânii cu saloanele de grooming
             </div>
             <h1 style={{ fontSize: "clamp(28px, 4.5vw, 52px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.1, marginBottom: 14 }}>
-              Grooming de top pentru<br />
-              <span style={{ color: "#FF6B00" }}>animăluțul tău iubit.</span>
+              Programează rapid animalul tău la<br />
+              <span style={{ color: "#FF6B00" }}>cel mai potrivit salon de grooming.</span>
             </h1>
             <p style={{ fontSize: "clamp(15px, 1.6vw, 18px)", color: "#6B7280", maxWidth: 500, margin: "0 auto", lineHeight: 1.7 }}>
               Fie că ești iubitor de animale sau deții un salon — CalyHub e construit pentru tine.
@@ -172,7 +172,7 @@ export default function HomePage() {
                 ["-70%", "Neprezentări", "Reminder SMS automat cu 24h înainte."],
                 ["3h", "Economisite/zi", "Zero timp pierdut cu telefoanele."],
                 ["+40%", "Clienți noi", "Vizibilitate garantată pe CalyHub."],
-                ["24/7", "Calendar activ", "Programări automate inclusiv noaptea."],
+                ["24/7", "Calendar activ", "Programul tău, sub control total: deschizi sau închizi disponibilitatea în câteva secunde, de oriunde."],
               ].map(([stat, title, desc]) => (
                 <div key={title as string} className="step-card" style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
                   <div style={{ fontSize: 32, fontWeight: 900, color: "#FF6B00", marginBottom: 8 }}>{stat}</div>
