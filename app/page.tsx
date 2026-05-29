@@ -90,9 +90,9 @@ export default function HomePage() {
               <h2 style={{ fontSize: "clamp(22px,2.6vw,30px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginBottom: 10 }}>Umple-ți<br />calendarul</h2>
               <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>Primești programări online oricând, îți gestionezi calendarul dintr-un singur loc și urmărești statisticile salonului în timp real.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-                {[["-70%", "Reducere neprezentări clienți"], ["3h", "Economisite zilnic față de telefon"], ["+40%", "Creștere clienți noi lunar"]].map(([val, label]) => (
+                {[["📅", "Programări online non-stop"], ["📊", "Statistici reale și rapoarte"], ["✂️", "Sloturi și servicii per specialist"]].map(([val, label]) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAFAFA", borderRadius: 12, padding: "11px 14px" }}>
-                    <span style={{ fontSize: 17, fontWeight: 900, color: "#FF6B00", minWidth: 52 }}>{val}</span>
+                    <span style={{ fontSize: 20, minWidth: 28, textAlign: "center" }}>{val}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
                 ))}
