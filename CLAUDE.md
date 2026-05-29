@@ -78,9 +78,9 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 - Notificări in-app (client + salon) cu optimistic update
 - Dashboard client (programări, saloane, animale, profil, notificări)
 - Dashboard salon (agendă, statistici reale, echipă, programări, rapoarte)
-- Dashboard admin (~65%)
+- Dashboard admin (~50%) — tab-urile Overview/Clienți/Saloane/Programări/Abonamente folosesc date reale din Supabase; tab-urile Recenzii/Tichete Suport/Marketing/Setări folosesc mock din `adminMockData.ts` (localStorage)
 - Statistici salon (încasări, top servicii, productivitate groomer, export Excel)
-- Recenzii — scriere/afișare (~70%)
+- Recenzii — scriere/afișare (~85%) — scriere, validare, afișare pe profil salon și dashboard, agregare rating pe carduri (RatingBadge) — toate cu date reale. Lipsă: răspuns salon, raportare, moderare admin reală
 - Performanță: paralelizare query-uri, optimistic UI, cache saloane, indexuri SQL
 - SEO complet pe toate paginile publice
 - Pagini publice: Home, Cum funcționează, Despre noi, Prețuri, Termeni, Confidențialitate
@@ -121,7 +121,6 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 - Contract cadru B2B cu salonul
 
 **🔍 UX / Calitate date**
-- Rating real în lista saloane (acum hardcodat, nu din `recenzii`)
 - Distanța „1.2 km" hardcodată (necesită Google Maps API)
 - Verificare email la register (neconfirmat în Supabase)
 - Filtrare saloane pe preț (acum doar serviciu + rating)
@@ -174,7 +173,6 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 **Etapa 4 — Înainte de prezentare (~1 zi dev)**
 13. Pagina Confidențialitate corectată juridic
 14. Google OAuth + Facebook OAuth activate
-15. Rating real din `recenzii` în lista saloane
 
 **Post-lansare (după primii clienți)**
 - SMS reminder Twilio · Telefon OTP login · Code splitting dashboard · Hartă Google Maps · PWA → React Native
