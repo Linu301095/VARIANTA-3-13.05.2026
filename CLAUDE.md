@@ -44,3 +44,10 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 ## TODO post-lansare
 
 - **Code splitting pe tab-uri (punctul E din optimizarea de performanță)** — `app/dashboard/client/page.tsx` (~2300 linii) și `app/dashboard/salon/page.tsx` (~2150 linii) sunt fișiere uriașe cu toate tab-urile la un loc. De spart fiecare tab într-un fișier separat (`tabs/saloane.tsx`, `tabs/programari.tsx`, etc.), de creat un Context provider pentru state-ul comun (user, salon, theme, notificari) și de folosit `dynamic(() => import(...))` pentru lazy loading. Estimare: 4-6 ore. Câștig: -40% bundle inițial. De făcut DUPĂ ce restul aplicației e stabilă post-lansare.
+
+- **Pagina Confidențialitate (`app/confidentialitate/page.tsx`) — de revizuit înainte de prezentare/lansare.** Are inexactități juridice care trebuie corectate ca să nu expună firma la sancțiuni ANSPDCP:
+  1. **Cookie-uri declarate dar (probabil) neinstalate** — pagina menționează Google Analytics 4, Hotjar, Facebook Pixel, Google Ads. De confirmat care sunt real active și de scos restul (declararea de prelucrări inexistente e o problemă GDPR).
+  2. **SMS Twilio** — pagina spune că se colectează telefon pentru SMS-uri de reminder; SMS-ul e „în curând" în tot restul aplicației. De reformulat ca funcție viitoare până e activ real.
+  3. **„Parole criptate cu bcrypt"** — aplicația folosește Supabase Auth, nu bcrypt gestionat direct. De reformulat: „prin Supabase, conform standardelor de securitate".
+  4. **CUI lipsă** — de adăugat CUI-ul real al firmei în pagină + footer (`components/Footer.tsx`) — obligatoriu legal.
+  5. **Claim-uri de securitate de susținut** — „audit semestrial", „backup criptat zilnic", „monitorizare continuă intruziuni" — de păstrat doar ce e real.
