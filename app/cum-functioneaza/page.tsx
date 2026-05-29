@@ -24,7 +24,7 @@ const STEPS_CLIENT = [
 
 const STEPS_SALON = [
   { nr: "01", icon: "🏪", titlu: "Înregistrezi salonul", desc: "Datele firmei, copertă, galerie până la 10 foto, echipa, descriere. Profilul salonului apare instant în lista clienților din oraș." },
-  { nr: "02", icon: "⚙️", titlu: "Configurezi calendarul", desc: "Orar săptămânal pe zile (deschis/închis), blocaje manuale pentru programări telefonice, walk-in sau pauze. Sloturi 30min anti-dublă-rezervare." },
+  { nr: "02", icon: "⚙️", titlu: "Configurezi calendarul", desc: "Stabilești orarul săptămânal și marchezi oricând sloturile ocupate — telefonic, walk-in sau pauze. Sistemul blochează automat suprapunerile." },
   { nr: "03", icon: "💰", titlu: "Prețuri diferite per talie", desc: "Preț și durată diferite pentru Mică/Medie/Mare. Reflectă exact cum lucrezi: un câine mare cere mai mult timp și șampon. Clientul vede prețul corect pentru talia lui." },
   { nr: "04", icon: "📊", titlu: "Statistici pe orice perioadă + rapoarte", desc: "Încasări, programări și clienți filtrate pe Azi / Ieri / Săptămână / Lună / An sau interval ales de tine. Evoluție lunară, top servicii, productivitate pe groomer și export Excel cu un click." },
 ];
@@ -39,8 +39,8 @@ const BENEFICII_CLIENT = [
 ];
 
 const BENEFICII_SALON = [
-  { icon: "💰", titlu: "3 prețuri per serviciu, zero negocieri", desc: "Tuns câine mare: 180 RON / 90 min. Câine mic: 80 RON / 45 min. Clientul vede exact prețul lui — nu mai există discuții la casă." },
-  { icon: "🚫", titlu: "Zero dublă-rezervare, garantat", desc: "Blochezi manual sloturi pentru programări telefonice, walk-in sau pauze. Calendarul online se umple doar în ce mai e liber." },
+  { icon: "💰", titlu: "Tarife clare", desc: "Setezi prețuri și durate diferite pentru Mică, Medie și Mare. Clientul vede prețul corect pentru animalul lui înainte de confirmare — fără negocieri la final." },
+  { icon: "🚫", titlu: "Calendarul tău, fără suprapuneri", desc: "Controlezi complet disponibilitatea — deschizi sau închizi sloturi oricând, inclusiv pentru programări telefonice sau pauze. Calendarul online reflectă întotdeauna realitatea." },
   { icon: "✂️", titlu: "Vezi cine produce în echipă", desc: "Statistici per groomer: câte programări a făcut și cât a încasat fiecare specialist în perioada aleasă. Știi exact cine îți duce salonul — fără să numeri manual." },
   { icon: "👤", titlu: "Dosar per client, mereu la îndemână", desc: "Istoricul complet al fiecărui client: câte vizite, ce servicii, ce animale, ce alergii. Nu mai cauți prin caiet sau WhatsApp." },
   { icon: "🛡️", titlu: "Protecție împotriva clienților neserioși", desc: "Vezi exact cine anulează des și, dacă un client îți strică agenda cu anulări repetate, îl blochezi cu un click — nu mai poate rezerva la tine. Timpul tău e protejat de no-show-uri." },
@@ -85,7 +85,7 @@ export default function CumFunctioneaza() {
               <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 }}>🐾</div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2 }}>Ai un animal de companie</div>
-                <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Rezervi în 4 pași simpli</h2>
+                <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Cum faci o programare în 4 pași</h2>
               </div>
             </div>
 
@@ -180,7 +180,7 @@ export default function CumFunctioneaza() {
               <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 }}>✂️</div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2 }}>Ai un salon de grooming</div>
-                <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Calendar plin în 4 pași</h2>
+                <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Ești live în 4 pași</h2>
               </div>
             </div>
 
