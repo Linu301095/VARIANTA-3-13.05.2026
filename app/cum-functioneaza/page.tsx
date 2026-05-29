@@ -39,7 +39,7 @@ const BENEFICII_CLIENT = [
 ];
 
 const BENEFICII_SALON = [
-  { icon: "💰", titlu: "Tarife clare", desc: "Setezi prețuri și durate diferite pentru Mică, Medie și Mare. Clientul vede prețul corect pentru animalul lui înainte de confirmare — fără negocieri la final." },
+  { icon: "💰", titlu: "Tarife clare", desc: "Prețuri și durate diferite per talie." },
   { icon: "🚫", titlu: "Calendarul tău, fără suprapuneri", desc: "Controlezi complet disponibilitatea — deschizi sau închizi sloturi oricând, inclusiv pentru programări telefonice sau pauze. Calendarul online reflectă întotdeauna realitatea." },
   { icon: "✂️", titlu: "Vezi cine produce în echipă", desc: "Statistici per groomer: câte programări a făcut și cât a încasat fiecare specialist în perioada aleasă. Știi exact cine îți duce salonul — fără să numeri manual." },
   { icon: "👤", titlu: "Dosar per client, mereu la îndemână", desc: "Istoricul complet al fiecărui client: câte vizite, ce servicii, ce animale, ce alergii. Nu mai cauți prin caiet sau WhatsApp." },
