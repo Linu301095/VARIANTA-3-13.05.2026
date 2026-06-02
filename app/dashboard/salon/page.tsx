@@ -347,7 +347,7 @@ function AgendaCalendar({
         </div>
 
         {/* Coloane specialiști — doar acestea scrollează orizontal */}
-        <div style={{ flex: 1, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ flex: 1, minWidth: 0, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <div style={{ display: "flex", minWidth: "min-content" }}>
             {cols.map((col, ci) => {
               const { info, laneCount } = withLanes(col.appts);
