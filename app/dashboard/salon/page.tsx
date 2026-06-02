@@ -179,9 +179,9 @@ function AgendaCalendar({
   theme: "light" | "dark";
 }) {
   const PX_PER_MIN = 1.4;
-  const HEADER_H = 60;
-  const COL_MIN = 150;
+  const HEADER_H = 56;
   const GUTTER_W = 50;
+  const [colSel, setColSel] = useState<string>("");
 
   const aziIso = isoData(new Date());
   const now = new Date();
@@ -212,6 +212,9 @@ function AgendaCalendar({
   if (fallbackAppts.length > 0 || cols.length === 0) {
     cols.push({ key: "__none__", nume: echipa.length === 0 ? "Salon" : "Fără specialist", appts: fallbackAppts });
   }
+  // Specialistul afișat (un singur calendar pe ecran — fără scroll orizontal)
+  const activeCol = cols.find(x => x.key === colSel) || cols[0];
+  const activeLanes = activeCol ? withLanes(activeCol.appts) : { info: [], laneCount: 1 };
 
   // Fereastra de timp a zilei (din programul salonului, extinsă să cuprindă toate programările)
   const progZi = program[String(selDate.getDay())];
@@ -334,67 +337,81 @@ function AgendaCalendar({
         </div>
       )}
 
-      {/* Calendar — gutter fix în stânga (nu scrollează), coloane cu scroll orizontal */}
-      <div style={{ border: `1.5px solid ${c.border}`, borderRadius: 16, background: c.surface, display: "flex", overflow: "hidden" }}>
-        {/* Gutter ore — în afara containerului cu scroll, nu se mișcă niciodată */}
-        <div style={{ flexShrink: 0, width: GUTTER_W, borderRight: `1px solid ${c.border}`, background: c.surface }}>
-          <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}` }} />
-          <div style={{ position: "relative", height: bodyH }}>
-            {hours.map(m => (
-              <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, transform: "translateY(-50%)", textAlign: "center", fontSize: 11, fontWeight: 700, color: c.xmuted }}>{minToTime(m)}</div>
-            ))}
-          </div>
+      {/* Selector specialist — un singur calendar pe ecran, fără scroll orizontal */}
+      {cols.length > 1 && (
+        <div style={{ display: "flex", gap: 7, marginBottom: 12, overflowX: "auto", paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
+          {cols.map(col => {
+            const sel = activeCol?.key === col.key;
+            return (
+              <button key={col.key} onClick={() => setColSel(col.key)}
+                style={{ flexShrink: 0, padding: "9px 16px", borderRadius: 50, border: sel ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: sel ? "#FF6B00" : c.surface, color: sel ? "#fff" : c.text2, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                <span>{col.key === "__none__" ? "👥" : "✂️"} {col.nume}</span>
+                {col.appts.length > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 900, color: sel ? "#fff" : "#FF6B00", background: sel ? "rgba(255,255,255,.25)" : c.orangeAccent, borderRadius: 50, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>{col.appts.length}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
+      )}
 
-        {/* Coloane specialiști — umplu ecranul când sunt puține, scrollează doar când sunt multe */}
-        <div style={{ flex: 1, minWidth: 0, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <div style={{ display: "flex", minWidth: "100%" }}>
-            {cols.map((col, ci) => {
-              const { info, laneCount } = withLanes(col.appts);
-              return (
-                <div key={col.key} style={{ flex: `1 0 ${COL_MIN}px`, minWidth: COL_MIN, borderRight: ci < cols.length - 1 ? `1px solid ${c.border}` : "none" }}>
-                  <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 8px", gap: 2 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.key === "__none__" ? col.nume : `✂️ ${col.nume}`}</div>
-                    {col.specialitate && <div style={{ fontSize: 10.5, fontWeight: 600, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.specialitate}</div>}
-                  </div>
-                  <div style={{ position: "relative", height: bodyH }}>
-                    {hours.map(m => (
-                      <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, height: 1, background: c.border2 }} />
-                    ))}
-                    {agendaZi === aziIso && nowMin >= startMin && nowMin <= endMin && (
-                      <div style={{ position: "absolute", top: (nowMin - startMin) * PX_PER_MIN, left: 0, right: 0, height: 2, background: "#FF6B00", zIndex: 4 }}>
-                        <div style={{ position: "absolute", left: -3, top: -3, width: 8, height: 8, borderRadius: "50%", background: "#FF6B00" }} />
-                      </div>
-                    )}
-                    {info.map(({ p, s, e, lane }) => {
-                      const nou = p.status === "în așteptare";
-                      const anulat = p.status === "anulat";
-                      const trecut = (agendaZi < aziIso) || (agendaZi === aziIso && e <= nowMin);
-                      const top = (s - startMin) * PX_PER_MIN;
-                      const h = Math.max(24, (e - s) * PX_PER_MIN);
-                      const w = `calc(${100 / laneCount}% - 4px)`;
-                      const left = `calc(${(lane * 100) / laneCount}% + 2px)`;
-                      let bg = c.surface2, border = c.border, accent = c.muted, bar = c.muted;
-                      if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.14)" : "#FEE2E2"; border = "rgba(239,68,68,.5)"; accent = "#EF4444"; bar = "#EF4444"; }
-                      else if (nou) { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFE8D6"; border = "#FF6B00"; accent = "#C2410C"; bar = "#FF6B00"; }
-                      else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.20)" : "#C7F2DE"; border = "#10B981"; accent = "#047857"; bar = "#10B981"; }
-                      const compact = h < 46;
-                      return (
-                        <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
-                          style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 9, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, borderLeft: `4px solid ${bar}`, padding: compact ? "2px 6px 2px 8px" : "5px 7px 5px 9px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 800, color: accent, whiteSpace: "nowrap" }}>{p.ora}–{minToTime(e)}{p.observatii ? " 📝" : ""}</div>
-                          {!compact && <div style={{ fontSize: 12, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
-                          {!compact && h >= 64 && <div style={{ fontSize: 10.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.serviciu}</div>}
-                        </div>
-                      );
-                    })}
-                  </div>
+      {/* Calendar — gutter ore + coloana specialistului selectat (umple ecranul, zero scroll orizontal) */}
+      {activeCol && (
+        <div style={{ border: `1.5px solid ${c.border}`, borderRadius: 16, background: c.surface, display: "flex", overflow: "hidden" }}>
+          {/* Gutter ore */}
+          <div style={{ flexShrink: 0, width: GUTTER_W, borderRight: `1px solid ${c.border}`, background: c.surface }}>
+            <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}` }} />
+            <div style={{ position: "relative", height: bodyH }}>
+              {hours.map(m => (
+                <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, transform: "translateY(-50%)", textAlign: "center", fontSize: 11, fontWeight: 700, color: c.xmuted }}>{minToTime(m)}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* Coloana specialistului selectat */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 10px", gap: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{activeCol.key === "__none__" ? activeCol.nume : `✂️ ${activeCol.nume}`}</div>
+              {activeCol.specialitate && <div style={{ fontSize: 11, fontWeight: 600, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{activeCol.specialitate}</div>}
+            </div>
+            <div style={{ position: "relative", height: bodyH }}>
+              {hours.map(m => (
+                <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, height: 1, background: c.border2 }} />
+              ))}
+              {agendaZi === aziIso && nowMin >= startMin && nowMin <= endMin && (
+                <div style={{ position: "absolute", top: (nowMin - startMin) * PX_PER_MIN, left: 0, right: 0, height: 2, background: "#FF6B00", zIndex: 4 }}>
+                  <div style={{ position: "absolute", left: -3, top: -3, width: 8, height: 8, borderRadius: "50%", background: "#FF6B00" }} />
                 </div>
-              );
-            })}
+              )}
+              {activeLanes.info.length === 0 && (
+                <div style={{ position: "absolute", top: 16, left: 0, right: 0, textAlign: "center", fontSize: 12.5, color: c.xmuted, fontWeight: 600 }}>Nicio programare</div>
+              )}
+              {activeLanes.info.map(({ p, s, e, lane }) => {
+                const nou = p.status === "în așteptare";
+                const anulat = p.status === "anulat";
+                const trecut = (agendaZi < aziIso) || (agendaZi === aziIso && e <= nowMin);
+                const top = (s - startMin) * PX_PER_MIN;
+                const h = Math.max(24, (e - s) * PX_PER_MIN);
+                const w = `calc(${100 / activeLanes.laneCount}% - 6px)`;
+                const left = `calc(${(lane * 100) / activeLanes.laneCount}% + 3px)`;
+                let bg = c.surface2, border = c.border, accent = c.muted, bar = c.muted;
+                if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.14)" : "#FEE2E2"; border = "rgba(239,68,68,.5)"; accent = "#EF4444"; bar = "#EF4444"; }
+                else if (nou) { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFE8D6"; border = "#FF6B00"; accent = "#C2410C"; bar = "#FF6B00"; }
+                else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.20)" : "#C7F2DE"; border = "#10B981"; accent = "#047857"; bar = "#10B981"; }
+                const compact = h < 46;
+                return (
+                  <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
+                    style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "3px 8px 3px 10px" : "6px 10px 6px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 800, color: accent, whiteSpace: "nowrap" }}>{p.ora}–{minToTime(e)}{p.observatii ? " 📝" : ""}</div>
+                    {!compact && <div style={{ fontSize: 13, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
+                    {!compact && h >= 56 && <div style={{ fontSize: 11.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Anulări de la client — sub calendar */}
       {anulate.length > 0 && (
