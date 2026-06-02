@@ -227,7 +227,8 @@ function AgendaCalendar({
   startMin = Math.floor(startMin / 60) * 60;
   endMin = Math.ceil(endMin / 60) * 60;
   if (endMin <= startMin) endMin = startMin + 60;
-  const bodyH = (endMin - startMin) * PX_PER_MIN;
+  // +18px spațiu jos ca ultima oră și capătul tabelului să nu fie tăiate de overflow:hidden
+  const bodyH = (endMin - startMin) * PX_PER_MIN + 18;
   const hours: number[] = [];
   for (let m = startMin; m <= endMin; m += 60) hours.push(m);
 
