@@ -1235,16 +1235,41 @@ export default function DashboardClient() {
                       )}
                       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                         {salon.serviciiComplete.map(s => {
-                          const { pret, durata } = getPretDurata(s, animal?.talie);
-                          if (!pret && !durata) return null;
+                          // Interval de preț/durată: peste toți specialiștii care oferă serviciul
+                          // (sau prețul de bază al salonului dacă nu există echipă). Transparent din prima.
+                          const echipaS: any[] = salon.echipa || [];
+                          const preturi: number[] = [];
+                          const durate: number[] = [];
+                          if (echipaS.length === 0) {
+                            const { pret, durata } = getPretDurata(s, animal?.talie);
+                            if (Number(pret) > 0) preturi.push(Number(pret));
+                            if (Number(durata) > 0) durate.push(Number(durata));
+                          } else {
+                            for (const m of echipaS) {
+                              const ofera = !m.servicii_oferite || m.servicii_oferite.length === 0 || !!getOverrideGroomer(m, s.nume);
+                              if (!ofera) continue;
+                              const { pret, durata } = getPretDurata(serviciuPentruGroomer(s, m), animal?.talie);
+                              if (Number(pret) > 0) preturi.push(Number(pret));
+                              if (Number(durata) > 0) durate.push(Number(durata));
+                            }
+                          }
+                          if (preturi.length === 0 && durate.length === 0) return null;
+                          const pMin = preturi.length ? Math.min(...preturi) : 0;
+                          const pMax = preturi.length ? Math.max(...preturi) : 0;
+                          const dMin = durate.length ? Math.min(...durate) : 0;
+                          const dMax = durate.length ? Math.max(...durate) : 0;
+                          const pretTxt = preturi.length === 0 ? "" : pMin === pMax ? `${pMin} RON` : `${pMin}–${pMax} RON`;
+                          const durTxt = durate.length === 0 ? "" : dMin === dMax ? `${dMin} min` : `${dMin}–${dMax} min`;
+                          const varianta = pMin !== pMax || dMin !== dMax;
                           return (
                             <div key={s.nume} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 18px", borderRadius: 16, border: `1.5px solid ${c.border}`, background: c.surface }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{s.nume}</div>
-                                {durata && <div style={{ fontSize: 12, color: c.muted, marginTop: 3 }}>⏱ {durata} min</div>}
+                                {durTxt && <div style={{ fontSize: 12, color: c.muted, marginTop: 3 }}>⏱ {durTxt}</div>}
+                                {varianta && <div style={{ fontSize: 11, color: c.xmuted, marginTop: 3 }}>în funcție de specialist</div>}
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-                                {pret && <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare }}>{pret} RON</div>}
+                                {pretTxt && <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare, whiteSpace: "nowrap" }}>{pretTxt}</div>}
                                 <button onClick={() => {
                                   setRezervare({ salonId: salon.id, servicii: [s.nume], ora: "" });
                                   setGroomerSelectat(null);
