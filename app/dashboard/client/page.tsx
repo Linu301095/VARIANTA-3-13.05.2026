@@ -875,6 +875,11 @@ export default function DashboardClient() {
       }
       const sloturiLibere = sloturiZiSel.filter(s => !s.ocupat && !s.trecut);
 
+      let totalPretSlot = 0;
+      for (const sv of serviciiObj) { const { pret } = getPretDurata(sv, animal?.talie); totalPretSlot += Number(pret) || 0; }
+      const etZi = etichetaZiC(dataSelectata);
+      const ziLabel = etZi.prefix ? `${etZi.prefix.toLowerCase()}` : etZi.rest.split(",")[0].toLowerCase();
+
       return (
         <>
           <SectionTitle>Alege ziua</SectionTitle>
@@ -896,41 +901,31 @@ export default function DashboardClient() {
             })}
           </div>
 
-          <SectionTitle>Alege ora</SectionTitle>
+          <SectionTitle>Ore disponibile {ziLabel}</SectionTitle>
           {sloturiZiSel.length === 0 ? (
             <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
               Salonul nu lucrează în ziua aleasă.
             </div>
           ) : sloturiLibere.length === 0 ? (
             <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
-              Toate sloturile sunt ocupate în ziua aleasă. Încearcă altă zi.
+              Toate orele sunt ocupate în ziua aleasă. Încearcă altă zi.
             </div>
           ) : (
-            <>
-              <div style={{ fontSize: 11, color: c.muted, marginBottom: 10, display: "flex", gap: 14, flexWrap: "wrap", fontWeight: 700 }}>
-                <span style={{ color: "#10B981" }}>● Liber</span>
-                <span style={{ color: "#EF4444" }}>● Ocupat</span>
-                <span style={{ color: c.xmuted }}>● Trecut</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 24 }}>
-                {sloturiZiSel.map(slot => {
-                  const sel = rezervare?.ora === slot.ora;
-                  const disabled = slot.ocupat || slot.trecut;
-                  let bg = c.surface, border = c.border, color = c.text2;
-                  if (sel) { border = salon.culoare; bg = theme === "dark" ? `${salon.culoare}26` : salon.bg; color = salon.culoare; }
-                  else if (slot.trecut) { bg = c.surface3; color = c.xmuted; border = c.border; }
-                  else if (slot.ocupat) { bg = theme === "dark" ? "rgba(239,68,68,.12)" : "#FEF2F2"; border = "#FECACA"; color = "#EF4444"; }
-                  else { bg = theme === "dark" ? "rgba(16,185,129,.18)" : "#D1FAE5"; border = "#10B981"; color = "#065F46"; }
-                  return (
-                    <button key={slot.ora} disabled={disabled} onClick={() => !disabled && setRezervare(r => ({ ...r!, ora: slot.ora }))}
-                      style={{ padding: "11px 6px", borderRadius: 10, border: `${sel ? 2 : 1.5}px solid ${border}`, background: bg, fontSize: 13, fontWeight: 700, color, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", position: "relative", textDecoration: slot.ocupat ? "line-through" : "none", opacity: slot.trecut ? 0.5 : 1 }}>
-                      {slot.ora}
-                      {slot.ocupat && !sel && <div style={{ fontSize: 9, fontWeight: 700, marginTop: 2, opacity: .8 }}>🔒 Ocupat</div>}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+              {sloturiLibere.map(slot => {
+                const sel = rezervare?.ora === slot.ora;
+                return (
+                  <button key={slot.ora} onClick={() => setRezervare(r => ({ ...r!, ora: slot.ora }))}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", width: "100%", boxSizing: "border-box" }}>
+                    <span style={{ fontSize: 17, fontWeight: 900, color: sel ? salon.culoare : c.text }}>{slot.ora}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                      {totalPretSlot > 0 && <span style={{ fontSize: 14, fontWeight: 800, color: sel ? salon.culoare : c.text2 }}>{totalPretSlot} RON</span>}
+                      <span style={{ fontSize: 18, fontWeight: 900, color: sel ? salon.culoare : c.xmuted, lineHeight: 1 }}>›</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           )}
         </>
       );
