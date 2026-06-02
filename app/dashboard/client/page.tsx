@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
+import { User, PawPrint, Calendar, Bell, Settings, HelpCircle, LogOut, Sun, Moon, type LucideIcon } from "lucide-react";
 
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
@@ -1170,7 +1171,7 @@ export default function DashboardClient() {
               <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, pointerEvents: "none" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                   <div>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badge}</span>
                     <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "6px 0 2px", textShadow: "0 1px 4px rgba(0,0,0,.4)" }}>{salon.nume}</h2>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)" }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
                   </div>
@@ -1759,7 +1760,7 @@ export default function DashboardClient() {
           {/* TAB PROFIL */}
           {tab === "profil" && (
             <div style={{ maxWidth: 520 }}>
-              <PageHeader icon="👤" title="Profilul meu" sub="Actualizează datele tale de contact" />
+              <PageHeader icon={User} title="Profilul meu" sub="Actualizează datele tale de contact" />
 
               {/* AVATAR */}
               <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
@@ -1811,7 +1812,7 @@ export default function DashboardClient() {
           {/* TAB ANIMALE */}
           {tab === "animal" && (
             <div style={{ maxWidth: 640 }}>
-              <PageHeader icon="🐾" title="Animalele mele" sub="Gestionează profilurile animăluților tăi" />
+              <PageHeader icon={PawPrint} title="Animalele mele" sub="Gestionează profilurile animăluților tăi" />
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                 {animale.length === 0 && !showAddAnimal && (
@@ -1909,7 +1910,7 @@ export default function DashboardClient() {
           {tab === "notificari" && (
             <div style={{ maxWidth: 520 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <PageHeader icon="🔔" title="Notificări" sub="Activitate recentă a programărilor" />
+                <PageHeader icon={Bell} title="Notificări" sub="Activitate recentă a programărilor" />
                 {notificari.filter(n => !n.citit).length > 0 && (
                   <button onClick={() => {
                     const snapshot = notificari;
@@ -1999,7 +2000,7 @@ export default function DashboardClient() {
           {/* TAB SETARI */}
           {tab === "setari" && (
             <div style={{ maxWidth: 520 }}>
-              <PageHeader icon="🔒" title="Setări cont" sub="Modifică parola contului tău" />
+              <PageHeader icon={Settings} title="Setări cont" sub="Modifică parola contului tău" />
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {[{ label: "Parola curentă", placeholder: "••••••••" }, { label: "Parola nouă", placeholder: "Minim 8 caractere" }, { label: "Confirmă parola nouă", placeholder: "••••••••" }].map(f => (
@@ -2022,7 +2023,7 @@ export default function DashboardClient() {
           {/* TAB AJUTOR */}
           {tab === "ajutor" && (
             <div style={{ maxWidth: 620 }}>
-              <PageHeader icon="❓" title="Ajutor" sub="Răspunsuri la cele mai frecvente întrebări" />
+              <PageHeader icon={HelpCircle} title="Ajutor" sub="Răspunsuri la cele mai frecvente întrebări" />
               <FAQ items={[
                 { q: "Cum anulez o programare?", r: "Mergi la Programările mele, găsești programarea confirmată și dai click pe Anulează. Poți anula cu cel puțin 12 ore înainte și trebuie să scrii un scurt motiv pentru salon." },
                 { q: "Pot schimba ora programării?", r: "Momentan poți anula și face o programare nouă. Funcția de reprogramare va fi disponibilă în curând." },
@@ -2080,13 +2081,13 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
     animal: "Animalele mele", notificari: "Notificări", setari: "Setări cont", ajutor: "Ajutor",
   };
 
-  const items: { icon: string; label: string; sub: string; t: Tab }[] = [
-    { icon: "👤", label: "Profilul meu", sub: "Nume, email, telefon", t: "profil" },
-    { icon: "🐾", label: "Animalele mele", sub: "Adaugă / editează profiluri", t: "animal" },
-    { icon: "📅", label: "Programările mele", sub: "Vezi toate programările", t: "programari" },
-    { icon: "🔔", label: "Notificări", sub: "Setări SMS / email", t: "notificari" },
-    { icon: "🔒", label: "Setări cont", sub: "Schimbă parola", t: "setari" },
-    { icon: "❓", label: "Ajutor", sub: "FAQ · Contact support", t: "ajutor" },
+  const items: { icon: LucideIcon; label: string; sub: string; t: Tab }[] = [
+    { icon: User, label: "Profilul meu", sub: "Nume, email, telefon", t: "profil" },
+    { icon: PawPrint, label: "Animalele mele", sub: "Adaugă / editează profiluri", t: "animal" },
+    { icon: Calendar, label: "Programările mele", sub: "Vezi toate programările", t: "programari" },
+    { icon: Bell, label: "Notificări", sub: "Setări SMS / email", t: "notificari" },
+    { icon: Settings, label: "Setări cont", sub: "Schimbă parola", t: "setari" },
+    { icon: HelpCircle, label: "Ajutor", sub: "FAQ · Contact support", t: "ajutor" },
   ];
 
   return (
@@ -2113,8 +2114,8 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            <button onClick={() => onNav("notificari")} style={{ position: "relative", padding: isMobile ? "8px 10px" : "8px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 16, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-              🔔
+            <button onClick={() => onNav("notificari")} style={{ position: "relative", padding: isMobile ? "8px 10px" : "8px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center" }}>
+              <Bell size={18} color={c.muted} strokeWidth={2} />
               {necitite > 0 && <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{necitite}</span>}
             </button>
           <div style={{ position: "relative" }}>
@@ -2122,7 +2123,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
               style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
               <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>🐾</span>
               <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, overflow: "hidden" }}>
-                {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "👤"}
+                {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
               </span>
               {!isMobile && <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{prenume}</span>}
               <span style={{ fontSize: 10, color: c.xmuted, display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}>▼</span>
@@ -2139,7 +2140,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
                       style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: tab === item.t ? c.orangeAccent : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
                       onMouseEnter={e => { if (tab !== item.t) e.currentTarget.style.background = c.surface2; }}
                       onMouseLeave={e => { e.currentTarget.style.background = tab === item.t ? c.orangeAccent : "transparent"; }}>
-                      <span style={{ width: 34, height: 34, borderRadius: 10, background: tab === item.t ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                      <span style={{ width: 34, height: 34, borderRadius: 10, background: tab === item.t ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><item.icon size={18} color={tab === item.t ? "#fff" : c.muted} strokeWidth={2} /></span>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: tab === item.t ? "#FF6B00" : c.text }}>{item.label}</div>
                         <div style={{ fontSize: 11, color: c.xmuted, marginTop: 1 }}>{item.sub}</div>
@@ -2151,12 +2152,12 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
                   <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>Aspect</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => toggleTheme("light")}
-                      style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "light" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "light" ? c.orangeAccent : c.surface2, color: theme === "light" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                      ☀️ Luminos
+                      style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "light" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "light" ? c.orangeAccent : c.surface2, color: theme === "light" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <Sun size={15} strokeWidth={2.2} /> Luminos
                     </button>
                     <button onClick={() => toggleTheme("dark")}
-                      style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "dark" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "dark" ? c.orangeAccent : c.surface2, color: theme === "dark" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                      🌙 Întunecat
+                      style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "dark" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "dark" ? c.orangeAccent : c.surface2, color: theme === "dark" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <Moon size={15} strokeWidth={2.2} /> Întunecat
                     </button>
                   </div>
                 </div>
@@ -2165,7 +2166,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,.08)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                    <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(239,68,68,.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🚪</span>
+                    <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(239,68,68,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}><LogOut size={17} color="#EF4444" strokeWidth={2} /></span>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>Ieșire din cont</div>
                   </button>
                 </div>
@@ -2181,11 +2182,11 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
   );
 }
 
-function PageHeader({ icon, title, sub }: { icon: string; title: string; sub: string }) {
+function PageHeader({ icon: Icon, title, sub }: { icon: LucideIcon; title: string; sub: string }) {
   const { c } = useContext(ThemeCtx);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-      <div style={{ width: 48, height: 48, borderRadius: 14, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{icon}</div>
+      <div style={{ width: 48, height: 48, borderRadius: 14, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon size={24} color="#FF6B00" strokeWidth={2} /></div>
       <div><div style={{ fontSize: 20, fontWeight: 900, color: c.text }}>{title}</div><div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{sub}</div></div>
     </div>
   );
@@ -2227,7 +2228,7 @@ function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect
         <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
           <img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.45) 100%)" }} />
-          <span style={{ position: "absolute", bottom: 10, left: 12, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
+          <span style={{ position: "absolute", bottom: 10, left: 12, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badge}</span>
         </div>
       ) : (
         <div style={{ height: 4, background: salon.culoare }} />
@@ -2236,7 +2237,7 @@ function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect
       <div style={{ padding: "18px 20px 20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
         {!salon.poza_url && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badgeIcon} {salon.badge}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badge}</span>
             <RatingBadge ratingReal={ratingReal} />
           </div>
         )}
