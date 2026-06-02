@@ -287,82 +287,10 @@ function AgendaCalendar({
         ))}
       </div>
 
-      {/* Eticheta zilei */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-        {et.prefix && <span style={{ fontSize: 15, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
-        <span style={{ fontSize: 14, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
-      </div>
-
-      {total === 0 && progZi && !progZi.activ && (
-        <div style={{ padding: "14px 18px", textAlign: "center", color: c.muted, fontSize: 13.5, fontWeight: 600, background: c.surface, borderRadius: 12, border: `1.5px dashed ${c.border}`, marginBottom: 14 }}>
-          Salonul este închis în această zi.
-        </div>
-      )}
-
-      {/* Calendar — gutter ore + coloane specialiști (scroll orizontal) */}
-      <div style={{ overflowX: "auto", border: `1.5px solid ${c.border}`, borderRadius: 16, background: c.surface, WebkitOverflowScrolling: "touch" }}>
-        <div style={{ display: "flex", minWidth: "min-content" }}>
-          {/* Gutter ore (rămâne fix la scroll orizontal) */}
-          <div style={{ position: "sticky", left: 0, zIndex: 3, background: c.surface, flexShrink: 0, width: GUTTER_W, borderRight: `1px solid ${c.border}` }}>
-            <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}` }} />
-            <div style={{ position: "relative", height: bodyH }}>
-              {hours.map(m => (
-                <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, transform: "translateY(-50%)", textAlign: "center", fontSize: 11, fontWeight: 700, color: c.xmuted }}>{minToTime(m)}</div>
-              ))}
-            </div>
-          </div>
-
-          {/* Coloane specialiști */}
-          {cols.map((col, ci) => {
-            const { info, laneCount } = withLanes(col.appts);
-            return (
-              <div key={col.key} style={{ flexShrink: 0, width: COL_W, borderRight: ci < cols.length - 1 ? `1px solid ${c.border}` : "none" }}>
-                <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 8px", gap: 2 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.key === "__none__" ? col.nume : `✂️ ${col.nume}`}</div>
-                  {col.specialitate && <div style={{ fontSize: 10.5, fontWeight: 600, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.specialitate}</div>}
-                </div>
-                <div style={{ position: "relative", height: bodyH }}>
-                  {hours.map(m => (
-                    <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, height: 1, background: c.border2 }} />
-                  ))}
-                  {agendaZi === aziIso && nowMin >= startMin && nowMin <= endMin && (
-                    <div style={{ position: "absolute", top: (nowMin - startMin) * PX_PER_MIN, left: 0, right: 0, height: 2, background: "#FF6B00", zIndex: 4 }}>
-                      <div style={{ position: "absolute", left: -3, top: -3, width: 8, height: 8, borderRadius: "50%", background: "#FF6B00" }} />
-                    </div>
-                  )}
-                  {info.map(({ p, s, e, lane }) => {
-                    const nou = p.status === "în așteptare";
-                    const anulat = p.status === "anulat";
-                    const trecut = (agendaZi < aziIso) || (agendaZi === aziIso && e <= nowMin);
-                    const top = (s - startMin) * PX_PER_MIN;
-                    const h = Math.max(24, (e - s) * PX_PER_MIN);
-                    const w = `calc(${100 / laneCount}% - 4px)`;
-                    const left = `calc(${(lane * 100) / laneCount}% + 2px)`;
-                    let bg = c.surface2, border = c.border, accent = c.muted;
-                    if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.10)" : "#FEF2F2"; border = "rgba(239,68,68,.4)"; accent = "#EF4444"; }
-                    else if (nou) { bg = c.orangeAccent; border = "#FF6B00"; accent = "#FF6B00"; }
-                    else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5"; border = "rgba(16,185,129,.45)"; accent = "#10B981"; }
-                    const compact = h < 50;
-                    return (
-                      <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
-                        style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 9, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, padding: compact ? "2px 6px" : "5px 7px", overflow: "hidden", opacity: trecut && !nou ? 0.5 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: accent, whiteSpace: "nowrap" }}>{p.ora}–{minToTime(e)}{p.observatii ? " 📝" : ""}</div>
-                        {!compact && <div style={{ fontSize: 12, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
-                        {!compact && h >= 64 && <div style={{ fontSize: 10.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.serviciu}</div>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Necesită atenție: cereri noi + anulări de la client */}
-      {(pending.length > 0 || anulate.length > 0) && (
-        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-          {pending.length > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>⏳ Cereri noi ({pending.length})</div>}
+      {/* CERERI NOI — deasupra calendarului, prima chestie vizibilă */}
+      {pending.length > 0 && (
+        <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>⏳ Cereri noi ({pending.length})</div>
           {pending.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
@@ -391,8 +319,87 @@ function AgendaCalendar({
               </div>
             );
           })}
+        </div>
+      )}
 
-          {anulate.length > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text, marginTop: pending.length > 0 ? 6 : 0 }}>✕ Anulări de la client ({anulate.length})</div>}
+      {/* Eticheta zilei */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+        {et.prefix && <span style={{ fontSize: 15, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
+        <span style={{ fontSize: 14, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
+      </div>
+
+      {total === 0 && progZi && !progZi.activ && (
+        <div style={{ padding: "14px 18px", textAlign: "center", color: c.muted, fontSize: 13.5, fontWeight: 600, background: c.surface, borderRadius: 12, border: `1.5px dashed ${c.border}`, marginBottom: 14 }}>
+          Salonul este închis în această zi.
+        </div>
+      )}
+
+      {/* Calendar — gutter fix în stânga (nu scrollează), coloane cu scroll orizontal */}
+      <div style={{ border: `1.5px solid ${c.border}`, borderRadius: 16, background: c.surface, display: "flex", overflow: "hidden" }}>
+        {/* Gutter ore — în afara containerului cu scroll, nu se mișcă niciodată */}
+        <div style={{ flexShrink: 0, width: GUTTER_W, borderRight: `1px solid ${c.border}`, background: c.surface }}>
+          <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}` }} />
+          <div style={{ position: "relative", height: bodyH }}>
+            {hours.map(m => (
+              <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, transform: "translateY(-50%)", textAlign: "center", fontSize: 11, fontWeight: 700, color: c.xmuted }}>{minToTime(m)}</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Coloane specialiști — doar acestea scrollează orizontal */}
+        <div style={{ flex: 1, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <div style={{ display: "flex", minWidth: "min-content" }}>
+            {cols.map((col, ci) => {
+              const { info, laneCount } = withLanes(col.appts);
+              return (
+                <div key={col.key} style={{ flexShrink: 0, width: COL_W, borderRight: ci < cols.length - 1 ? `1px solid ${c.border}` : "none" }}>
+                  <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 8px", gap: 2 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.key === "__none__" ? col.nume : `✂️ ${col.nume}`}</div>
+                    {col.specialitate && <div style={{ fontSize: 10.5, fontWeight: 600, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.specialitate}</div>}
+                  </div>
+                  <div style={{ position: "relative", height: bodyH }}>
+                    {hours.map(m => (
+                      <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, height: 1, background: c.border2 }} />
+                    ))}
+                    {agendaZi === aziIso && nowMin >= startMin && nowMin <= endMin && (
+                      <div style={{ position: "absolute", top: (nowMin - startMin) * PX_PER_MIN, left: 0, right: 0, height: 2, background: "#FF6B00", zIndex: 4 }}>
+                        <div style={{ position: "absolute", left: -3, top: -3, width: 8, height: 8, borderRadius: "50%", background: "#FF6B00" }} />
+                      </div>
+                    )}
+                    {info.map(({ p, s, e, lane }) => {
+                      const nou = p.status === "în așteptare";
+                      const anulat = p.status === "anulat";
+                      const trecut = (agendaZi < aziIso) || (agendaZi === aziIso && e <= nowMin);
+                      const top = (s - startMin) * PX_PER_MIN;
+                      const h = Math.max(24, (e - s) * PX_PER_MIN);
+                      const w = `calc(${100 / laneCount}% - 4px)`;
+                      const left = `calc(${(lane * 100) / laneCount}% + 2px)`;
+                      let bg = c.surface2, border = c.border, accent = c.muted;
+                      if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.10)" : "#FEF2F2"; border = "rgba(239,68,68,.4)"; accent = "#EF4444"; }
+                      else if (nou) { bg = c.orangeAccent; border = "#FF6B00"; accent = "#FF6B00"; }
+                      else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5"; border = "rgba(16,185,129,.45)"; accent = "#10B981"; }
+                      const compact = h < 50;
+                      return (
+                        <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
+                          style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 9, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, padding: compact ? "2px 6px" : "5px 7px", overflow: "hidden", opacity: trecut && !nou ? 0.5 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 800, color: accent, whiteSpace: "nowrap" }}>{p.ora}–{minToTime(e)}{p.observatii ? " 📝" : ""}</div>
+                          {!compact && <div style={{ fontSize: 12, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
+                          {!compact && h >= 64 && <div style={{ fontSize: 10.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.serviciu}</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Anulări de la client — sub calendar */}
+      {anulate.length > 0 && (
+        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>✕ Anulări de la client ({anulate.length})</div>
           {anulate.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             return (
