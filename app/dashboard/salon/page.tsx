@@ -178,9 +178,9 @@ function AgendaCalendar({
   c: ColorSet;
   theme: "light" | "dark";
 }) {
-  const PX_PER_MIN = 1.1;
+  const PX_PER_MIN = 1.4;
   const HEADER_H = 60;
-  const COL_W = 152;
+  const COL_MIN = 150;
   const GUTTER_W = 50;
 
   const aziIso = isoData(new Date());
@@ -346,13 +346,13 @@ function AgendaCalendar({
           </div>
         </div>
 
-        {/* Coloane specialiști — doar acestea scrollează orizontal */}
+        {/* Coloane specialiști — umplu ecranul când sunt puține, scrollează doar când sunt multe */}
         <div style={{ flex: 1, minWidth: 0, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <div style={{ display: "flex", minWidth: "min-content" }}>
+          <div style={{ display: "flex", minWidth: "100%" }}>
             {cols.map((col, ci) => {
               const { info, laneCount } = withLanes(col.appts);
               return (
-                <div key={col.key} style={{ flexShrink: 0, width: COL_W, borderRight: ci < cols.length - 1 ? `1px solid ${c.border}` : "none" }}>
+                <div key={col.key} style={{ flex: `1 0 ${COL_MIN}px`, minWidth: COL_MIN, borderRight: ci < cols.length - 1 ? `1px solid ${c.border}` : "none" }}>
                   <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 8px", gap: 2 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.key === "__none__" ? col.nume : `✂️ ${col.nume}`}</div>
                     {col.specialitate && <div style={{ fontSize: 10.5, fontWeight: 600, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.specialitate}</div>}
@@ -374,14 +374,14 @@ function AgendaCalendar({
                       const h = Math.max(24, (e - s) * PX_PER_MIN);
                       const w = `calc(${100 / laneCount}% - 4px)`;
                       const left = `calc(${(lane * 100) / laneCount}% + 2px)`;
-                      let bg = c.surface2, border = c.border, accent = c.muted;
-                      if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.10)" : "#FEF2F2"; border = "rgba(239,68,68,.4)"; accent = "#EF4444"; }
-                      else if (nou) { bg = c.orangeAccent; border = "#FF6B00"; accent = "#FF6B00"; }
-                      else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5"; border = "rgba(16,185,129,.45)"; accent = "#10B981"; }
-                      const compact = h < 50;
+                      let bg = c.surface2, border = c.border, accent = c.muted, bar = c.muted;
+                      if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.14)" : "#FEE2E2"; border = "rgba(239,68,68,.5)"; accent = "#EF4444"; bar = "#EF4444"; }
+                      else if (nou) { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFE8D6"; border = "#FF6B00"; accent = "#C2410C"; bar = "#FF6B00"; }
+                      else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.20)" : "#C7F2DE"; border = "#10B981"; accent = "#047857"; bar = "#10B981"; }
+                      const compact = h < 46;
                       return (
                         <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
-                          style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 9, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, padding: compact ? "2px 6px" : "5px 7px", overflow: "hidden", opacity: trecut && !nou ? 0.5 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
+                          style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 9, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, borderLeft: `4px solid ${bar}`, padding: compact ? "2px 6px 2px 8px" : "5px 7px 5px 9px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
                           <div style={{ fontSize: 10.5, fontWeight: 800, color: accent, whiteSpace: "nowrap" }}>{p.ora}–{minToTime(e)}{p.observatii ? " 📝" : ""}</div>
                           {!compact && <div style={{ fontSize: 12, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
                           {!compact && h >= 64 && <div style={{ fontSize: 10.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.serviciu}</div>}
