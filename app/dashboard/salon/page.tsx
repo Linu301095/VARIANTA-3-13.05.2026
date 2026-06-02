@@ -16,6 +16,7 @@ type ProgramareSalon = {
   serviciu: string;
   ora: string;
   data: string;
+  durata?: number | null;
   pret: number;
   groomer?: string | null;
   status: StatusProg;
@@ -157,6 +158,265 @@ const ThemeCtx = createContext<ThemeCtxType>({ theme: "light", c: C.light, toggl
 
 const btnPrimary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 16px rgba(255,107,0,.35)" };
 
+/* ───────────────────────── Agenda — calendar pe zi ───────────────────────── */
+function AgendaCalendar({
+  programari, echipa, program, agendaZi, setAgendaZi, filtruTalie, setFiltruTalie,
+  accepta, respinge, clientiBlocati, abateriMap, toggleBlocClient, c, theme,
+}: {
+  programari: ProgramareSalon[];
+  echipa: Groomer[];
+  program: ProgramSaptamanal;
+  agendaZi: string;
+  setAgendaZi: (s: string) => void;
+  filtruTalie: "toate" | "mica" | "medie" | "mare";
+  setFiltruTalie: (v: "toate" | "mica" | "medie" | "mare") => void;
+  accepta: (id: string) => void;
+  respinge: (id: string) => void;
+  clientiBlocati: string[];
+  abateriMap: Record<string, number>;
+  toggleBlocClient: (userId: string) => void;
+  c: ColorSet;
+  theme: "light" | "dark";
+}) {
+  const PX_PER_MIN = 1.1;
+  const HEADER_H = 60;
+  const COL_W = 152;
+  const GUTTER_W = 50;
+
+  const aziIso = isoData(new Date());
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  // Săptămâna care conține agendaZi (Luni → Duminică)
+  const selDate = new Date(agendaZi + "T00:00:00");
+  const dowSelMon = (selDate.getDay() + 6) % 7; // 0 = Luni
+  const monday = new Date(selDate); monday.setDate(selDate.getDate() - dowSelMon);
+  const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+
+  const countByDay: Record<string, number> = {};
+  for (const p of programari) if (p.status !== "anulat") countByDay[p.data] = (countByDay[p.data] || 0) + 1;
+
+  // Programările zilei selectate (filtrate pe talie)
+  const apptsZi = programari
+    .filter(p => p.data === agendaZi)
+    .filter(p => filtruTalie === "toate" ? true : p.talie === filtruTalie);
+
+  // Coloane: una per specialist din echipă; programările fără groomer ajung într-o coloană separată
+  type Col = { key: string; nume: string; specialitate?: string; appts: ProgramareSalon[] };
+  const cols: Col[] = echipa.map(g => ({ key: g.nume, nume: g.nume, specialitate: g.specialitate, appts: [] }));
+  const fallbackAppts: ProgramareSalon[] = [];
+  for (const p of apptsZi) {
+    const col = p.groomer ? cols.find(x => x.key === p.groomer) : null;
+    if (col) col.appts.push(p); else fallbackAppts.push(p);
+  }
+  if (fallbackAppts.length > 0 || cols.length === 0) {
+    cols.push({ key: "__none__", nume: echipa.length === 0 ? "Salon" : "Fără specialist", appts: fallbackAppts });
+  }
+
+  // Fereastra de timp a zilei (din programul salonului, extinsă să cuprindă toate programările)
+  const progZi = program[String(selDate.getDay())];
+  let startMin = progZi?.activ ? timeToMin(progZi.start) : 9 * 60;
+  let endMin = progZi?.activ ? timeToMin(progZi.end) : 18 * 60;
+  for (const p of apptsZi) {
+    startMin = Math.min(startMin, timeToMin(p.ora));
+    endMin = Math.max(endMin, timeToMin(p.ora) + (p.durata || 60));
+  }
+  startMin = Math.floor(startMin / 60) * 60;
+  endMin = Math.ceil(endMin / 60) * 60;
+  if (endMin <= startMin) endMin = startMin + 60;
+  const bodyH = (endMin - startMin) * PX_PER_MIN;
+  const hours: number[] = [];
+  for (let m = startMin; m <= endMin; m += 60) hours.push(m);
+
+  // Distribuire pe „benzi" pentru programări care se suprapun în aceeași coloană
+  function withLanes(appts: ProgramareSalon[]) {
+    const sorted = [...appts].sort((a, b) => timeToMin(a.ora) - timeToMin(b.ora));
+    const laneEnds: number[] = [];
+    const info = sorted.map(p => {
+      const s = timeToMin(p.ora), e = s + (p.durata || 60);
+      let lane = laneEnds.findIndex(end => end <= s);
+      if (lane === -1) { lane = laneEnds.length; laneEnds.push(e); } else laneEnds[lane] = e;
+      return { p, s, e, lane };
+    });
+    return { info, laneCount: Math.max(1, laneEnds.length) };
+  }
+
+  const et = etichetaZi(agendaZi);
+  const total = apptsZi.length;
+  const pending = apptsZi.filter(p => p.status === "în așteptare").sort((a, b) => a.ora < b.ora ? -1 : 1);
+  const anulate = apptsZi.filter(p => p.status === "anulat").sort((a, b) => a.ora < b.ora ? -1 : 1);
+
+  const navBtn: React.CSSProperties = { width: 34, height: 34, flexShrink: 0, borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 18, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>📅 Agenda</h2>
+        <div style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>{total} {total === 1 ? "programare" : "programări"}</div>
+      </div>
+
+      {/* Selector săptămână */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <button onClick={() => { const d = new Date(monday); d.setDate(monday.getDate() - 7); setAgendaZi(isoData(d)); }} style={navBtn} aria-label="Săptămâna anterioară">‹</button>
+        <div style={{ display: "flex", gap: 5, flex: 1 }}>
+          {weekDays.map(d => {
+            const iso = isoData(d);
+            const sel = iso === agendaZi;
+            const esteAzi = iso === aziIso;
+            const cnt = countByDay[iso] || 0;
+            return (
+              <button key={iso} onClick={() => setAgendaZi(iso)}
+                style={{ flex: 1, padding: "7px 2px", borderRadius: 12, border: sel ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: sel ? "#FF6B00" : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "center", position: "relative", minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: sel ? "rgba(255,255,255,.85)" : c.muted }}>{ZILE[(d.getDay() + 6) % 7]}</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: sel ? "#fff" : esteAzi ? "#FF6B00" : c.text, marginTop: 1 }}>{d.getDate()}</div>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: cnt > 0 ? (sel ? "#fff" : "#FF6B00") : "transparent", margin: "2px auto 0" }} />
+              </button>
+            );
+          })}
+        </div>
+        <button onClick={() => { const d = new Date(monday); d.setDate(monday.getDate() + 7); setAgendaZi(isoData(d)); }} style={navBtn} aria-label="Săptămâna următoare">›</button>
+      </div>
+
+      {/* Filtru talie */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+        {[{ val: "toate", label: "Toate", icon: "📋" }, { val: "mica", label: "Mică", icon: "🐕‍🦺" }, { val: "medie", label: "Medie", icon: "🐕" }, { val: "mare", label: "Mare", icon: "🐺" }].map(t => (
+          <button key={t.val} onClick={() => setFiltruTalie(t.val as any)}
+            style={{ padding: "6px 13px", borderRadius: 50, border: filtruTalie === t.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruTalie === t.val ? c.orangeAccent : c.surface, color: filtruTalie === t.val ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+            <span>{t.icon}</span> {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Eticheta zilei */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+        {et.prefix && <span style={{ fontSize: 15, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
+        <span style={{ fontSize: 14, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
+      </div>
+
+      {total === 0 && progZi && !progZi.activ && (
+        <div style={{ padding: "14px 18px", textAlign: "center", color: c.muted, fontSize: 13.5, fontWeight: 600, background: c.surface, borderRadius: 12, border: `1.5px dashed ${c.border}`, marginBottom: 14 }}>
+          Salonul este închis în această zi.
+        </div>
+      )}
+
+      {/* Calendar — gutter ore + coloane specialiști (scroll orizontal) */}
+      <div style={{ overflowX: "auto", border: `1.5px solid ${c.border}`, borderRadius: 16, background: c.surface, WebkitOverflowScrolling: "touch" }}>
+        <div style={{ display: "flex", minWidth: "min-content" }}>
+          {/* Gutter ore (rămâne fix la scroll orizontal) */}
+          <div style={{ position: "sticky", left: 0, zIndex: 3, background: c.surface, flexShrink: 0, width: GUTTER_W, borderRight: `1px solid ${c.border}` }}>
+            <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}` }} />
+            <div style={{ position: "relative", height: bodyH }}>
+              {hours.map(m => (
+                <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, transform: "translateY(-50%)", textAlign: "center", fontSize: 11, fontWeight: 700, color: c.xmuted }}>{minToTime(m)}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* Coloane specialiști */}
+          {cols.map((col, ci) => {
+            const { info, laneCount } = withLanes(col.appts);
+            return (
+              <div key={col.key} style={{ flexShrink: 0, width: COL_W, borderRight: ci < cols.length - 1 ? `1px solid ${c.border}` : "none" }}>
+                <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 8px", gap: 2 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.key === "__none__" ? col.nume : `✂️ ${col.nume}`}</div>
+                  {col.specialitate && <div style={{ fontSize: 10.5, fontWeight: 600, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{col.specialitate}</div>}
+                </div>
+                <div style={{ position: "relative", height: bodyH }}>
+                  {hours.map(m => (
+                    <div key={m} style={{ position: "absolute", top: (m - startMin) * PX_PER_MIN, left: 0, right: 0, height: 1, background: c.border2 }} />
+                  ))}
+                  {agendaZi === aziIso && nowMin >= startMin && nowMin <= endMin && (
+                    <div style={{ position: "absolute", top: (nowMin - startMin) * PX_PER_MIN, left: 0, right: 0, height: 2, background: "#FF6B00", zIndex: 4 }}>
+                      <div style={{ position: "absolute", left: -3, top: -3, width: 8, height: 8, borderRadius: "50%", background: "#FF6B00" }} />
+                    </div>
+                  )}
+                  {info.map(({ p, s, e, lane }) => {
+                    const nou = p.status === "în așteptare";
+                    const anulat = p.status === "anulat";
+                    const trecut = (agendaZi < aziIso) || (agendaZi === aziIso && e <= nowMin);
+                    const top = (s - startMin) * PX_PER_MIN;
+                    const h = Math.max(24, (e - s) * PX_PER_MIN);
+                    const w = `calc(${100 / laneCount}% - 4px)`;
+                    const left = `calc(${(lane * 100) / laneCount}% + 2px)`;
+                    let bg = c.surface2, border = c.border, accent = c.muted;
+                    if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.10)" : "#FEF2F2"; border = "rgba(239,68,68,.4)"; accent = "#EF4444"; }
+                    else if (nou) { bg = c.orangeAccent; border = "#FF6B00"; accent = "#FF6B00"; }
+                    else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5"; border = "rgba(16,185,129,.45)"; accent = "#10B981"; }
+                    const compact = h < 50;
+                    return (
+                      <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
+                        style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 9, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, padding: compact ? "2px 6px" : "5px 7px", overflow: "hidden", opacity: trecut && !nou ? 0.5 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 800, color: accent, whiteSpace: "nowrap" }}>{p.ora}–{minToTime(e)}{p.observatii ? " 📝" : ""}</div>
+                        {!compact && <div style={{ fontSize: 12, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
+                        {!compact && h >= 64 && <div style={{ fontSize: 10.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.serviciu}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Necesită atenție: cereri noi + anulări de la client */}
+      {(pending.length > 0 || anulate.length > 0) && (
+        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+          {pending.length > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>⏳ Cereri noi ({pending.length})</div>}
+          {pending.map(p => {
+            const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
+            const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
+            return (
+              <div key={p.id} style={{ background: c.surface, borderRadius: 14, padding: "12px 16px", border: "2px solid #FF6B00", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <div style={{ width: 46, height: 46, borderRadius: 11, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#FF6B00", flexShrink: 0 }}>{p.ora}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, color: c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                    {p.client}
+                    {p.groomer && <span style={{ fontSize: 11, fontWeight: 700, color: c.muted }}>· 👤 {p.groomer}</span>}
+                    {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50 }}>🔴 Blocat</span>}
+                    {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50 }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: c.muted, marginTop: 2 }}>{p.animal}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
+                  {p.observatii && (
+                    <div style={{ fontSize: 12, color: c.text2, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 8, padding: "7px 11px", lineHeight: 1.5, marginTop: 7 }}>
+                      <span style={{ fontWeight: 800, color: "#B45309" }}>📝 Observații:</span> {p.observatii}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  <button onClick={() => respinge(p.id)} style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Refuză</button>
+                  <button onClick={() => accepta(p.id)} style={{ padding: "9px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 12px rgba(255,107,0,.3)" }}>Acceptă</button>
+                </div>
+              </div>
+            );
+          })}
+
+          {anulate.length > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text, marginTop: pending.length > 0 ? 6 : 0 }}>✕ Anulări de la client ({anulate.length})</div>}
+          {anulate.map(p => {
+            const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
+            return (
+              <div key={p.id} style={{ background: theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2", borderRadius: 14, padding: "12px 16px", border: "1.5px solid rgba(239,68,68,.35)", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <div style={{ width: 46, height: 46, borderRadius: 11, background: "rgba(239,68,68,.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#EF4444", flexShrink: 0 }}>{p.ora}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, color: c.muted, textDecoration: "line-through" }}>{p.client}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginTop: 2 }}>✂️ {p.serviciu}</div>
+                  {p.motivAnulare && <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>}
+                </div>
+                {p.esteApp && p.user_id && (
+                  <button onClick={() => toggleBlocClient(p.user_id)} style={{ padding: "7px 13px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                    {blocat ? "✓ Deblochează" : "🚫 Blochează"}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardSalon() {
   const router = useRouter();
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -211,6 +471,7 @@ export default function DashboardSalon() {
     return stepFromDurate(durate);
   }, [servicii]);
   const [zilaSelectata, setZilaSelectata] = useState<string>(() => isoData(new Date()));
+  const [agendaZi, setAgendaZi] = useState<string>(() => isoData(new Date()));
   const [filtruTalie, setFiltruTalie] = useState<"toate" | "mica" | "medie" | "mare">("toate");
   const [animaleIstoric, setAnimaleIstoric] = useState<AnimalIstoric[]>([]);
   const [cautareAnimal, setCautareAnimal] = useState("");
@@ -438,6 +699,7 @@ export default function DashboardSalon() {
           serviciu: p.serviciu,
           ora: p.ora,
           data: p.data,
+          durata: Number(p.durata) || null,
           pret: Number(p.pret) || 0,
           status: p.status as StatusProg,
           esteApp,
@@ -838,121 +1100,25 @@ export default function DashboardSalon() {
         <main style={{ flex: 1, padding: "28px 20px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
-            {/* AGENDA */}
-            {tab === "agenda" && (() => {
-              const programariFiltrate = filtruTalie === "toate" ? programari : programari.filter(p => p.talie === filtruTalie);
-              const grupuri: { data: string; items: ProgramareSalon[] }[] = [];
-              for (const p of programariFiltrate) {
-                let g = grupuri.find(x => x.data === p.data);
-                if (!g) { g = { data: p.data, items: [] }; grupuri.push(g); }
-                g.items.push(p);
-              }
-              // Cele „în așteptare" mereu sus, apoi restul descrescător (16:40, 15:00, 10:00)
-              for (const g of grupuri) {
-                g.items.sort((a, b) => {
-                  const aAst = a.status === "în așteptare" ? 0 : 1;
-                  const bAst = b.status === "în așteptare" ? 0 : 1;
-                  if (aAst !== bAst) return aAst - bAst;
-                  return a.ora > b.ora ? -1 : a.ora < b.ora ? 1 : 0;
-                });
-              }
-              const aziIso = isoData(new Date());
-              const viitoare = grupuri.filter(g => g.data >= aziIso).sort((a, b) => a.data < b.data ? -1 : 1);
-              const trecute = grupuri.filter(g => g.data < aziIso).sort((a, b) => a.data > b.data ? -1 : 1);
-              const grupuriSortate = [...viitoare, ...trecute];
-              return (
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>📅 Agenda</h2>
-                  <div style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>{programariFiltrate.length} programări{filtruTalie !== "toate" ? ` (din ${programari.length})` : ""}</div>
-                </div>
-                <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-                  {[
-                    { val: "toate", label: "Toate", icon: "📋" },
-                    { val: "mica", label: "Mică", icon: "🐕‍🦺" },
-                    { val: "medie", label: "Medie", icon: "🐕" },
-                    { val: "mare", label: "Mare", icon: "🐺" },
-                  ].map(t => (
-                    <button key={t.val} onClick={() => setFiltruTalie(t.val as any)}
-                      style={{ padding: "7px 14px", borderRadius: 50, border: filtruTalie === t.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruTalie === t.val ? c.orangeAccent : c.surface, color: filtruTalie === t.val ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
-                      <span>{t.icon}</span> {t.label}
-                    </button>
-                  ))}
-                </div>
-                {programariFiltrate.length === 0 && (
-                  <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
-                    {filtruTalie === "toate" ? "Nu ai programări încă. Clienții te vor găsi în aplicație și pot rezerva." : `Nicio programare cu talie ${filtruTalie === "mica" ? "Mică" : filtruTalie === "medie" ? "Medie" : "Mare"}.`}
-                  </div>
-                )}
-                <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-                  {grupuriSortate.map(g => {
-                    const et = etichetaZi(g.data);
-                    return (
-                    <div key={g.data}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, position: "sticky", top: 66, background: c.pageBg, padding: "6px 0", zIndex: 5 }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                          {et.prefix && <span style={{ fontSize: 14, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text }}>{et.prefix}</span>}
-                          <span style={{ fontSize: 13.5, fontWeight: 700, color: et.prefix ? c.muted : c.text }}>{et.rest}</span>
-                        </div>
-                        <div style={{ flex: 1, height: 1, background: c.border }} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: c.xmuted }}>{g.items.length}</span>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {g.items.map(p => {
-                          const nou = p.status === "în așteptare";
-                          const anulat = p.status === "anulat";
-                          const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
-                          const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
-                          return (
-                            <div key={p.id} style={{ background: anulat ? (theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2") : c.surface, borderRadius: 16, padding: "16px 20px", border: anulat ? "1.5px solid rgba(239,68,68,.35)" : blocat ? "2px solid #EF4444" : nou ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, display: "flex", flexDirection: "column", gap: 10, opacity: anulat ? 0.92 : 1 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                                <div style={{ width: 52, height: 52, borderRadius: 12, background: anulat ? "rgba(239,68,68,.12)" : nou ? c.orangeAccent : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: anulat ? "#EF4444" : nou ? "#FF6B00" : c.muted, flexShrink: 0, textAlign: "center" }}>{p.ora}</div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 15, fontWeight: 800, color: anulat ? c.muted : c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-                                    {p.client}
-                                    {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50 }}>🔴 Blocat</span>}
-                                    {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50 }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
-                                  </div>
-                                  <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.animal}</div>
-                                  <div style={{ fontSize: 12, fontWeight: 700, color: anulat ? c.muted : "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
-                                  {anulat && p.motivAnulare && (
-                                    <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>
-                                  )}
-                                  {anulat && p.esteApp && p.user_id && (
-                                    <button onClick={() => toggleBlocClient(p.user_id)} style={{ marginTop: 8, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                                      {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
-                                    </button>
-                                  )}
-                                </div>
-                                {nou ? (
-                                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                                    <button onClick={() => respinge(p.id)} style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Refuză</button>
-                                    <button onClick={() => accepta(p.id)} style={{ padding: "9px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 12px rgba(255,107,0,.3)" }}>Acceptă</button>
-                                  </div>
-                                ) : anulat ? (
-                                  <span style={{ fontSize: 12, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✕ Anulat de client</span>
-                                ) : p.status === "confirmat" ? (
-                                  <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981", background: "rgba(16,185,129,.15)", padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>✓ Confirmat</span>
-                                ) : (
-                                  <span style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, padding: "6px 14px", borderRadius: 50, flexShrink: 0 }}>{p.status}</span>
-                                )}
-                              </div>
-                              {!anulat && p.observatii && (
-                                <div style={{ fontSize: 12, color: c.text2, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 8, padding: "8px 12px", lineHeight: 1.6 }}>
-                                  <span style={{ fontWeight: 800, color: "#B45309" }}>📝 Observații:</span> {p.observatii}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              </div>
-              );
-            })()}
+            {/* AGENDA — calendar pe zi, coloane per specialist */}
+            {tab === "agenda" && (
+              <AgendaCalendar
+                programari={programari}
+                echipa={echipa}
+                program={program}
+                agendaZi={agendaZi}
+                setAgendaZi={setAgendaZi}
+                filtruTalie={filtruTalie}
+                setFiltruTalie={setFiltruTalie}
+                accepta={accepta}
+                respinge={respinge}
+                clientiBlocati={clientiBlocati}
+                abateriMap={abateriMap}
+                toggleBlocClient={toggleBlocClient}
+                c={c}
+                theme={theme}
+              />
+            )}
 
             {/* ISTORIC ANIMALE */}
             {tab === "animale" && (() => {
