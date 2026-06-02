@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import { User, PawPrint, Calendar, Bell, Settings, HelpCircle, LogOut, Sun, Moon, type LucideIcon } from "lucide-react";
-
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
   { nume: "Băiță + uscare", pret: "50", durata: "40" },
@@ -1729,7 +1728,7 @@ export default function DashboardClient() {
           {/* TAB PROGRAMARI */}
           {tab === "programari" && (
             <div>
-              <h2 style={{ fontSize: 20, fontWeight: 900, color: c.text, marginBottom: 20 }}>📅 Programările mele</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 900, color: c.text, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}><Calendar size={22} color="#FF6B00" strokeWidth={2} /> Programările mele</h2>
               {viitoare.length > 0 && (<>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Viitoare</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
@@ -1749,9 +1748,9 @@ export default function DashboardClient() {
               </>)}
               {programari.length === 0 && (
                 <div style={{ textAlign: "center", padding: "60px 20px", color: c.xmuted }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><Calendar size={48} color="#FF6B00" strokeWidth={1.5} /></div>
                   <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Nicio programare încă</div>
-                  <button onClick={() => setTab("saloane")} style={{ ...btnPrimary, marginTop: 8 }}>🐾 Caută salon acum</button>
+                  <button onClick={() => setTab("saloane")} style={{ ...btnPrimary, marginTop: 8 }}>Caută salon acum</button>
                 </div>
               )}
             </div>
