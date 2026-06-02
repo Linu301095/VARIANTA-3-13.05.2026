@@ -1728,7 +1728,7 @@ export default function DashboardClient() {
           {/* TAB PROGRAMARI */}
           {tab === "programari" && (
             <div>
-              <h2 style={{ fontSize: 20, fontWeight: 900, color: c.text, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}><Calendar size={22} color="#FF6B00" strokeWidth={2} /> Programările mele</h2>
+              <PageHeader icon={Calendar} title="Programările mele" sub="Vezi programările viitoare și istoricul tău" />
               {viitoare.length > 0 && (<>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Viitoare</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
