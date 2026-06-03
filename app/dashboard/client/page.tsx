@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
-import { User, PawPrint, Calendar, Bell, Settings, HelpCircle, LogOut, Sun, Moon, type LucideIcon } from "lucide-react";
+import { User, PawPrint, Calendar, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
   { nume: "Băiță + uscare", pret: "50", durata: "40" },
@@ -73,13 +73,13 @@ type Tab = "saloane" | "programari" | "profil" | "animal" | "notificari" | "seta
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
 
 const SPECII = [
-  { val: "caine", label: "Câine", icon: "🐶" },
-  { val: "pisica", label: "Pisică", icon: "🐱" },
-  { val: "iepure", label: "Iepure", icon: "🐰" },
-  { val: "pasare", label: "Pasăre", icon: "🐦" },
-  { val: "rozator", label: "Rozătoare", icon: "🐹" },
-  { val: "reptila", label: "Reptilă", icon: "🦎" },
-  { val: "altele", label: "Altele", icon: "✨" },
+  { val: "caine", label: "Câine", icon: "Câine" },
+  { val: "pisica", label: "Pisică", icon: "Pisică" },
+  { val: "iepure", label: "Iepure", icon: "Iepure" },
+  { val: "pasare", label: "Pasăre", icon: "Pasăre" },
+  { val: "rozator", label: "Rozătoare", icon: "Rozătoare" },
+  { val: "reptila", label: "Reptilă", icon: "Reptilă" },
+  { val: "altele", label: "Altele", icon: "Altele" },
 ];
 
 const RASE_PE_SPECII: Record<string, string[]> = {
@@ -91,7 +91,7 @@ const RASE_PE_SPECII: Record<string, string[]> = {
   reptila: ["Iguana", "Șarpe Corn (Corn Snake)", "Leopard Gecko", "Bearded Dragon", "Blue Tongue Skink", "Cameleon", "Broasca Testoasă"],
   altele:  [],
 };
-function specieInfo(val?: string) { return SPECII.find(s => s.val === val) || { val: "altele", label: "—", icon: "🐾" }; }
+function specieInfo(val?: string) { return SPECII.find(s => s.val === val) || { val: "altele", label: "—", icon: "—" }; }
 
 type ProgramZiC = { activ: boolean; start: string; end: string };
 type ProgramSaptC = Record<string, ProgramZiC>;
@@ -140,9 +140,9 @@ function suprapunereC(slotStart: number, slotEnd: number, ora: string, durata: n
   const pS = timeToMinC(ora), pE = pS + (durata || 60);
   return slotStart < pE && slotEnd > pS;
 }
-function sexLabel(val?: string) { return val === "mascul" ? "♂️ Mascul" : val === "femela" ? "♀️ Femelă" : "—"; }
+function sexLabel(val?: string) { return val === "mascul" ? "♂ Mascul" : val === "femela" ? "♀ Femelă" : "—"; }
 function talieLabel(val?: string) { return val === "mica" ? "Mică" : val === "medie" ? "Medie" : val === "mare" ? "Mare" : "—"; }
-function talieIcon(val?: string) { return val === "mica" ? "🐕‍🦺" : val === "medie" ? "🐕" : val === "mare" ? "🐺" : "📏"; }
+function talieIcon(val?: string) { return val === "mica" ? "Mică" : val === "medie" ? "Medie" : val === "mare" ? "Mare" : "—"; }
 function getPretDurata(serviciu: any, talie?: string): { pret: string; durata: string } {
   if (!serviciu) return { pret: "", durata: "" };
   const t = (talie === "mica" || talie === "medie" || talie === "mare") ? talie : "medie";
@@ -235,8 +235,8 @@ function statusStyle(theme: "light" | "dark") {
   const d = theme === "dark";
   return {
     "confirmat":    { bg: d ? "rgba(16,185,129,.15)"  : "#ECFDF5", color: "#10B981", label: "✓ Confirmat" },
-    "în așteptare": { bg: d ? "rgba(255,107,0,.15)"   : "#FFF3EA", color: "#FF6B00", label: "⏳ În așteptare" },
-    "finalizat":    { bg: d ? "rgba(14,165,233,.15)"  : "#F0F9FF", color: "#0EA5E9", label: "✅ Finalizat" },
+    "în așteptare": { bg: d ? "rgba(255,107,0,.15)"   : "#FFF3EA", color: "#FF6B00", label: "În așteptare" },
+    "finalizat":    { bg: d ? "rgba(14,165,233,.15)"  : "#F0F9FF", color: "#0EA5E9", label: "Finalizat" },
     "anulat":       { bg: d ? "rgba(239,68,68,.15)"   : "#FEF2F2", color: "#EF4444", label: "✕ Anulat" },
   };
 }
@@ -751,11 +751,11 @@ export default function DashboardClient() {
         <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
             <div style={{ textAlign: "center", maxWidth: 460, width: "100%" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>✅</div>
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}><CheckCircle2 size={40} color="#FF6B00" strokeWidth={2} /></div>
               <h1 style={{ fontSize: 24, fontWeight: 900, color: c.text, marginBottom: 10 }}>Programare trimisă!</h1>
               <p style={{ fontSize: 14, color: c.muted, marginBottom: 24, lineHeight: 1.7 }}>Salonul va confirma în curând. Vei primi notificare când se aprobă.</p>
               <div style={{ background: c.surface, border: "2px solid #FF6B00", borderRadius: 20, padding: "20px 24px", marginBottom: 24, textAlign: "left" }}>
-                {[["🏪 Salon", salon.nume], ["✂️ Serviciu", rezervare.servicii.join(" + ")], ["📅 Data", new Date(dataSelectata + "T00:00:00").toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" })], ["🕐 Ora", rezervare.ora], ["🐾 Animal", animal?.nume || "Animăluțul tău"]].map(([k, v]) => (
+                {[["Salon", salon.nume], ["Serviciu", rezervare.servicii.join(" + ")], ["Data", new Date(dataSelectata + "T00:00:00").toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" })], ["Ora", rezervare.ora], ["Animal", animal?.nume || "Animăluțul tău"]].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "8px 0", borderBottom: `1px solid ${c.border2}` }}>
                     <span style={{ color: c.muted }}>{k}</span><span style={{ fontWeight: 700, color: c.text }}>{v}</span>
                   </div>
@@ -942,10 +942,10 @@ export default function DashboardClient() {
                 <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
                   {salon.poza_url
                     ? <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
-                    : <span style={{ fontSize: 28, flexShrink: 0 }}>✂️</span>}
+                    : <Scissors size={28} color="#FF6B00" strokeWidth={2} style={{ flexShrink: 0 }} />}
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{salon.nume}</div>
-                    <div style={{ fontSize: 12, color: c.muted }}>✂️ {rezervare?.servicii?.join(" + ")}</div>
+                    <div style={{ fontSize: 12, color: c.muted, display: "flex", alignItems: "center", gap: 4 }}><Scissors size={12} color={c.muted} strokeWidth={2} /> {rezervare?.servicii?.join(" + ")}</div>
                   </div>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 900, color: c.text, marginBottom: 4 }}>Alege specialistul</div>
@@ -957,7 +957,7 @@ export default function DashboardClient() {
                         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
                           {m.poza
                             ? <div style={{ width: 52, height: 52, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><img src={m.poza} alt={m.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
-                            : <div style={{ width: 52, height: 52, borderRadius: 12, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>✂️</div>}
+                            : <div style={{ width: 52, height: 52, borderRadius: 12, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={24} color={salon.culoare} strokeWidth={2} /></div>}
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{m.nume}</div>
                             {m.specialitate && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.specialitate}</div>}
