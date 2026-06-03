@@ -2064,6 +2064,7 @@ export default function DashboardClient() {
 /* ── Shell ── */
 function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUrl, onBack, backLabel }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number; avatarUrl?: string | null; onBack?: () => void; backLabel?: string }) {
   const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState<Tab | "logout" | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
 
@@ -2134,18 +2135,22 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
                   <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2 }}>Cont client 🐾</div>
                 </div>
                 <div style={{ padding: "6px 0" }}>
-                  {items.map(item => (
+                  {items.map(item => {
+                    const isActive = tab === item.t;
+                    const isHovered = hovered === item.t;
+                    return (
                     <button key={item.t} onClick={() => { onNav(item.t); setOpen(false); }}
-                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: tab === item.t ? c.orangeAccent : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
-                      onMouseEnter={e => { if (tab !== item.t) e.currentTarget.style.background = c.surface2; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = tab === item.t ? c.orangeAccent : "transparent"; }}>
-                      <span style={{ width: 34, height: 34, borderRadius: 10, background: tab === item.t ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><item.icon size={18} color={tab === item.t ? "#fff" : c.muted} strokeWidth={2} /></span>
+                      onMouseEnter={() => setHovered(item.t)}
+                      onMouseLeave={() => setHovered(null)}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: isActive ? c.orangeAccent : isHovered ? c.surface2 : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", transition: "background .12s" }}>
+                      <span style={{ width: 34, height: 34, borderRadius: 10, background: isActive ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "background .12s" }}><item.icon size={18} color={isActive ? "#fff" : c.muted} strokeWidth={2} /></span>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: tab === item.t ? "#FF6B00" : c.text }}>{item.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#FF6B00" : c.text }}>{item.label}</div>
                         <div style={{ fontSize: 11, color: c.xmuted, marginTop: 1 }}>{item.sub}</div>
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
                 <div style={{ borderTop: `1px solid ${c.border}`, padding: "12px 18px" }}>
                   <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>Aspect</div>
@@ -2162,9 +2167,9 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
                 </div>
                 <div style={{ borderTop: `1px solid ${c.border}`, padding: "6px 0" }}>
                   <button onClick={() => { setOpen(false); onLogout(); }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,.08)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                    onMouseEnter={() => setHovered("logout")}
+                    onMouseLeave={() => setHovered(null)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: hovered === "logout" ? "rgba(239,68,68,.08)" : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", transition: "background .12s" }}>
                     <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(239,68,68,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}><LogOut size={17} color="#EF4444" strokeWidth={2} /></span>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>Ieșire din cont</div>
                   </button>
