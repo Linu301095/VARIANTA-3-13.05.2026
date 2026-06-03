@@ -106,7 +106,7 @@ function etichetaZi(dataIso: string) {
   return { prefix: "", rest: baza, azi: false };
 }
 function specieIcon(specie?: string) {
-  return specie === "pisica" ? "🐱" : specie === "iepure" ? "🐰" : specie === "pasare" ? "🐦" : specie === "rozator" ? "🐹" : specie === "reptila" ? "🦎" : specie === "altele" ? "✨" : "🐶";
+  return specie === "pisica" ? "Pisică" : specie === "iepure" ? "Iepure" : specie === "pasare" ? "Pasăre" : specie === "rozator" ? "Rozătoare" : specie === "reptila" ? "Reptilă" : specie === "altele" ? "Altele" : "Câine";
 }
 type PerioadaStat = "azi" | "ieri" | "saptamana" | "luna" | "an" | "custom";
 function intervalPerioada(per: PerioadaStat, cStart: string, cEnd: string): { start: string; end: string; label: string } {
@@ -121,7 +121,7 @@ function intervalPerioada(per: PerioadaStat, cStart: string, cEnd: string): { st
   return { start: a, end: b, label: `${a} → ${b}` };
 }
 function talieLabel(t?: string | null) {
-  return t === "mica" ? "🐕‍🦺 Mică" : t === "medie" ? "🐕 Medie" : t === "mare" ? "🐺 Mare" : null;
+  return t === "mica" ? "Mică" : t === "medie" ? "Medie" : t === "mare" ? "Mare" : null;
 }
 function areAlergii(s?: string | null) {
   if (!s) return false;
@@ -256,7 +256,7 @@ function AgendaCalendar({
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>📅 Agenda</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text, display: "flex", alignItems: "center", gap: 8 }}><CalendarDays size={20} color="#FF6B00" strokeWidth={2} /> Agenda</h2>
         <div style={{ fontSize: 13, color: c.xmuted, fontWeight: 600 }}>{total} {total === 1 ? "programare" : "programări"}</div>
       </div>
 
@@ -706,15 +706,15 @@ export default function DashboardSalon() {
       setProgramari(data.map((p: any) => {
         const profil = profileMap[p.user_id];
         const animal = animalMap[p.animal_id];
-        const specieIcon = animal?.specie === "pisica" ? "🐱" : animal?.specie === "iepure" ? "🐰" : animal?.specie === "pasare" ? "🐦" : animal?.specie === "rozator" ? "🐹" : animal?.specie === "reptila" ? "🦎" : animal?.specie === "altele" ? "✨" : "🐶";
-        const sexIcon = animal?.sex === "femela" ? "♀️" : animal?.sex === "mascul" ? "♂️" : "";
+        const specieIconStr = specieIcon(animal?.specie);
+        const sexIcon = animal?.sex === "femela" ? "♀" : animal?.sex === "mascul" ? "♂" : "";
         const talieEf = p.talie_animal || animal?.talie;
-        const talieTxt = talieEf === "mica" ? "🐕‍🦺 Mică" : talieEf === "medie" ? "🐕 Medie" : talieEf === "mare" ? "🐺 Mare" : null;
+        const talieTxt = talieEf === "mica" ? "Mică" : talieEf === "medie" ? "Medie" : talieEf === "mare" ? "Mare" : null;
         const detalii = [animal?.rasa, animal?.greutate ? `${animal.greutate}kg` : null, talieTxt, sexIcon].filter(Boolean).join(", ");
         const esteApp = !p.sursa || p.sursa === "app";
-        const clientNume = esteApp ? (profil?.nume || "—") : (p.nume_client_extern || (p.sursa === "telefonic" ? "📞 Client telefonic" : p.sursa === "walkin" ? "🚶 Walk-in" : "⏸ Indisponibil"));
+        const clientNume = esteApp ? (profil?.nume || "—") : (p.nume_client_extern || (p.sursa === "telefonic" ? "Client telefonic" : p.sursa === "walkin" ? "Walk-in" : "Indisponibil"));
         const animalText = esteApp
-          ? (animal?.nume ? `${specieIcon} ${animal.nume}${detalii ? ` (${detalii})` : ""}` : "—")
+          ? (animal?.nume ? `${specieIconStr} ${animal.nume}${detalii ? ` (${detalii})` : ""}` : "—")
           : (p.sursa === "blocaj" ? "—" : "Adăugat manual");
         return {
           id: p.id,
