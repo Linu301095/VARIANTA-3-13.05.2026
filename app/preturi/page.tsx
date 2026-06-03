@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
 import { supabase } from "../../lib/supabase";
+import { Scissors, Gift, Flame } from "lucide-react";
 
 type Ciclu = "lunar" | "anual";
 
@@ -138,7 +139,7 @@ export default function Preturi() {
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Prețuri simple, fără surprize</div>
             <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15, marginBottom: 18 }}>
-              Totul pentru salon,<br /><span style={{ color: "#FF6B00" }}>dintr-un singur abonament. ✂️</span>
+              Totul pentru salon,<br /><span style={{ color: "#FF6B00", display: "inline-flex", alignItems: "center", gap: 8 }}>dintr-un singur abonament. <Scissors size={32} strokeWidth={2} /></span>
             </h1>
             <p style={{ fontSize: 17, color: "#6B7280", lineHeight: 1.7, maxWidth: 560, margin: "0 auto" }}>
               O singură subscripție pe tot salonul — nu plătești per angajat. Programări nelimitate, remindere WhatsApp și statistici reale, incluse.
@@ -150,11 +151,11 @@ export default function Preturi() {
         {promoActiva && (
           <section style={{ padding: "0 20px 8px" }}>
             <div style={{ maxWidth: 900, margin: "0 auto", background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 20, padding: "20px 26px", color: "#fff", textAlign: "center", boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
-              <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>🎁 Primele 3 luni GRATUITE</div>
+              <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><Gift size={20} strokeWidth={2} /> Primele 3 luni GRATUITE</div>
               <div style={{ fontSize: 14, opacity: .95 }}>
                 Doar pentru primele {LOCURI_PROMO} saloane înscrise pe CalyHub.
                 {locuriRamase !== null && (
-                  <strong> 🔥 Au mai rămas {locuriRamase} {locuriRamase === 1 ? "loc" : "locuri"} din {LOCURI_PROMO}.</strong>
+                  <strong style={{ display: "inline-flex", alignItems: "center", gap: 5 }}> <Flame size={14} strokeWidth={2} /> Au mai rămas {locuriRamase} {locuriRamase === 1 ? "loc" : "locuri"} din {LOCURI_PROMO}.</strong>
                 )}
               </div>
             </div>
@@ -270,8 +271,8 @@ export default function Preturi() {
             <p style={{ fontSize: 15, color: "rgba(255,255,255,.92)", marginBottom: 32, lineHeight: 1.7 }}>
               {promoActiva ? "Prinde-te în primele 10 saloane cu 3 luni gratuite." : "Începe azi. Fără card, anulezi oricând."}
             </p>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", padding: "15px 34px", borderRadius: 50, background: "#fff", color: "#FF6B00", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(0,0,0,.18)" }}>
-              ✂️ Înregistrează salonul gratuit →
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "15px 34px", borderRadius: 50, background: "#fff", color: "#FF6B00", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(0,0,0,.18)" }}>
+              <Scissors size={17} strokeWidth={2} /> Înregistrează salonul gratuit →
             </Link>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", marginTop: 14 }}>Fără card · Fără comision · Anulezi oricând</div>
           </div>
