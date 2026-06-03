@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo, useContext, createContext } from "
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -1153,7 +1154,7 @@ export default function DashboardSalon() {
                 : animaleIstoric;
               return (
                 <div>
-                  <PageHeader icon="🐾" title="Istoric animale" sub="Fișa completă a fiecărui animal care a fost la salonul tău" />
+                  <PageHeader icon={PawPrint} title="Istoric animale" sub="Fișa completă a fiecărui animal care a fost la salonul tău" />
                   <div style={{ marginBottom: 16 }}>
                     <input value={cautareAnimal} onChange={e => setCautareAnimal(e.target.value)} placeholder="Caută după nume animal, stăpân sau rasă…" style={inp} />
                   </div>
@@ -1685,7 +1686,7 @@ export default function DashboardSalon() {
 
               return (
                 <div style={{ maxWidth: 900 }}>
-                  <PageHeader icon="🕐" title="Program & disponibilitate" sub="Setează orarul săptămânal și gestionează sloturile" />
+                  <PageHeader icon={Clock} title="Program & disponibilitate" sub="Setează orarul săptămânal și gestionează sloturile" />
 
                   {/* ORAR SĂPTĂMÂNAL */}
                   <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 20 }}>
@@ -1880,7 +1881,7 @@ export default function DashboardSalon() {
             {/* PROFIL SALON */}
             {tab === "profil-salon" && (
               <div style={{ maxWidth: 560 }}>
-                <PageHeader icon="🏪" title="Profilul salonului" sub="Actualizează datele publice ale salonului" />
+                <PageHeader icon={Store} title="Profilul salonului" sub="Actualizează datele publice ale salonului" />
 
                 {/* POZA DE PREZENTARE */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
@@ -1976,7 +1977,7 @@ export default function DashboardSalon() {
             {/* SERVICII */}
             {tab === "servicii" && (
               <div style={{ maxWidth: 580 }}>
-                <PageHeader icon="✂️" title="Serviciile mele" sub="Gestioneaza serviciile oferite de salon" />
+                <PageHeader icon={Scissors} title="Serviciile mele" sub="Gestioneaza serviciile oferite de salon" />
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                   {servicii.map((s, i) => {
                     const preturi = s.preturi || { mica: s.pret || "", medie: s.pret || "", mare: s.pret || "" };
@@ -2042,7 +2043,7 @@ export default function DashboardSalon() {
             {/* ECHIPA */}
             {tab === "echipa" && (
               <div style={{ maxWidth: 560 }}>
-                <PageHeader icon="👥" title="Echipa mea" sub="Gestionează groomerii și orarul fiecăruia" />
+                <PageHeader icon={Users} title="Echipa mea" sub="Gestionează groomerii și orarul fiecăruia" />
                 <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 16 }}>
                   {echipa.map(g => {
                     const orarDeschis = !!groomerOrarDeschis[g.id];
@@ -2206,7 +2207,7 @@ export default function DashboardSalon() {
             {/* ABONAMENT */}
             {tab === "abonament" && (
               <div style={{ maxWidth: 720 }}>
-                <PageHeader icon="💳" title="Abonamentul meu" sub="Detalii despre planul tau si facturare" />
+                <PageHeader icon={CreditCard} title="Abonamentul meu" sub="Detalii despre planul tau si facturare" />
                 {abonament ? (
                   <>
                     <div style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 20, padding: "26px 28px", color: "#fff", marginBottom: 18, boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
@@ -2266,7 +2267,7 @@ export default function DashboardSalon() {
             {/* SETARI */}
             {tab === "setari" && (
               <div style={{ maxWidth: 520 }}>
-                <PageHeader icon="🔒" title="Setari cont" sub="Modifica datele contului tau de salon" />
+                <PageHeader icon={Settings} title="Setari cont" sub="Modifica datele contului tau de salon" />
 
                 {/* AVATAR */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
@@ -2316,7 +2317,7 @@ export default function DashboardSalon() {
             {/* AJUTOR */}
             {tab === "ajutor" && (
               <div style={{ maxWidth: 620 }}>
-                <PageHeader icon="❓" title="Ajutor" sub="Suport dedicat pentru partenerii CalyHub" />
+                <PageHeader icon={HelpCircle} title="Ajutor" sub="Suport dedicat pentru partenerii CalyHub" />
                 <FAQ items={[
                   { q: "Cum adaug un serviciu nou?", r: "Din meniu click pe Serviciile mele, apoi + Adauga serviciu. Completeaza denumirea, pretul si durata, apoi salveaza." },
                   { q: "Cum accept o programare noua?", r: "In tab-ul Agenda vei vedea programarile noi marcate cu portocaliu. Click pe Accepta pentru a le confirma." },
@@ -2347,14 +2348,14 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
     try { const a = JSON.parse(localStorage.getItem("calyhub_abonament") || "{}"); return a.planNume || null; } catch { return null; }
   })();
 
-  const items: { icon: string; label: string; sub: string; t: Tab }[] = [
-    { icon: "🏪", label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
-    { icon: "✂️", label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
-    { icon: "👥", label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
-    { icon: "🐾", label: "Istoric animale", sub: "Fișa fiecărui animal programat", t: "animale" },
-    { icon: "💳", label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
-    { icon: "🔒", label: "Setari cont", sub: "Schimba parola", t: "setari" },
-    { icon: "❓", label: "Ajutor", sub: "Support dedicat", t: "ajutor" },
+  const items: { icon: LucideIcon; label: string; sub: string; t: Tab }[] = [
+    { icon: Store, label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
+    { icon: Scissors, label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
+    { icon: Users, label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
+    { icon: PawPrint, label: "Istoric animale", sub: "Fișa fiecărui animal programat", t: "animale" },
+    { icon: CreditCard, label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
+    { icon: Settings, label: "Setari cont", sub: "Schimba parola", t: "setari" },
+    { icon: HelpCircle, label: "Ajutor", sub: "Support dedicat", t: "ajutor" },
   ];
 
   return (
@@ -2364,7 +2365,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
         style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
         <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>✂️</span>
         <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, overflow: "hidden" }}>
-          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "👤"}
+          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
         </span>
         {!isMobile && <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{numeComplet}</span>}
         <span style={{ fontSize: 10, color: c.xmuted, display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}>▼</span>
@@ -2388,7 +2389,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
                 style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: tab === item.t ? c.orangeAccent : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
                 onMouseEnter={e => { if (tab !== item.t) e.currentTarget.style.background = c.surface2; }}
                 onMouseLeave={e => { e.currentTarget.style.background = tab === item.t ? c.orangeAccent : "transparent"; }}>
-                <span style={{ width: 34, height: 34, borderRadius: 10, background: tab === item.t ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 34, height: 34, borderRadius: 10, background: tab === item.t ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><item.icon size={18} color={tab === item.t ? "#fff" : c.muted} strokeWidth={2} /></span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: tab === item.t ? "#FF6B00" : c.text }}>{item.label}</div>
                   <div style={{ fontSize: 11, color: c.xmuted, marginTop: 1 }}>{item.sub}</div>
@@ -2400,12 +2401,12 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
             <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>Aspect</div>
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => toggleTheme("light")}
-                style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "light" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "light" ? c.orangeAccent : c.surface2, color: theme === "light" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                ☀️ Luminos
+                style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "light" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "light" ? c.orangeAccent : c.surface2, color: theme === "light" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <Sun size={15} strokeWidth={2.2} /> Luminos
               </button>
               <button onClick={() => toggleTheme("dark")}
-                style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "dark" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "dark" ? c.orangeAccent : c.surface2, color: theme === "dark" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                🌙 Întunecat
+                style={{ flex: 1, padding: "9px 8px", borderRadius: 10, border: theme === "dark" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: theme === "dark" ? c.orangeAccent : c.surface2, color: theme === "dark" ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <Moon size={15} strokeWidth={2.2} /> Întunecat
               </button>
             </div>
           </div>
@@ -2414,7 +2415,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
               style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
               onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,.08)")}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-              <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(239,68,68,.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🚪</span>
+              <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(239,68,68,.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><LogOut size={17} color="#EF4444" strokeWidth={2} /></span>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>Iesire din cont</div>
             </button>
           </div>
@@ -2424,11 +2425,11 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
   );
 }
 
-function PageHeader({ icon, title, sub }: { icon: string; title: string; sub: string }) {
+function PageHeader({ icon: Icon, title, sub }: { icon: LucideIcon; title: string; sub: string }) {
   const { c } = useContext(ThemeCtx);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-      <div style={{ width: 48, height: 48, borderRadius: 14, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{icon}</div>
+      <div style={{ width: 48, height: 48, borderRadius: 14, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon size={24} color="#FF6B00" strokeWidth={2} /></div>
       <div><div style={{ fontSize: 20, fontWeight: 900, color: c.text }}>{title}</div><div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{sub}</div></div>
     </div>
   );
