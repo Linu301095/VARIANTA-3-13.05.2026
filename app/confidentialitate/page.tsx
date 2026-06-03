@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+import { Building2, ClipboardList, Target, Clock, Users, Scale, Cookie, Lock, FileText, CheckCircle2, type LucideIcon } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Politica de confidențialitate — CalyHub",
@@ -11,17 +12,17 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const SECTIUNI = [
+const SECTIUNI: { titlu: string; Icon: LucideIcon; continut: string }[] = [
   {
     titlu: "Cine suntem",
-    icon: "🏢",
+    Icon: Building2,
     continut: `CalyHub SRL este operatorul platformei CalyHub și, în sensul Regulamentului (UE) 2016/679 (GDPR), are calitatea de operator de date cu caracter personal.
 
 Contact DPO (Responsabil cu Protecția Datelor): privacy@calyhub.ro`,
   },
   {
     titlu: "Ce date colectăm",
-    icon: "📋",
+    Icon: ClipboardList,
     continut: `Date furnizate de tine la înregistrare:
 • Nume și prenume
 • Adresă de email
@@ -44,7 +45,7 @@ Date colectate automat:
   },
   {
     titlu: "De ce colectăm aceste date",
-    icon: "🎯",
+    Icon: Target,
     continut: `Baza legală pentru prelucrare (Art. 6 GDPR):
 
 ✓ Executarea contractului — pentru a-ți furniza serviciile de programare online, calendar, notificări.
@@ -54,7 +55,7 @@ Date colectate automat:
   },
   {
     titlu: "Cât timp păstrăm datele",
-    icon: "⏱️",
+    Icon: Clock,
     continut: `• Datele contului: pe durata existenței contului + 30 zile după ștergere (pentru backup)
 • Istoricul programărilor: 3 ani de la data programării (obligație legală contabilitate)
 • Datele de facturare: 5 ani (conform Codului Fiscal român)
@@ -65,7 +66,7 @@ Poți solicita ștergerea datelor tale oricând, cu excepția celor pe care sunt
   },
   {
     titlu: "Cu cine partajăm datele",
-    icon: "🤝",
+    Icon: Users,
     continut: `Nu vindem niciodată datele tale. Le partajăm doar cu:
 
 • Salonul ales — când faci o programare, salonul vede numele tău, numărul de telefon și profilul animăluțului (strict necesar pentru prestarea serviciului).
@@ -76,40 +77,40 @@ Niciun transfer de date în afara UE fără garanții adecvate (clauze contractu
   },
   {
     titlu: "Drepturile tale",
-    icon: "⚖️",
+    Icon: Scale,
     continut: `Conform GDPR, ai dreptul la:
 
-🔍 Acces — să știi ce date deținem despre tine.
-✏️ Rectificare — să corectezi datele inexacte direct din cont (Setări → Profil).
-🗑️ Ștergere ("dreptul de a fi uitat") — să soliciți ștergerea contului și a datelor asociate.
-📦 Portabilitate — să primești datele tale într-un format structurat (JSON/CSV).
-🚫 Opoziție — să te opui prelucrării în scop de marketing direct.
-⏸️ Restricție — să limitezi prelucrarea în anumite situații.
+→ Acces — să știi ce date deținem despre tine.
+→ Rectificare — să corectezi datele inexacte direct din cont (Setări → Profil).
+→ Ștergere ("dreptul de a fi uitat") — să soliciți ștergerea contului și a datelor asociate.
+→ Portabilitate — să primești datele tale într-un format structurat (JSON/CSV).
+→ Opoziție — să te opui prelucrării în scop de marketing direct.
+→ Restricție — să limitezi prelucrarea în anumite situații.
 
 Exercitare drepturi: privacy@calyhub.ro (răspuns în max. 30 zile)
 Sesizare autoritate: ANSPDCP — www.dataprotection.ro`,
   },
   {
     titlu: "Cookie-uri",
-    icon: "🍪",
+    Icon: Cookie,
     continut: `Folosim 3 categorii de cookie-uri:
 
-🟢 Esențiale (nu necesită consimțământ)
+[ Esențiale ] (nu necesită consimțământ)
 Necesare funcționării platformei: autentificare, coș sesiune, securitate CSRF.
 Durată: sesiune sau max. 30 zile.
 
-🟡 Analiză (cu consimțământ)
+[ Analiză ] (cu consimțământ)
 Google Analytics 4 cu IP anonim, Hotjar pentru heatmaps. Ne ajută să înțelegem cum folosești platforma.
 Durată: max. 13 luni.
 
-🔴 Marketing (cu consimțământ)
+[ Marketing ] (cu consimțământ)
 Cookie-uri pentru retargeting publicitar (Facebook Pixel, Google Ads). Activate doar dacă accepți.
 
 Poți gestiona preferințele de cookie-uri oricând din butonul "Cookie-uri" din footer.`,
   },
   {
     titlu: "Securitatea datelor",
-    icon: "🔒",
+    Icon: Lock,
     continut: `Luăm securitatea datelor tale în serios:
 
 • Conexiune HTTPS/TLS 1.3 pe toate paginile
@@ -123,7 +124,7 @@ Poți gestiona preferințele de cookie-uri oricând din butonul "Cookie-uri" din
   },
   {
     titlu: "Modificări ale politicii",
-    icon: "📝",
+    Icon: FileText,
     continut: `Această politică poate fi actualizată periodic. Versiunea curentă este întotdeauna disponibilă pe această pagină, cu data ultimei modificări vizibilă.
 
 Pentru modificări semnificative, vei primi notificare prin email cu cel puțin 15 zile înainte.
@@ -156,7 +157,7 @@ export default function Confidentialitate() {
           <div style={{ maxWidth: 780, margin: "0 auto" }}>
 
             <div style={{ background: "#ECFDF5", border: "1px solid #6EE7B7", borderRadius: 16, padding: "18px 22px", marginBottom: 40 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#059669", marginBottom: 4 }}>✅ Angajamentul nostru față de tine</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#059669", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={15} strokeWidth={2} /> Angajamentul nostru față de tine</div>
               <div style={{ fontSize: 14, color: "#374151", lineHeight: 1.7 }}>
                 Nu vindem datele tale. Nu le partajăm fără motiv. Le protejăm cu seriozitate. Această politică îți explică exact ce facem cu informațiile tale — în limbaj clar, nu juridic.
               </div>
@@ -166,7 +167,7 @@ export default function Confidentialitate() {
               {SECTIUNI.map((s, i) => (
                 <div key={i} style={{ marginBottom: 36, paddingBottom: 36, borderBottom: i < SECTIUNI.length - 1 ? "1px solid #F3F4F6" : "none" }}>
                   <h2 style={{ fontSize: 18, fontWeight: 900, color: "#1A1A1A", marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 22 }}>{s.icon}</span>
+                    <s.Icon size={22} color="#FF6B00" strokeWidth={1.8} />
                     {s.titlu}
                   </h2>
                   <div style={{ fontSize: 14, color: "#374151", lineHeight: 1.9, whiteSpace: "pre-line" }}>{s.continut}</div>
