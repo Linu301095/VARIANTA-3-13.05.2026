@@ -106,7 +106,7 @@ function etichetaZi(dataIso: string) {
   return { prefix: "", rest: baza, azi: false };
 }
 function specieIcon(specie?: string) {
-  return specie === "pisica" ? "Pisică" : specie === "iepure" ? "Iepure" : specie === "pasare" ? "Pasăre" : specie === "rozator" ? "Rozătoare" : specie === "reptila" ? "Reptilă" : specie === "altele" ? "Altele" : "Câine";
+  return specie === "pisica" ? "🐈" : specie === "iepure" ? "🐇" : specie === "pasare" ? "🐦" : specie === "rozator" ? "🐹" : specie === "reptila" ? "🦎" : specie === "altele" ? "🐾" : "🐕";
 }
 type PerioadaStat = "azi" | "ieri" | "saptamana" | "luna" | "an" | "custom";
 function intervalPerioada(per: PerioadaStat, cStart: string, cEnd: string): { start: string; end: string; label: string } {
