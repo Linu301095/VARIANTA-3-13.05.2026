@@ -35,6 +35,15 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 - Footer cu varianta corectă pe fiecare tip de pagină
 - Limba română pentru tot conținutul UI
 
+## Logo (OFICIAL — rămâne acesta)
+
+- Fișierul `public/logo.png` este logo-ul oficial al aplicației CalyHub și **rămâne acesta**.
+- Design: chenar rotunjit (jumătate negru `#1A1A1A`, jumătate portocaliu `#FF6B00`) cu silueta câine (negru) + pisică (portocaliu) și textul „CalyHub" dedesubt.
+- Versiunea curentă este **decupată strâns** (fără marginile albe goale) și are **fundal transparent** (PNG RGBA, ~894×873) — astfel apare mai mare la aceeași înălțime în header, fără să schimbăm designul.
+- Toate paginile și dashboard-urile referențiază `/logo.png` (un singur fișier sursă). Header public la `height: 44`, dashboard la `height: 38`.
+- NU se modifică designul logo-ului fără cerere explicită. Dacă logo-ul se mărește, butoanele din header se micșorează pe mobil prin clasele `.hdr-btn` / `.hdr-nav` din `app/globals.css` (media query `@max-width:640px`).
+- Notă: `logo.png` e folosit și ca imagine OpenGraph în `app/layout.tsx`; fiind transparent, pe share social fundalul poate apărea negru/alb — la nevoie se face o imagine OG dedicată cu fundal, separat de logo.
+
 ## Branch & deploy
 
 - Development: `claude/change-project-background-zPuM4`
