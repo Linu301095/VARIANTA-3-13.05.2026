@@ -86,9 +86,9 @@ export default function ConfigurareSalon() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 74 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={160} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
           <div style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>Configurare salon — Pasul {step + 1} din {STEPS.length}</div>
         </div>
       </header>

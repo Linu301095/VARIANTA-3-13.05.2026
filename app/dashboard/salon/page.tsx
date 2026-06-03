@@ -1074,12 +1074,12 @@ export default function DashboardSalon() {
         {savedMsg && <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1A1A1A", color: "#fff", padding: "12px 20px", borderRadius: 12, fontSize: 14, fontWeight: 700, zIndex: 999, boxShadow: "0 4px 20px rgba(0,0,0,.2)" }}>✓ {savedMsg}</div>}
 
         {/* Header */}
-        <header style={{ position: "sticky", top: 0, zIndex: 100, background: c.surface, borderBottom: `1px solid ${c.border}`, height: 74 }}>
+        <header style={{ position: "sticky", top: 0, zIndex: 100, background: c.surface, borderBottom: `1px solid ${c.border}`, height: 66 }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             {/* Left: logo + name OR back button when in sub-tab */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexShrink: 0 }}>
               {!(isMobile && isSubTab) && (
-                <Image src="/logo.png" alt="CalyHub" width={135} height={46} style={{ height: 46, width: "auto", objectFit: "contain", flexShrink: 0 }} priority />
+                <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain", flexShrink: 0 }} priority />
               )}
               {!isMobile && !isSubTab && (
                 <>
