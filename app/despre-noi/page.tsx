@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+import { Heart, Star, Users, Lock, type LucideIcon } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Despre noi — Povestea CalyHub",
@@ -15,16 +16,16 @@ export const metadata: Metadata = {
   },
 };
 
-const VALORI = [
-  { icon: "❤️", titlu: "Pasiune pentru animale", desc: "Fiecare decizie de produs o luăm cu animalul în minte. Bunăstarea lor nu e o opțiune — e centrul a tot ce construim." },
-  { icon: "🌟", titlu: "Standarde înalte", desc: "Vrem ca fiecare salon de pe CalyHub să ofere servicii la cele mai bune standarde. Filtrăm, verificăm, ridicăm ștacheta." },
-  { icon: "🤝", titlu: "Parteneriat real", desc: "Saloanele nu sunt simpli furnizori — sunt parteneri în misiunea noastră. Le oferim uneltele ca să crească împreună cu noi." },
-  { icon: "🔒", titlu: "Transparență totală", desc: "Prețuri clare, fără comisioane ascunse. Ce vezi este ce primești — pentru toți cei implicați." },
+const VALORI: { Icon: LucideIcon; titlu: string; desc: string }[] = [
+  { Icon: Heart, titlu: "Pasiune pentru animale", desc: "Fiecare decizie de produs o luăm cu animalul în minte. Bunăstarea lor nu e o opțiune — e centrul a tot ce construim." },
+  { Icon: Star, titlu: "Standarde înalte", desc: "Vrem ca fiecare salon de pe CalyHub să ofere servicii la cele mai bune standarde. Filtrăm, verificăm, ridicăm ștacheta." },
+  { Icon: Users, titlu: "Parteneriat real", desc: "Saloanele nu sunt simpli furnizori — sunt parteneri în misiunea noastră. Le oferim uneltele ca să crească împreună cu noi." },
+  { Icon: Lock, titlu: "Transparență totală", desc: "Prețuri clare, fără comisioane ascunse. Ce vezi este ce primești — pentru toți cei implicați." },
 ];
 
 const CIFRE = [
   { val: "2026", label: "Anul fondării" },
-  { val: "🇷🇴", label: "Construit în România" },
+  { val: "RO", label: "Construit în România" },
   { val: "0", label: "Comisioane ascunse" },
   { val: "100%", label: "Dedicat grooming-ului" },
 ];
@@ -129,7 +130,7 @@ export default function DespreNoi() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
               {VALORI.map(v => (
                 <div key={v.titlu} style={{ background: "#FAFAFA", borderRadius: 22, padding: "28px 24px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
-                  <div style={{ fontSize: 36, marginBottom: 14 }}>{v.icon}</div>
+                  <div style={{ marginBottom: 14 }}><v.Icon size={36} color="#FF6B00" strokeWidth={1.8} /></div>
                   <h3 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{v.titlu}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{v.desc}</p>
                 </div>
