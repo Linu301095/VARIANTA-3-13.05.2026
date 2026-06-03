@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
-import { User, PawPrint, Calendar, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, type LucideIcon } from "lucide-react";
+import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
   { nume: "Băiță + uscare", pret: "50", durata: "40" },
@@ -14,20 +14,20 @@ const SERVICII_DEMO = [
 ];
 
 const SALOANE = [
-  { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], serviciiComplete: SERVICII_DEMO, pretDe: 80, distanta: "1.2 km", badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { id: 2, nume: "Fluffy Salon", oras: "București, Sector 1", rating: 4.8, recenzii: 89, servicii: ["Tuns", "Styling", "Spa"], serviciiComplete: SERVICII_DEMO, pretDe: 90, distanta: "2.1 km", badge: "Nou", badgeIcon: "🆕", culoare: "#8B5CF6", bg: "#F5F3FF" },
-  { id: 3, nume: "Happy Pets Grooming", oras: "București, Sector 3", rating: 4.7, recenzii: 214, servicii: ["Tuns", "Băiță", "Anti-purici"], serviciiComplete: SERVICII_DEMO, pretDe: 65, distanta: "3.4 km", badge: "Popular", badgeIcon: "🔥", culoare: "#10B981", bg: "#ECFDF5" },
-  { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", badgeIcon: "👑", culoare: "#F59E0B", bg: "#FFFBEB" },
+  { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], serviciiComplete: SERVICII_DEMO, pretDe: 80, distanta: "1.2 km", badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { id: 2, nume: "Fluffy Salon", oras: "București, Sector 1", rating: 4.8, recenzii: 89, servicii: ["Tuns", "Styling", "Spa"], serviciiComplete: SERVICII_DEMO, pretDe: 90, distanta: "2.1 km", badge: "Nou", culoare: "#8B5CF6", bg: "#F5F3FF" },
+  { id: 3, nume: "Happy Pets Grooming", oras: "București, Sector 3", rating: 4.7, recenzii: 214, servicii: ["Tuns", "Băiță", "Anti-purici"], serviciiComplete: SERVICII_DEMO, pretDe: 65, distanta: "3.4 km", badge: "Popular", culoare: "#10B981", bg: "#ECFDF5" },
+  { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
 type ServiciuOferitC = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; badgeIcon: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
-  { badge: "Top rated", badgeIcon: "⭐", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { badge: "Nou",       badgeIcon: "🆕", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { badge: "Popular",   badgeIcon: "🔥", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { badge: "Premium",   badgeIcon: "👑", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { badge: "Nou",       culoare: "#FF6B00", bg: "#FFF3EA" },
+  { badge: "Popular",   culoare: "#FF6B00", bg: "#FFF3EA" },
+  { badge: "Premium",   culoare: "#FF6B00", bg: "#FFF3EA" },
 ];
 
 function mapSalonDB(s: any, i: number): SalonItem {
@@ -56,7 +56,6 @@ function mapSalonDB(s: any, i: number): SalonItem {
     pretDe,
     distanta: "",
     badge: p.badge,
-    badgeIcon: p.badgeIcon,
     culoare: p.culoare,
     bg: p.bg,
     poza_url: s.poza_url || null,
@@ -998,14 +997,14 @@ export default function DashboardClient() {
               <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
                 {salon.poza_url
                   ? <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
-                  : <span style={{ fontSize: 28, flexShrink: 0 }}>✂️</span>}
+                  : <div style={{ width: 48, height: 48, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={24} color="#FF6B00" strokeWidth={2} /></div>}
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{salon.nume}</div>
-                  <div style={{ fontSize: 12, color: c.muted }}>📍 {salon.oras}</div>
+                  <div style={{ fontSize: 12, color: c.muted, display: "flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={c.muted} strokeWidth={2} /> {salon.oras}</div>
                 </div>
                 {groomerSelectat && (
-                  <div style={{ marginLeft: "auto", background: theme === "dark" ? `${salon.culoare}26` : salon.bg, border: `1px solid ${salon.culoare}`, borderRadius: 50, padding: "4px 12px", fontSize: 12, fontWeight: 800, color: salon.culoare, flexShrink: 0 }}>
-                    👤 {groomerSelectat}
+                  <div style={{ marginLeft: "auto", background: theme === "dark" ? `${salon.culoare}26` : salon.bg, border: `1px solid ${salon.culoare}`, borderRadius: 50, padding: "4px 12px", fontSize: 12, fontWeight: 800, color: salon.culoare, flexShrink: 0, display: "flex", alignItems: "center", gap: 4 }}>
+                    <User size={12} color={salon.culoare} strokeWidth={2} /> {groomerSelectat}
                   </div>
                 )}
               </div>
@@ -1047,8 +1046,8 @@ export default function DashboardClient() {
                     </div>
                   )}
                   {!animal?.talie && (
-                    <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 4 }}>
-                      ⚠️ {animal?.nume || "Animalul"} nu are talie setată. Mergi la „Animalele mele" și alege talia pentru a vedea prețurile corecte.
+                    <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 4, display: "flex", alignItems: "flex-start", gap: 4 }}>
+                      <AlertTriangle size={13} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} /> {animal?.nume || "Animalul"} nu are talie setată. Mergi la „Animalele mele" și alege talia pentru a vedea prețurile corecte.
                     </div>
                   )}
                   {groomerSelectat && (() => {
@@ -1056,8 +1055,8 @@ export default function DashboardClient() {
                     const svOferite = groomerObj?.servicii_oferite;
                     if (svOferite && svOferite.length > 0) {
                       return (
-                        <div style={{ fontSize: 12, color: c.muted, marginBottom: 4 }}>
-                          👤 Servicii și prețuri la <strong style={{ color: c.text }}>{groomerSelectat}</strong>
+                        <div style={{ fontSize: 12, color: c.muted, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                          <User size={12} color={c.muted} strokeWidth={2} /> Servicii și prețuri la <strong style={{ color: c.text }}>{groomerSelectat}</strong>
                         </div>
                       );
                     }
@@ -1133,8 +1132,8 @@ export default function DashboardClient() {
                 </div>
               )}
               {confirmareError && (
-                <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center", marginBottom: 12 }}>
-                  ⚠️ {confirmareError}
+                <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                  <AlertTriangle size={14} color="#EF4444" strokeWidth={2} /> {confirmareError}
                 </div>
               )}
               {(rezervare?.servicii?.length ?? 0) > 0 && rezervare?.ora && (
@@ -1165,21 +1164,21 @@ export default function DashboardClient() {
             <div style={{ position: "relative", height: 220, background: c.surface2, overflow: "hidden" }}>
               {salon.poza_url
                 ? <img src={salon.poza_url} alt={salon.nume} onClick={() => setLightboxIdx(0)} style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "zoom-in" }} />
-                : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64 }}>✂️</div>}
+                : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: c.surface2 }}><Scissors size={64} color="#FF6B00" strokeWidth={1.5} /></div>}
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.7) 100%)", pointerEvents: "none" }} />
               <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, pointerEvents: "none" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                   <div>
                     <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badge}</span>
                     <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "6px 0 2px", textShadow: "0 1px 4px rgba(0,0,0,.4)" }}>{salon.nume}</h2>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)" }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} color="rgba(255,255,255,.85)" strokeWidth={2} /> {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
                     {nrRecenzii > 0 ? (<>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>⭐ {medieRecenzii.toFixed(1)}</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", display: "flex", alignItems: "center", gap: 5 }}><Star size={18} color="#F59E0B" fill="#F59E0B" strokeWidth={0} /> {medieRecenzii.toFixed(1)}</div>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,.75)" }}>{nrRecenzii} {nrRecenzii === 1 ? "recenzie" : "recenzii"}</div>
                     </>) : (
-                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "rgba(255,255,255,.2)", padding: "4px 12px", borderRadius: 50 }}>🆕 Nou</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "rgba(255,255,255,.2)", padding: "4px 12px", borderRadius: 50 }}>Nou</div>
                     )}
                   </div>
                 </div>
@@ -1229,8 +1228,8 @@ export default function DashboardClient() {
                         </div>
                       )}
                       {!animal?.talie && animale.length > 0 && (
-                        <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 14, padding: "8px 12px", background: "rgba(239,68,68,.07)", borderRadius: 10 }}>
-                          ⚠️ {animal?.nume || "Animalul"} nu are talie setată — mergi la „Animalele mele" pentru prețuri corecte.
+                        <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 14, padding: "8px 12px", background: "rgba(239,68,68,.07)", borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 4 }}>
+                          <AlertTriangle size={13} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} /> {animal?.nume || "Animalul"} nu are talie setată — mergi la „Animalele mele" pentru prețuri corecte.
                         </div>
                       )}
                       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1302,7 +1301,7 @@ export default function DashboardClient() {
                         <div key={idx} style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 16px" }}>
                           {m.poza
                             ? <div style={{ width: 56, height: 56, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}><img src={m.poza} alt={m.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
-                            : <div style={{ width: 56, height: 56, borderRadius: 14, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>✂️</div>}
+                            : <div style={{ width: 56, height: 56, borderRadius: 14, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={24} color={salon.culoare} strokeWidth={2} /></div>}
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{m.nume}</div>
                             {m.rol && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.rol}</div>}
@@ -1322,7 +1321,7 @@ export default function DashboardClient() {
                         <div key={idx} style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 16px" }}>
                           {m.poza
                             ? <div style={{ width: 56, height: 56, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}><img src={m.poza} alt={m.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
-                            : <div style={{ width: 56, height: 56, borderRadius: 14, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>✂️</div>}
+                            : <div style={{ width: 56, height: 56, borderRadius: 14, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={24} color={salon.culoare} strokeWidth={2} /></div>}
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{m.nume}</div>
                             {m.rol && <div style={{ fontSize: 12, color: salon.culoare, fontWeight: 700, marginTop: 2 }}>{m.rol}</div>}
@@ -1350,7 +1349,7 @@ export default function DashboardClient() {
                       <div style={{ display: "flex", alignItems: "center", gap: 20, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, padding: "20px 22px", marginBottom: 20 }}>
                         <div style={{ textAlign: "center" }}>
                           <div style={{ fontSize: 48, fontWeight: 900, color: c.text, lineHeight: 1 }}>{medieRecenzii.toFixed(1)}</div>
-                          <div style={{ fontSize: 20, marginTop: 4 }}>{"⭐".repeat(Math.round(medieRecenzii))}</div>
+                          <div style={{ display: "flex", gap: 2, marginTop: 4, justifyContent: "center" }}>{Array.from({ length: Math.round(medieRecenzii) }).map((_, i) => <Star key={i} size={16} color="#F59E0B" fill="#F59E0B" strokeWidth={0} />)}</div>
                           <div style={{ fontSize: 12, color: c.muted, marginTop: 4 }}>din {nrRecenzii} {nrRecenzii === 1 ? "recenzie" : "recenzii"}</div>
                         </div>
                         <div style={{ flex: 1 }}>
@@ -1360,7 +1359,7 @@ export default function DashboardClient() {
                             return (
                               <div key={stea} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                                 <span style={{ fontSize: 11, color: c.muted, fontWeight: 700, minWidth: 12 }}>{stea}</span>
-                                <span style={{ fontSize: 11 }}>⭐</span>
+                                <Star size={11} color="#F59E0B" fill="#F59E0B" strokeWidth={0} />
                                 <div style={{ flex: 1, height: 6, background: c.border, borderRadius: 99, overflow: "hidden" }}>
                                   <div style={{ width: `${pct}%`, height: "100%", background: "#FF6B00", borderRadius: 99 }} />
                                 </div>
@@ -1372,7 +1371,7 @@ export default function DashboardClient() {
                       </div>
                     ) : (
                       <div style={{ textAlign: "center", background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, padding: "32px 20px", marginBottom: 20 }}>
-                        <div style={{ fontSize: 40, marginBottom: 10 }}>⭐</div>
+                        <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}><Star size={40} color="#F59E0B" fill="#F59E0B" strokeWidth={0} /></div>
                         <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 4 }}>Încă nu există recenzii</div>
                         <div style={{ fontSize: 13, color: c.muted }}>Fii primul care lasă o părere după o programare finalizată.</div>
                       </div>
@@ -1381,12 +1380,12 @@ export default function DashboardClient() {
                     {/* Formular adăugare recenzie */}
                     {poateRecenza && (
                       <div style={{ background: c.surface, borderRadius: 18, border: `2px solid #FF6B00`, padding: "20px 22px", marginBottom: 20 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: c.text, marginBottom: 12 }}>✍️ Lasă o recenzie</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: c.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}><Pencil size={14} color={c.text} strokeWidth={2} /> Lasă o recenzie</div>
                         <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
                           {[1, 2, 3, 4, 5].map(s => (
                             <button key={s} onClick={() => setRecenzieRating(s)}
-                              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 30, padding: 0, lineHeight: 1, filter: s <= recenzieRating ? "none" : "grayscale(1) opacity(.35)", transition: "filter .1s" }}
-                              aria-label={`${s} stele`}>⭐</button>
+                              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, transition: "opacity .1s" }}
+                              aria-label={`${s} stele`}><Star size={28} color="#F59E0B" fill={s <= recenzieRating ? "#F59E0B" : "none"} strokeWidth={s <= recenzieRating ? 0 : 1.5} /></button>
                           ))}
                         </div>
                         <textarea
@@ -1406,7 +1405,7 @@ export default function DashboardClient() {
                     )}
                     {!userAScris && !areProgramareFinalizata && (
                       <div style={{ background: c.orangeAccent, borderRadius: 14, border: `1.5px solid ${c.orangeBorder}`, padding: "14px 16px", marginBottom: 20, fontSize: 13, color: c.text2, fontWeight: 600 }}>
-                        💡 Poți lăsa o recenzie după ce ai o programare finalizată la acest salon.
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Lightbulb size={14} color="#FF6B00" strokeWidth={2} /> Poți lăsa o recenzie după ce ai o programare finalizată la acest salon.</span>
                       </div>
                     )}
                     {userAScris && (
@@ -1430,7 +1429,7 @@ export default function DashboardClient() {
                                 <div style={{ fontSize: 11, color: c.muted }}>{timpRelativ(r.created_at)}</div>
                               </div>
                             </div>
-                            <div style={{ fontSize: 14 }}>{"⭐".repeat(r.rating)}</div>
+                            <div style={{ display: "flex", gap: 1 }}>{Array.from({ length: r.rating }).map((_, i) => <Star key={i} size={13} color="#F59E0B" fill="#F59E0B" strokeWidth={0} />)}</div>
                           </div>
                           <p style={{ fontSize: 13, color: c.text2, lineHeight: 1.65, margin: 0 }}>{r.text}</p>
                         </div>
@@ -1462,7 +1461,7 @@ export default function DashboardClient() {
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px" }}>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Adresă</div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>📍 {salon.adresa}, {salon.oras}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 4 }}><MapPin size={13} color={c.muted} strokeWidth={2} /> {salon.adresa}, {salon.oras}</div>
                         </div>
                         <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
                           style={{ flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#fff", background: salon.culoare, textDecoration: "none", borderRadius: 50, padding: "8px 14px", whiteSpace: "nowrap" }}>
@@ -1474,7 +1473,7 @@ export default function DashboardClient() {
                   {salon.telefon && (
                     <div style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
                       <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Telefon</div>
-                      <a href={`tel:${salon.telefon}`} style={{ fontSize: 16, fontWeight: 900, color: c.text, textDecoration: "none" }}>📞 {salon.telefon}</a>
+                      <a href={`tel:${salon.telefon}`} style={{ fontSize: 16, fontWeight: 900, color: c.text, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}><Phone size={16} color={c.text} strokeWidth={2} /> {salon.telefon}</a>
                     </div>
                   )}
                   <div style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "16px 18px" }}>
@@ -1554,7 +1553,7 @@ export default function DashboardClient() {
 
           {/* Bun venit */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10 }}>Bună, {prenume}! {animal ? specieInfo(animal.specie).icon : <span style={{ filter: theme === "dark" ? "brightness(0) invert(1)" : "brightness(0)", display: "inline-block" }}>🐾</span>}</h1>
+            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>Bună, {prenume}! {animal ? specieInfo(animal.specie).icon : <PawPrint size={24} color="#FF6B00" strokeWidth={2} />}</h1>
             {animal && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13, flexWrap: "wrap" }}>
                 {animal.poza_url
@@ -1579,7 +1578,7 @@ export default function DashboardClient() {
             <div style={{ display: "flex", gap: 10, marginBottom: 24, alignItems: "stretch" }}>
               {/* Search input */}
               <div style={{ flex: 1, position: "relative" }}>
-                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 17, pointerEvents: "none", opacity: .55 }}>🔍</span>
+                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .55, display: "flex", alignItems: "center" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                 <input
                   value={cautare}
                   onChange={e => { setCautare(e.target.value); setOrasDropdown(false); }}
@@ -1597,7 +1596,7 @@ export default function DashboardClient() {
                   onClick={() => setOrasDropdown(v => !v)}
                   style={{ height: "100%", padding: "0 16px", borderRadius: 50, border: `1.5px solid ${filtruOras ? "#FF6B00" : c.border}`, background: filtruOras ? "#FFF3EA" : c.surface, color: filtruOras ? "#FF6B00" : c.muted, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
                 >
-                  <span>📍</span>
+                  <MapPin size={14} strokeWidth={2} />
                   <span>{filtruOras || "Oraș"}</span>
                   <span style={{ fontSize: 10, opacity: .6 }}>{orasDropdown ? "▲" : "▼"}</span>
                 </button>
@@ -1634,12 +1633,12 @@ export default function DashboardClient() {
                     )}
                     {oraseleDisponibile.filter(o => o.toLowerCase().includes(orasInput.toLowerCase().trim())).map(o => (
                       <button key={o} onClick={() => { setFiltruOras(o); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruOras === o ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruOras === o ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruOras === o ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
-                        📍 {o}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={12} strokeWidth={2} /> {o}</span>
                       </button>
                     ))}
                     {orasInput.trim() && oraseleDisponibile.filter(o => o.toLowerCase().includes(orasInput.toLowerCase().trim())).length === 0 && (
                       <button onClick={() => { setFiltruOras(orasInput.trim()); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
-                        🔍 Caută „{orasInput.trim()}"
+                        Caută „{orasInput.trim()}"
                       </button>
                     )}
                   </div>
@@ -1651,19 +1650,19 @@ export default function DashboardClient() {
             <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Sortare:</span>
               {[
-                { val: "recomandat", label: "Recomandate" },
-                { val: "rating", label: "⭐ Rating" },
-                { val: "alfabetic", label: "A–Z" },
+                { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
+                { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
+                { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
               ].map(opt => (
                 <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
-                  style={{ padding: "7px 14px", borderRadius: 50, border: sortareSalon === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: sortareSalon === opt.val ? "#FFF3EA" : c.surface, color: sortareSalon === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                  {opt.label}
+                  style={{ padding: "7px 14px", borderRadius: 50, border: sortareSalon === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: sortareSalon === opt.val ? "#FFF3EA" : c.surface, color: sortareSalon === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                  {opt.icon}{opt.label}
                 </button>
               ))}
               <div style={{ position: "relative", marginLeft: "auto" }}>
                 <button onClick={() => setFiltruServiciuDropdown(v => !v)}
                   style={{ padding: "7px 14px", borderRadius: 50, border: filtruServiciu ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruServiciu ? "#FFF3EA" : c.surface, color: filtruServiciu ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-                  <span>✂️</span>
+                  <Scissors size={14} strokeWidth={2} />
                   <span>{filtruServiciu || "Serviciu"}</span>
                   <span style={{ fontSize: 10, opacity: .6 }}>{filtruServiciuDropdown ? "▲" : "▼"}</span>
                 </button>
@@ -1681,7 +1680,7 @@ export default function DashboardClient() {
                     {serviciiDisponibile.map(sv => (
                       <button key={sv} onClick={() => { setFiltruServiciu(sv); setFiltruServiciuDropdown(false); }}
                         style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruServiciu === sv ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruServiciu === sv ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruServiciu === sv ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
-                        ✂️ {sv}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Scissors size={12} strokeWidth={2} /> {sv}</span>
                       </button>
                     ))}
                   </div>
@@ -1702,7 +1701,7 @@ export default function DashboardClient() {
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                    <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
                     <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: c.text }}>Niciun salon găsit</div>
                     <div style={{ fontSize: 14, color: c.muted, marginBottom: 20 }}>Încearcă alte cuvinte cheie sau schimbă orașul</div>
                     <button onClick={() => { setCautare(""); setFiltruOras(""); }} style={{ padding: "10px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
@@ -1713,11 +1712,11 @@ export default function DashboardClient() {
               </>
             ) : (
               <>
-                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14 }}>📍 Recomandate</h2>
+                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><MapPin size={17} color="#FF6B00" strokeWidth={2} /> Recomandate</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
                   {saloaneList.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
-                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14 }}>✂️ Toți partenerii CalyHub</h2>
+                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><Scissors size={17} color="#FF6B00" strokeWidth={2} /> Toți partenerii CalyHub</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
                   {saloaneList.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
@@ -1763,23 +1762,23 @@ export default function DashboardClient() {
 
               {/* AVATAR */}
               <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14 }}>📷 Poza de profil</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><ImageIcon size={14} color={c.text2} strokeWidth={2} /> Poza de profil</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                  <div style={{ width: 96, height: 96, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, flexShrink: 0, overflow: "hidden" }}>
-                    {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "👤"}
+                  <div style={{ width: 96, height: 96, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                    {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={40} color="#FF6B00" strokeWidth={2} />}
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <label style={{ cursor: "pointer" }}>
-                      <div style={{ padding: "10px 18px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif" }}>
-                        {uploadingAvatar ? "Se încarcă..." : avatarUrl ? "✏️ Schimbă" : "📤 Încarcă"}
+                      <div style={{ padding: "10px 18px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                        {uploadingAvatar ? "Se încarcă..." : avatarUrl ? <><Pencil size={13} strokeWidth={2} /> Schimbă</> : <><Upload size={13} strokeWidth={2} /> Încarcă</>}
                       </div>
                       <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingAvatar}
                         onChange={e => { if (e.target.files?.[0]) uploadAvatar(e.target.files[0]); }} />
                     </label>
                     {avatarUrl && (
                       <button onClick={stergeAvatar}
-                        style={{ padding: "10px 18px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                        🗑️ Șterge
+                        style={{ padding: "10px 18px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                        <Trash2 size={13} strokeWidth={2} /> Șterge
                       </button>
                     )}
                   </div>
@@ -1834,7 +1833,7 @@ export default function DashboardClient() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 17, fontWeight: 900, color: c.text }}>{a.nume}</div>
                               <div style={{ fontSize: 13, color: c.muted, marginTop: 4 }}>{sp.label} · {sexLabel(a.sex)} · {a.rasa}</div>
-                              <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>⚖️ {a.greutate} kg · 🎂 {a.varsta} ani · 💊 {a.alergii || "Fără alergii"} · {a.vaccinat ? <span style={{ color: "#10B981", fontWeight: 700 }}>💉 Vaccinat</span> : <span style={{ color: "#EF4444", fontWeight: 700 }}>Nevaccinat</span>}</div>
+                              <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>{a.greutate} kg · {a.varsta} ani · {a.alergii || "Fără alergii"} · {a.vaccinat ? <span style={{ color: "#10B981", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}><Shield size={11} color="#10B981" strokeWidth={2} /> Vaccinat</span> : <span style={{ color: "#EF4444", fontWeight: 700 }}>Nevaccinat</span>}</div>
                             </div>
                             <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap" }}>
                               {animale.length > 1 && a.id !== selectedAnimalId && (
@@ -1846,14 +1845,14 @@ export default function DashboardClient() {
                               <button onClick={() => {
                                 setEditingAnimalId(a.id);
                                 setAnimalForm({ numeAnimal: a.nume || "", specie: a.specie || "caine", sex: a.sex || "", rasa: a.rasa || "", talie: a.talie || "", greutate: String(a.greutate || ""), varsta: String(a.varsta || ""), alergii: a.alergii || "", vaccinat: a.vaccinat || false });
-                              }} style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, padding: "7px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✏️ Editează</button>
+                              }} style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, padding: "7px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "inline-flex", alignItems: "center", gap: 5 }}><Pencil size={12} strokeWidth={2} /> Editează</button>
                               <button onClick={async () => {
                                 if (!confirm(`Sigur ștergi profilul lui ${a.nume}?`)) return;
                                 await supabase.from("animale").delete().eq("id", a.id);
                                 setAnimale(prev => prev.filter(x => x.id !== a.id));
                                 if (selectedAnimalId === a.id) setSelectedAnimalId(null);
                                 salveaza("Animal șters");
-                              }} style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.08)", border: "none", padding: "7px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>🗑️</button>
+                              }} style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.08)", border: "none", padding: "7px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "inline-flex", alignItems: "center" }}><Trash2 size={13} strokeWidth={2} /></button>
                             </div>
                           </div>
                         </>
@@ -1879,7 +1878,7 @@ export default function DashboardClient() {
 
               {showAddAnimal ? (
                 <div style={{ background: c.surface, borderRadius: 16, padding: "20px", border: "2px dashed #FF6B00" }}>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00", marginBottom: 14 }}>➕ Animal nou</div>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00", marginBottom: 14 }}>Animal nou</div>
                   <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp} onCancel={() => { setShowAddAnimal(false); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "", vaccinat: false }); }} onSave={async () => {
                     if (!animalForm.numeAnimal.trim() || !animalForm.sex) { salveaza("Completează numele și sexul"); return; }
                     const { data: nou } = await supabase.from("animale").insert({
@@ -1960,7 +1959,7 @@ export default function DashboardClient() {
                               }
                             }}
                               style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                              <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "🔔"}</div>
+                              <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
                                 <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
@@ -2043,7 +2042,7 @@ export default function DashboardClient() {
           <div onClick={() => !anulareLoading && setAnulareModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 1000 }}>
             <div onClick={e => e.stopPropagation()} style={{ background: c.surface, borderRadius: 20, padding: "26px 24px", maxWidth: 440, width: "100%", boxShadow: "0 12px 48px rgba(0,0,0,.3)" }}>
               <div style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 6 }}>Anulezi programarea?</div>
-              <div style={{ fontSize: 13, color: c.muted, marginBottom: 16 }}>{anulareModal.salon_nume} · {anulareModal.serviciu}<br />📅 {formatData(anulareModal.data)} · 🕐 {anulareModal.ora}</div>
+              <div style={{ fontSize: 13, color: c.muted, marginBottom: 16 }}>{anulareModal.salon_nume} · {anulareModal.serviciu}<br /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><CalendarDays size={12} strokeWidth={2} /> {formatData(anulareModal.data)}</span> · <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Clock size={12} strokeWidth={2} /> {anulareModal.ora}</span></div>
               <label style={{ fontSize: 13, fontWeight: 700, color: c.text2, display: "block", marginBottom: 6 }}>Scrie un motiv pentru salon <span style={{ color: "#EF4444" }}>*</span></label>
               <textarea value={motivAnulare} onChange={e => { setMotivAnulare(e.target.value); if (anulareError) setAnulareError(""); }}
                 placeholder="Ex: a apărut o urgență, nu mai pot ajunge la ora stabilită…" rows={3}
@@ -2218,9 +2217,9 @@ function FAQ({ items }: { items: { q: string; r: string }[] }) {
 function RatingBadge({ ratingReal }: { ratingReal?: { medie: number; nr: number } }) {
   const { c } = useContext(ThemeCtx);
   if (!ratingReal || ratingReal.nr === 0) {
-    return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 800, color: "#FF6B00" }}>🆕 Nou</div>;
+    return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 800, color: "#FF6B00" }}>Nou</div>;
   }
-  return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}>⭐ {ratingReal.medie.toFixed(1)}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({ratingReal.nr})</span></div>;
+  return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}><Star size={13} color="#F59E0B" fill="#F59E0B" strokeWidth={0} /> {ratingReal.medie.toFixed(1)}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({ratingReal.nr})</span></div>;
 }
 
 function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect: () => void; ratingReal?: { medie: number; nr: number } }) {
@@ -2246,7 +2245,7 @@ function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect
           </div>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600 }}>📍 {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div></div>
+          <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={c.xmuted} strokeWidth={2} /> {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div></div>
           {salon.poza_url && <RatingBadge ratingReal={ratingReal} />}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
@@ -2274,12 +2273,12 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere }: { p: Progra
   const anulBtn: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "4px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" };
   return (
     <div style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", boxShadow: c.cardShadow }}>
-      <div style={{ width: 46, height: 46, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>✂️</div>
+      <div style={{ width: 46, height: 46, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={20} color="#FF6B00" strokeWidth={2} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.salon_nume}</div>
         <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.serviciu}</div>
-        {p.groomer && <div style={{ fontSize: 12, color: c.muted, marginTop: 3 }}>👤 {p.groomer}</div>}
-        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>📅 {formatData(p.data)} · 🕐 {p.ora}</div>
+        {p.groomer && <div style={{ fontSize: 12, color: c.muted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.muted} strokeWidth={2} /> {p.groomer}</div>}
+        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><CalendarDays size={11} strokeWidth={2} /> {formatData(p.data)} · <Clock size={11} strokeWidth={2} /> {p.ora}</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
         <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: st.bg, padding: "4px 12px", borderRadius: 50 }}>{st.label}</span>
@@ -2290,7 +2289,7 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere }: { p: Progra
         {onAnuleazaConfirmat && p.status === "confirmat" && (
           poateAnula
             ? <button onClick={() => onAnuleazaConfirmat(p)} style={anulBtn}>Anulează</button>
-            : <span style={{ fontSize: 10.5, fontWeight: 700, color: c.xmuted, textAlign: "right", lineHeight: 1.3 }}>🔒 Anulare blocată<br />(sub 12h)</span>
+            : <span style={{ fontSize: 10.5, fontWeight: 700, color: c.xmuted, textAlign: "right", lineHeight: 1.3, display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={10} strokeWidth={2} /> Anulare blocată<br />(sub 12h)</span>
         )}
       </div>
     </div>
@@ -2342,18 +2341,18 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
             <div style={{ width: 72, height: 72, borderRadius: 14, overflow: "hidden", background: c.surface2, border: `1.5px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               {animalPoza
                 ? <img src={animalPoza} alt="Poza animal" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <span style={{ fontSize: 28 }}>🐾</span>}
+                : <PawPrint size={28} color="#FF6B00" strokeWidth={1.5} />}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <label style={{ cursor: "pointer" }}>
                 <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingPoza} onChange={e => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }} />
-                <span style={{ display: "inline-block", padding: "8px 16px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                  {uploadingPoza ? "Se încarcă..." : animalPoza ? "📷 Schimbă poza" : "📷 Adaugă poză"}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "8px 16px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  {uploadingPoza ? "Se încarcă..." : <><ImageIcon size={13} strokeWidth={2} /> {animalPoza ? "Schimbă poza" : "Adaugă poză"}</>}
                 </span>
               </label>
               {animalPoza && (
                 <button type="button" onClick={handlePhotoDelete} style={{ padding: "8px 16px", borderRadius: 50, border: "none", background: "rgba(239,68,68,.1)", color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                  🗑️ Șterge poza
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Trash2 size={13} strokeWidth={2} /> Șterge poza</span>
                 </button>
               )}
             </div>
@@ -2379,7 +2378,7 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
       <div>
         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Sex</label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {[{ val: "mascul", label: "Mascul", icon: "♂️" }, { val: "femela", label: "Femelă", icon: "♀️" }].map(s => (
+          {[{ val: "mascul", label: "Mascul", icon: "♂" }, { val: "femela", label: "Femelă", icon: "♀" }].map(s => (
             <button key={s.val} type="button" onClick={() => set("sex", s.val)}
               style={{ padding: "10px", borderRadius: 10, border: form.sex === s.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: form.sex === s.val ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 13, fontWeight: 800, color: form.sex === s.val ? "#FF6B00" : c.text2 }}>
               <span style={{ fontSize: 16 }}>{s.icon}</span> {s.label}
@@ -2417,13 +2416,12 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Talie</label>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
           {[
-            { val: "mica", label: "Mică", desc: "sub 10 kg", icon: "🐕‍🦺" },
-            { val: "medie", label: "Medie", desc: "10–25 kg", icon: "🐕" },
-            { val: "mare", label: "Mare", desc: "peste 25 kg", icon: "🐺" },
+            { val: "mica", label: "Mică", desc: "sub 10 kg" },
+            { val: "medie", label: "Medie", desc: "10–25 kg" },
+            { val: "mare", label: "Mare", desc: "peste 25 kg" },
           ].map(t => (
             <button key={t.val} type="button" onClick={() => set("talie", t.val)}
               style={{ padding: "8px 4px", borderRadius: 10, border: form.talie === t.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: form.talie === t.val ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-              <span style={{ fontSize: 18 }}>{t.icon}</span>
               <span style={{ fontSize: 12, fontWeight: 800, color: form.talie === t.val ? "#FF6B00" : c.text2 }}>{t.label}</span>
               <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}>{t.desc}</span>
             </button>
@@ -2449,12 +2447,12 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <button type="button" onClick={() => set("vaccinat", true)}
             style={{ padding: "10px 8px", borderRadius: 10, border: form.vaccinat ? "2px solid #10B981" : `1.5px solid ${c.border}`, background: form.vaccinat ? "rgba(16,185,129,.1)" : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            <span style={{ fontSize: 16 }}>💉</span>
+            <Shield size={16} color={form.vaccinat ? "#10B981" : c.text2} strokeWidth={2} />
             <span style={{ fontSize: 13, fontWeight: 800, color: form.vaccinat ? "#10B981" : c.text2 }}>Vaccinat</span>
           </button>
           <button type="button" onClick={() => set("vaccinat", false)}
             style={{ padding: "10px 8px", borderRadius: 10, border: !form.vaccinat ? "2px solid #EF4444" : `1.5px solid ${c.border}`, background: !form.vaccinat ? "rgba(239,68,68,.08)" : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            <span style={{ fontSize: 16 }}>❌</span>
+            <XCircle size={16} color={!form.vaccinat ? "#EF4444" : c.text2} strokeWidth={2} />
             <span style={{ fontSize: 13, fontWeight: 800, color: !form.vaccinat ? "#EF4444" : c.text2 }}>Nevaccinat</span>
           </button>
         </div>

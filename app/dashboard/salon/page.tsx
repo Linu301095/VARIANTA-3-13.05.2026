@@ -284,10 +284,10 @@ function AgendaCalendar({
 
       {/* Filtru talie */}
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-        {[{ val: "toate", label: "Toate", icon: "📋" }, { val: "mica", label: "Mică", icon: "🐕‍🦺" }, { val: "medie", label: "Medie", icon: "🐕" }, { val: "mare", label: "Mare", icon: "🐺" }].map(t => (
+        {[{ val: "toate", label: "Toate" }, { val: "mica", label: "Mică" }, { val: "medie", label: "Medie" }, { val: "mare", label: "Mare" }].map(t => (
           <button key={t.val} onClick={() => setFiltruTalie(t.val as any)}
-            style={{ padding: "6px 13px", borderRadius: 50, border: filtruTalie === t.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruTalie === t.val ? c.orangeAccent : c.surface, color: filtruTalie === t.val ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
-            <span>{t.icon}</span> {t.label}
+            style={{ padding: "6px 13px", borderRadius: 50, border: filtruTalie === t.val ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruTalie === t.val ? c.orangeAccent : c.surface, color: filtruTalie === t.val ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+            {t.label}
           </button>
         ))}
       </div>
@@ -295,7 +295,7 @@ function AgendaCalendar({
       {/* CERERI NOI — deasupra calendarului, prima chestie vizibilă */}
       {pending.length > 0 && (
         <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>⏳ Cereri noi ({pending.length})</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Cereri noi ({pending.length})</div>
           {pending.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
@@ -305,15 +305,15 @@ function AgendaCalendar({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 800, color: c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                     {p.client}
-                    {p.groomer && <span style={{ fontSize: 11, fontWeight: 700, color: c.muted }}>· 👤 {p.groomer}</span>}
-                    {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50 }}>🔴 Blocat</span>}
-                    {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50 }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
+                    {p.groomer && <span style={{ fontSize: 11, fontWeight: 700, color: c.muted }}>· <User size={12} color={c.muted} strokeWidth={2} style={{ display: "inline", verticalAlign: "middle" }} /> {p.groomer}</span>}
+                    {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Blocat</span>}
+                    {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={11} color="#D97706" strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
                   </div>
                   <div style={{ fontSize: 12.5, color: c.muted, marginTop: 2 }}>{p.animal}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2 }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Scissors size={12} color="#FF6B00" strokeWidth={2} /> {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
                   {p.observatii && (
                     <div style={{ fontSize: 12, color: c.text2, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 8, padding: "7px 11px", lineHeight: 1.5, marginTop: 7 }}>
-                      <span style={{ fontWeight: 800, color: "#B45309" }}>📝 Observații:</span> {p.observatii}
+                      <span style={{ fontWeight: 800, color: "#B45309", display: "inline-flex", alignItems: "center", gap: 4 }}><FileEdit size={12} color="#B45309" strokeWidth={2} /> Observații:</span> {p.observatii}
                     </div>
                   )}
                 </div>
@@ -347,7 +347,7 @@ function AgendaCalendar({
             return (
               <button key={col.key} onClick={() => setColSel(col.key)}
                 style={{ flexShrink: 0, padding: "9px 16px", borderRadius: 50, border: sel ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: sel ? "#FF6B00" : c.surface, color: sel ? "#fff" : c.text2, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
-                <span>{col.key === "__none__" ? "👥" : "✂️"} {col.nume}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>{col.key === "__none__" ? <Users size={14} color="currentColor" strokeWidth={2} /> : <Scissors size={14} color="currentColor" strokeWidth={2} />} {col.nume}</span>
                 {col.appts.length > 0 && (
                   <span style={{ fontSize: 11, fontWeight: 900, color: sel ? "#fff" : "#FF6B00", background: sel ? "rgba(255,255,255,.25)" : c.orangeAccent, borderRadius: 50, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>{col.appts.length}</span>
                 )}
@@ -373,7 +373,7 @@ function AgendaCalendar({
           {/* Coloana specialistului selectat */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ height: HEADER_H, borderBottom: `1px solid ${c.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 10px", gap: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 900, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{activeCol.key === "__none__" ? activeCol.nume : `✂️ ${activeCol.nume}`}</div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%", display: "flex", alignItems: "center", gap: 5 }}>{activeCol.key !== "__none__" && <Scissors size={14} color={c.text} strokeWidth={2} />}{activeCol.nume}</div>
               {activeCol.specialitate && <div style={{ fontSize: 11, fontWeight: 600, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{activeCol.specialitate}</div>}
             </div>
             <div style={{ position: "relative", height: bodyH }}>
@@ -404,9 +404,9 @@ function AgendaCalendar({
                 return (
                   <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
                     style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "3px 8px 3px 10px" : "6px 10px 6px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 800, color: accent, whiteSpace: "nowrap" }}>{p.ora}–{minToTime(e)}{p.observatii ? " 📝" : ""}</div>
+                    <div style={{ fontSize: 11.5, fontWeight: 800, color: accent, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>{p.ora}–{minToTime(e)}{p.observatii ? <FileEdit size={10} color={accent} strokeWidth={2} /> : null}</div>
                     {!compact && <div style={{ fontSize: 13, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
-                    {!compact && h >= 56 && <div style={{ fontSize: 11.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>✂️ {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>}
+                    {!compact && h >= 56 && <div style={{ fontSize: 11.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 4 }}><Scissors size={10} color={c.muted} strokeWidth={2} /> {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>}
                   </div>
                 );
               })}
@@ -418,7 +418,7 @@ function AgendaCalendar({
       {/* Anulări de la client — sub calendar */}
       {anulate.length > 0 && (
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>✕ Anulări de la client ({anulate.length})</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Anulări de la client ({anulate.length})</div>
           {anulate.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             return (
@@ -426,12 +426,12 @@ function AgendaCalendar({
                 <div style={{ width: 46, height: 46, borderRadius: 11, background: "rgba(239,68,68,.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#EF4444", flexShrink: 0 }}>{p.ora}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 800, color: c.muted, textDecoration: "line-through" }}>{p.client}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginTop: 2 }}>✂️ {p.serviciu}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Scissors size={12} color={c.muted} strokeWidth={2} /> {p.serviciu}</div>
                   {p.motivAnulare && <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>}
                 </div>
                 {p.esteApp && p.user_id && (
                   <button onClick={() => toggleBlocClient(p.user_id)} style={{ padding: "7px 13px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
-                    {blocat ? "✓ Deblochează" : "🚫 Blochează"}
+                    {blocat ? "✓ Deblochează" : "Blochează"}
                   </button>
                 )}
               </div>
@@ -1166,7 +1166,8 @@ export default function DashboardSalon() {
                   </div>
                   {animaleIstoric.length === 0 ? (
                     <div style={{ padding: "40px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
-                      🐾 Niciun animal în istoric încă.<br />Vizitele apar aici după ce programările din aplicație au fost confirmate și au trecut.
+                      <div style={{ marginBottom: 8, display: "flex", justifyContent: "center" }}><PawPrint size={28} color={c.muted} strokeWidth={1.5} /></div>
+                      Niciun animal în istoric încă.<br />Vizitele apar aici după ce programările din aplicație au fost confirmate și au trecut.
                     </div>
                   ) : lista.length === 0 ? (
                     <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14 }}>Niciun rezultat pentru &bdquo;{cautareAnimal}&rdquo;.</div>
@@ -1184,7 +1185,7 @@ export default function DashboardSalon() {
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{specieIcon(a.specie)} {a.nume}</div>
                                 <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>{[a.rasa, talieLabel(a.talie), a.greutate ? `${a.greutate}kg` : null].filter(Boolean).join(" · ")}</div>
-                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>👤 {a.stapanNume}</div>
+                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.xmuted} strokeWidth={2} /> {a.stapanNume}</div>
                               </div>
                               <div style={{ textAlign: "right", flexShrink: 0 }}>
                                 <div style={{ fontSize: 13, fontWeight: 900, color: "#FF6B00" }}>{a.vizite.length} {a.vizite.length === 1 ? "vizită" : "vizite"}</div>
@@ -1196,16 +1197,16 @@ export default function DashboardSalon() {
                               <div style={{ borderTop: `1px solid ${c.border}`, padding: "14px 18px", background: c.surface2 }}>
                                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
                                   {talieLabel(a.talie) && <span style={{ background: c.orangeAccent, color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>{talieLabel(a.talie)}</span>}
-                                  {a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀️ Femelă" : "♂️ Mascul"}</span>}
+                                  {a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀ Femelă" : "♂ Mascul"}</span>}
                                   {a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
-                                  {a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>📞 {a.stapanNume} · {a.stapanTelefon}</span>}
+                                  {a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} color={c.text2} strokeWidth={2} /> {a.stapanNume} · {a.stapanTelefon}</span>}
                                   {areAlergii(a.alergii)
-                                    ? <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>⚠️ Alergii: {a.alergii}</span>
-                                    : <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>✅ Fără alergii</span>
+                                    ? <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={11} color="#DC2626" strokeWidth={2} /> Alergii: {a.alergii}</span>
+                                    : <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckCircle2 size={11} color="#059669" strokeWidth={2} /> Fără alergii</span>
                                   }
                                   {a.vaccinat
-                                    ? <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>💉 Vaccinat</span>
-                                    : <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>❌ Nevaccinat</span>
+                                    ? <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>Vaccinat</span>
+                                    : <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={11} color="#DC2626" strokeWidth={2} /> Nevaccinat</span>
                                   }
                                 </div>
                                 <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Istoric vizite</div>
@@ -1213,7 +1214,7 @@ export default function DashboardSalon() {
                                   {a.vizite.map(v => (
                                     <div key={v.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: c.surface, borderRadius: 10, border: `1px solid ${c.border}` }}>
                                       <div>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: c.text }}>✂️ {v.serviciu}</div>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: c.text, display: "flex", alignItems: "center", gap: 4 }}><Scissors size={13} color={c.text} strokeWidth={2} /> {v.serviciu}</div>
                                         <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>{new Date(v.data).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })} · {v.ora}</div>
                                       </div>
                                       <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00" }}>{v.pret} RON</div>
@@ -1226,10 +1227,10 @@ export default function DashboardSalon() {
                                   return (
                                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${c.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "space-between" }}>
                                       <div style={{ fontSize: 12, color: c.muted, fontWeight: 700 }}>
-                                        {blocat ? <span style={{ color: "#EF4444" }}>🔴 Client blocat — nu poate rezerva</span> : abateri > 0 ? <span style={{ color: "#D97706" }}>⚠️ {abateri} {abateri === 1 ? "anulare" : "anulări"} cu motiv</span> : <span>✓ Fără anulări</span>}
+                                        {blocat ? <span style={{ color: "#EF4444", display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Client blocat — nu poate rezerva</span> : abateri > 0 ? <span style={{ color: "#D97706", display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={12} color="#D97706" strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare" : "anulări"} cu motiv</span> : <span>✓ Fără anulări</span>}
                                       </div>
                                       <button onClick={() => toggleBlocClient(a.stapanUserId!)} style={{ padding: "7px 16px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                                        {blocat ? "✓ Deblochează clientul" : "🚫 Blochează clientul"}
+                                        {blocat ? "✓ Deblochează clientul" : "Blochează clientul"}
                                       </button>
                                     </div>
                                   );
@@ -1332,10 +1333,10 @@ export default function DashboardSalon() {
                 { key: "talie", label: "Distribuție talie" },
               ];
               const cards = [
-                { id: "venituri" as const, icon: "💰", label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`, sub: `${venitRange.length} programări`, color: "#10B981", clickable: true },
-                { id: "programari" as const, icon: "📅", label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${venitRange.length} confirmate`, color: "#FF6B00", clickable: true },
-                { id: "clienti" as const, icon: "👥", label: `Clienți ${perLabel.toLowerCase()}`, valoare: `${clientiPer}`, sub: `${incasariPer} RON încasați`, color: "#8B5CF6", clickable: true },
-                { id: "rating" as const, icon: "⭐", label: "Rating mediu (total)", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B", clickable: true },
+                { id: "venituri" as const, Icon: Wallet, label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`, sub: `${venitRange.length} programări`, color: "#10B981", clickable: true },
+                { id: "programari" as const, Icon: CalendarDays, label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${venitRange.length} confirmate`, color: "#FF6B00", clickable: true },
+                { id: "clienti" as const, Icon: Users, label: `Clienți ${perLabel.toLowerCase()}`, valoare: `${clientiPer}`, sub: `${incasariPer} RON încasați`, color: "#8B5CF6", clickable: true },
+                { id: "rating" as const, Icon: Star, label: "Rating mediu (total)", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B", clickable: true },
               ];
               return (
               <div>
@@ -1351,7 +1352,7 @@ export default function DashboardSalon() {
                   </div>
                   <button onClick={() => setRaportDeschis(v => !v)}
                     style={{ ...btnPrimary, padding: "10px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
-                    📥 Generează raport Excel
+                    <Download size={15} strokeWidth={2} /> Generează raport Excel
                   </button>
                 </div>
 
@@ -1382,7 +1383,7 @@ export default function DashboardSalon() {
                     <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                       <button onClick={genereazaRaportExcel} disabled={exportLoading || !Object.values(raportSel).some(Boolean)}
                         style={{ ...btnPrimary, padding: "12px 22px", opacity: (exportLoading || !Object.values(raportSel).some(Boolean)) ? 0.6 : 1, cursor: (exportLoading || !Object.values(raportSel).some(Boolean)) ? "not-allowed" : "pointer" }}>
-                        {exportLoading ? "Se generează…" : "⬇️ Descarcă .xlsx"}
+                        {exportLoading ? "Se generează…" : <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Download size={15} strokeWidth={2} /> Descarcă .xlsx</span>}
                       </button>
                       <span style={{ fontSize: 12.5, color: c.muted }}>{progRange.length} programări în perioadă</span>
                     </div>
@@ -1395,7 +1396,7 @@ export default function DashboardSalon() {
                     return (
                     <div key={card.label} onClick={card.clickable ? () => setStatExtins(prev => prev === card.id ? null : card.id) : undefined}
                       style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: deschis ? "2px solid #10B981" : "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)", cursor: card.clickable ? "pointer" : "default", position: "relative" }}>
-                      <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
+                      <div style={{ marginBottom: 8 }}><card.Icon size={22} color={card.color} strokeWidth={2} /></div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{card.label}</div>
                       <div style={{ fontSize: 26, fontWeight: 900, color: c.text, lineHeight: 1 }}>{card.valoare}</div>
                       <div style={{ fontSize: 12, color: card.color, fontWeight: 700, marginTop: 6 }}>{card.sub}</div>
@@ -1476,7 +1477,7 @@ export default function DashboardSalon() {
                             )}
                             {recenziiSalon.length === 0 ? (
                               <div style={{ textAlign: "center", padding: "16px 0" }}>
-                                <div style={{ fontSize: 28, marginBottom: 6 }}>💬</div>
+                                <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><Star size={28} color="#F59E0B" strokeWidth={1.5} /></div>
                                 <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 2 }}>Încă nu ai recenzii</div>
                                 <div style={{ fontSize: 12, color: c.muted }}>Clienții pot lăsa o recenzie după o programare finalizată.</div>
                               </div>
@@ -1497,7 +1498,7 @@ export default function DashboardSalon() {
                                           <div style={{ fontSize: 11, color: c.muted }}>{new Date(r.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</div>
                                         </div>
                                       </div>
-                                      <div style={{ fontSize: 12 }}>{"⭐".repeat(r.rating)}</div>
+                                      <div style={{ display: "flex", gap: 1 }}>{Array.from({ length: r.rating }).map((_, i) => <Star key={i} size={12} color="#F59E0B" strokeWidth={2} fill="#F59E0B" />)}</div>
                                     </div>
                                     <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.text}</p>
                                   </div>
@@ -1520,7 +1521,7 @@ export default function DashboardSalon() {
                     return (
                       <div onClick={() => setStatExtins(prev => prev === "servicii" ? null : "servicii")}
                         style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: deschis ? "2px solid #10B981" : "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)", cursor: "pointer", position: "relative" }}>
-                        <div style={{ fontSize: 22, marginBottom: 8 }}>✂️</div>
+                        <div style={{ marginBottom: 8 }}><Scissors size={22} color="#FF6B00" strokeWidth={2} /></div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Servicii & Groomeri — {perLabel.toLowerCase()}</div>
                         <div style={{ fontSize: 22, fontWeight: 900, color: c.text, lineHeight: 1.1 }}>{serviciiPop.length > 0 ? serviciiPop[0].nume : "—"}</div>
                         <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 700, marginTop: 6 }}>{totalServ} {totalServ === 1 ? "serviciu efectuat" : "servicii efectuate"} · {groomerProd.length} {groomerProd.length === 1 ? "groomer" : "groomeri"}</div>
@@ -1542,7 +1543,7 @@ export default function DashboardSalon() {
                             ) : groomerProd.map(g => (
                               <div key={g.nume} style={{ marginBottom: 14 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: g.nume === "Neatribuit" ? c.muted : c.text2 }}>{g.nume === "Neatribuit" ? "👤 Neatribuit" : `✂️ ${g.nume}`}</span>
+                                  <span style={{ fontSize: 13, fontWeight: 700, color: g.nume === "Neatribuit" ? c.muted : c.text2, display: "inline-flex", alignItems: "center", gap: 4 }}>{g.nume === "Neatribuit" ? <><User size={13} color={c.muted} strokeWidth={2} /> Neatribuit</> : <><Scissors size={13} color={c.text2} strokeWidth={2} /> {g.nume}</>}</span>
                                   <span style={{ fontSize: 13, fontWeight: 800, color: g.col }}>{g.nr} {g.nr === 1 ? "progr." : "progr."} · {g.venit} RON</span>
                                 </div>
                                 <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${g.pct}%`, background: g.col, borderRadius: 3 }} /></div>
@@ -1559,7 +1560,7 @@ export default function DashboardSalon() {
                     return (
                       <div onClick={() => setStatExtins(prev => prev === "talie" ? null : "talie")}
                         style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: deschis ? "2px solid #10B981" : "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)", cursor: "pointer", position: "relative" }}>
-                        <div style={{ fontSize: 22, marginBottom: 8 }}>📏</div>
+                        <div style={{ marginBottom: 8 }}><PawPrint size={22} color="#8B5CF6" strokeWidth={2} /></div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Distribuție pe talie — {perLabel.toLowerCase()}</div>
                         <div style={{ fontSize: 22, fontWeight: 900, color: c.text, lineHeight: 1.1 }}>{talieDominanta}</div>
                         <div style={{ fontSize: 12, color: "#8B5CF6", fontWeight: 700, marginTop: 6 }}>{totalTalie} {totalTalie === 1 ? "programare" : "programări"}</div>
@@ -1569,10 +1570,10 @@ export default function DashboardSalon() {
                             {totalTalie === 0 ? (
                               <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare efectuată încă.</div>
                             ) : [
-                              { key: "mica", label: "🐕‍🦺 Mică", cnt: talieCount.mica, col: "#10B981" },
-                              { key: "medie", label: "🐕 Medie", cnt: talieCount.medie, col: "#FF6B00" },
-                              { key: "mare", label: "🐺 Mare", cnt: talieCount.mare, col: "#8B5CF6" },
-                              ...(talieCount.necunoscuta > 0 ? [{ key: "necunoscuta", label: "📏 Necunoscută", cnt: talieCount.necunoscuta, col: "#9CA3AF" }] : []),
+                              { key: "mica", label: "Mică", cnt: talieCount.mica, col: "#10B981" },
+                              { key: "medie", label: "Medie", cnt: talieCount.medie, col: "#FF6B00" },
+                              { key: "mare", label: "Mare", cnt: talieCount.mare, col: "#8B5CF6" },
+                              ...(talieCount.necunoscuta > 0 ? [{ key: "necunoscuta", label: "Necunoscută", cnt: talieCount.necunoscuta, col: "#9CA3AF" }] : []),
                             ].map(t => {
                               const pct = Math.round((t.cnt / totalTalie) * 100);
                               return (
@@ -1651,7 +1652,7 @@ export default function DashboardSalon() {
                                 }
                               }}
                                 style={{ background: n.citit ? c.surface : (theme === "dark" ? "rgba(255,107,0,0.24)" : "rgba(255,107,0,0.16)"), borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                                <div style={{ fontSize: 20, flexShrink: 0 }}>{n.tip === "programare_noua" ? "🔔" : n.tip === "confirmat" ? "✅" : n.tip === "anulat" ? "❌" : "ℹ️"}</div>
+                                <div style={{ flexShrink: 0 }}>{n.tip === "programare_noua" ? <Bell size={20} color="#FF6B00" strokeWidth={2} /> : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : <Lightbulb size={20} color="#6B7280" strokeWidth={2} />}</div>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
                                   <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
@@ -1696,7 +1697,7 @@ export default function DashboardSalon() {
 
                   {/* ORAR SĂPTĂMÂNAL */}
                   <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 20 }}>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 16 }}>📅 Orar săptămânal</div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}><CalendarDays size={16} color="#FF6B00" strokeWidth={2} /> Orar săptămânal</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {ZILE_ORDINE.map(k => {
                         const z = program[k];
@@ -1731,7 +1732,7 @@ export default function DashboardSalon() {
 
                   {/* GESTIONARE SLOTURI */}
                   <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 20 }}>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 12 }}>🗓️ Gestionează sloturi (următoarele 14 zile)</div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: c.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}><Clock size={16} color="#FF6B00" strokeWidth={2} /> Gestionează sloturi (următoarele 14 zile)</div>
 
                     {echipa.length > 0 && (
                       <>
@@ -1739,12 +1740,12 @@ export default function DashboardSalon() {
                         <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, marginBottom: 14, borderBottom: `1px solid ${c.border2}` }}>
                           <button onClick={() => setGroomerProgramTab("toti")}
                             style={{ padding: "8px 14px", borderRadius: 10, border: groomerProgramTab === "toti" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerProgramTab === "toti" ? c.orangeAccent : c.surface, color: groomerProgramTab === "toti" ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
-                            👥 Toți
+                            <Users size={13} color="currentColor" strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> Toți
                           </button>
                           {echipa.map(g => (
                             <button key={g.id} onClick={() => setGroomerProgramTab(g.nume)}
                               style={{ padding: "8px 14px", borderRadius: 10, border: groomerProgramTab === g.nume ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerProgramTab === g.nume ? c.orangeAccent : c.surface, color: groomerProgramTab === g.nume ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
-                              👤 {g.nume || "Specialist"}
+                              <User size={13} color="currentColor" strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> {g.nume || "Specialist"}
                             </button>
                           ))}
                         </div>
@@ -1775,7 +1776,7 @@ export default function DashboardSalon() {
                     ) : (
                       <>
                         <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginBottom: 10, display: "flex", gap: 14, flexWrap: "wrap" }}>
-                          <span>🟢 Liber</span><span>🟠 Rezervat (CalyHub)</span><span>🔴 Blocat manual</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981", display: "inline-block" }} /> Liber</span><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#FF6B00", display: "inline-block" }} /> Rezervat (CalyHub)</span><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Blocat manual</span>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
                           {sloturiPosibile.map(slot => {
@@ -1807,7 +1808,7 @@ export default function DashboardSalon() {
                                 <div>{label}</div>
                                 {ocupare && ocupaPrimulSlot && (
                                   <div style={{ fontSize: 10, fontWeight: 600, marginTop: 2, opacity: .85 }}>
-                                    {ocupare.sursa === "app" ? "App" : ocupare.sursa === "telefonic" ? `📞 ${ocupare.nume_client_extern || "Telefonic"}` : ocupare.sursa === "walkin" ? `🚶 ${ocupare.nume_client_extern || "Walk-in"}` : "⏸ Pauză"}
+                                    {ocupare.sursa === "app" ? "App" : ocupare.sursa === "telefonic" ? `${ocupare.nume_client_extern || "Telefonic"}` : ocupare.sursa === "walkin" ? `${ocupare.nume_client_extern || "Walk-in"}` : "Pauză"}
                                   </div>
                                 )}
                               </button>
@@ -1827,7 +1828,7 @@ export default function DashboardSalon() {
 
                         <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 8 }}>Tip blocare</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 16 }}>
-                          {[{ v: "telefonic", l: "📞 Telefonic" }, { v: "walkin", l: "🚶 Walk-in" }, { v: "blocaj", l: "⏸ Pauză" }].map(o => (
+                          {[{ v: "telefonic", l: "Telefonic" }, { v: "walkin", l: "Walk-in" }, { v: "blocaj", l: "Pauză" }].map(o => (
                             <button key={o.v} onClick={() => setTipBlocare(o.v as any)}
                               style={{ padding: "10px 6px", borderRadius: 10, border: tipBlocare === o.v ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: tipBlocare === o.v ? c.orangeAccent : c.surface, color: tipBlocare === o.v ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                               {o.l}
@@ -1853,7 +1854,7 @@ export default function DashboardSalon() {
                               {echipa.map(g => (
                                 <button key={g.id} onClick={() => setGroomerBlocare(g.nume)}
                                   style={{ padding: "8px 14px", borderRadius: 50, border: groomerBlocare === g.nume ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerBlocare === g.nume ? c.orangeAccent : c.surface, color: groomerBlocare === g.nume ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                                  👤 {g.nume || "Specialist"}
+                                  <User size={12} color="currentColor" strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> {g.nume || "Specialist"}
                                 </button>
                               ))}
                             </div>
@@ -1891,20 +1892,20 @@ export default function DashboardSalon() {
 
                 {/* POZA DE PREZENTARE */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14 }}>📷 Poza de prezentare</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><ImageIcon size={14} color={c.text2} strokeWidth={2} /> Poza de prezentare</div>
                   <div style={{ position: "relative", width: "100%", height: 200, borderRadius: 14, overflow: "hidden", background: c.surface2, border: `1.5px dashed ${c.border}`, marginBottom: 14 }}>
                     {pozaUrl ? (
                       <img src={pozaUrl} alt="Cover salon" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
                       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                        <span style={{ fontSize: 40 }}>📷</span>
+                        <ImageIcon size={40} color={c.muted} strokeWidth={1.5} />
                         <span style={{ fontSize: 13, color: c.muted, fontWeight: 600 }}>Nicio poză încărcată</span>
                       </div>
                     )}
                   </div>
                   <label style={{ display: "inline-block", cursor: "pointer" }}>
                     <div style={{ padding: "10px 20px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "inline-block" }}>
-                      {uploadingCover ? "Se încarcă..." : pozaUrl ? "✏️ Schimbă poza" : "📤 Încarcă poza"}
+                      {uploadingCover ? "Se încarcă..." : pozaUrl ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Pencil size={13} strokeWidth={2} /> Schimbă poza</span> : <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Upload size={13} strokeWidth={2} /> Încarcă poza</span>}
                     </div>
                     <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingCover}
                       onChange={e => { if (e.target.files?.[0]) uploadCover(e.target.files[0]); }} />
@@ -1915,7 +1916,7 @@ export default function DashboardSalon() {
                 {/* GALERIE */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text2 }}>🖼️ Galerie salon ({galerie.length}/10)</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, display: "flex", alignItems: "center", gap: 6 }}><ImageIcon size={14} color={c.text2} strokeWidth={2} /> Galerie salon ({galerie.length}/10)</div>
                     {galerie.length < 10 && (
                       <label style={{ cursor: "pointer" }}>
                         <div style={{ padding: "8px 16px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
@@ -1928,7 +1929,7 @@ export default function DashboardSalon() {
                   </div>
                   {galerie.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "32px 0", color: c.muted, fontSize: 13 }}>
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>🖼️</div>
+                      <div style={{ marginBottom: 8, display: "flex", justifyContent: "center" }}><ImageIcon size={32} color={c.muted} strokeWidth={1.5} /></div>
                       Nicio poză în galerie. Adaugă poze din salonul tău!
                     </div>
                   ) : (
@@ -1949,7 +1950,7 @@ export default function DashboardSalon() {
 
                 {/* DATE SALON */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 16 }}>📋 Date salon</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 16 }}>Date salon</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {[{ key: "numeSalon", label: "Numele salonului", placeholder: "Paws & Style" }, { key: "adresa", label: "Adresa", placeholder: "Str. Florilor nr. 12" }, { key: "oras", label: "Orașul", placeholder: "București" }, { key: "telefon", label: "Telefon public", placeholder: "07XX XXX XXX" }].map(f => (
                       <div key={f.key}>
@@ -1989,9 +1990,9 @@ export default function DashboardSalon() {
                     const preturi = s.preturi || { mica: s.pret || "", medie: s.pret || "", mare: s.pret || "" };
                     const durate = s.durate || { mica: s.durata || "", medie: s.durata || "", mare: s.durata || "" };
                     const TALII = [
-                      { key: "mica" as const, label: "Mică", icon: "🐕‍🦺" },
-                      { key: "medie" as const, label: "Medie", icon: "🐕" },
-                      { key: "mare" as const, label: "Mare", icon: "🐺" },
+                      { key: "mica" as const, label: "Mică" },
+                      { key: "medie" as const, label: "Medie" },
+                      { key: "mare" as const, label: "Mare" },
                     ];
                     return (
                     <div key={s.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}` }}>
@@ -2009,7 +2010,7 @@ export default function DashboardSalon() {
                           {TALII.map(t => (
                             <React.Fragment key={t.key}>
                               <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 800, color: c.text2 }}>
-                                <span style={{ fontSize: 16 }}>{t.icon}</span> {t.label}
+                                {t.label}
                               </div>
                               <input value={preturi[t.key]} onChange={e => {
                                 const val = e.target.value;
@@ -2057,7 +2058,7 @@ export default function DashboardSalon() {
                     return (
                       <div key={g.id} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
                         <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                          <div style={{ width: 44, height: 44, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>👤</div>
+                          <div style={{ width: 44, height: 44, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><User size={20} color="#FF6B00" strokeWidth={2} /></div>
                           <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, minWidth: 0 }}>
                             <input value={g.nume} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, nume: e.target.value } : x))} placeholder="Nume specialist" style={inp} />
                             <input value={g.specialitate} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, specialitate: e.target.value } : x))} placeholder="Specialitate / rol" style={inp} />
@@ -2065,7 +2066,7 @@ export default function DashboardSalon() {
                           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                             <button onClick={() => setGroomerOrarDeschis(s => ({ ...s, [g.id]: !s[g.id] }))}
                               style={{ fontSize: 12, fontWeight: 800, color: orarDeschis ? "#FF6B00" : c.muted, background: orarDeschis ? c.orangeAccent : c.surface2, border: `1.5px solid ${orarDeschis ? "#FF6B00" : c.border}`, padding: "7px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                              🗓 Orar {orarDeschis ? "▲" : "▼"}
+                              Orar {orarDeschis ? "▲" : "▼"}
                             </button>
                             <button onClick={() => setEchipa(ec => ec.filter(x => x.id !== g.id))} style={{ fontSize: 13, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "8px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
                           </div>
@@ -2128,9 +2129,9 @@ export default function DashboardSalon() {
                                     }));
 
                                     const TALII_LOC = [
-                                      { key: "mica" as const, label: "Mică", icon: "🐕‍🦺" },
-                                      { key: "medie" as const, label: "Medie", icon: "🐕" },
-                                      { key: "mare" as const, label: "Mare", icon: "🐺" },
+                                      { key: "mica" as const, label: "Mică" },
+                                      { key: "medie" as const, label: "Medie" },
+                                      { key: "mare" as const, label: "Mare" },
                                     ];
                                     const inpSmall: React.CSSProperties = { ...inp, padding: "7px 9px", fontSize: 12 };
 
@@ -2159,7 +2160,7 @@ export default function DashboardSalon() {
                                               {TALII_LOC.map(t => (
                                                 <React.Fragment key={t.key}>
                                                   <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: c.text2 }}>
-                                                    <span style={{ fontSize: 14 }}>{t.icon}</span> {t.label}
+                                                    {t.label}
                                                   </div>
                                                   <div>
                                                     <input type="number" value={preturiOv[t.key] || ""} placeholder={preturiBaza[t.key] ? `${preturiBaza[t.key]} (salon)` : "—"}
@@ -2261,7 +2262,7 @@ export default function DashboardSalon() {
                   </>
                 ) : (
                   <div style={{ background: c.surface, borderRadius: 20, padding: "32px", border: `1.5px solid ${c.border}`, textAlign: "center" }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>💳</div>
+                    <div style={{ fontSize: 40, marginBottom: 12 }}><CreditCard size={40} color={c.muted} strokeWidth={1.5} /></div>
                     <div style={{ fontSize: 17, fontWeight: 800, color: c.text, marginBottom: 8 }}>Niciun abonament activ</div>
                     <div style={{ fontSize: 14, color: c.muted, marginBottom: 20 }}>Alege un plan pentru a debloca toate functionalitatile salonului.</div>
                     <button onClick={() => router.push("/register/abonament-salon")} style={btnPrimary}>Alege un plan</button>
@@ -2277,15 +2278,15 @@ export default function DashboardSalon() {
 
                 {/* AVATAR */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14 }}>📷 Poza de profil</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><ImageIcon size={14} color={c.text2} strokeWidth={2} /> Poza de profil</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                     <div style={{ width: 96, height: 96, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, flexShrink: 0, overflow: "hidden" }}>
-                      {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "👤"}
+                      {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={40} color="#FF6B00" strokeWidth={2} />}
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <label style={{ cursor: "pointer" }}>
                         <div style={{ padding: "10px 18px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif" }}>
-                          {uploadingAvatar ? "Se încarcă..." : avatarUrl ? "✏️ Schimbă" : "📤 Încarcă"}
+                          {uploadingAvatar ? "Se încarcă..." : avatarUrl ? <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Pencil size={13} strokeWidth={2} /> Schimbă</span> : <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Upload size={13} strokeWidth={2} /> Încarcă</span>}
                         </div>
                         <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingAvatar}
                           onChange={e => { if (e.target.files?.[0]) uploadAvatar(e.target.files[0]); }} />
@@ -2293,7 +2294,7 @@ export default function DashboardSalon() {
                       {avatarUrl && (
                         <button onClick={stergeAvatar}
                           style={{ padding: "10px 18px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                          🗑️ Șterge
+                          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Trash2 size={13} strokeWidth={2} /> Șterge</span>
                         </button>
                       )}
                     </div>
