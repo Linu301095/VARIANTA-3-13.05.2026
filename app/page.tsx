@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
 import ResetTheme from "../components/ResetTheme";
+import { PawPrint, Scissors, Search, Calendar, BarChart3, Smartphone, Star, Shield, Wallet, User, Gift, Download, AlertTriangle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "CalyHub — Programări grooming online pentru câini și pisici",
@@ -42,7 +43,7 @@ export default function HomePage() {
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 20px 80px" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 18px", marginBottom: 20, fontSize: 13, fontWeight: 700, color: "#FF6B00" }}>
-              🐾 Platforma care conectează stăpânii cu saloanele de grooming
+              <PawPrint size={14} strokeWidth={2} style={{ flexShrink: 0 }} /> Platforma care conectează stăpânii cu saloanele de grooming
             </div>
             <h1 style={{ fontSize: "clamp(28px, 4.5vw, 52px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.1, marginBottom: 14 }}>
               Programează rapid animalul tău la<br />
@@ -59,21 +60,25 @@ export default function HomePage() {
             {/* Card Stăpân */}
             <div style={{ background: "#fff", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>🐾</div>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PawPrint size={26} color="#FF6B00" strokeWidth={1.8} /></div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un animal de companie</div>
               </div>
               <h2 style={{ fontSize: "clamp(22px,2.6vw,30px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginBottom: 10 }}>Programează-ți<br />animalul</h2>
               <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>Găsești salonul potrivit în câteva secunde, alegi ora și primești reminder automat înainte de vizită.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-                {[["🔍", "Cauți după oraș, serviciu și preț"], ["📅", "Disponibilitate în timp real"], ["🐾", "Profil cu istoric salvat automat"]].map(([val, label]) => (
+                {[
+                  { Icon: Search, label: "Cauți după oraș, serviciu și preț" },
+                  { Icon: Calendar, label: "Disponibilitate în timp real" },
+                  { Icon: PawPrint, label: "Profil cu istoric salvat automat" },
+                ].map(({ Icon, label }) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAFAFA", borderRadius: 12, padding: "11px 14px" }}>
-                    <span style={{ fontSize: 20, minWidth: 28, textAlign: "center" }}>{val}</span>
+                    <div style={{ width: 28, display: "flex", justifyContent: "center", flexShrink: 0 }}><Icon size={20} color="#FF6B00" strokeWidth={2} /></div>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
                 ))}
               </div>
               <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 14, padding: "12px 16px", marginBottom: 22 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>🐾 Profil animal salvat automat</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 800, color: "#FF6B00" }}><PawPrint size={14} strokeWidth={2} /> Profil animal salvat automat</div>
                 <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>Rasă, vârstă, alergii — salonul îl cunoaște deja</div>
               </div>
               <Link href="/register" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "15px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)", marginTop: "auto" }}>
@@ -84,21 +89,25 @@ export default function HomePage() {
             {/* Card Salon */}
             <div style={{ background: "#fff", borderRadius: 28, padding: "clamp(26px,3.5vw,42px)", border: "2px solid #FF6B00", boxShadow: "0 4px 32px rgba(255,107,0,.1)", display: "flex", flexDirection: "column", gap: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>✂️</div>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={26} color="#FF6B00" strokeWidth={1.8} /></div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 2, textTransform: "uppercase" }}>Ai un salon de grooming</div>
               </div>
               <h2 style={{ fontSize: "clamp(22px,2.6vw,30px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginBottom: 10 }}>Umple-ți<br />calendarul</h2>
               <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>Primești programări online oricând, îți gestionezi calendarul dintr-un singur loc și urmărești statisticile salonului în timp real.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-                {[["📅", "Programări online non-stop"], ["📊", "Statistici reale și rapoarte"], ["✂️", "Sloturi și servicii per specialist"]].map(([val, label]) => (
+                {[
+                  { Icon: Calendar, label: "Programări online non-stop" },
+                  { Icon: BarChart3, label: "Statistici reale și rapoarte" },
+                  { Icon: Scissors, label: "Sloturi și servicii per specialist" },
+                ].map(({ Icon, label }) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAFAFA", borderRadius: 12, padding: "11px 14px" }}>
-                    <span style={{ fontSize: 20, minWidth: 28, textAlign: "center" }}>{val}</span>
+                    <div style={{ width: 28, display: "flex", justifyContent: "center", flexShrink: 0 }}><Icon size={20} color="#FF6B00" strokeWidth={2} /></div>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{label}</span>
                   </div>
                 ))}
               </div>
               <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 14, padding: "12px 16px", marginBottom: 22 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>🎁 Primele 3 luni complet gratuite</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 800, color: "#FF6B00" }}><Gift size={14} strokeWidth={2} /> Primele 3 luni complet gratuite</div>
                 <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>Fără card · 0% comision · Anulezi oricând</div>
               </div>
               <Link href="/register" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "15px 24px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)", marginTop: "auto" }}>
@@ -140,13 +149,13 @@ export default function HomePage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 40 }}>
               {[
-                ["📅", "Programări 24/7", "Fără telefon. Calendar actualizat în timp real."],
-                ["📱", "Reminder SMS automat", "Primești un SMS cu o zi înainte. Fără programări uitate."],
-                ["🐾", "Profil animal unic", "Rasă, vârstă, alergii salvate. Salonul îl cunoaște deja."],
-                ["⭐", "Status Special", "Istoric complet vizite. Animalul tău are dosar propriu."],
-              ].map(([icon, title, desc]) => (
-                <div key={title as string} className="step-card" style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
-                  <div style={{ fontSize: 32, marginBottom: 14 }}>{icon}</div>
+                { Icon: Calendar, title: "Programări 24/7", desc: "Fără telefon. Calendar actualizat în timp real." },
+                { Icon: Smartphone, title: "Reminder SMS automat", desc: "Primești un SMS cu o zi înainte. Fără programări uitate." },
+                { Icon: PawPrint, title: "Profil animal unic", desc: "Rasă, vârstă, alergii salvate. Salonul îl cunoaște deja." },
+                { Icon: Star, title: "Status Special", desc: "Istoric complet vizite. Animalul tău are dosar propriu." },
+              ].map(({ Icon, title, desc }) => (
+                <div key={title} className="step-card" style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
+                  <div style={{ marginBottom: 14 }}><Icon size={32} color="#FF6B00" strokeWidth={1.8} /></div>
                   <h3 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{title}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.6 }}>{desc}</p>
                 </div>
@@ -168,15 +177,15 @@ export default function HomePage() {
                 {/* Card profil animal */}
                 <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 16px rgba(255,107,0,.08)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                    <div style={{ width: 46, height: 46, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🐕</div>
+                    <div style={{ width: 46, height: 46, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center" }}><PawPrint size={24} color="#FF6B00" strokeWidth={1.8} /></div>
                     <div>
                       <div style={{ fontSize: 16, fontWeight: 900, color: "#1A1A1A" }}>Rex</div>
                       <div style={{ fontSize: 12, color: "#6B7280" }}>Golden Retriever · 3 ani · 28 kg</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ background: "#FFF3EA", color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>🐺 Mare</span>
-                    <span style={{ background: "#FEF2F2", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>⚠️ Alergie ovăz</span>
+                    <span style={{ background: "#FFF3EA", color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>Mare</span>
+                    <span style={{ background: "#FEF2F2", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={10} strokeWidth={2} /> Alergie ovăz</span>
                     <span style={{ background: "#F0FDF4", color: "#16A34A", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>✓ Vaccinat</span>
                   </div>
                 </div>
@@ -201,7 +210,7 @@ export default function HomePage() {
             </div>
             <div style={{ textAlign: "center" }}>
               <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}>
-                🐾 Găsește salon acum →
+                <PawPrint size={16} strokeWidth={2} /> Găsește salon acum →
               </Link>
             </div>
           </div>
@@ -216,13 +225,13 @@ export default function HomePage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 40 }}>
               {[
-                ["🛡️", "Protecție anulări", "Vezi cine anulează des și blochezi clienții care îți strică agenda."],
-                ["💰", "Prețuri per talie", "Tarif corect pentru fiecare câine — Mică, Medie, Mare. Fără negocieri."],
-                ["👤", "Dosar per client", "Vizite, servicii, animale și alergii — totul despre fiecare client, la îndemână."],
-                ["📱", "Calendar de pe telefon", "Accepți, refuzi sau ajustezi programări de oriunde, oricând."],
-              ].map(([stat, title, desc]) => (
-                <div key={title as string} className="step-card" style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>{stat}</div>
+                { Icon: Shield, title: "Protecție anulări", desc: "Vezi cine anulează des și blochezi clienții care îți strică agenda." },
+                { Icon: Wallet, title: "Prețuri per talie", desc: "Tarif corect pentru fiecare câine — Mică, Medie, Mare. Fără negocieri." },
+                { Icon: User, title: "Dosar per client", desc: "Vizite, servicii, animale și alergii — totul despre fiecare client, la îndemână." },
+                { Icon: Smartphone, title: "Calendar de pe telefon", desc: "Accepți, refuzi sau ajustezi programări de oriunde, oricând." },
+              ].map(({ Icon, title, desc }) => (
+                <div key={title} className="step-card" style={{ background: "#fff", borderRadius: 20, padding: 28, border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
+                  <div style={{ marginBottom: 8 }}><Icon size={32} color="#FF6B00" strokeWidth={1.8} /></div>
                   <h3 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{title}</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.6 }}>{desc}</p>
                 </div>
@@ -232,7 +241,7 @@ export default function HomePage() {
             <div style={{ background: "#FFFBF7", borderRadius: 22, border: "2px solid #FF6B00", padding: "28px 26px", marginBottom: 40, boxShadow: "0 2px 12px rgba(255,107,0,.08)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 26, alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>📊 Statistici & rapoarte</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}><BarChart3 size={14} strokeWidth={2} /> Statistici & rapoarte</div>
                   <h3 style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A", lineHeight: 1.2, marginBottom: 10 }}>Vezi exact cât produci — pe orice perioadă</h3>
                   <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, marginBottom: 16 }}>
                     Încasări, top servicii și productivitatea fiecărui groomer, filtrate pe Azi / Săptămână / Lună / An. Plus raport Excel descărcabil cu un click — gata pentru contabil.
@@ -257,7 +266,7 @@ export default function HomePage() {
                     </div>
                   ))}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14, paddingTop: 14, borderTop: "1px solid #F3F4F6" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 12.5, fontWeight: 800 }}>📥 Raport Excel</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 12.5, fontWeight: 800 }}><Download size={13} strokeWidth={2} /> Raport Excel</span>
                     <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 600 }}>venituri · servicii · groomeri · talie</span>
                   </div>
                 </div>
@@ -265,7 +274,7 @@ export default function HomePage() {
             </div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}>
-                ✂️ Înregistrează salonul gratuit →
+                <Scissors size={16} strokeWidth={2} /> Înregistrează salonul gratuit →
               </Link>
               <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", padding: "14px 28px", borderRadius: 50, border: "2px solid #FF6B00", background: "#fff", fontSize: 15, fontWeight: 800, color: "#FF6B00", textDecoration: "none" }}>Planuri</Link>
             </div>
@@ -277,8 +286,8 @@ export default function HomePage() {
           <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#fff", marginBottom: 16 }}>Ești gata să începi?</h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,.6)", marginBottom: 36 }}>Stăpâni — programare în 10 secunde.<br />Saloane — primele 3 luni gratuite.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}>🐾 Programează acum</Link>
-            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}>✂️ Înregistrează salonul gratuit</Link>
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}><PawPrint size={16} strokeWidth={2} /> Programează acum</Link>
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}><Scissors size={16} strokeWidth={2} /> Înregistrează salonul gratuit</Link>
           </div>
         </section>
       </main>
