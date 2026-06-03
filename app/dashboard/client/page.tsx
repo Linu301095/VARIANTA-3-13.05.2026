@@ -1647,25 +1647,31 @@ export default function DashboardClient() {
             </div>
 
             {/* Sortare + filtru serviciu */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Sortare:</span>
-              {[
-                { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
-                { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
-                { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
-              ].map(opt => (
-                <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
-                  style={{ padding: "7px 14px", borderRadius: 50, border: sortareSalon === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: sortareSalon === opt.val ? "#FFF3EA" : c.surface, color: sortareSalon === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
-                  {opt.icon}{opt.label}
-                </button>
-              ))}
-              <div style={{ position: "relative", marginLeft: "auto" }}>
-                <button onClick={() => setFiltruServiciuDropdown(v => !v)}
-                  style={{ padding: "7px 14px", borderRadius: 50, border: filtruServiciu ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruServiciu ? "#FFF3EA" : c.surface, color: filtruServiciu ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-                  <Scissors size={14} strokeWidth={2} />
-                  <span>{filtruServiciu || "Serviciu"}</span>
-                  <span style={{ fontSize: 10, opacity: .6 }}>{filtruServiciuDropdown ? "▲" : "▼"}</span>
-                </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+              {/* Rând 1: sortare */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Sortare:</span>
+                {[
+                  { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
+                  { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
+                  { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
+                ].map(opt => (
+                  <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
+                    style={{ padding: "7px 14px", borderRadius: 50, border: sortareSalon === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: sortareSalon === opt.val ? "#FFF3EA" : c.surface, color: sortareSalon === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                    {opt.icon}{opt.label}
+                  </button>
+                ))}
+              </div>
+              {/* Rând 2: filtru serviciu */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Serviciu:</span>
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setFiltruServiciuDropdown(v => !v)}
+                    style={{ padding: "7px 14px", borderRadius: 50, border: filtruServiciu ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruServiciu ? "#FFF3EA" : c.surface, color: filtruServiciu ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Scissors size={14} strokeWidth={2} />
+                    <span>{filtruServiciu || "Toate"}</span>
+                    <span style={{ fontSize: 10, opacity: .6 }}>{filtruServiciuDropdown ? "▲" : "▼"}</span>
+                  </button>
                 {filtruServiciuDropdown && (
                   <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 40, minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
                     {filtruServiciu && (
@@ -1685,6 +1691,7 @@ export default function DashboardClient() {
                     ))}
                   </div>
                 )}
+                </div>
               </div>
             </div>
 
@@ -1961,7 +1968,7 @@ export default function DashboardClient() {
                               style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
                               <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
                               <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj}</div>
+                                <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
                                 <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
                               </div>
                               {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
