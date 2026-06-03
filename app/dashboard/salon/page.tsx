@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, useContext, createContext } from "
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, type LucideIcon } from "lucide-react";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -1104,12 +1104,18 @@ export default function DashboardSalon() {
             {/* Center: main tab buttons (only when not in sub-tab) */}
             {!isSubTab && (
               <div style={{ display: "flex", alignItems: "center", gap: 2, flex: "0 1 auto", overflow: "hidden" }}>
-                {([["statistici", "📊", "Statistici"], ["agenda", "📅", "Agenda"], ["program", "🕐", "Program"], ["notificari", "🔔", `Notificări${necitite > 0 ? ` (${necitite})` : ""}`]] as const).map(([t, icon, label]) => (
+                {([
+                  { t: "statistici" as const, Icon: BarChart3, label: "Statistici" },
+                  { t: "agenda" as const, Icon: CalendarDays, label: "Agenda" },
+                  { t: "program" as const, Icon: Clock, label: "Program" },
+                  { t: "notificari" as const, Icon: Bell, label: `Notificări${necitite > 0 ? ` (${necitite})` : ""}` },
+                ]).map(({ t, Icon, label }) => (
                   <button key={t} onClick={() => setTab(t)}
-                    style={{ padding: isMobile ? "7px 10px" : "7px 16px", borderRadius: 50, border: "none", background: tab === t ? "#FF6B00" : "transparent", color: tab === t ? "#fff" : c.muted, fontSize: isMobile ? 18 : 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0, transition: "all .15s", position: "relative" }}>
-                    {isMobile ? icon : label}
-                    {isMobile && t === "notificari" && necitite > 0 && (
-                      <span style={{ position: "absolute", top: 2, right: 2, width: 8, height: 8, borderRadius: "50%", background: "#EF4444" }} />
+                    style={{ padding: isMobile ? "7px 10px" : "7px 14px", borderRadius: 50, border: "none", background: tab === t ? "#FF6B00" : "transparent", color: tab === t ? "#fff" : c.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0, transition: "all .15s", position: "relative", display: "flex", alignItems: "center", gap: isMobile ? 0 : 6 }}>
+                    <Icon size={isMobile ? 20 : 16} strokeWidth={2} />
+                    {!isMobile && label}
+                    {t === "notificari" && necitite > 0 && (
+                      <span style={{ position: "absolute", top: 2, right: 2, width: 8, height: 8, borderRadius: "50%", background: tab === t ? "#fff" : "#EF4444" }} />
                     )}
                   </button>
                 ))}
@@ -2343,6 +2349,7 @@ export default function DashboardSalon() {
 
 function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null }) {
   const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState<Tab | "logout" | null>(null);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
   const planNume = (() => {
     try { const a = JSON.parse(localStorage.getItem("calyhub_abonament") || "{}"); return a.planNume || null; } catch { return null; }
@@ -2384,18 +2391,22 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
             )}
           </div>
           <div style={{ padding: "6px 0" }}>
-            {items.map(item => (
+            {items.map(item => {
+              const isActive = tab === item.t;
+              const isHovered = hovered === item.t;
+              return (
               <button key={item.t} onClick={() => { onNav(item.t); setOpen(false); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: tab === item.t ? c.orangeAccent : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
-                onMouseEnter={e => { if (tab !== item.t) e.currentTarget.style.background = c.surface2; }}
-                onMouseLeave={e => { e.currentTarget.style.background = tab === item.t ? c.orangeAccent : "transparent"; }}>
-                <span style={{ width: 34, height: 34, borderRadius: 10, background: tab === item.t ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><item.icon size={18} color={tab === item.t ? "#fff" : c.muted} strokeWidth={2} /></span>
+                onMouseEnter={() => setHovered(item.t)}
+                onMouseLeave={() => setHovered(null)}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: isActive ? c.orangeAccent : isHovered ? c.surface2 : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", transition: "background .12s" }}>
+                <span style={{ width: 34, height: 34, borderRadius: 10, background: isActive ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "background .12s" }}><item.icon size={18} color={isActive ? "#fff" : c.muted} strokeWidth={2} /></span>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: tab === item.t ? "#FF6B00" : c.text }}>{item.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#FF6B00" : c.text }}>{item.label}</div>
                   <div style={{ fontSize: 11, color: c.xmuted, marginTop: 1 }}>{item.sub}</div>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
           <div style={{ borderTop: `1px solid ${c.border}`, padding: "12px 18px" }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>Aspect</div>
@@ -2412,9 +2423,9 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
           </div>
           <div style={{ borderTop: `1px solid ${c.border}`, padding: "6px 0" }}>
             <button onClick={() => { setOpen(false); onLogout(); }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,.08)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+              onMouseEnter={() => setHovered("logout")}
+              onMouseLeave={() => setHovered(null)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: hovered === "logout" ? "rgba(239,68,68,.08)" : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", transition: "background .12s" }}>
               <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(239,68,68,.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><LogOut size={17} color="#EF4444" strokeWidth={2} /></span>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>Iesire din cont</div>
             </button>
