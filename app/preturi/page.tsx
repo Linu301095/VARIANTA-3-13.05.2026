@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
 import { supabase } from "../../lib/supabase";
-import { Scissors, Gift, Flame } from "lucide-react";
+import { Scissors, Gift, Flame, ArrowRight } from "lucide-react";
 
 type Ciclu = "lunar" | "anual";
 
@@ -267,12 +267,14 @@ export default function Preturi() {
         {/* CTA FINAL */}
         <section style={{ padding: "20px 20px 64px", textAlign: "center" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 26, padding: "52px 30px", boxShadow: "0 16px 44px rgba(255,107,0,.28)" }}>
-            <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Gata să-ți crești salonul?</h2>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,.92)", marginBottom: 32, lineHeight: 1.7 }}>
-              {promoActiva ? "Prinde-te în primele 10 saloane cu 3 luni gratuite." : "Începe azi. Fără card, anulezi oricând."}
+            <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Agenda ta plină începe azi</h2>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,.92)", marginBottom: 32, lineHeight: 1.7, maxWidth: 460, marginLeft: "auto", marginRight: "auto" }}>
+              {promoActiva ? "Fii printre primele 10 saloane din rețea și primești 3 luni gratuite. Fără card, fără riscuri." : "Configurezi salonul în câteva minute și începi să primești programări chiar de azi."}
             </p>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "15px 34px", borderRadius: 50, background: "#fff", color: "#FF6B00", fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(0,0,0,.18)" }}>
-              <Scissors size={17} strokeWidth={2} /> Înregistrează salonul gratuit →
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "16px 30px", borderRadius: 50, background: "#fff", color: "#FF6B00", fontSize: "clamp(14px,3.6vw,16px)", fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(0,0,0,.18)", maxWidth: "100%", boxSizing: "border-box" }}>
+              <Scissors size={18} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+              <span style={{ whiteSpace: "nowrap" }}>Înregistrează salonul gratuit</span>
+              <ArrowRight size={18} strokeWidth={2.5} style={{ flexShrink: 0 }} />
             </Link>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", marginTop: 14 }}>Fără card · Fără comision · Anulezi oricând</div>
           </div>
