@@ -1673,7 +1673,7 @@ export default function DashboardClient() {
                     <span style={{ fontSize: 10, opacity: .6 }}>{filtruServiciuDropdown ? "▲" : "▼"}</span>
                   </button>
                 {filtruServiciuDropdown && (
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 40, minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 40, minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
                     {filtruServiciu && (
                       <button onClick={() => { setFiltruServiciu(""); setFiltruServiciuDropdown(false); }}
                         style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
