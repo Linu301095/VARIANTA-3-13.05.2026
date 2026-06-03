@@ -2099,12 +2099,12 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
   return (
     <div style={{ minHeight: "100vh", background: c.pageBg, fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
       {open && <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: c.surface, borderBottom: `1px solid ${c.border}`, height: 64 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: c.surface, borderBottom: `1px solid ${c.border}`, height: 74 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 16px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             {/* On mobile with sub-tab or onBack active, hide logo and show back button instead */}
             {!(isMobile && (tab !== "saloane" || onBack)) && (
-              <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
+              <Image src="/logo.png" alt="CalyHub" width={135} height={46} style={{ height: 46, width: "auto", objectFit: "contain" }} priority />
             )}
             {(tab !== "saloane" || onBack) && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>

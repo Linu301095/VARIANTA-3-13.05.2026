@@ -10,7 +10,7 @@ export default function Header() {
         zIndex: 100,
         backgroundColor: "#fff",
         borderBottom: "1px solid #F0EDE9",
-        height: "68px",
+        height: "76px",
         display: "flex",
         alignItems: "center",
       }}
@@ -40,10 +40,10 @@ export default function Header() {
           <Image
             src="/logo.png"
             alt="CalyHub"
-            width={140}
-            height={48}
+            width={160}
+            height={54}
             style={{
-              height: "42px",
+              height: "54px",
               width: "auto",
               objectFit: "contain",
             }}
