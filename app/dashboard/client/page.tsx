@@ -2121,7 +2121,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
           <div style={{ position: "relative" }}>
             <button onClick={() => setOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
-              <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>🐾</span>
+              <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PawPrint size={14} color="#FF6B00" strokeWidth={2} /></span>
               <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, overflow: "hidden" }}>
                 {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
               </span>
@@ -2132,7 +2132,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
               <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, width: 262, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, boxShadow: c.shadow, overflow: "hidden", zIndex: 200 }}>
                 <div style={{ padding: "14px 18px", background: c.orangeAccent, borderBottom: `1px solid ${c.orangeBorder}` }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{prenume}</div>
-                  <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2 }}>Cont client 🐾</div>
+                  <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2, display: "flex", alignItems: "center", gap: 5 }}>Cont client <PawPrint size={12} color="#FF6B00" strokeWidth={2} /></div>
                 </div>
                 <div style={{ padding: "6px 0" }}>
                   {items.map(item => {
