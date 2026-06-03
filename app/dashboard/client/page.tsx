@@ -72,13 +72,13 @@ type Tab = "saloane" | "programari" | "profil" | "animal" | "notificari" | "seta
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
 
 const SPECII = [
-  { val: "caine", label: "Câine", icon: "Câine" },
-  { val: "pisica", label: "Pisică", icon: "Pisică" },
-  { val: "iepure", label: "Iepure", icon: "Iepure" },
-  { val: "pasare", label: "Pasăre", icon: "Pasăre" },
-  { val: "rozator", label: "Rozătoare", icon: "Rozătoare" },
-  { val: "reptila", label: "Reptilă", icon: "Reptilă" },
-  { val: "altele", label: "Altele", icon: "Altele" },
+  { val: "caine", label: "Câine", icon: "🐕" },
+  { val: "pisica", label: "Pisică", icon: "🐈" },
+  { val: "iepure", label: "Iepure", icon: "🐇" },
+  { val: "pasare", label: "Pasăre", icon: "🐦" },
+  { val: "rozator", label: "Rozătoare", icon: "🐹" },
+  { val: "reptila", label: "Reptilă", icon: "🦎" },
+  { val: "altele", label: "Altele", icon: "🐾" },
 ];
 
 const RASE_PE_SPECII: Record<string, string[]> = {
