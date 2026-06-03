@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Lock, Shield, HelpCircle, Mail } from "lucide-react";
 
 type Variant = "full" | "auth" | "payment" | "client" | "salon" | "admin";
 
@@ -90,8 +91,8 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
-            <span className="footer-link" style={{ ...linkStyleSm, color: "#10B981" }}>🔒 Plată securizată</span>
-            <span className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42" }}>🛡️ Garanție 30 zile</span>
+            <span className="footer-link" style={{ ...linkStyleSm, color: "#10B981", display: "inline-flex", alignItems: "center", gap: 5 }}><Lock size={13} strokeWidth={2} /> Plată securizată</span>
+            <span className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42", display: "inline-flex", alignItems: "center", gap: 5 }}><Shield size={13} strokeWidth={2} /> Garanție 30 zile</span>
             <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={linkStyleSm}>parteneri@calyhub.ro</a>
             <Link href="/" className="footer-link" style={linkStyleSm}>Politică plăți</Link>
           </div>
@@ -108,8 +109,8 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-            <button onClick={onAjutor} style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontWeight: 800, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0 }}>❓ Ajutor pentru clienți</button>
-            <a href="mailto:support@calyhub.ro" className="footer-link" style={linkStyleSm}>✉️ support@calyhub.ro</a>
+            <button onClick={onAjutor} style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontWeight: 800, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0, display: "inline-flex", alignItems: "center", gap: 5 }}><HelpCircle size={14} strokeWidth={2} /> Ajutor pentru clienți</button>
+            <a href="mailto:support@calyhub.ro" className="footer-link" style={{ ...linkStyleSm, display: "inline-flex", alignItems: "center", gap: 5 }}><Mail size={13} strokeWidth={2} /> support@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub</div>
         </div>
@@ -124,8 +125,8 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
           {LOGO}
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-            <button onClick={onAjutor} style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontWeight: 800, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0 }}>❓ Ajutor pentru salon</button>
-            <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42" }}>✉️ parteneri@calyhub.ro</a>
+            <button onClick={onAjutor} style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontWeight: 800, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0, display: "inline-flex", alignItems: "center", gap: 5 }}><HelpCircle size={14} strokeWidth={2} /> Ajutor pentru salon</button>
+            <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42", display: "inline-flex", alignItems: "center", gap: 5 }}><Mail size={13} strokeWidth={2} /> parteneri@calyhub.ro</a>
           </div>
           <div style={copyright}>© 2026 CalyHub · Partener</div>
         </div>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
 import { supabase } from "../../lib/supabase";
+import { AlertTriangle } from "lucide-react";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -84,7 +85,7 @@ export default function LoginPage() {
       <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
         <div style={{ width: "100%", maxWidth: 440 }}>
           <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(28px,5vw,48px)", border: "1px solid #EBEBEB", boxShadow: "0 4px 32px rgba(26,26,26,.08)" }}>
-            <h1 style={{ fontSize: 26, fontWeight: 900, color: "#1A1A1A", textAlign: "center", marginBottom: 6 }}>Bine ai revenit! 👋</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 900, color: "#1A1A1A", textAlign: "center", marginBottom: 6 }}>Bine ai revenit!</h1>
             <p style={{ fontSize: 14, color: "#6B7280", textAlign: "center", marginBottom: 28 }}>Introdu emailul și te ducem în contul tău</p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
@@ -133,8 +134,8 @@ export default function LoginPage() {
                 {errors.parola && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{errors.parola}</div>}
               </div>
               {loginError && (
-                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center" }}>
-                  ⚠️ {loginError}
+                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <AlertTriangle size={15} strokeWidth={2} /> {loginError}
                 </div>
               )}
               <button onClick={handleSubmit} disabled={loading}
