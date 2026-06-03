@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
 import { supabase } from "../../lib/supabase";
+import { PawPrint, Scissors, Gift, AlertTriangle } from "lucide-react";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" };
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
@@ -104,19 +105,19 @@ export default function RegisterPage() {
       <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
         <div style={{ width: "100%", maxWidth: 480 }}>
           <div style={{ background: "#fff", borderRadius: 24, padding: "clamp(28px,5vw,48px)", border: "1px solid #EBEBEB", boxShadow: "0 4px 32px rgba(26,26,26,.08)" }}>
-            <h1 style={{ fontSize: 24, fontWeight: 900, color: "#1A1A1A", textAlign: "center", marginBottom: 6 }}>Creează cont gratuit 🐾</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: "#1A1A1A", textAlign: "center", marginBottom: 6 }}>Creează cont gratuit</h1>
             <p style={{ fontSize: 14, color: "#6B7280", textAlign: "center", marginBottom: 24 }}>Alege tipul de cont potrivit</p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
               <button onClick={() => { setTip("client"); setErrors({}); }}
                 style={{ border: tip === "client" ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", borderRadius: 16, padding: "16px 12px", textAlign: "center", cursor: "pointer", background: tip === "client" ? "#FFF3EA" : "#fff", transition: "all .2s", fontFamily: "Nunito, sans-serif" }}>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>🐾</div>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}><PawPrint size={28} color={tip === "client" ? "#FF6B00" : "#9CA3AF"} strokeWidth={1.8} /></div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#1A1A1A" }}>Client salon</div>
                 <div style={{ fontSize: 12, color: "#6B7280", marginTop: 4 }}>Programezi animăluțul</div>
               </button>
               <button onClick={() => { setTip("salon"); setErrors({}); }}
                 style={{ border: tip === "salon" ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", borderRadius: 16, padding: "16px 12px", textAlign: "center", cursor: "pointer", background: tip === "salon" ? "#FFF3EA" : "#fff", transition: "all .2s", fontFamily: "Nunito, sans-serif" }}>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>✂️</div>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}><Scissors size={28} color={tip === "salon" ? "#FF6B00" : "#9CA3AF"} strokeWidth={1.8} /></div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#1A1A1A" }}>Salon grooming</div>
                 <div style={{ fontSize: 12, color: "#6B7280", marginTop: 4 }}>Primești programări</div>
               </button>
@@ -163,14 +164,14 @@ export default function RegisterPage() {
 
               {tip === "salon" && (
                 <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 12, padding: "12px 16px", textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>🎁 3 luni gratuite pentru parteneri fondatori</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> 3 luni gratuite pentru parteneri fondatori</div>
                   <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>0% comision · Suport dedicat</div>
                 </div>
               )}
 
               {registerError && (
-                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", textAlign: "center" }}>
-                  ⚠️ {registerError}
+                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <AlertTriangle size={15} strokeWidth={2} /> {registerError}
                 </div>
               )}
 
