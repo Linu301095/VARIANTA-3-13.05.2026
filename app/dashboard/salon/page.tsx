@@ -1,11 +1,12 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState, useEffect, useMemo, useContext, createContext } from "react";
+import React, { useState, useEffect, useMemo, useContext, createContext, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, type LucideIcon } from "lucide-react";
+import Cropper from "react-easy-crop";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -470,6 +471,11 @@ export default function DashboardSalon() {
   const [galerie, setGalerie] = useState<string[]>([]);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGalerie, setUploadingGalerie] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropState, setCropState] = useState({ x: 0, y: 0 });
+  const [cropZoom, setCropZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [servicii, setServicii] = useState<Serviciu[]>([
@@ -1022,6 +1028,34 @@ export default function DashboardSalon() {
     await supabase.from("profiluri").update({ avatar_url: null }).eq("id", userId);
     setAvatarUrl(null);
     salveaza("Avatar șters!");
+  }
+
+  function handleCoverSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { setCropSrc(reader.result as string); setCropOpen(true); setCropZoom(1); setCropState({ x: 0, y: 0 }); };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  async function handleCropSave() {
+    if (!cropSrc || !croppedAreaPixels) return;
+    const img = new window.Image();
+    img.src = cropSrc;
+    await new Promise(r => { img.onload = r; });
+    const canvas = document.createElement("canvas");
+    canvas.width = croppedAreaPixels.width;
+    canvas.height = croppedAreaPixels.height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, croppedAreaPixels.x, croppedAreaPixels.y, croppedAreaPixels.width, croppedAreaPixels.height, 0, 0, croppedAreaPixels.width, croppedAreaPixels.height);
+    canvas.toBlob(async blob => {
+      if (!blob) return;
+      const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+      setCropOpen(false);
+      setCropSrc(null);
+      await uploadCover(file);
+    }, "image/jpeg", 0.92);
   }
 
   async function uploadCover(file: File) {
@@ -1907,8 +1941,7 @@ export default function DashboardSalon() {
                     <div style={{ padding: "10px 20px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "inline-block" }}>
                       {uploadingCover ? "Se încarcă..." : pozaUrl ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Pencil size={13} strokeWidth={2} /> Schimbă poza</span> : <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Upload size={13} strokeWidth={2} /> Încarcă poza</span>}
                     </div>
-                    <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingCover}
-                      onChange={e => { if (e.target.files?.[0]) uploadCover(e.target.files[0]); }} />
+                    <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingCover} onChange={handleCoverSelect} />
                   </label>
                   <div style={{ fontSize: 11, color: c.muted, marginTop: 8 }}>JPG, PNG, WEBP — max 5MB. Această poză apare pe cardul salonului tău.</div>
                 </div>
@@ -2344,6 +2377,50 @@ export default function DashboardSalon() {
 
         <Footer variant="salon" onAjutor={() => setTab("ajutor")} />
       </div>
+
+      {/* ── CROP MODAL ── */}
+      {cropOpen && cropSrc && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          {/* Container crop */}
+          <div style={{ position: "relative", width: "min(92vw, 560px)", height: "min(52vw, 315px)", borderRadius: 16, overflow: "hidden", background: "#000" }}>
+            <Cropper
+              image={cropSrc}
+              crop={cropState}
+              zoom={cropZoom}
+              aspect={16 / 9}
+              onCropChange={setCropState}
+              onZoomChange={setCropZoom}
+              onCropComplete={(_: unknown, px: { x: number; y: number; width: number; height: number }) => setCroppedAreaPixels(px)}
+              style={{ containerStyle: { borderRadius: 16 } }}
+            />
+          </div>
+
+          {/* Zoom slider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 20, width: "min(92vw, 560px)" }}>
+            <ZoomOut size={18} color="#fff" strokeWidth={2} />
+            <input type="range" min={1} max={3} step={0.05} value={cropZoom} onChange={e => setCropZoom(Number(e.target.value))}
+              style={{ flex: 1, accentColor: "#FF6B00", cursor: "pointer" }} />
+            <ZoomIn size={18} color="#fff" strokeWidth={2} />
+          </div>
+
+          {/* Previzualizare etichetă */}
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.5)", marginTop: 10, fontFamily: "Nunito, sans-serif" }}>
+            Mișcă și ajustează zoom-ul pentru a potrivi poza
+          </div>
+
+          {/* Butoane */}
+          <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+            <button onClick={() => { setCropOpen(false); setCropSrc(null); }}
+              style={{ padding: "11px 28px", borderRadius: 50, border: "1.5px solid rgba(255,255,255,.25)", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+              Anulează
+            </button>
+            <button onClick={handleCropSave}
+              style={{ padding: "11px 28px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 16px rgba(255,107,0,.4)" }}>
+              Salvează poza →
+            </button>
+          </div>
+        </div>
+      )}
     </ThemeCtx.Provider>
   );
 }
