@@ -56,7 +56,6 @@ export default function CumFunctioneaza() {
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
           <nav className="hdr-nav" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Link href="/preturi" style={{ padding: "9px 14px", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Prețuri</Link>
             <Link href="/login" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
             <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
           </nav>
