@@ -8,6 +8,7 @@ import { supabase } from "../../../lib/supabase";
 import {
   Store, Scissors, Users, CheckCircle, Plus, Trash2, Clock,
   Building2, FileText, MapPin, Phone, AlignLeft, Globe, Receipt,
+  Camera, ImagePlus, X,
 } from "lucide-react";
 
 const inp: React.CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", background: "#fff" };
@@ -18,7 +19,7 @@ type Serviciu = { nume: string; pret: string; durata: string };
 type Groomer = { nume: string; specialitate: string };
 type ZiProgram = { deschis: boolean; start: string; end: string };
 
-const STEPS = ["Date firmă", "Servicii", "Echipă & Program", "Gata!"];
+const STEPS = ["Date firmă", "Servicii", "Echipă & Program", "Fotografii", "Gata!"];
 
 const SPECII = [
   { val: "caine",   label: "Câine",     icon: "🐕" },
@@ -59,6 +60,12 @@ export default function ConfigurareSalon() {
   const [servicii, setServicii] = useState<Serviciu[]>([{ nume: "", pret: "", durata: "" }]);
   const [echipa, setEchipa] = useState<Groomer[]>([{ nume: "", specialitate: "" }]);
   const [program, setProgram] = useState<Record<string, ZiProgram>>(PROGRAM_DEFAULT);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [galerieFiles, setGalerieFiles] = useState<File[]>([]);
+  const [galeriePreviews, setGaleriePreviews] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [savedUserId, setSavedUserId] = useState<string | null>(null);
 
   function setFirma(k: string, v: string) {
     setDateFirma(f => ({ ...f, [k]: v }));
@@ -95,6 +102,57 @@ export default function ConfigurareSalon() {
     return e;
   }
 
+  function onCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  }
+
+  function onGalerieChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    setGalerieFiles(prev => [...prev, ...files]);
+    setGaleriePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+  }
+
+  function removeGalerie(idx: number) {
+    setGalerieFiles(prev => prev.filter((_, i) => i !== idx));
+    setGaleriePreviews(prev => prev.filter((_, i) => i !== idx));
+  }
+
+  async function uploadPhotos(userId: string) {
+    setUploadingPhotos(true);
+    try {
+      if (coverFile) {
+        const ext = coverFile.name.split(".").pop();
+        const path = `${userId}/cover.${ext}`;
+        const { error } = await supabase.storage.from("saloane").upload(path, coverFile, { upsert: true });
+        if (!error) {
+          const { data } = supabase.storage.from("saloane").getPublicUrl(path);
+          await supabase.from("saloane").update({ poza_url: `${data.publicUrl}?t=${Date.now()}` }).eq("user_id", userId);
+        }
+      }
+      if (galerieFiles.length > 0) {
+        const urls: string[] = [];
+        for (let i = 0; i < galerieFiles.length; i++) {
+          const file = galerieFiles[i];
+          const ext = file.name.split(".").pop();
+          const path = `${userId}/gallery/${Date.now()}_${i}.${ext}`;
+          const { error } = await supabase.storage.from("saloane").upload(path, file, { upsert: true });
+          if (!error) {
+            const { data } = supabase.storage.from("saloane").getPublicUrl(path);
+            urls.push(data.publicUrl);
+          }
+        }
+        if (urls.length > 0) {
+          await supabase.from("saloane").update({ galerie: urls }).eq("user_id", userId);
+        }
+      }
+    } finally {
+      setUploadingPhotos(false);
+    }
+  }
+
   async function next() {
     if (step === 0) {
       const e = validateStep0();
@@ -108,6 +166,7 @@ export default function ConfigurareSalon() {
       setSaving(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
+      setSavedUserId(user.id);
 
       const { error: salonError } = await supabase
         .from("saloane")
@@ -131,6 +190,9 @@ export default function ConfigurareSalon() {
 
       if (salonError) console.error("Salon upsert error:", salonError);
       setSaving(false);
+    }
+    if (step === 3 && savedUserId && (coverFile || galerieFiles.length > 0)) {
+      await uploadPhotos(savedUserId);
     }
     setErrors({});
     setStep(s => s + 1);
@@ -397,8 +459,84 @@ export default function ConfigurareSalon() {
               </div>
             )}
 
-            {/* ── STEP 3 — Gata! ── */}
+            {/* ── STEP 3 — Fotografii ── */}
             {step === 3 && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "#FFF3EA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Camera size={24} color="#FF6B00" strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A", margin: 0 }}>Fotografii salon</h2>
+                    <p style={{ fontSize: 13, color: "#6B7280", margin: "4px 0 0" }}>Poți adăuga sau modifica oricând din cont</p>
+                  </div>
+                </div>
+
+                {/* Cover photo */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Camera size={12} strokeWidth={2.5} /> Poza de profil / cover
+                  </div>
+                  <label style={{ display: "block", cursor: "pointer" }}>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={onCoverChange} />
+                    {coverPreview ? (
+                      <div style={{ position: "relative", width: "100%", height: 180, borderRadius: 16, overflow: "hidden", border: "2px solid #FF6B00" }}>
+                        <img src={coverPreview} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,.5)", color: "#fff", fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 50 }}>
+                          Schimbă foto
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ width: "100%", height: 180, borderRadius: 16, border: "1.5px dashed #FFDCC6", background: "#FFF3EA", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                        <Camera size={32} color="#FF6B00" strokeWidth={1.5} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#FF6B00" }}>Adaugă poza principală</span>
+                        <span style={{ fontSize: 12, color: "#9CA3AF" }}>JPG, PNG · max 10MB</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                {/* Galerie */}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                    <ImagePlus size={12} strokeWidth={2.5} /> Galerie foto
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                    {galeriePreviews.map((src, idx) => (
+                      <div key={idx} style={{ position: "relative", aspectRatio: "1", borderRadius: 12, overflow: "hidden", border: "1.5px solid #EBEBEB" }}>
+                        <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button onClick={() => removeGalerie(idx)} type="button"
+                          style={{ position: "absolute", top: 5, right: 5, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,.55)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <X size={13} color="#fff" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    ))}
+                    <label style={{ aspectRatio: "1", borderRadius: 12, border: "1.5px dashed #FFDCC6", background: "#FFF3EA", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer" }}>
+                      <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={onGalerieChange} />
+                      <ImagePlus size={22} color="#FF6B00" strokeWidth={1.8} />
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#FF6B00" }}>Adaugă</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Butoane */}
+                <button onClick={next} disabled={uploadingPhotos}
+                  style={{ marginTop: 24, width: "100%", padding: "14px 24px", borderRadius: 50, border: "none", background: uploadingPhotos ? "#FFB07A" : "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: uploadingPhotos ? "default" : "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif" }}>
+                  {uploadingPhotos ? "Se încarcă..." : "Salvează și continuă →"}
+                </button>
+                <button onClick={() => { setStep(s => s + 1); }} type="button"
+                  style={{ marginTop: 10, width: "100%", padding: "10px", borderRadius: 50, border: "1.5px solid #EBEBEB", background: "#fff", color: "#9CA3AF", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  Sari peste →
+                </button>
+                <button onClick={() => { setErrors({}); setStep(s => s - 1); }} type="button"
+                  style={{ marginTop: 6, width: "100%", padding: "10px", borderRadius: 50, border: "none", background: "transparent", color: "#9CA3AF", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  ← Înapoi
+                </button>
+              </div>
+            )}
+
+            {/* ── STEP 4 — Gata! ── */}
+            {step === 4 && (
               <div style={{ textAlign: "center" }}>
                 <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#FFF3EA", border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                   <CheckCircle size={40} color="#FF6B00" strokeWidth={1.8} />
@@ -468,6 +606,7 @@ export default function ConfigurareSalon() {
                 ← Înapoi
               </button>
             )}
+            {/* step 3 (Fotografii) are propriile butoane, step 4 (Gata!) nu are butoane de nav */}
 
           </div>
         </div>

@@ -1124,7 +1124,7 @@ export default function DashboardSalon() {
 
             {/* Right: user menu */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} avatarUrl={avatarUrl} />
+              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} avatarUrl={avatarUrl} pozaUrl={pozaUrl} />
             </div>
           </div>
         </header>
@@ -2348,7 +2348,7 @@ export default function DashboardSalon() {
   );
 }
 
-function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null }) {
+function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl, pozaUrl }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null; pozaUrl?: string | null }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<Tab | "logout" | null>(null);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
@@ -2373,7 +2373,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
         style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
         <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={14} color="#FF6B00" strokeWidth={2} /></span>
         <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, overflow: "hidden" }}>
-          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
+          {(avatarUrl || pozaUrl) ? <img src={avatarUrl || pozaUrl!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
         </span>
         {!isMobile && <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{numeComplet}</span>}
         <span style={{ fontSize: 10, color: c.xmuted, display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}>▼</span>
