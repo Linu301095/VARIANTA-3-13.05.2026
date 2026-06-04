@@ -43,7 +43,7 @@ export default function HomePage() {
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 20px 80px" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <div style={{ display: "inline-block", background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 18px", marginBottom: 20, fontSize: 13, fontWeight: 700, color: "#FF6B00", textAlign: "center", lineHeight: 1.5 }}>
-              <PawPrint size={14} strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 5, position: "relative", top: -1 }} /> Platforma care conectează stăpânii cu saloanele de grooming
+              Platforma care conectează stăpânii cu saloanele de grooming
             </div>
             <h1 style={{ fontSize: "clamp(28px, 4.5vw, 52px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.1, marginBottom: 14 }}>
               Programează rapid animalul tău la<br />
