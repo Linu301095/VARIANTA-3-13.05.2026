@@ -1890,6 +1890,32 @@ export default function DashboardSalon() {
               <div style={{ maxWidth: 560 }}>
                 <PageHeader icon={Store} title="Profilul salonului" sub="Actualizează datele publice ale salonului" />
 
+                {/* AVATAR SALON */}
+                <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><User size={14} color={c.text2} strokeWidth={2} /> Avatar salon</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                      {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={34} color="#FF6B00" strokeWidth={2} />}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <label style={{ cursor: "pointer" }}>
+                        <div style={{ padding: "10px 18px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif" }}>
+                          {uploadingAvatar ? "Se încarcă..." : avatarUrl ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Pencil size={13} strokeWidth={2} /> Schimbă</span> : <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Upload size={13} strokeWidth={2} /> Încarcă</span>}
+                        </div>
+                        <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingAvatar}
+                          onChange={e => { if (e.target.files?.[0]) uploadAvatar(e.target.files[0]); }} />
+                      </label>
+                      {avatarUrl && (
+                        <button onClick={stergeAvatar}
+                          style={{ padding: "10px 18px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Trash2 size={13} strokeWidth={2} /> Șterge</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: c.muted, marginTop: 10 }}>Apare în colțul din header. JPG, PNG, WEBP — max 5MB.</div>
+                </div>
+
                 {/* POZA DE PREZENTARE */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><ImageIcon size={14} color={c.text2} strokeWidth={2} /> Poza de prezentare</div>
@@ -2373,7 +2399,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
         style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
         <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={14} color="#FF6B00" strokeWidth={2} /></span>
         <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, overflow: "hidden" }}>
-          {(avatarUrl || pozaUrl) ? <img src={avatarUrl || pozaUrl!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
+          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
         </span>
         {!isMobile && <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{numeComplet}</span>}
         <span style={{ fontSize: 10, color: c.xmuted, display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}>▼</span>
