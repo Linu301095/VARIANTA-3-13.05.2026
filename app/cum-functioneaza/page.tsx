@@ -337,11 +337,12 @@ export default function CumFunctioneaza() {
                 </div>
               ))}
             </div>
-            <div style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
               <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 32px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
                 <Scissors size={16} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Înregistrează salonul gratuit →</span>
               </Link>
-              <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 10 }}>Fără card · Fără comision · Primele 3 luni gratuite</div>
+              <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", padding: "14px 28px", borderRadius: 50, border: "2px solid #FF6B00", background: "transparent", fontSize: 15, fontWeight: 800, color: "#FF6B00", textDecoration: "none", whiteSpace: "nowrap" }}>Planuri</Link>
+              <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 4 }}>Fără card · Fără comision · Primele 3 luni gratuite</div>
             </div>
           </div>
         </section>
@@ -349,15 +350,10 @@ export default function CumFunctioneaza() {
         {/* CTA FINAL */}
         <section style={{ background: "#1A1A1A", padding: "64px 20px", textAlign: "center" }}>
           <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Gata să începi?</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginBottom: 32, lineHeight: 1.7 }}>
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", lineHeight: 1.7 }}>
             Stăpâni — programare în 10 secunde, profil animal gata.<br />
             Saloane — primele 3 luni gratuite, fără card.
           </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}><PawPrint size={16} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Creează cont</span></Link>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}><Scissors size={16} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Înregistrează salonul gratuit</span></Link>
-            <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", padding: "14px 28px", borderRadius: 50, border: "2px solid #FF6B00", background: "transparent", fontSize: 15, fontWeight: 800, color: "#FF6B00", textDecoration: "none", whiteSpace: "nowrap" }}>Planuri</Link>
-          </div>
         </section>
       </main>
 
