@@ -42,8 +42,8 @@ export default function HomePage() {
         {/* HERO */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 20px 80px" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 18px", marginBottom: 20, fontSize: 13, fontWeight: 700, color: "#FF6B00" }}>
-              <PawPrint size={14} strokeWidth={2} style={{ flexShrink: 0 }} /> Platforma care conectează stăpânii cu saloanele de grooming
+            <div style={{ display: "inline-flex", alignItems: "flex-start", gap: 6, background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 18px", marginBottom: 20, fontSize: 13, fontWeight: 700, color: "#FF6B00" }}>
+              <PawPrint size={14} strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} /> Platforma care conectează stăpânii cu saloanele de grooming
             </div>
             <h1 style={{ fontSize: "clamp(28px, 4.5vw, 52px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.1, marginBottom: 14 }}>
               Programează rapid animalul tău la<br />
@@ -266,7 +266,7 @@ export default function HomePage() {
                     </div>
                   ))}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14, paddingTop: 14, borderTop: "1px solid #F3F4F6" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 12.5, fontWeight: 800 }}><Download size={13} strokeWidth={2} /> Raport Excel</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 12.5, fontWeight: 800 }}><Download size={13} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Raport Excel</span></span>
                     <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 600 }}>venituri · servicii · groomeri · talie</span>
                   </div>
                 </div>
@@ -286,8 +286,8 @@ export default function HomePage() {
           <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#fff", marginBottom: 16 }}>Ești gata să începi?</h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,.6)", marginBottom: 36 }}>Stăpâni — programare în 10 secunde.<br />Saloane — primele 3 luni gratuite.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}><PawPrint size={16} strokeWidth={2} /> Programează acum</Link>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}><Scissors size={16} strokeWidth={2} /> Înregistrează salonul gratuit</Link>
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}><PawPrint size={16} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Programează acum</span></Link>
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "rgba(255,255,255,.1)", border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}><Scissors size={16} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Înregistrează salonul gratuit</span></Link>
           </div>
         </section>
       </main>

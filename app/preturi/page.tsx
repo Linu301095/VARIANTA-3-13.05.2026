@@ -155,7 +155,7 @@ export default function Preturi() {
               <div style={{ fontSize: 14, opacity: .95 }}>
                 Doar pentru primele {LOCURI_PROMO} saloane înscrise pe CalyHub.
                 {locuriRamase !== null && (
-                  <strong style={{ display: "inline-flex", alignItems: "center", gap: 5 }}> <Flame size={14} strokeWidth={2} /> Au mai rămas {locuriRamase} {locuriRamase === 1 ? "loc" : "locuri"} din {LOCURI_PROMO}.</strong>
+                  <strong style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Flame size={14} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Au mai rămas {locuriRamase} {locuriRamase === 1 ? "loc" : "locuri"} din {LOCURI_PROMO}.</span></strong>
                 )}
               </div>
             </div>
