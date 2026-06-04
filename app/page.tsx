@@ -274,9 +274,8 @@ export default function HomePage() {
             </div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 0 0 4px rgba(255,107,0,.15), 0 8px 28px rgba(255,107,0,.55), 0 0 48px rgba(255,107,0,.25)" }}>
-                <Scissors size={16} strokeWidth={2} /> Înregistrează salonul gratuit →
+                <Scissors size={16} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Înregistrează salonul gratuit →</span>
               </Link>
-              <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", padding: "14px 28px", borderRadius: 50, border: "2px solid #FF6B00", background: "#fff", fontSize: 15, fontWeight: 800, color: "#FF6B00", textDecoration: "none" }}>Planuri</Link>
             </div>
           </div>
         </section>
