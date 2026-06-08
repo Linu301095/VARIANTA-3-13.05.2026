@@ -188,7 +188,7 @@ type Programare = {
 };
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type RecenzieUI = { id: string; user_id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null };
+type RecenzieUI = { id: string; user_id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null; raspuns_salon: string | null; raspuns_at: string | null };
 
 function timpRelativ(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -480,7 +480,7 @@ export default function DashboardClient() {
       setRecenziiLoading(true);
       const { data: recs } = await supabase
         .from("recenzii")
-        .select("id, user_id, rating, text, created_at")
+        .select("id, user_id, rating, text, created_at, raspuns_salon, raspuns_at")
         .eq("salon_id", salonSelectat)
         .order("created_at", { ascending: false });
       if (!recs || recs.length === 0) { setRecenziiSalon([]); setRecenziiLoading(false); return; }
@@ -491,6 +491,8 @@ export default function DashboardClient() {
         id: r.id, user_id: r.user_id, rating: r.rating, text: r.text, created_at: r.created_at,
         nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
         avatar_url: pmap.get(r.user_id)?.avatar_url || null,
+        raspuns_salon: r.raspuns_salon || null,
+        raspuns_at: r.raspuns_at || null,
       })));
       setRecenziiLoading(false);
     })();
@@ -590,6 +592,7 @@ export default function DashboardClient() {
     const noua: RecenzieUI = {
       id: inserted.id, user_id: inserted.user_id, rating: inserted.rating, text: inserted.text,
       created_at: inserted.created_at, nume: profilForm.numeComplet || "Client CalyHub", avatar_url: avatarUrl,
+      raspuns_salon: null, raspuns_at: null,
     };
     setRecenziiSalon(prev => [noua, ...prev]);
     setRatinguriSaloane(prev => {
@@ -1432,6 +1435,15 @@ export default function DashboardClient() {
                             <div style={{ display: "flex", gap: 1 }}>{Array.from({ length: r.rating }).map((_, i) => <Star key={i} size={13} color="#F59E0B" fill="#F59E0B" strokeWidth={0} />)}</div>
                           </div>
                           <p style={{ fontSize: 13, color: c.text2, lineHeight: 1.65, margin: 0 }}>{r.text}</p>
+                          {r.raspuns_salon && (
+                            <div style={{ marginTop: 12, background: theme === "dark" ? "rgba(255,107,0,.06)" : "#FFF8F2", borderRadius: 12, padding: "12px 14px" }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                                <span style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1 }}>Răspunsul salonului</span>
+                                {r.raspuns_at && <span style={{ fontSize: 10.5, color: c.muted }}>{timpRelativ(r.raspuns_at)}</span>}
+                              </div>
+                              <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.raspuns_salon}</p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import Cropper from "react-easy-crop";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, type LucideIcon } from "lucide-react";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -449,8 +449,9 @@ export default function DashboardSalon() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [salonData, setSalonData] = useState<any>(null);
   const [ratingSalon, setRatingSalon] = useState<{ medie: number; nr: number }>({ medie: 0, nr: 0 });
-  const [recenziiSalon, setRecenziiSalon] = useState<{ id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null }[]>([]);
+  const [recenziiSalon, setRecenziiSalon] = useState<{ id: string; user_id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null; raspuns_salon: string | null; raspuns_at: string | null; animal: { nume: string; rasa: string | null } | null }[]>([]);
   const [filtruRecenzii, setFiltruRecenzii] = useState<"toate" | "azi" | "ieri" | "trecut">("toate");
+  const [raspunsAiState, setRaspunsAiState] = useState<Record<string, { editare: boolean; draft: string; generand: boolean; trimitand: boolean; eroare: string | null }>>({});
   const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("azi");
   const [customStart, setCustomStart] = useState<string>(isoData(new Date()));
   const [customEnd, setCustomEnd] = useState<string>(isoData(new Date()));
@@ -933,6 +934,50 @@ export default function DashboardSalon() {
     salveaza(blocat ? "Client deblocat" : "Client blocat — nu mai poate rezerva");
   }
 
+  function setRaspunsState(id: string, patch: Partial<{ editare: boolean; draft: string; generand: boolean; trimitand: boolean; eroare: string | null }>) {
+    setRaspunsAiState(prev => {
+      const curent = prev[id] || { editare: false, draft: "", generand: false, trimitand: false, eroare: null };
+      return { ...prev, [id]: { ...curent, ...patch } };
+    });
+  }
+
+  async function genereazaRaspunsAi(r: typeof recenziiSalon[number]) {
+    setRaspunsState(r.id, { editare: true, generand: true, eroare: null });
+    try {
+      const res = await fetch("/api/ai/raspuns-recenzie", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          salonNume: salonData?.nume,
+          clientNume: r.nume,
+          rating: r.rating,
+          text: r.text,
+          animal: r.animal,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Eroare la generare");
+      setRaspunsState(r.id, { generand: false, draft: json.raspuns });
+    } catch (err: any) {
+      setRaspunsState(r.id, { generand: false, eroare: err?.message || "Nu am putut genera răspunsul. Încearcă din nou." });
+    }
+  }
+
+  async function trimiteRaspunsRecenzie(r: typeof recenziiSalon[number]) {
+    const draft = (raspunsAiState[r.id]?.draft || "").trim();
+    if (!draft) return;
+    setRaspunsState(r.id, { trimitand: true, eroare: null });
+    const acum = new Date().toISOString();
+    const { error } = await supabase.from("recenzii").update({ raspuns_salon: draft, raspuns_at: acum }).eq("id", r.id);
+    if (error) {
+      setRaspunsState(r.id, { trimitand: false, eroare: "Nu am putut salva răspunsul. Încearcă din nou." });
+      return;
+    }
+    setRecenziiSalon(prev => prev.map(x => x.id === r.id ? { ...x, raspuns_salon: draft, raspuns_at: acum } : x));
+    setRaspunsState(r.id, { trimitand: false, editare: false, draft: "" });
+    salveaza("Răspuns trimis");
+  }
+
   async function salveazaProgram() {
     if (!salonData?.id) return;
     const { error } = await supabase.from("saloane").update({ program }).eq("id", salonData.id);
@@ -959,20 +1004,39 @@ export default function DashboardSalon() {
     (async () => {
       const { data } = await supabase
         .from("recenzii")
-        .select("id, user_id, rating, text, created_at")
+        .select("id, user_id, rating, text, created_at, raspuns_salon, raspuns_at")
         .eq("salon_id", salonData.id)
         .order("created_at", { ascending: false });
       if (!data || data.length === 0) { setRatingSalon({ medie: 0, nr: 0 }); setRecenziiSalon([]); return; }
       const suma = (data as any[]).reduce((s, r) => s + r.rating, 0);
       setRatingSalon({ medie: suma / data.length, nr: data.length });
       const userIds = Array.from(new Set((data as any[]).map(r => r.user_id)));
-      const { data: profile } = await supabase.from("profiluri").select("id, nume, avatar_url").in("id", userIds);
+      const [{ data: profile }, { data: programari }] = await Promise.all([
+        supabase.from("profiluri").select("id, nume, avatar_url").in("id", userIds),
+        supabase.from("programari").select("user_id, animal_id, data").eq("salon_id", salonData.id).eq("status", "finalizat").in("user_id", userIds).order("data", { ascending: false }),
+      ]);
       const pmap = new Map((profile || []).map((p: any) => [p.id, p]));
-      setRecenziiSalon((data as any[]).map(r => ({
-        id: r.id, rating: r.rating, text: r.text, created_at: r.created_at,
-        nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
-        avatar_url: pmap.get(r.user_id)?.avatar_url || null,
-      })));
+      const ultimAnimalPerUser = new Map<string, string>();
+      for (const p of (programari || []) as any[]) {
+        if (!ultimAnimalPerUser.has(p.user_id) && p.animal_id) ultimAnimalPerUser.set(p.user_id, p.animal_id);
+      }
+      const animalIds = Array.from(new Set(Array.from(ultimAnimalPerUser.values())));
+      const { data: animale } = animalIds.length > 0
+        ? await supabase.from("animale").select("id, nume, rasa").in("id", animalIds)
+        : { data: [] as any[] };
+      const amap = new Map((animale || []).map((a: any) => [a.id, a]));
+      setRecenziiSalon((data as any[]).map(r => {
+        const animalId = ultimAnimalPerUser.get(r.user_id);
+        const animal = animalId ? amap.get(animalId) : null;
+        return {
+          id: r.id, user_id: r.user_id, rating: r.rating, text: r.text, created_at: r.created_at,
+          nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
+          avatar_url: pmap.get(r.user_id)?.avatar_url || null,
+          raspuns_salon: r.raspuns_salon || null,
+          raspuns_at: r.raspuns_at || null,
+          animal: animal ? { nume: animal.nume, rasa: animal.rasa || null } : null,
+        };
+      }));
     })();
   }, [salonData?.id]);
 
@@ -1535,6 +1599,62 @@ export default function DashboardSalon() {
                                       <div style={{ display: "flex", gap: 1 }}>{Array.from({ length: r.rating }).map((_, i) => <Star key={i} size={12} color="#F59E0B" strokeWidth={2} fill="#F59E0B" />)}</div>
                                     </div>
                                     <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.text}</p>
+
+                                    {/* Răspuns salon — AI sau existent */}
+                                    {(() => {
+                                      const st = raspunsAiState[r.id];
+                                      if (r.raspuns_salon && !st?.editare) {
+                                        return (
+                                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                                              <span style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1 }}>Răspunsul salonului</span>
+                                              {r.raspuns_at && <span style={{ fontSize: 10.5, color: c.muted }}>{new Date(r.raspuns_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</span>}
+                                            </div>
+                                            <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.raspuns_salon}</p>
+                                          </div>
+                                        );
+                                      }
+                                      if (st?.editare) {
+                                        return (
+                                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                            <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                                              <Sparkles size={12} strokeWidth={2} /> Răspuns AI {st.generand ? "— se generează…" : "(editabil)"}
+                                            </div>
+                                            <textarea
+                                              value={st.draft}
+                                              onChange={e => setRaspunsState(r.id, { draft: e.target.value })}
+                                              placeholder={st.generand ? "Claude scrie un răspuns personalizat…" : "Scrie sau editează răspunsul aici…"}
+                                              disabled={st.generand}
+                                              rows={3}
+                                              style={{ width: "100%", boxSizing: "border-box", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 12.5, fontFamily: "Nunito, sans-serif", lineHeight: 1.6, padding: "9px 11px", resize: "vertical" }}
+                                            />
+                                            {st.eroare && <div style={{ fontSize: 11.5, color: "#DC2626", marginTop: 6 }}>{st.eroare}</div>}
+                                            <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                                              <button onClick={() => genereazaRaspunsAi(r)} disabled={st.generand}
+                                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: `1.5px solid #FF6B00`, background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: st.generand ? "default" : "pointer", opacity: st.generand ? .6 : 1, fontFamily: "Nunito, sans-serif" }}>
+                                                <Sparkles size={13} strokeWidth={2} /> {st.draft ? "Regenerează" : "Generează"}
+                                              </button>
+                                              <button onClick={() => trimiteRaspunsRecenzie(r)} disabled={st.generand || st.trimitand || !st.draft.trim()}
+                                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 12, fontWeight: 800, cursor: (st.generand || st.trimitand || !st.draft.trim()) ? "default" : "pointer", opacity: (st.generand || st.trimitand || !st.draft.trim()) ? .5 : 1, fontFamily: "Nunito, sans-serif" }}>
+                                                <Send size={13} strokeWidth={2} /> {st.trimitand ? "Se trimite…" : "Trimite răspuns"}
+                                              </button>
+                                              <button onClick={() => setRaspunsState(r.id, { editare: false, draft: "", eroare: null })} disabled={st.generand || st.trimitand}
+                                                style={{ padding: "7px 14px", borderRadius: 50, border: "none", background: "transparent", color: c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                                Renunță
+                                              </button>
+                                            </div>
+                                          </div>
+                                        );
+                                      }
+                                      return (
+                                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                          <button onClick={() => genereazaRaspunsAi(r)}
+                                            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #FF6B00", background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                            <Sparkles size={13} strokeWidth={2} /> Generează răspuns AI
+                                          </button>
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 ))}
                               </div>
