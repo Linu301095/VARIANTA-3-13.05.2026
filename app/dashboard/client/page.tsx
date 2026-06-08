@@ -597,6 +597,17 @@ export default function DashboardClient() {
       const nrNou = cur.nr + 1;
       return { ...prev, [k]: { medie: (cur.medie * cur.nr + rating) / nrNou, nr: nrNou } };
     });
+    // Notificare pentru proprietarul salonului
+    const { data: salonRow } = await supabase.from("saloane").select("user_id").eq("id", prog.salon_id).single();
+    if (salonRow?.user_id) {
+      const { error: notifErr } = await supabase.from("notificari").insert({
+        user_id: salonRow.user_id,
+        tip: "recenzie_noua",
+        mesaj: `⭐ ${user?.nume || "Un client"} a lăsat o recenzie de ${rating}/5 — ${prog.serviciu}`,
+        programare_id: prog.id,
+      });
+      if (notifErr) console.error("Notificare recenzie nouă - eroare:", notifErr);
+    }
     salveaza("Recenzie trimisă, mulțumim!");
     return null;
   }
