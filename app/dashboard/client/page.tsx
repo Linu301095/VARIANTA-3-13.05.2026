@@ -479,19 +479,22 @@ export default function DashboardClient() {
     })();
   }, [saloaneList]);
 
-  // Încarcă recenziile salonului selectat
+  // Încarcă recenziile salonului selectat + abonament live (recenzii noi + răspunsuri salon)
   useEffect(() => {
     if (!salonSelectat) { setRecenziiSalon([]); return; }
-    (async () => {
-      setRecenziiLoading(true);
+    let activ = true;
+    async function incarcaRecenzii(arataLoading: boolean) {
+      if (arataLoading) setRecenziiLoading(true);
       const { data: recs } = await supabase
         .from("recenzii")
         .select("id, user_id, rating, text, created_at, raspuns_salon, raspuns_at")
         .eq("salon_id", salonSelectat)
         .order("created_at", { ascending: false });
+      if (!activ) return;
       if (!recs || recs.length === 0) { setRecenziiSalon([]); setRecenziiLoading(false); return; }
       const userIds = Array.from(new Set(recs.map((r: any) => r.user_id)));
       const { data: profile } = await supabase.from("profiluri").select("id, nume, avatar_url").in("id", userIds);
+      if (!activ) return;
       const pmap = new Map((profile || []).map((p: any) => [p.id, p]));
       setRecenziiSalon(recs.map((r: any) => ({
         id: r.id, user_id: r.user_id, rating: r.rating, text: r.text, created_at: r.created_at,
@@ -501,7 +504,14 @@ export default function DashboardClient() {
         raspuns_at: r.raspuns_at || null,
       })));
       setRecenziiLoading(false);
-    })();
+    }
+    incarcaRecenzii(true);
+    const canal = supabase
+      .channel(`recenzii-salon-${salonSelectat}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "recenzii", filter: `salon_id=eq.${salonSelectat}` },
+        () => { incarcaRecenzii(false); })
+      .subscribe();
+    return () => { activ = false; supabase.removeChannel(canal); };
   }, [salonSelectat]);
 
   useEffect(() => {
