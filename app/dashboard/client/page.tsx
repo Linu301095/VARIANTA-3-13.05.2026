@@ -654,6 +654,26 @@ export default function DashboardClient() {
 
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
 
+  function deschideNotificare(n: Notificare) {
+    if (!n.citit) {
+      setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+      supabase.from("notificari").update({ citit: true }).eq("id", n.id).then(({ error }) => {
+        if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
+      });
+    }
+    if (n.tip === "confirmat" || n.tip === "anulat") {
+      setTab("programari");
+    } else if (n.tip === "raspuns_recenzie") {
+      const prog = n.programare_id ? programari.find(p => p.id === n.programare_id) : null;
+      if (prog) {
+        setSalonSelectat(prog.salon_id);
+        setProfilSalonTab("recenzii");
+      } else {
+        setTab("saloane");
+      }
+    }
+  }
+
   async function uploadAvatar(file: File) {
     if (!userId) return;
     setUploadingAvatar(true);
@@ -1953,14 +1973,7 @@ export default function DashboardClient() {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           {g.items.map(n => (
-                            <div key={n.id} onClick={() => {
-                              if (!n.citit) {
-                                setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
-                                supabase.from("notificari").update({ citit: true }).eq("id", n.id).then(({ error }) => {
-                                  if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
-                                });
-                              }
-                            }}
+                            <div key={n.id} onClick={() => deschideNotificare(n)}
                               style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
                               <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "raspuns_recenzie" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
                               <div style={{ flex: 1 }}>

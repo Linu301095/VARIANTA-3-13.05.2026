@@ -163,7 +163,7 @@ const btnPrimary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50
 /* ───────────────────────── Agenda — calendar pe zi ───────────────────────── */
 function AgendaCalendar({
   programari, echipa, program, agendaZi, setAgendaZi, filtruTalie, setFiltruTalie,
-  accepta, respinge, clientiBlocati, abateriMap, toggleBlocClient, c, theme,
+  accepta, respinge, clientiBlocati, abateriMap, toggleBlocClient, highlightProgramare, onHighlightConsumat, c, theme,
 }: {
   programari: ProgramareSalon[];
   echipa: Groomer[];
@@ -177,6 +177,8 @@ function AgendaCalendar({
   clientiBlocati: string[];
   abateriMap: Record<string, number>;
   toggleBlocClient: (userId: string) => void;
+  highlightProgramare?: string | null;
+  onHighlightConsumat?: () => void;
   c: ColorSet;
   theme: "light" | "dark";
 }) {
@@ -214,6 +216,18 @@ function AgendaCalendar({
   if (fallbackAppts.length > 0 || cols.length === 0) {
     cols.push({ key: "__none__", nume: echipa.length === 0 ? "Salon" : "Fără specialist", appts: fallbackAppts });
   }
+  // La click pe notificarea „programare nouă": selectează coloana programării evidențiate
+  useEffect(() => {
+    if (!highlightProgramare) return;
+    const prog = apptsZi.find(p => p.id === highlightProgramare);
+    if (prog) {
+      const colKey = prog.groomer && cols.some(x => x.key === prog.groomer) ? prog.groomer : "__none__";
+      setColSel(colKey);
+    }
+    const t = setTimeout(() => onHighlightConsumat?.(), 4000);
+    return () => clearTimeout(t);
+  }, [highlightProgramare]);
+
   // Specialistul afișat (un singur calendar pe ecran — fără scroll orizontal)
   const activeCol = cols.find(x => x.key === colSel) || cols[0];
   const activeLanes = activeCol ? withLanes(activeCol.appts) : { info: [], laneCount: 1 };
@@ -402,9 +416,10 @@ function AgendaCalendar({
                 else if (nou) { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFE8D6"; border = "#FF6B00"; accent = "#C2410C"; bar = "#FF6B00"; }
                 else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.20)" : "#C7F2DE"; border = "#10B981"; accent = "#047857"; bar = "#10B981"; }
                 const compact = h < 46;
+                const evidentiat = highlightProgramare === p.id;
                 return (
                   <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
-                    style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou ? 2 : 1.5}px solid ${border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "3px 8px 3px 10px" : "6px 10px 6px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1 }}>
+                    style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou || evidentiat ? 2 : 1.5}px solid ${evidentiat ? "#FF6B00" : border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "3px 8px 3px 10px" : "6px 10px 6px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1, boxShadow: evidentiat ? "0 0 0 4px rgba(255,107,0,.35)" : "none", transition: "box-shadow .2s" }}>
                     <div style={{ fontSize: 11.5, fontWeight: 800, color: accent, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>{p.ora}–{minToTime(e)}{p.observatii ? <FileEdit size={10} color={accent} strokeWidth={2} /> : null}</div>
                     {!compact && <div style={{ fontSize: 13, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
                     {!compact && h >= 56 && <div style={{ fontSize: 11.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 4 }}><Scissors size={10} color={c.muted} strokeWidth={2} /> {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>}
@@ -449,7 +464,7 @@ export default function DashboardSalon() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [salonData, setSalonData] = useState<any>(null);
   const [ratingSalon, setRatingSalon] = useState<{ medie: number; nr: number }>({ medie: 0, nr: 0 });
-  const [recenziiSalon, setRecenziiSalon] = useState<{ id: string; user_id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null; raspuns_salon: string | null; raspuns_at: string | null; animal: { nume: string; rasa: string | null } | null }[]>([]);
+  const [recenziiSalon, setRecenziiSalon] = useState<{ id: string; user_id: string; programare_id: string | null; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null; raspuns_salon: string | null; raspuns_at: string | null; animal: { nume: string; rasa: string | null } | null }[]>([]);
   const [filtruRecenzii, setFiltruRecenzii] = useState<"toate" | "azi" | "ieri" | "trecut">("toate");
   const [raspunsAiState, setRaspunsAiState] = useState<Record<string, { editare: boolean; draft: string; generand: boolean; trimitand: boolean; eroare: string | null }>>({});
   const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("azi");
@@ -505,6 +520,7 @@ export default function DashboardSalon() {
   }, [servicii]);
   const [zilaSelectata, setZilaSelectata] = useState<string>(() => isoData(new Date()));
   const [agendaZi, setAgendaZi] = useState<string>(() => isoData(new Date()));
+  const [highlightProgramare, setHighlightProgramare] = useState<string | null>(null);
   const [filtruTalie, setFiltruTalie] = useState<"toate" | "mica" | "medie" | "mare">("toate");
   const [animaleIstoric, setAnimaleIstoric] = useState<AnimalIstoric[]>([]);
   const [cautareAnimal, setCautareAnimal] = useState("");
@@ -833,6 +849,23 @@ export default function DashboardSalon() {
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
 
+  function deschideNotificare(n: Notificare) {
+    if (!n.citit) {
+      setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
+      supabase.from("notificari").update({ citit: true }).eq("id", n.id).then(({ error }) => {
+        if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
+      });
+    }
+    if (n.tip === "programare_noua") {
+      const prog = n.programare_id ? programari.find(p => p.id === n.programare_id) : null;
+      if (prog) { setAgendaZi(prog.data); setHighlightProgramare(prog.id); }
+      setTab("agenda");
+    } else if (n.tip === "recenzie_noua") {
+      setStatExtins("rating");
+      setTab("statistici");
+    }
+  }
+
   async function genereazaRaportExcel() {
     const { start, end, label } = intervalPerioada(perioadaStat, customStart, customEnd);
     const inRange = (d: string) => d >= start && d <= end;
@@ -981,7 +1014,7 @@ export default function DashboardSalon() {
         user_id: r.user_id,
         tip: "raspuns_recenzie",
         mesaj: `⭐ ${numeSalon} a răspuns la recenzia ta`,
-        programare_id: null,
+        programare_id: r.programare_id || null,
       });
       if (notifErr) console.error("Notificare răspuns recenzie - eroare:", notifErr);
     }
@@ -1014,7 +1047,7 @@ export default function DashboardSalon() {
     (async () => {
       const { data } = await supabase
         .from("recenzii")
-        .select("id, user_id, rating, text, created_at, raspuns_salon, raspuns_at")
+        .select("id, user_id, programare_id, rating, text, created_at, raspuns_salon, raspuns_at")
         .eq("salon_id", salonData.id)
         .order("created_at", { ascending: false });
       if (!data || data.length === 0) { setRatingSalon({ medie: 0, nr: 0 }); setRecenziiSalon([]); return; }
@@ -1039,7 +1072,7 @@ export default function DashboardSalon() {
         const animalId = ultimAnimalPerUser.get(r.user_id);
         const animal = animalId ? amap.get(animalId) : null;
         return {
-          id: r.id, user_id: r.user_id, rating: r.rating, text: r.text, created_at: r.created_at,
+          id: r.id, user_id: r.user_id, programare_id: r.programare_id || null, rating: r.rating, text: r.text, created_at: r.created_at,
           nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
           avatar_url: pmap.get(r.user_id)?.avatar_url || null,
           raspuns_salon: r.raspuns_salon || null,
@@ -1255,6 +1288,8 @@ export default function DashboardSalon() {
                 clientiBlocati={clientiBlocati}
                 abateriMap={abateriMap}
                 toggleBlocClient={toggleBlocClient}
+                highlightProgramare={highlightProgramare}
+                onHighlightConsumat={() => setHighlightProgramare(null)}
                 c={c}
                 theme={theme}
               />
@@ -1807,14 +1842,7 @@ export default function DashboardSalon() {
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                             {g.items.map(n => (
-                              <div key={n.id} onClick={() => {
-                                if (!n.citit) {
-                                  setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: true } : x));
-                                  supabase.from("notificari").update({ citit: true }).eq("id", n.id).then(({ error }) => {
-                                    if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
-                                  });
-                                }
-                              }}
+                              <div key={n.id} onClick={() => deschideNotificare(n)}
                                 style={{ background: n.citit ? c.surface : (theme === "dark" ? "rgba(255,107,0,0.24)" : "rgba(255,107,0,0.16)"), borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
                                 <div style={{ flexShrink: 0 }}>{n.tip === "programare_noua" ? <Bell size={20} color="#FF6B00" strokeWidth={2} /> : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "recenzie_noua" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : <Lightbulb size={20} color="#6B7280" strokeWidth={2} />}</div>
                                 <div style={{ flex: 1 }}>
