@@ -1978,7 +1978,7 @@ export default function DashboardClient() {
                               }
                             }}
                               style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                              <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
+                              <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "raspuns_recenzie" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
                                 <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
