@@ -291,10 +291,7 @@ export default function DashboardClient() {
   const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
   const [recenziiLoading, setRecenziiLoading] = useState(false);
   const [ratinguriSaloane, setRatinguriSaloane] = useState<Record<string, { medie: number; nr: number }>>({});
-  const [recenzieRating, setRecenzieRating] = useState(0);
-  const [recenzieText, setRecenzieText] = useState("");
-  const [recenzieLoading, setRecenzieLoading] = useState(false);
-  const [recenzieError, setRecenzieError] = useState("");
+  const [recenziiProgramari, setRecenziiProgramari] = useState<Record<string, { id: string; rating: number; text: string }>>({});
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
 
   useEffect(() => {
@@ -450,6 +447,16 @@ export default function DashboardClient() {
           groomer: p.groomer || null,
         })));
       }
+      const { data: recs } = await supabase
+        .from("recenzii")
+        .select("id, programare_id, rating, text")
+        .eq("user_id", userId)
+        .not("programare_id", "is", null);
+      if (recs) {
+        const map: Record<string, { id: string; rating: number; text: string }> = {};
+        for (const r of recs as any[]) map[r.programare_id] = { id: r.id, rating: r.rating, text: r.text };
+        setRecenziiProgramari(map);
+      }
     }
     loadUser();
   }, []);
@@ -475,7 +482,6 @@ export default function DashboardClient() {
   // Încarcă recenziile salonului selectat
   useEffect(() => {
     if (!salonSelectat) { setRecenziiSalon([]); return; }
-    setRecenzieRating(0); setRecenzieText(""); setRecenzieError("");
     (async () => {
       setRecenziiLoading(true);
       const { data: recs } = await supabase
@@ -579,29 +585,20 @@ export default function DashboardClient() {
     router.push("/login");
   }
 
-  async function trimiteRecenzie(salonId: string | number, progId: string | null) {
-    if (recenzieRating < 1) { setRecenzieError("Alege un număr de stele."); return; }
-    if (recenzieText.trim().length < 10) { setRecenzieError("Scrie minim 10 caractere."); return; }
-    setRecenzieError(""); setRecenzieLoading(true);
+  async function trimiteRecenziePentruProgramare(prog: Programare, rating: number, text: string): Promise<string | null> {
     const { data: inserted, error } = await supabase.from("recenzii").insert({
-      salon_id: salonId, user_id: userId, programare_id: progId,
-      rating: recenzieRating, text: recenzieText.trim(),
-    }).select("id, user_id, rating, text, created_at").single();
-    setRecenzieLoading(false);
-    if (error) { setRecenzieError("Nu am putut trimite recenzia. Poate ai recenzat deja."); return; }
-    const noua: RecenzieUI = {
-      id: inserted.id, user_id: inserted.user_id, rating: inserted.rating, text: inserted.text,
-      created_at: inserted.created_at, nume: profilForm.numeComplet || "Client CalyHub", avatar_url: avatarUrl,
-      raspuns_salon: null, raspuns_at: null,
-    };
-    setRecenziiSalon(prev => [noua, ...prev]);
+      salon_id: prog.salon_id, user_id: userId, programare_id: prog.id,
+      rating, text,
+    }).select("id, rating, text").single();
+    if (error) return "Nu am putut trimite recenzia. Poate ai evaluat deja această programare.";
+    setRecenziiProgramari(prev => ({ ...prev, [prog.id]: { id: inserted.id, rating: inserted.rating, text: inserted.text } }));
     setRatinguriSaloane(prev => {
-      const k = String(salonId); const cur = prev[k] || { medie: 0, nr: 0 };
+      const k = String(prog.salon_id); const cur = prev[k] || { medie: 0, nr: 0 };
       const nrNou = cur.nr + 1;
-      return { ...prev, [k]: { medie: (cur.medie * cur.nr + recenzieRating) / nrNou, nr: nrNou } };
+      return { ...prev, [k]: { medie: (cur.medie * cur.nr + rating) / nrNou, nr: nrNou } };
     });
-    setRecenzieRating(0); setRecenzieText(""); setSavedMsg("Recenzie trimisă, mulțumim!");
-    setTimeout(() => setSavedMsg(""), 2500);
+    salveaza("Recenzie trimisă, mulțumim!");
+    return null;
   }
 
   async function confirmaAnulare() {
@@ -778,9 +775,6 @@ export default function DashboardClient() {
   if (salonSelectat && salon) {
     const nrRecenzii = recenziiSalon.length;
     const medieRecenzii = nrRecenzii > 0 ? recenziiSalon.reduce((s, r) => s + r.rating, 0) / nrRecenzii : 0;
-    const userAScris = recenziiSalon.some(r => r.user_id === userId);
-    const areProgramareFinalizata = programari.some(p => String(p.salon_id) === String(salonSelectat) && p.status === "finalizat");
-    const poateRecenza = areProgramareFinalizata && !userAScris;
 
     /* Helper: lightbox overlay (used in both profile and booking views) */
     const Lightbox = lightboxIdx !== null ? (() => {
@@ -1380,42 +1374,9 @@ export default function DashboardClient() {
                       </div>
                     )}
 
-                    {/* Formular adăugare recenzie */}
-                    {poateRecenza && (
-                      <div style={{ background: c.surface, borderRadius: 18, border: `2px solid #FF6B00`, padding: "20px 22px", marginBottom: 20 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: c.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}><Pencil size={14} color={c.text} strokeWidth={2} /> Lasă o recenzie</div>
-                        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-                          {[1, 2, 3, 4, 5].map(s => (
-                            <button key={s} onClick={() => setRecenzieRating(s)}
-                              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, transition: "opacity .1s" }}
-                              aria-label={`${s} stele`}><Star size={28} color="#F59E0B" fill={s <= recenzieRating ? "#F59E0B" : "none"} strokeWidth={s <= recenzieRating ? 0 : 1.5} /></button>
-                          ))}
-                        </div>
-                        <textarea
-                          value={recenzieText}
-                          onChange={e => setRecenzieText(e.target.value)}
-                          placeholder="Cum a fost experiența ta? (minim 10 caractere)"
-                          rows={3}
-                          style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: 12, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 14, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none", resize: "vertical", marginBottom: 12 }}
-                        />
-                        {recenzieError && <div style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", marginBottom: 10 }}>{recenzieError}</div>}
-                        <button onClick={() => trimiteRecenzie(salonSelectat, programari.find(p => String(p.salon_id) === String(salonSelectat) && p.status === "finalizat")?.id || null)}
-                          disabled={recenzieLoading}
-                          style={{ ...btnPrimary, opacity: recenzieLoading ? .6 : 1, cursor: recenzieLoading ? "wait" : "pointer" }}>
-                          {recenzieLoading ? "Se trimite..." : "Trimite recenzia"}
-                        </button>
-                      </div>
-                    )}
-                    {!userAScris && !areProgramareFinalizata && (
-                      <div style={{ background: c.orangeAccent, borderRadius: 14, border: `1.5px solid ${c.orangeBorder}`, padding: "14px 16px", marginBottom: 20, fontSize: 13, color: c.text2, fontWeight: 600 }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Lightbulb size={14} color="#FF6B00" strokeWidth={2} /> Poți lăsa o recenzie după ce ai o programare finalizată la acest salon.</span>
-                      </div>
-                    )}
-                    {userAScris && (
-                      <div style={{ background: theme === "dark" ? "rgba(16,185,129,.12)" : "#ECFDF5", borderRadius: 14, border: "1.5px solid rgba(16,185,129,.3)", padding: "14px 16px", marginBottom: 20, fontSize: 13, color: "#10B981", fontWeight: 700 }}>
-                        ✓ Ai lăsat deja o recenzie pentru acest salon. Mulțumim!
-                      </div>
-                    )}
+                    <div style={{ background: c.orangeAccent, borderRadius: 14, border: `1.5px solid ${c.orangeBorder}`, padding: "14px 16px", marginBottom: 20, fontSize: 13, color: c.text2, fontWeight: 600 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Lightbulb size={14} color="#FF6B00" strokeWidth={2} /> Poți evalua serviciul direct din „Programările mele", după fiecare vizită finalizată.</span>
+                    </div>
 
                     {/* Lista recenzii */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1761,7 +1722,9 @@ export default function DashboardClient() {
               {trecute.length > 0 && (<>
                 <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Istoric</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {trecute.map(p => <CardProgramare key={p.id} p={p} />)}
+                  {trecute.map(p => <CardProgramare key={p.id} p={p}
+                    recenzie={recenziiProgramari[p.id] || null}
+                    onTrimiteRecenzie={trimiteRecenziePentruProgramare} />)}
                 </div>
               </>)}
               {programari.length === 0 && (
@@ -2284,33 +2247,100 @@ function formatData(iso: string): string {
   } catch { return iso; }
 }
 
-function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere }: { p: Programare; onAnuleazaConfirmat?: (p: Programare) => void; onRetrageCerere?: (id: string) => void }) {
+function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onTrimiteRecenzie }: { p: Programare; onAnuleazaConfirmat?: (p: Programare) => void; onRetrageCerere?: (id: string) => void; recenzie?: { id: string; rating: number; text: string } | null; onTrimiteRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null> }) {
   const { theme, c } = useContext(ThemeCtx);
   const st = statusStyle(theme)[p.status];
   const oreRamase = (new Date(`${p.data}T${p.ora}:00`).getTime() - Date.now()) / 3600000;
   const poateAnula = oreRamase >= 12;
   const anulBtn: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "4px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" };
+
+  const [evaluareDeschisa, setEvaluareDeschisa] = useState(false);
+  const [ratingNou, setRatingNou] = useState(0);
+  const [textNou, setTextNou] = useState("");
+  const [eroareEvaluare, setEroareEvaluare] = useState("");
+  const [seTrimiteEvaluare, setSeTrimiteEvaluare] = useState(false);
+
+  async function handleTrimiteEvaluare() {
+    if (ratingNou < 1) { setEroareEvaluare("Alege un număr de stele."); return; }
+    if (textNou.trim().length < 10) { setEroareEvaluare("Scrie minim 10 caractere."); return; }
+    setEroareEvaluare(""); setSeTrimiteEvaluare(true);
+    const eroare = await onTrimiteRecenzie?.(p, ratingNou, textNou.trim()) ?? null;
+    setSeTrimiteEvaluare(false);
+    if (eroare) { setEroareEvaluare(eroare); return; }
+    setEvaluareDeschisa(false); setRatingNou(0); setTextNou("");
+  }
+
   return (
-    <div style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", boxShadow: c.cardShadow }}>
-      <div style={{ width: 46, height: 46, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={20} color="#FF6B00" strokeWidth={2} /></div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.salon_nume}</div>
-        <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.serviciu}</div>
-        {p.groomer && <div style={{ fontSize: 12, color: c.muted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.muted} strokeWidth={2} /> {p.groomer}</div>}
-        <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><CalendarDays size={11} strokeWidth={2} /> {formatData(p.data)} · <Clock size={11} strokeWidth={2} /> {p.ora}</div>
+    <div style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, boxShadow: c.cardShadow }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ width: 46, height: 46, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={20} color="#FF6B00" strokeWidth={2} /></div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{p.salon_nume}</div>
+          <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.serviciu}</div>
+          {p.groomer && <div style={{ fontSize: 12, color: c.muted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.muted} strokeWidth={2} /> {p.groomer}</div>}
+          <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><CalendarDays size={11} strokeWidth={2} /> {formatData(p.data)} · <Clock size={11} strokeWidth={2} /> {p.ora}</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: st.bg, padding: "4px 12px", borderRadius: 50 }}>{st.label}</span>
+          {p.pret > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{p.pret} RON</div>}
+          {onRetrageCerere && p.status === "în așteptare" && (
+            <button onClick={() => onRetrageCerere(p.id)} style={anulBtn}>Anulează</button>
+          )}
+          {onAnuleazaConfirmat && p.status === "confirmat" && (
+            poateAnula
+              ? <button onClick={() => onAnuleazaConfirmat(p)} style={anulBtn}>Anulează</button>
+              : <span style={{ fontSize: 10.5, fontWeight: 700, color: c.xmuted, textAlign: "right", lineHeight: 1.3, display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={10} strokeWidth={2} /> Anulare blocată<br />(sub 12h)</span>
+          )}
+        </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
-        <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: st.bg, padding: "4px 12px", borderRadius: 50 }}>{st.label}</span>
-        {p.pret > 0 && <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{p.pret} RON</div>}
-        {onRetrageCerere && p.status === "în așteptare" && (
-          <button onClick={() => onRetrageCerere(p.id)} style={anulBtn}>Anulează</button>
-        )}
-        {onAnuleazaConfirmat && p.status === "confirmat" && (
-          poateAnula
-            ? <button onClick={() => onAnuleazaConfirmat(p)} style={anulBtn}>Anulează</button>
-            : <span style={{ fontSize: 10.5, fontWeight: 700, color: c.xmuted, textAlign: "right", lineHeight: 1.3, display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={10} strokeWidth={2} /> Anulare blocată<br />(sub 12h)</span>
-        )}
-      </div>
+
+      {p.status === "finalizat" && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
+          {recenzie ? (
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#10B981", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Ai evaluat acest serviciu</div>
+              <div style={{ display: "flex", gap: 2, marginBottom: 6 }}>
+                {[1, 2, 3, 4, 5].map(s => <Star key={s} size={15} color="#F59E0B" fill={s <= recenzie.rating ? "#F59E0B" : "none"} strokeWidth={s <= recenzie.rating ? 0 : 1.5} />)}
+              </div>
+              <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>„{recenzie.text}"</div>
+            </div>
+          ) : evaluareDeschisa ? (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}><Pencil size={13} color={c.text} strokeWidth={2} /> Evaluează serviciul</div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button key={s} onClick={() => setRatingNou(s)}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, transition: "opacity .1s" }}
+                    aria-label={`${s} stele`}><Star size={26} color="#F59E0B" fill={s <= ratingNou ? "#F59E0B" : "none"} strokeWidth={s <= ratingNou ? 0 : 1.5} /></button>
+                ))}
+              </div>
+              <textarea
+                value={textNou}
+                onChange={e => setTextNou(e.target.value)}
+                placeholder="Cum a fost experiența ta? (minim 10 caractere)"
+                rows={3}
+                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: 12, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 14, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none", resize: "vertical", marginBottom: 10 }}
+              />
+              {eroareEvaluare && <div style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", marginBottom: 10 }}>{eroareEvaluare}</div>}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={handleTrimiteEvaluare} disabled={seTrimiteEvaluare}
+                  style={{ padding: "9px 20px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 16px rgba(255,107,0,.35)", opacity: seTrimiteEvaluare ? .6 : 1, cursor: seTrimiteEvaluare ? "wait" : "pointer" }}>
+                  {seTrimiteEvaluare ? "Se trimite..." : "Trimite evaluarea"}
+                </button>
+                <button onClick={() => { setEvaluareDeschisa(false); setRatingNou(0); setTextNou(""); setEroareEvaluare(""); }}
+                  style={{ padding: "9px 20px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: "none", color: c.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  Renunță
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setEvaluareDeschisa(true)}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+              <Star size={14} color="#FF6B00" strokeWidth={2} /> Evaluează serviciul
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
