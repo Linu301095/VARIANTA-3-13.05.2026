@@ -976,11 +976,13 @@ export default function DashboardSalon() {
     setRecenziiSalon(prev => prev.map(x => x.id === r.id ? { ...x, raspuns_salon: draft, raspuns_at: acum } : x));
     setRaspunsState(r.id, { trimitand: false, editare: false, draft: "" });
     if (r.user_id) {
-      await supabase.from("notificari").insert({
+      const { error: notifErr } = await supabase.from("notificari").insert({
         user_id: r.user_id,
         tip: "raspuns_recenzie",
         mesaj: `⭐ ${numeSalon} a răspuns la recenzia ta`,
+        programare_id: null,
       });
+      if (notifErr) console.error("Notificare răspuns recenzie - eroare:", notifErr);
     }
     salveaza("Răspuns trimis");
   }
