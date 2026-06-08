@@ -968,9 +968,10 @@ export default function DashboardSalon() {
     if (!draft) return;
     setRaspunsState(r.id, { trimitand: true, eroare: null });
     const acum = new Date().toISOString();
-    const { error } = await supabase.from("recenzii").update({ raspuns_salon: draft, raspuns_at: acum }).eq("id", r.id);
-    if (error) {
-      setRaspunsState(r.id, { trimitand: false, eroare: "Nu am putut salva răspunsul. Încearcă din nou." });
+    const { data: updated, error } = await supabase.from("recenzii").update({ raspuns_salon: draft, raspuns_at: acum }).eq("id", r.id).select("id");
+    if (error || !updated || updated.length === 0) {
+      if (error) console.error("Salvare răspuns recenzie - eroare:", error);
+      setRaspunsState(r.id, { trimitand: false, eroare: "Nu am putut salva răspunsul (verifică permisiunile bazei de date). Încearcă din nou." });
       return;
     }
     setRecenziiSalon(prev => prev.map(x => x.id === r.id ? { ...x, raspuns_salon: draft, raspuns_at: acum } : x));
