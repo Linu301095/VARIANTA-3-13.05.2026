@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
 import ResetTheme from "../components/ResetTheme";
-import { PawPrint, Scissors, Search, Calendar, BarChart3, Smartphone, Star, Shield, Wallet, User, Gift, Download, AlertTriangle } from "lucide-react";
+import { PawPrint, Scissors, Search, Calendar, BarChart3, Smartphone, Star, Shield, Wallet, User, Gift, Download, AlertTriangle, Sparkles, MessageSquare, BellRing, ImagePlus } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "CalyHub — Programări grooming online pentru câini și pisici",
@@ -280,8 +280,38 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* AI TEASER */}
+        <section style={{ background: "#1A1A1A", padding: "72px 20px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
+                <Sparkles size={14} strokeWidth={2} /> Noutate — în curând
+              </div>
+              <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#fff", lineHeight: 1.15 }}>
+                Nu doar un calendar online.<br /><span style={{ color: "#FF8C42" }}>Un asistent AI pentru salonul tău.</span>
+              </h2>
+              <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", maxWidth: 560, margin: "14px auto 0", lineHeight: 1.7 }}>
+                CalyHub învață din datele salonului tău și te ajută să ții clienții aproape — automat.
+              </p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+              {[
+                { Icon: MessageSquare, title: "Răspunsuri AI la recenzii", desc: "Un răspuns personalizat, generat în câteva secunde — îl editezi sau îl trimiți direct." },
+                { Icon: BellRing, title: "Alertă clienți inactivi", desc: "AI observă când un client a depășit intervalul lui obișnuit de vizită și îți pregătește mesajul de reactivare." },
+                { Icon: ImagePlus, title: "Postări sociale din poze", desc: "Încarci poza cu rezultatul final, AI recunoaște rasa și scrie caption-ul + hashtag-urile pentru Instagram." },
+              ].map(({ Icon, title, desc }) => (
+                <div key={title} style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 20, padding: "26px 24px" }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 14, background: "rgba(255,140,66,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon size={24} color="#FF8C42" strokeWidth={1.8} /></div>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{title}</h3>
+                  <p style={{ fontSize: 13.5, color: "rgba(255,255,255,.6)", lineHeight: 1.65 }}>{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA FINAL */}
-        <section style={{ background: "#1A1A1A", padding: "72px 20px", textAlign: "center" }}>
+        <section style={{ background: "#1A1A1A", padding: "72px 20px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,.08)" }}>
           <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#fff", marginBottom: 16 }}>Ești gata să începi?</h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,.6)", marginBottom: 36 }}>Stăpâni — programare în 10 secunde.<br />Saloane — primele 3 luni gratuite.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>

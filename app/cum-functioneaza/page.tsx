@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
-import { PawPrint, Scissors, Search, Calendar, BarChart3, Smartphone, Star, Shield, Wallet, User, Gift, Bell, ClipboardList, Ban, Settings, Download, FileText, Store, AlertTriangle, type LucideIcon } from "lucide-react";
+import { PawPrint, Scissors, Search, Calendar, BarChart3, Smartphone, Star, Shield, Wallet, User, Gift, Bell, ClipboardList, Ban, Settings, Download, FileText, Store, AlertTriangle, Sparkles, MessageSquare, BellRing, ImagePlus, type LucideIcon } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Cum funcționează CalyHub — Programări grooming în 4 pași",
@@ -322,6 +322,34 @@ export default function CumFunctioneaza() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 24, flexWrap: "wrap" }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 14, fontWeight: 800 }}><Download size={15} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Descarcă raport Excel</span></span>
                 <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>Foi separate: venituri, programări, clienți, servicii, distribuție pe talie — pentru contabil sau pentru tine.</span>
+              </div>
+            </div>
+
+            {/* CENTRUL DE COMANDĂ AI — ce ne face diferiți */}
+            <div style={{ background: "#1A1A1A", borderRadius: 28, padding: "44px 36px", marginBottom: 48 }}>
+              <div style={{ textAlign: "center", marginBottom: 40 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
+                  <Sparkles size={14} strokeWidth={2} /> Asistent AI — în curând
+                </div>
+                <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 12 }}>
+                  Ce ne face diferiți: <span style={{ color: "#FF8C42" }}>un asistent AI dedicat salonului tău</span>
+                </h2>
+                <p style={{ fontSize: 14.5, color: "rgba(255,255,255,.6)", maxWidth: 620, margin: "0 auto", lineHeight: 1.7 }}>
+                  CalyHub nu e doar o agendă online. Folosim datele deja existente despre clienți, animale și programări ca să te ajutăm să economisești timp și să ții clienții aproape.
+                </p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 22 }}>
+                {[
+                  { Icon: MessageSquare, title: "Răspunsuri AI la recenzii", desc: "Primești o recenzie nouă? AI scrie un răspuns personalizat — folosind numele și rasa animalului — pe care îl poți edita sau trimite direct, în câteva secunde." },
+                  { Icon: BellRing, title: "Alertă clienți inactivi", desc: "AI urmărește intervalul obișnuit de vizită al fiecărui client și te anunță când cineva a întârziat să revină — cu un mesaj de reactivare gata pregătit." },
+                  { Icon: ImagePlus, title: "Postări sociale din poze", desc: "Încarci poza cu rezultatul final al unui tuns, AI recunoaște rasa și generează un caption + hashtag-uri pentru Instagram sau Facebook — gata de postat." },
+                ].map(({ Icon, title, desc }) => (
+                  <div key={title} style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 20, padding: "26px 24px" }}>
+                    <div style={{ width: 50, height: 50, borderRadius: 15, background: "rgba(255,140,66,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon size={25} color="#FF8C42" strokeWidth={1.8} /></div>
+                    <h3 style={{ fontSize: 16.5, fontWeight: 800, color: "#fff", marginBottom: 9 }}>{title}</h3>
+                    <p style={{ fontSize: 13.5, color: "rgba(255,255,255,.6)", lineHeight: 1.7 }}>{desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
 

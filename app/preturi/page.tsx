@@ -48,6 +48,8 @@ const PLANURI = [
       "Raport Excel complet (secțiuni selectabile)",
       "Remindere WhatsApp nelimitate + 100 SMS / lună",
       "Badge „Profil verificat”",
+      "✨ Răspunsuri AI la recenzii (în curând)",
+      "✨ Alertă AI clienți inactivi (în curând)",
     ],
   },
   {
@@ -65,6 +67,7 @@ const PLANURI = [
       "Remindere WhatsApp + SMS nelimitate",
       "Suport prioritar 24/7 + manager dedicat",
       "Multi-locație (în curând)",
+      "✨ Generator AI de postări social media (în curând)",
     ],
   },
 ];
@@ -93,6 +96,9 @@ const COMPARATIE: { rand: string; basic: string; pro: string; business: string }
   { rand: "Statistici cu filtre perioadă", basic: "nu", pro: "da", business: "da" },
   { rand: "Productivitate per groomer", basic: "nu", pro: "da", business: "da" },
   { rand: "Raport Excel", basic: "Bază", pro: "Complet", business: "Complet" },
+  { rand: "✨ Răspunsuri AI la recenzii", basic: "nu", pro: "în curând", business: "în curând" },
+  { rand: "✨ Alertă AI clienți inactivi", basic: "nu", pro: "în curând", business: "în curând" },
+  { rand: "✨ Generator AI postări social media", basic: "nu", pro: "nu", business: "în curând" },
   { rand: "Login separat per groomer", basic: "nu", pro: "nu", business: "în curând" },
   { rand: "Promovare în oraș", basic: "nu", pro: "nu", business: "da" },
   { rand: "Multi-locație", basic: "nu", pro: "nu", business: "în curând" },
