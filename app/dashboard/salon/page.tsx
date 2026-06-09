@@ -309,32 +309,71 @@ function AgendaCalendar({
 
       {/* CERERI NOI — deasupra calendarului, prima chestie vizibilă */}
       {pending.length > 0 && (
-        <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Cereri noi ({pending.length})</div>
+        <div style={{ marginBottom: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", display: "inline-block", boxShadow: "0 0 0 3px rgba(255,107,0,.2)" }} />
+            <span style={{ fontSize: 13, fontWeight: 900, color: c.text, letterSpacing: 0.3 }}>Cereri noi</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, padding: "1px 9px", borderRadius: 50 }}>{pending.length}</span>
+          </div>
           {pending.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
             return (
-              <div key={p.id} style={{ background: c.surface, borderRadius: 14, padding: "12px 16px", border: "2px solid #FF6B00", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                <div style={{ width: 46, height: 46, borderRadius: 11, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#FF6B00", flexShrink: 0 }}>{p.ora}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 800, color: c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-                    {p.client}
-                    {p.groomer && <span style={{ fontSize: 11, fontWeight: 700, color: c.muted }}>· <User size={12} color={c.muted} strokeWidth={2} style={{ display: "inline", verticalAlign: "middle" }} /> {p.groomer}</span>}
-                    {blocat && <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 9px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Blocat</span>}
-                    {abateri > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 9px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={11} color="#D97706" strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
+              <div key={p.id} style={{ background: c.surface, borderRadius: 16, overflow: "hidden", border: `1.5px solid ${theme === "dark" ? "rgba(255,107,0,.35)" : "rgba(255,107,0,.25)"}`, boxShadow: theme === "dark" ? "0 2px 12px rgba(0,0,0,.25)" : "0 2px 12px rgba(255,107,0,.08)" }}>
+                {/* Accent bar top */}
+                <div style={{ height: 3, background: "linear-gradient(90deg, #FF6B00 0%, #FF9F4A 100%)" }} />
+                <div style={{ padding: "14px 16px 16px" }}>
+                  {/* Row 1 — client name + time pill */}
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15.5, fontWeight: 900, color: c.text, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                        {p.client}
+                        {blocat && <span style={{ fontSize: 10.5, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 8px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 3 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Blocat</span>}
+                        {abateri > 0 && <span style={{ fontSize: 10.5, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 8px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 3 }}><AlertTriangle size={10} color="#D97706" strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
+                      </div>
+                      {p.groomer && (
+                        <div style={{ fontSize: 12, color: c.muted, fontWeight: 600, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>
+                          <User size={11} color={c.muted} strokeWidth={2} /> {p.groomer}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flexShrink: 0, background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 900, padding: "5px 13px", borderRadius: 50, letterSpacing: 0.3, boxShadow: "0 3px 8px rgba(255,107,0,.35)" }}>{p.ora}</div>
                   </div>
-                  <div style={{ fontSize: 12.5, color: c.muted, marginTop: 2 }}>{p.animal}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FF6B00", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Scissors size={12} color="#FF6B00" strokeWidth={2} /> {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>
+
+                  {/* Divider */}
+                  <div style={{ height: 1, background: c.border2, marginBottom: 10 }} />
+
+                  {/* Row 2 — animal + service */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                    <div style={{ fontSize: 12.5, color: c.text2, display: "flex", alignItems: "center", gap: 6 }}>
+                      <PawPrint size={13} color={c.muted} strokeWidth={2} />
+                      <span style={{ fontWeight: 700, color: c.text }}>{p.animal}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Scissors size={13} color="#FF6B00" strokeWidth={2} />
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: c.text }}>{p.serviciu}</span>
+                      {p.pret > 0 && <span style={{ fontSize: 12, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, padding: "1px 9px", borderRadius: 50, marginLeft: 2 }}>{p.pret} RON</span>}
+                      {p.durata && <span style={{ fontSize: 11.5, color: c.muted, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}><Clock size={11} color={c.muted} strokeWidth={2} /> {p.durata} min</span>}
+                    </div>
+                  </div>
+
+                  {/* Observations */}
                   {p.observatii && (
-                    <div style={{ fontSize: 12, color: c.text2, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 8, padding: "7px 11px", lineHeight: 1.5, marginTop: 7 }}>
-                      <span style={{ fontWeight: 800, color: "#B45309", display: "inline-flex", alignItems: "center", gap: 4 }}><FileEdit size={12} color="#B45309" strokeWidth={2} /> Observații:</span> {p.observatii}
+                    <div style={{ fontSize: 12, color: c.text2, background: theme === "dark" ? "rgba(255,193,7,.10)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(255,193,7,.3)" : "#FDE68A"}`, borderRadius: 10, padding: "8px 12px", lineHeight: 1.55, marginBottom: 12 }}>
+                      <span style={{ fontWeight: 800, color: "#B45309", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 2 }}><FileEdit size={11} color="#B45309" strokeWidth={2} /> Observații</span>
+                      <div style={{ marginTop: 2 }}>{p.observatii}</div>
                     </div>
                   )}
-                </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => respinge(p.id)} style={{ padding: "9px 14px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: "#EF4444", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Refuză</button>
-                  <button onClick={() => accepta(p.id)} style={{ padding: "9px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 12px rgba(255,107,0,.3)" }}>Acceptă</button>
+
+                  {/* Action buttons */}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => respinge(p.id)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(239,68,68,.4)" : "rgba(239,68,68,.3)"}`, background: theme === "dark" ? "rgba(239,68,68,.08)" : "rgba(239,68,68,.05)", color: "#EF4444", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                      <XCircle size={15} color="#EF4444" strokeWidth={2} /> Refuză
+                    </button>
+                    <button onClick={() => accepta(p.id)} style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #FF6B00 0%, #FF9F4A 100%)", color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>
+                      <CheckCircle2 size={15} color="#fff" strokeWidth={2} /> Acceptă programarea
+                    </button>
+                  </div>
                 </div>
               </div>
             );
