@@ -285,7 +285,7 @@ export default function HomePage() {
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
-                <Sparkles size={14} strokeWidth={2} /> Noutate — în curând
+                <Sparkles size={14} strokeWidth={2} /> Disponibil acum
               </div>
               <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#fff", lineHeight: 1.15 }}>
                 Nu doar un calendar online.<br /><span style={{ color: "#FF8C42" }}>Un asistent AI pentru salonul tău.</span>
