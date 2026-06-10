@@ -454,14 +454,22 @@ function AgendaCalendar({
                 if (anulat) { bg = theme === "dark" ? "rgba(239,68,68,.14)" : "#FEE2E2"; border = "rgba(239,68,68,.5)"; accent = "#EF4444"; bar = "#EF4444"; }
                 else if (nou) { bg = theme === "dark" ? "rgba(255,107,0,.18)" : "#FFE8D6"; border = "#FF6B00"; accent = "#C2410C"; bar = "#FF6B00"; }
                 else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.20)" : "#C7F2DE"; border = "#10B981"; accent = "#047857"; bar = "#10B981"; }
-                const compact = h < 46;
+                const compact = h < 44;
                 const evidentiat = highlightProgramare === p.id;
                 return (
                   <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
-                    style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou || evidentiat ? 2 : 1.5}px solid ${evidentiat ? "#FF6B00" : border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "3px 8px 3px 10px" : "6px 10px 6px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 1, boxShadow: evidentiat ? "0 0 0 4px rgba(255,107,0,.35)" : "none", transition: "box-shadow .2s" }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 800, color: accent, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>{p.ora}–{minToTime(e)}{p.observatii ? <FileEdit size={10} color={accent} strokeWidth={2} /> : null}</div>
-                    {!compact && <div style={{ fontSize: 13, fontWeight: 800, color: anulat ? c.muted : c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textDecoration: anulat ? "line-through" : "none" }}>{p.client}</div>}
-                    {!compact && h >= 56 && <div style={{ fontSize: 11.5, color: c.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 4 }}><Scissors size={10} color={c.muted} strokeWidth={2} /> {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</div>}
+                    style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou || evidentiat ? 2 : 1.5}px solid ${evidentiat ? "#FF6B00" : border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "0 8px 0 10px" : "5px 10px 5px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, lineHeight: 1.15, boxShadow: evidentiat ? "0 0 0 4px rgba(255,107,0,.35)" : "none", transition: "box-shadow .2s" }}>
+                    <div style={{ fontSize: compact ? 11 : 11.5, fontWeight: 800, color: accent, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ flexShrink: 0 }}>{p.ora}–{minToTime(e)}</span>
+                      {p.observatii ? <FileEdit size={10} color={accent} strokeWidth={2} style={{ flexShrink: 0 }} /> : null}
+                      {compact && <span style={{ fontWeight: 800, color: anulat ? c.muted : c.text, textDecoration: anulat ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>· {p.client}</span>}
+                    </div>
+                    {!compact && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                        <span style={{ fontSize: 12.5, fontWeight: 800, color: anulat ? c.muted : c.text, textDecoration: anulat ? "line-through" : "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 1, minWidth: 0 }}>{p.client}</span>
+                        <span style={{ fontSize: 11, color: c.muted, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 3, flexShrink: 0 }}><Scissors size={10} color={c.muted} strokeWidth={2} />{p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
