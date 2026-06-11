@@ -325,34 +325,6 @@ export default function CumFunctioneaza() {
               </div>
             </div>
 
-            {/* CENTRUL DE COMANDĂ AI — ce ne face diferiți */}
-            <div style={{ background: "#1A1A1A", borderRadius: 28, padding: "44px 36px", marginBottom: 48 }}>
-              <div style={{ textAlign: "center", marginBottom: 40 }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
-                  <Sparkles size={14} strokeWidth={2} /> Asistent AI — în curând
-                </div>
-                <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 12 }}>
-                  Ce ne face diferiți: <span style={{ color: "#FF8C42" }}>un asistent AI dedicat salonului tău</span>
-                </h2>
-                <p style={{ fontSize: 14.5, color: "rgba(255,255,255,.6)", maxWidth: 620, margin: "0 auto", lineHeight: 1.7 }}>
-                  CalyHub nu e doar o agendă online. Folosim datele deja existente despre clienți, animale și programări ca să te ajutăm să economisești timp și să ții clienții aproape.
-                </p>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 22 }}>
-                {[
-                  { Icon: MessageSquare, title: "Răspunsuri AI la recenzii", desc: "Primești o recenzie nouă? AI scrie un răspuns personalizat — folosind numele și rasa animalului — pe care îl poți edita sau trimite direct, în câteva secunde." },
-                  { Icon: BellRing, title: "Alertă clienți inactivi", desc: "AI urmărește intervalul obișnuit de vizită al fiecărui client și te anunță când cineva a întârziat să revină — cu un mesaj de reactivare gata pregătit." },
-                  { Icon: ImagePlus, title: "Postări sociale din poze", desc: "Încarci poza cu rezultatul final al unui tuns, AI recunoaște rasa și generează un caption + hashtag-uri pentru Instagram sau Facebook — gata de postat." },
-                ].map(({ Icon, title, desc }) => (
-                  <div key={title} style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 20, padding: "26px 24px" }}>
-                    <div style={{ width: 50, height: 50, borderRadius: 15, background: "rgba(255,140,66,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon size={25} color="#FF8C42" strokeWidth={1.8} /></div>
-                    <h3 style={{ fontSize: 16.5, fontWeight: 800, color: "#fff", marginBottom: 9 }}>{title}</h3>
-                    <p style={{ fontSize: 13.5, color: "rgba(255,255,255,.6)", lineHeight: 1.7 }}>{desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Beneficii salon — 6 carduri */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
               {BENEFICII_SALON.map(b => (
@@ -371,6 +343,36 @@ export default function CumFunctioneaza() {
               </Link>
               <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", padding: "14px 28px", borderRadius: 50, border: "2px solid #FF6B00", background: "transparent", fontSize: 15, fontWeight: 800, color: "#FF6B00", textDecoration: "none", whiteSpace: "nowrap" }}>Planuri</Link>
               <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 4 }}>Fără card · Fără comision · Primele 3 luni gratuite</div>
+            </div>
+          </div>
+        </section>
+
+        {/* CENTRUL DE COMANDĂ AI — secțiune separată */}
+        <section style={{ background: "#1A1A1A", padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
+                <Sparkles size={14} strokeWidth={2} /> Disponibil acum
+              </div>
+              <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 12 }}>
+                Ce ne face diferiți: <span style={{ color: "#FF8C42" }}>un asistent AI dedicat salonului tău</span>
+              </h2>
+              <p style={{ fontSize: 14.5, color: "rgba(255,255,255,.6)", maxWidth: 620, margin: "0 auto", lineHeight: 1.7 }}>
+                CalyHub nu e doar o agendă online. Folosim datele deja existente despre clienți, animale și programări ca să te ajutăm să economisești timp și să ții clienții aproape.
+              </p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 22 }}>
+              {[
+                { Icon: MessageSquare, title: "Răspunsuri AI la recenzii", desc: "Primești o recenzie nouă? AI scrie un răspuns personalizat — folosind numele și rasa animalului — pe care îl poți edita sau trimite direct, în câteva secunde." },
+                { Icon: BellRing, title: "Alertă clienți inactivi", desc: "AI urmărește intervalul obișnuit de vizită al fiecărui client și te anunță când cineva a întârziat să revină — cu un mesaj de reactivare gata pregătit." },
+                { Icon: ImagePlus, title: "Postări sociale din poze", desc: "Încarci poza cu rezultatul final al unui tuns, AI recunoaște rasa și generează un caption + hashtag-uri pentru Instagram sau Facebook — gata de postat." },
+              ].map(({ Icon, title, desc }) => (
+                <div key={title} style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 20, padding: "26px 24px" }}>
+                  <div style={{ width: 50, height: 50, borderRadius: 15, background: "rgba(255,140,66,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon size={25} color="#FF8C42" strokeWidth={1.8} /></div>
+                  <h3 style={{ fontSize: 16.5, fontWeight: 800, color: "#fff", marginBottom: 9 }}>{title}</h3>
+                  <p style={{ fontSize: 13.5, color: "rgba(255,255,255,.6)", lineHeight: 1.7 }}>{desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
