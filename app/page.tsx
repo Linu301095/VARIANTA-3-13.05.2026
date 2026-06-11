@@ -281,32 +281,20 @@ export default function HomePage() {
         </section>
 
         {/* AI TEASER */}
-        <section style={{ background: "#1A1A1A", padding: "72px 20px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 40 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
-                <Sparkles size={14} strokeWidth={2} /> Disponibil acum
-              </div>
-              <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, color: "#fff", lineHeight: 1.15 }}>
-                Nu doar un calendar online.<br /><span style={{ color: "#FF8C42" }}>Un asistent AI pentru salonul tău.</span>
-              </h2>
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", maxWidth: 560, margin: "14px auto 0", lineHeight: 1.7 }}>
-                CalyHub învață din datele salonului tău și te ajută să ții clienții aproape — automat.
-              </p>
+        <section style={{ background: "#1A1A1A", padding: "64px 20px", textAlign: "center" }}>
+          <div style={{ maxWidth: 680, margin: "0 auto" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 20 }}>
+              <Sparkles size={14} strokeWidth={2} /> Disponibil acum
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-              {[
-                { Icon: MessageSquare, title: "Răspunsuri AI la recenzii", desc: "Un răspuns personalizat, generat în câteva secunde — îl editezi sau îl trimiți direct." },
-                { Icon: BellRing, title: "Alertă clienți inactivi", desc: "AI observă când un client a depășit intervalul lui obișnuit de vizită și îți pregătește mesajul de reactivare." },
-                { Icon: ImagePlus, title: "Postări sociale din poze", desc: "Încarci poza cu rezultatul final, AI recunoaște rasa și scrie caption-ul + hashtag-urile pentru Instagram." },
-              ].map(({ Icon, title, desc }) => (
-                <div key={title} style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 20, padding: "26px 24px" }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 14, background: "rgba(255,140,66,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon size={24} color="#FF8C42" strokeWidth={1.8} /></div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{title}</h3>
-                  <p style={{ fontSize: 13.5, color: "rgba(255,255,255,.6)", lineHeight: 1.65 }}>{desc}</p>
-                </div>
-              ))}
-            </div>
+            <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: "#fff", lineHeight: 1.15, marginBottom: 16 }}>
+              Nu doar un calendar online.<br /><span style={{ color: "#FF8C42" }}>Asistenți AI pentru salonul tău.</span>
+            </h2>
+            <p style={{ fontSize: 15.5, color: "rgba(255,255,255,.6)", lineHeight: 1.75, marginBottom: 32 }}>
+              CalyHub vine cu asistenți AI care lucrează pentru tine în fundal — răspund la recenzii, îți semnalează clienții care nu au mai revenit și generează postări pentru social media dintr-o poză.
+            </p>
+            <Link href="/cum-functioneaza#asistenti-ai" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 30px", borderRadius: 50, background: "#FF8C42", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,140,66,.4)" }}>
+              <Sparkles size={16} strokeWidth={2} /> Descoperă asistenții AI →
+            </Link>
           </div>
         </section>
 

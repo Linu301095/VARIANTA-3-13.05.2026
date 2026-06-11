@@ -348,14 +348,14 @@ export default function CumFunctioneaza() {
         </section>
 
         {/* CENTRUL DE COMANDĂ AI — secțiune separată */}
-        <section style={{ background: "#1A1A1A", padding: "64px 20px" }}>
+        <section id="asistenti-ai" style={{ background: "#1A1A1A", padding: "64px 20px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
                 <Sparkles size={14} strokeWidth={2} /> Disponibil acum
               </div>
               <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 12 }}>
-                Ce ne face diferiți: <span style={{ color: "#FF8C42" }}>un asistent AI dedicat salonului tău</span>
+                Ce ne face diferiți: <span style={{ color: "#FF8C42" }}>asistenți AI pentru salonul tău</span>
               </h2>
               <p style={{ fontSize: 14.5, color: "rgba(255,255,255,.6)", maxWidth: 620, margin: "0 auto", lineHeight: 1.7 }}>
                 CalyHub nu e doar o agendă online. Folosim datele deja existente despre clienți, animale și programări ca să te ajutăm să economisești timp și să ții clienții aproape.
