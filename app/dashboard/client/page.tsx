@@ -1001,7 +1001,7 @@ export default function DashboardClient() {
                             {m.descriere && <div style={{ fontSize: 12, color: c.muted, marginTop: 4, lineHeight: 1.5 }}>{m.descriere}</div>}
                           </div>
                         </div>
-                        <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); setRezervare(r => r ? { ...r, servicii: [], ora: "" } : r); }}
+                        <button onClick={() => { setGroomerSelectat(m.nume); setEtapaBooking("calendar"); setRezervare(r => r ? { ...r, ora: "" } : r); }}
                           style={{ ...btnPrimary, background: salon.culoare, boxShadow: "none", padding: "10px 22px", fontSize: 13, width: "100%" }}>
                           Alege →
                         </button>
@@ -1023,7 +1023,7 @@ export default function DashboardClient() {
               if (salon.echipa && salon.echipa.length > 0 && groomerSelectat) {
                 setEtapaBooking("specialist");
                 setGroomerSelectat(null);
-                setRezervare(r => r ? { ...r, servicii: [], ora: "" } : r);
+                setRezervare(r => r ? { ...r, ora: "" } : r);
               } else {
                 setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); setEtapaBooking("calendar");
               }
@@ -1071,86 +1071,42 @@ export default function DashboardClient() {
                 </>
               )}
 
-              <SectionTitle>Alege serviciul</SectionTitle>
-              {salon.serviciiComplete.length === 0 ? (
-                <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 24 }}>
-                  Salonul nu a configurat încă servicii.
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                  {animal?.talie && (
-                    <div style={{ fontSize: 12, color: c.muted, marginBottom: 4 }}>
-                      Prețurile afișate sunt pentru talie <strong style={{ color: c.text }}>{talieIcon(animal.talie)} {talieLabel(animal.talie)}</strong> ({animal.nume})
-                    </div>
-                  )}
-                  {!animal?.talie && (
-                    <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 4, display: "flex", alignItems: "flex-start", gap: 4 }}>
-                      <AlertTriangle size={13} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} /> {animal?.nume || "Animalul"} nu are talie setată. Mergi la „Animalele mele" și alege talia pentru a vedea prețurile corecte.
-                    </div>
-                  )}
-                  {groomerSelectat && (() => {
-                    const groomerObj = salon.echipa?.find(m => m.nume === groomerSelectat);
-                    const svOferite = groomerObj?.servicii_oferite;
-                    if (svOferite && svOferite.length > 0) {
-                      return (
-                        <div style={{ fontSize: 12, color: c.muted, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                          <User size={12} color={c.muted} strokeWidth={2} /> Servicii și prețuri la <strong style={{ color: c.text }}>{groomerSelectat}</strong>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                  {(() => {
-                    const groomerObj = groomerSelectat ? salon.echipa?.find(m => m.nume === groomerSelectat) : null;
-                    return salon.serviciiComplete.filter(s => {
-                      if (!groomerObj) return true;
-                      const svOferite = groomerObj.servicii_oferite;
-                      if (!svOferite || svOferite.length === 0) return true;
-                      return !!getOverrideGroomer(groomerObj, s.nume);
-                    }).map(sBaza => {
-                      const s = groomerObj ? serviciuPentruGroomer(sBaza, groomerObj) : sBaza;
-                      const sel = (rezervare?.servicii || []).includes(s.nume);
-                      const { pret, durata } = getPretDurata(s, animal?.talie);
-                      if (!pret && !durata) return null;
-                    return (
-                      <button key={s.nume} onClick={() => setRezervare(r => {
-                        const curr = r?.servicii || [];
-                        const next = curr.includes(s.nume) ? curr.filter(n => n !== s.nume) : [...curr, s.nume];
-                        return { salonId: salon.id, servicii: next, ora: r?.ora && next.length === curr.length ? r.ora : "" };
-                      })}
-                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}26` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                          <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${sel ? salon.culoare : c.border}`, background: sel ? salon.culoare : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, color: "#fff", fontWeight: 900 }}>{sel ? "✓" : ""}</div>
-                          <div style={{ minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>{durata && <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>⏱ {durata} min</div>}</div>
-                        </div>
-                        {pret && <div style={{ fontSize: 15, fontWeight: 900, color: salon.culoare, marginLeft: 12, flexShrink: 0 }}>{pret} RON</div>}
-                      </button>
-                    );
-                  });
-                })()}
-                </div>
-              )}
-
+              {/* Rezumat servicii selectate — readonly, cu prețurile finale per groomer ales */}
               {(() => {
                 const groomerObj = groomerSelectat ? salon.echipa?.find(m => m.nume === groomerSelectat) : null;
                 const selServ = (rezervare?.servicii || []).map(n => {
                   const baza = salon.serviciiComplete.find(s => s.nume === n);
                   if (!baza) return null;
-                  return groomerObj ? serviciuPentruGroomer(baza, groomerObj) : baza;
-                }).filter(Boolean) as any[];
-                if (!selServ.length) return null;
+                  return { baza, final: groomerObj ? serviciuPentruGroomer(baza, groomerObj) : baza };
+                }).filter(Boolean) as { baza: any; final: any }[];
+                if (!selServ.length) return (
+                  <div style={{ padding: "18px", textAlign: "center", color: c.muted, fontSize: 13.5, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}`, marginBottom: 20 }}>
+                    Niciun serviciu ales. <button onClick={() => setRezervareActiva(false)} style={{ background: "none", border: "none", color: salon.culoare, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 13.5 }}>← Înapoi</button>
+                  </div>
+                );
                 let totalPret = 0, totalDurata = 0;
                 for (const sv of selServ) {
-                  const { pret, durata } = getPretDurata(sv, animal?.talie);
+                  const { pret, durata } = getPretDurata(sv.final, animal?.talie);
                   totalPret += Number(pret) || 0;
                   totalDurata += Number(durata) || 0;
                 }
                 return (
-                  <div style={{ background: theme === "dark" ? `${salon.culoare}26` : salon.bg, border: `2px solid ${salon.culoare}`, borderRadius: 14, padding: "12px 16px", marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: salon.culoare }}>
-                      {selServ.length} {selServ.length === 1 ? "serviciu" : "servicii"} · ⏱ {totalDurata} min
+                  <div style={{ background: theme === "dark" ? `${salon.culoare}26` : salon.bg, border: `2px solid ${salon.culoare}`, borderRadius: 14, padding: "14px 18px", marginBottom: 18 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: selServ.length > 1 ? 10 : 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: salon.culoare }}>
+                        {selServ.length} {selServ.length === 1 ? "serviciu ales" : "servicii alese"} · ⏱ {totalDurata} min
+                      </div>
+                      <div style={{ fontSize: 17, fontWeight: 900, color: salon.culoare }}>{totalPret} RON</div>
                     </div>
-                    <div style={{ fontSize: 17, fontWeight: 900, color: salon.culoare }}>{totalPret} RON</div>
+                    {selServ.map(({ final: sv }) => {
+                      const { pret, durata } = getPretDurata(sv, animal?.talie);
+                      return (
+                        <div key={sv.nume} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: c.text2, paddingTop: 6, borderTop: `1px solid ${theme === "dark" ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.06)"}`, marginTop: 4 }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Scissors size={11} color={salon.culoare} strokeWidth={2} /> {sv.nume}{durata ? ` · ${durata} min` : ""}</span>
+                          {pret ? <span style={{ fontWeight: 700, color: c.text }}>{pret} RON</span> : null}
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -1270,57 +1226,89 @@ export default function DashboardClient() {
                           <AlertTriangle size={13} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} /> {animal?.nume || "Animalul"} nu are talie setată — mergi la „Animalele mele" pentru prețuri corecte.
                         </div>
                       )}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                        {salon.serviciiComplete.map(s => {
-                          // Interval de preț/durată: peste toți specialiștii care oferă serviciul
-                          // (sau prețul de bază al salonului dacă nu există echipă). Transparent din prima.
-                          const echipaS: any[] = salon.echipa || [];
-                          const preturi: number[] = [];
-                          const durate: number[] = [];
-                          if (echipaS.length === 0) {
-                            const { pret, durata } = getPretDurata(s, animal?.talie);
-                            if (Number(pret) > 0) preturi.push(Number(pret));
-                            if (Number(durata) > 0) durate.push(Number(durata));
-                          } else {
-                            for (const m of echipaS) {
-                              const ofera = !m.servicii_oferite || m.servicii_oferite.length === 0 || !!getOverrideGroomer(m, s.nume);
-                              if (!ofera) continue;
-                              const { pret, durata } = getPretDurata(serviciuPentruGroomer(s, m), animal?.talie);
-                              if (Number(pret) > 0) preturi.push(Number(pret));
-                              if (Number(durata) > 0) durate.push(Number(durata));
-                            }
-                          }
-                          if (preturi.length === 0 && durate.length === 0) return null;
-                          const pMin = preturi.length ? Math.min(...preturi) : 0;
-                          const pMax = preturi.length ? Math.max(...preturi) : 0;
-                          const dMin = durate.length ? Math.min(...durate) : 0;
-                          const dMax = durate.length ? Math.max(...durate) : 0;
-                          const pretTxt = preturi.length === 0 ? "" : pMin === pMax ? `${pMin} RON` : `${pMin}–${pMax} RON`;
-                          const durTxt = durate.length === 0 ? "" : dMin === dMax ? `${dMin} min` : `${dMin}–${dMax} min`;
-                          const varianta = pMin !== pMax || dMin !== dMax;
-                          return (
-                            <div key={s.nume} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 18px", borderRadius: 16, border: `1.5px solid ${c.border}`, background: c.surface }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{s.nume}</div>
-                                {durTxt && <div style={{ fontSize: 12, color: c.muted, marginTop: 3 }}>⏱ {durTxt}</div>}
-                                {varianta && <div style={{ fontSize: 11, color: c.xmuted, marginTop: 3 }}>în funcție de specialist</div>}
-                              </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-                                {pretTxt && <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare, whiteSpace: "nowrap" }}>{pretTxt}</div>}
+                      {(() => {
+                        const serviciiSelectate: string[] = rezervare?.salonId === salon.id ? (rezervare?.servicii || []) : [];
+                        const toggleServiciu = (nume: string) => {
+                          setRezervare(r => {
+                            const baza: string[] = (r?.salonId === salon.id ? r?.servicii : null) || [];
+                            const next = baza.includes(nume) ? baza.filter(n => n !== nume) : [...baza, nume];
+                            return { salonId: salon.id, servicii: next, ora: "" };
+                          });
+                        };
+                        // total estimat (la prețurile de bază, fără groomer ales încă)
+                        let totalPretEst = 0, totalDurataEst = 0;
+                        for (const n of serviciiSelectate) {
+                          const s = salon.serviciiComplete.find(x => x.nume === n);
+                          if (!s) continue;
+                          const { pret, durata } = getPretDurata(s, animal?.talie);
+                          totalPretEst += Number(pret) || 0;
+                          totalDurataEst += Number(durata) || 0;
+                        }
+                        return (
+                          <>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              {salon.serviciiComplete.map(s => {
+                                const echipaS: any[] = salon.echipa || [];
+                                const preturi: number[] = [];
+                                const durate: number[] = [];
+                                if (echipaS.length === 0) {
+                                  const { pret, durata } = getPretDurata(s, animal?.talie);
+                                  if (Number(pret) > 0) preturi.push(Number(pret));
+                                  if (Number(durata) > 0) durate.push(Number(durata));
+                                } else {
+                                  for (const m of echipaS) {
+                                    const ofera = !m.servicii_oferite || m.servicii_oferite.length === 0 || !!getOverrideGroomer(m, s.nume);
+                                    if (!ofera) continue;
+                                    const { pret, durata } = getPretDurata(serviciuPentruGroomer(s, m), animal?.talie);
+                                    if (Number(pret) > 0) preturi.push(Number(pret));
+                                    if (Number(durata) > 0) durate.push(Number(durata));
+                                  }
+                                }
+                                if (preturi.length === 0 && durate.length === 0) return null;
+                                const pMin = preturi.length ? Math.min(...preturi) : 0;
+                                const pMax = preturi.length ? Math.max(...preturi) : 0;
+                                const dMin = durate.length ? Math.min(...durate) : 0;
+                                const dMax = durate.length ? Math.max(...durate) : 0;
+                                const pretTxt = preturi.length === 0 ? "" : pMin === pMax ? `${pMin} RON` : `${pMin}–${pMax} RON`;
+                                const durTxt = durate.length === 0 ? "" : dMin === dMax ? `${dMin} min` : `${dMin}–${dMax} min`;
+                                const varianta = pMin !== pMax || dMin !== dMax;
+                                const sel = serviciiSelectate.includes(s.nume);
+                                return (
+                                  <button key={s.nume} onClick={() => toggleServiciu(s.nume)}
+                                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderRadius: 14, border: sel ? `2px solid ${salon.culoare}` : `1.5px solid ${c.border}`, background: sel ? (theme === "dark" ? `${salon.culoare}22` : salon.bg) : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", width: "100%" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                                      <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${sel ? salon.culoare : c.border}`, background: sel ? salon.culoare : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, color: "#fff", fontWeight: 900 }}>{sel ? "✓" : ""}</div>
+                                      <div style={{ minWidth: 0 }}>
+                                        <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{s.nume}</div>
+                                        {durTxt && <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>⏱ {durTxt}{varianta ? " · în funcție de specialist" : ""}</div>}
+                                      </div>
+                                    </div>
+                                    {pretTxt && <div style={{ fontSize: 15, fontWeight: 900, color: sel ? salon.culoare : c.muted, marginLeft: 12, flexShrink: 0 }}>{pretTxt}</div>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {serviciiSelectate.length > 0 && (
+                              <div style={{ marginTop: 16, background: theme === "dark" ? `${salon.culoare}20` : salon.bg, border: `1.5px solid ${salon.culoare}`, borderRadius: 16, padding: "14px 18px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 800, color: salon.culoare }}>
+                                    {serviciiSelectate.length} {serviciiSelectate.length === 1 ? "serviciu ales" : "servicii alese"} · ⏱ {totalDurataEst} min
+                                  </div>
+                                  <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare }}>{totalPretEst} RON</div>
+                                </div>
                                 <button onClick={() => {
-                                  setRezervare({ salonId: salon.id, servicii: [s.nume], ora: "" });
                                   setGroomerSelectat(null);
                                   setEtapaBooking(salon.echipa && salon.echipa.length > 0 ? "specialist" : "calendar");
                                   setRezervareActiva(true);
                                 }}
-                                  style={{ background: salon.culoare, color: "#fff", border: "none", borderRadius: 50, padding: "8px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap" }}>
-                                  Programează
+                                  style={{ width: "100%", background: salon.culoare, color: "#fff", border: "none", borderRadius: 12, padding: "13px 0", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                  Continuă rezervarea →
                                 </button>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </>
                   )}
                 </>
