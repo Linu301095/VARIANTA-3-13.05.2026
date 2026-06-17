@@ -882,7 +882,7 @@ export default function DashboardSalon() {
     clientiInactivi: ["pro", "business"].includes(planIdCurent),
     postari: ["business"].includes(planIdCurent),
   };
-  const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Gratuit";
+  const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Trial";
   // Tab implicit în „Funcții AI" = primul agent disponibil din plan
   const aiTabActiv = aiTab ?? (aiAccess.recenzii ? "recenzii" : aiAccess.clientiInactivi ? "clientiInactivi" : "recenzii");
   const necitite = notificari.filter(n => !n.citit).length;
