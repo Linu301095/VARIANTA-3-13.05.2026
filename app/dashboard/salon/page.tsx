@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import Cropper from "react-easy-crop";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, type LucideIcon } from "lucide-react";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -527,10 +527,11 @@ export default function DashboardSalon() {
   const [isMobile, setIsMobile] = useState(false);
   const [programari, setProgramari] = useState<ProgramareSalon[]>([]);
   const [notificari, setNotificari] = useState<Notificare[]>([]);
-  const [clientiRisc, setClientiRisc] = useState<{ userId: string; numeClient: string; telefon: string | null; numeAnimal: string | null; rasaAnimal: string | null; ultimaVizita: string; zileAbsenta: number; intervalMediu: number; mesajAI: string }[]>([]);
+  const [clientiRisc, setClientiRisc] = useState<{ userId: string; numeClient: string; telefon: string | null; numeAnimal: string | null; rasaAnimal: string | null; ultimaVizita: string; zileAbsenta: number; intervalMediu: number; mesajAI: string; cod?: string; reducere?: number }[]>([]);
   const [clientiRiscLoading, setClientiRiscLoading] = useState(false);
   const [clientiRiscEroare, setClientiRiscEroare] = useState<string | null>(null);
   const [mesajeCopiate, setMesajeCopiate] = useState<Record<string, boolean>>({});
+  const [reducereRisc, setReducereRisc] = useState(0);
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -1103,11 +1104,12 @@ export default function DashboardSalon() {
         };
       });
 
-      // 5. POST to API route to generate AI messages
+      // 5. POST to API route to generate AI messages (optionally with a reactivation discount)
+      const cod = reducereRisc > 0 ? `REVIN${reducereRisc}` : "";
       const res = await fetch("/api/ai/clienti-risc", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clienti: clientiPayload }),
+        body: JSON.stringify({ clienti: clientiPayload, reducere: reducereRisc, cod }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Eroare server");
@@ -1973,6 +1975,26 @@ export default function DashboardSalon() {
                     </button>
                   </div>
 
+                  {/* Reducere opțională inclusă în mesajul AI */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+                    <span style={{ fontSize: 12.5, color: c.muted, fontWeight: 700 }}>Reducere de reactivare (opțional):</span>
+                    {[0, 10, 15, 20].map(v => {
+                      const activ = reducereRisc === v;
+                      return (
+                        <button
+                          key={v}
+                          onClick={() => setReducereRisc(v)}
+                          disabled={clientiRiscLoading}
+                          style={{ padding: "5px 12px", borderRadius: 50, fontSize: 12.5, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: clientiRiscLoading ? "default" : "pointer", border: `1.5px solid ${activ ? "#D97706" : c.border}`, background: activ ? "#D97706" : "transparent", color: activ ? "#fff" : c.muted, transition: "all .15s" }}>
+                          {v === 0 ? "Fără" : `${v}%`}
+                        </button>
+                      );
+                    })}
+                    {reducereRisc > 0 && (
+                      <span style={{ fontSize: 11.5, color: "#D97706", fontWeight: 700 }}>Cod inclus: REVIN{reducereRisc}</span>
+                    )}
+                  </div>
+
                   {clientiRiscEroare && (
                     <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", color: "#EF4444", fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
                       {clientiRiscEroare}
@@ -2016,6 +2038,12 @@ export default function DashboardSalon() {
                             <div style={{ fontSize: 13, color: c.text, lineHeight: 1.65, background: theme === "dark" ? "rgba(245,158,11,.08)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(245,158,11,.2)" : "#FDE68A"}`, borderRadius: 10, padding: "10px 14px", marginBottom: 12 }}>
                               {client.mesajAI}
                             </div>
+
+                            {client.cod && client.reducere ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 800, color: "#D97706", background: theme === "dark" ? "rgba(245,158,11,.1)" : "#FEF3C7", border: `1px dashed ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FBBF24"}`, borderRadius: 8, padding: "7px 11px", marginBottom: 12 }}>
+                                <Tag size={12} color="#D97706" strokeWidth={2.2} /> Cod inclus: {client.cod} · {client.reducere}% reducere — de aplicat manual la plată
+                              </div>
+                            ) : null}
 
                             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                               <button
