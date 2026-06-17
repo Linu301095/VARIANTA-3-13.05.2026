@@ -753,107 +753,6 @@ export default function DashboardSalon() {
       if (data) setNotificari(data);
     }
 
-    async function incarcaClientiRisc(salonId: string) {
-      setClientiRiscLoading(true);
-      setClientiRiscEroare(null);
-      try {
-        // 1. Fetch all finalized appointments for this salon
-        const { data: prog } = await supabase
-          .from("programari")
-          .select("user_id, data, serviciu, animal_id")
-          .eq("salon_id", salonId)
-          .eq("status", "finalizat")
-          .not("user_id", "is", null)
-          .order("data", { ascending: true });
-
-        if (!prog || prog.length === 0) { setClientiRisc([]); return; }
-
-        // 2. Group by user_id, compute last visit + average interval
-        const byUser: Record<string, { dates: string[]; servicii: string[]; animalIds: string[] }> = {};
-        for (const p of prog) {
-          if (!p.user_id) continue;
-          if (!byUser[p.user_id]) byUser[p.user_id] = { dates: [], servicii: [], animalIds: [] };
-          byUser[p.user_id].dates.push(p.data);
-          if (p.serviciu) byUser[p.user_id].servicii.push(p.serviciu);
-          if (p.animal_id && !byUser[p.user_id].animalIds.includes(p.animal_id)) byUser[p.user_id].animalIds.push(p.animal_id);
-        }
-
-        const today = new Date();
-        const atRiskUserIds: string[] = [];
-        const atRiskMeta: Record<string, { ultimaVizita: string; zileAbsenta: number; intervalMediu: number; ultimulServiciu: string; animalId: string | null }> = {};
-
-        for (const [userId, { dates, servicii, animalIds }] of Object.entries(byUser)) {
-          if (dates.length < 2) continue; // need at least 2 visits to compute interval
-          const sorted = [...dates].sort();
-          const lastDate = new Date(sorted[sorted.length - 1]);
-          const zileAbsenta = Math.floor((today.getTime() - lastDate.getTime()) / 86400000);
-
-          // average interval between consecutive visits
-          let totalInterval = 0;
-          for (let i = 1; i < sorted.length; i++) {
-            const diff = (new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / 86400000;
-            totalInterval += diff;
-          }
-          const intervalMediu = Math.round(totalInterval / (sorted.length - 1));
-
-          if (intervalMediu > 0 && zileAbsenta > intervalMediu * 1.2) {
-            atRiskUserIds.push(userId);
-            atRiskMeta[userId] = {
-              ultimaVizita: sorted[sorted.length - 1],
-              zileAbsenta,
-              intervalMediu,
-              ultimulServiciu: servicii[servicii.length - 1] || "grooming",
-              animalId: animalIds[0] || null,
-            };
-          }
-        }
-
-        if (atRiskUserIds.length === 0) { setClientiRisc([]); return; }
-
-        // 3. Fetch profiles + animals for at-risk users
-        const allAnimalIds = [...new Set(Object.values(atRiskMeta).map(m => m.animalId).filter(Boolean) as string[])];
-        const [{ data: profiles }, { data: animals }] = await Promise.all([
-          supabase.from("profiluri").select("id, nume, telefon").in("id", atRiskUserIds),
-          allAnimalIds.length > 0 ? supabase.from("animale").select("id, nume, rasa").in("id", allAnimalIds) : Promise.resolve({ data: [] }),
-        ]);
-
-        const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
-        const animalMap = Object.fromEntries((animals || []).map((a: any) => [a.id, a]));
-
-        // 4. Build ClientRisc[] payload
-        const clientiPayload = atRiskUserIds.slice(0, 10).map(userId => {
-          const meta = atRiskMeta[userId];
-          const profil = profileMap[userId];
-          const animal = meta.animalId ? animalMap[meta.animalId] : null;
-          return {
-            userId,
-            numeClient: profil?.nume || "Client",
-            telefon: profil?.telefon || null,
-            numeAnimal: animal?.nume || null,
-            rasaAnimal: animal?.rasa || null,
-            ultimaVizita: meta.ultimaVizita,
-            zileAbsenta: meta.zileAbsenta,
-            intervalMediu: meta.intervalMediu,
-            ultimulServiciu: meta.ultimulServiciu,
-          };
-        });
-
-        // 5. POST to API route to generate AI messages
-        const res = await fetch("/api/ai/clienti-risc", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clienti: clientiPayload }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Eroare server");
-        setClientiRisc(json.clienti || []);
-      } catch (e: any) {
-        setClientiRiscEroare(e.message || "Eroare la încărcarea datelor");
-      } finally {
-        setClientiRiscLoading(false);
-      }
-    }
-
     async function loadProgramari(salonId: string) {
       const { data: dataRaw } = await supabase
         .from("programari")
@@ -1117,6 +1016,107 @@ export default function DashboardSalon() {
     if (error) { salveaza("Eroare la salvare"); console.error(error); return; }
     setClientiBlocati(noua);
     salveaza(blocat ? "Client deblocat" : "Client blocat — nu mai poate rezerva");
+  }
+
+  async function incarcaClientiRisc(salonId: string) {
+    setClientiRiscLoading(true);
+    setClientiRiscEroare(null);
+    try {
+      // 1. Fetch all finalized appointments for this salon
+      const { data: prog } = await supabase
+        .from("programari")
+        .select("user_id, data, serviciu, animal_id")
+        .eq("salon_id", salonId)
+        .eq("status", "finalizat")
+        .not("user_id", "is", null)
+        .order("data", { ascending: true });
+
+      if (!prog || prog.length === 0) { setClientiRisc([]); return; }
+
+      // 2. Group by user_id, compute last visit + average interval
+      const byUser: Record<string, { dates: string[]; servicii: string[]; animalIds: string[] }> = {};
+      for (const p of prog) {
+        if (!p.user_id) continue;
+        if (!byUser[p.user_id]) byUser[p.user_id] = { dates: [], servicii: [], animalIds: [] };
+        byUser[p.user_id].dates.push(p.data);
+        if (p.serviciu) byUser[p.user_id].servicii.push(p.serviciu);
+        if (p.animal_id && !byUser[p.user_id].animalIds.includes(p.animal_id)) byUser[p.user_id].animalIds.push(p.animal_id);
+      }
+
+      const today = new Date();
+      const atRiskUserIds: string[] = [];
+      const atRiskMeta: Record<string, { ultimaVizita: string; zileAbsenta: number; intervalMediu: number; ultimulServiciu: string; animalId: string | null }> = {};
+
+      for (const [userId, { dates, servicii, animalIds }] of Object.entries(byUser)) {
+        if (dates.length < 2) continue; // need at least 2 visits to compute interval
+        const sorted = [...dates].sort();
+        const lastDate = new Date(sorted[sorted.length - 1]);
+        const zileAbsenta = Math.floor((today.getTime() - lastDate.getTime()) / 86400000);
+
+        // average interval between consecutive visits
+        let totalInterval = 0;
+        for (let i = 1; i < sorted.length; i++) {
+          const diff = (new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / 86400000;
+          totalInterval += diff;
+        }
+        const intervalMediu = Math.round(totalInterval / (sorted.length - 1));
+
+        if (intervalMediu > 0 && zileAbsenta > intervalMediu * 1.2) {
+          atRiskUserIds.push(userId);
+          atRiskMeta[userId] = {
+            ultimaVizita: sorted[sorted.length - 1],
+            zileAbsenta,
+            intervalMediu,
+            ultimulServiciu: servicii[servicii.length - 1] || "grooming",
+            animalId: animalIds[0] || null,
+          };
+        }
+      }
+
+      if (atRiskUserIds.length === 0) { setClientiRisc([]); return; }
+
+      // 3. Fetch profiles + animals for at-risk users
+      const allAnimalIds = [...new Set(Object.values(atRiskMeta).map(m => m.animalId).filter(Boolean) as string[])];
+      const [{ data: profiles }, { data: animals }] = await Promise.all([
+        supabase.from("profiluri").select("id, nume, telefon").in("id", atRiskUserIds),
+        allAnimalIds.length > 0 ? supabase.from("animale").select("id, nume, rasa").in("id", allAnimalIds) : Promise.resolve({ data: [] }),
+      ]);
+
+      const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
+      const animalMap = Object.fromEntries((animals || []).map((a: any) => [a.id, a]));
+
+      // 4. Build ClientRisc[] payload
+      const clientiPayload = atRiskUserIds.slice(0, 10).map(userId => {
+        const meta = atRiskMeta[userId];
+        const profil = profileMap[userId];
+        const animal = meta.animalId ? animalMap[meta.animalId] : null;
+        return {
+          userId,
+          numeClient: profil?.nume || "Client",
+          telefon: profil?.telefon || null,
+          numeAnimal: animal?.nume || null,
+          rasaAnimal: animal?.rasa || null,
+          ultimaVizita: meta.ultimaVizita,
+          zileAbsenta: meta.zileAbsenta,
+          intervalMediu: meta.intervalMediu,
+          ultimulServiciu: meta.ultimulServiciu,
+        };
+      });
+
+      // 5. POST to API route to generate AI messages
+      const res = await fetch("/api/ai/clienti-risc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clienti: clientiPayload }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Eroare server");
+      setClientiRisc(json.clienti || []);
+    } catch (e: any) {
+      setClientiRiscEroare(e.message || "Eroare la încărcarea datelor");
+    } finally {
+      setClientiRiscLoading(false);
+    }
   }
 
   function setRaspunsState(id: string, patch: Partial<{ editare: boolean; draft: string; generand: boolean; trimitand: boolean; eroare: string | null }>) {
@@ -1965,7 +1965,7 @@ export default function DashboardSalon() {
                       </div>
                     </div>
                     <button
-                      onClick={() => salon?.id && incarcaClientiRisc(salon.id)}
+                      onClick={() => salonData?.id && incarcaClientiRisc(salonData.id)}
                       disabled={clientiRiscLoading}
                       style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB", color: "#D97706", fontSize: 12.5, fontWeight: 800, cursor: clientiRiscLoading ? "default" : "pointer", fontFamily: "Nunito, sans-serif", opacity: clientiRiscLoading ? 0.7 : 1 }}>
                       <Sparkles size={13} color="#D97706" strokeWidth={2} />
