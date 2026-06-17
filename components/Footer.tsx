@@ -6,8 +6,9 @@ type Variant = "full" | "auth" | "payment" | "client" | "salon" | "admin";
 
 const LOGO = (
   <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
-    <Image src="/logo.png" alt="CalyHub" width={120} height={42}
-      style={{ height: "38px", width: "auto", objectFit: "contain", background: "#fff", borderRadius: "10px", padding: "4px 10px" }} />
+    {/* Footer-ul e mereu pe fundal întunecat → varianta dark (silueta albă, portocaliul păstrat), fără pilulă albă */}
+    <Image src="/logo-dark.png" alt="CalyHub" width={120} height={42}
+      style={{ height: "40px", width: "auto", objectFit: "contain" }} />
   </Link>
 );
 
