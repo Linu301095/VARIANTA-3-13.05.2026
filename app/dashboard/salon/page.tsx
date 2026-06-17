@@ -13,6 +13,7 @@ type ProgramareSalon = {
   id: string;
   user_id: string;
   client: string;
+  clientAvatar?: string | null;
   animal: string;
   talie?: string | null;
   serviciu: string;
@@ -775,7 +776,7 @@ export default function DashboardSalon() {
       const animalIds = [...new Set(data.map((p: any) => p.animal_id).filter(Boolean))];
 
       const [{ data: profiles }, { data: animals }] = await Promise.all([
-        userIds.length > 0 ? supabase.from("profiluri").select("id, nume").in("id", userIds) : Promise.resolve({ data: [] }),
+        userIds.length > 0 ? supabase.from("profiluri").select("id, nume, avatar_url").in("id", userIds) : Promise.resolve({ data: [] }),
         animalIds.length > 0 ? supabase.from("animale").select("id, nume, specie, sex, rasa, greutate, talie").in("id", animalIds) : Promise.resolve({ data: [] }),
       ]);
 
@@ -799,6 +800,7 @@ export default function DashboardSalon() {
           id: p.id,
           user_id: p.user_id,
           client: clientNume,
+          clientAvatar: esteApp ? (profil?.avatar_url || null) : null,
           animal: animalText,
           talie: talieEf || null,
           serviciu: p.serviciu,
@@ -2030,10 +2032,33 @@ export default function DashboardSalon() {
                             {necititeZi > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: "#FF6B00", padding: "1px 8px", borderRadius: 50 }}>{necititeZi}</span>}
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                            {g.items.map(n => (
+                            {g.items.map(n => {
+                              // Aflăm clientul (poza) din programarea legată de notificare
+                              const progNotif = n.programare_id ? programari.find(p => p.id === n.programare_id) : null;
+                              const avatarClient = progNotif?.clientAvatar || null;
+                              const numeClient = progNotif?.client || "";
+                              const iconTip = n.tip === "programare_noua" ? <Bell size={20} color="#FF6B00" strokeWidth={2} /> : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "recenzie_noua" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : <Lightbulb size={20} color="#6B7280" strokeWidth={2} />;
+                              const badgeTip = n.tip === "programare_noua" ? <Bell size={11} color="#FF6B00" strokeWidth={2.6} /> : n.tip === "confirmat" ? <CheckCircle2 size={12} color="#10B981" strokeWidth={2.6} /> : n.tip === "anulat" ? <XCircle size={12} color="#EF4444" strokeWidth={2.6} /> : n.tip === "recenzie_noua" ? <Star size={11} color="#F59E0B" strokeWidth={2.6} /> : <Lightbulb size={11} color="#6B7280" strokeWidth={2.6} />;
+                              return (
                               <div key={n.id} onClick={() => deschideNotificare(n)}
                                 style={{ background: n.citit ? c.surface : (theme === "dark" ? "rgba(255,107,0,0.24)" : "rgba(255,107,0,0.16)"), borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                                <div style={{ flexShrink: 0 }}>{n.tip === "programare_noua" ? <Bell size={20} color="#FF6B00" strokeWidth={2} /> : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "recenzie_noua" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : <Lightbulb size={20} color="#6B7280" strokeWidth={2} />}</div>
+                                <div style={{ flexShrink: 0, position: "relative" }}>
+                                  {avatarClient ? (
+                                    <>
+                                      <img src={avatarClient} alt={numeClient} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", display: "block" }} />
+                                      <div style={{ position: "absolute", bottom: -4, right: -4, width: 19, height: 19, borderRadius: "50%", background: c.surface, border: `1.5px solid ${c.surface}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,.25)" }}>
+                                        {badgeTip}
+                                      </div>
+                                    </>
+                                  ) : numeClient ? (
+                                    <>
+                                      <div style={{ width: 38, height: 38, borderRadius: "50%", background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900, color: "#FF6B00" }}>{numeClient.charAt(0).toUpperCase()}</div>
+                                      <div style={{ position: "absolute", bottom: -4, right: -4, width: 19, height: 19, borderRadius: "50%", background: c.surface, border: `1.5px solid ${c.surface}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,.25)" }}>
+                                        {badgeTip}
+                                      </div>
+                                    </>
+                                  ) : iconTip}
+                                </div>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
                                   <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
@@ -2047,7 +2072,8 @@ export default function DashboardSalon() {
                                 </div>
                                 {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       );
