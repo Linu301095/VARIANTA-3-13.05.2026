@@ -1960,17 +1960,33 @@ export default function DashboardClient() {
                           {necititeZi > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: "#FF6B00", padding: "1px 8px", borderRadius: 50 }}>{necititeZi}</span>}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                          {g.items.map(n => (
-                            <div key={n.id} onClick={() => deschideNotificare(n)}
-                              style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                              <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "raspuns_recenzie" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : n.tip === "mesaj_salon" ? <Sparkles size={20} color="#D97706" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
-                                <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
+                          {g.items.map(n => {
+                            const salonIdNotif = n.tip === "mesaj_salon" && n.programare_id
+                              ? programari.find(p => p.id === n.programare_id)?.salon_id
+                              : null;
+                            const salonNotif = salonIdNotif
+                              ? saloaneList.find(s => String(s.id) === String(salonIdNotif))
+                              : null;
+                            return (
+                              <div key={n.id} onClick={() => deschideNotificare(n)}
+                                style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                                <div style={{ flexShrink: 0, marginTop: 2 }}>
+                                  {n.tip === "mesaj_salon" && salonNotif?.poza_url
+                                    ? <img src={salonNotif.poza_url} alt={salonNotif.nume} style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", display: "block" }} />
+                                    : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} />
+                                    : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} />
+                                    : n.tip === "raspuns_recenzie" ? <Star size={20} color="#F59E0B" strokeWidth={2} />
+                                    : n.tip === "mesaj_salon" ? <Sparkles size={20} color="#D97706" strokeWidth={2} />
+                                    : <Bell size={20} color="#FF6B00" strokeWidth={2} />}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
+                                  <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
+                                </div>
+                                {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
                               </div>
-                              {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     );
