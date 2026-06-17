@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
-import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, type LucideIcon } from "lucide-react";
+import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
   { nume: "Băiță + uscare", pret: "50", durata: "40" },
@@ -1963,7 +1963,7 @@ export default function DashboardClient() {
                           {g.items.map(n => (
                             <div key={n.id} onClick={() => deschideNotificare(n)}
                               style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                              <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "raspuns_recenzie" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
+                              <div style={{ flexShrink: 0, marginTop: 2 }}>{n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} /> : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} /> : n.tip === "raspuns_recenzie" ? <Star size={20} color="#F59E0B" strokeWidth={2} /> : n.tip === "mesaj_salon" ? <Sparkles size={20} color="#D97706" strokeWidth={2} /> : <Bell size={20} color="#FF6B00" strokeWidth={2} />}</div>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
                                 <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>

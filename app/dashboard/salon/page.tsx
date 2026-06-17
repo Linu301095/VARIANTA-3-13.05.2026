@@ -533,6 +533,8 @@ export default function DashboardSalon() {
   const [mesajeCopiate, setMesajeCopiate] = useState<Record<string, boolean>>({});
   const [reducereRisc, setReducereRisc] = useState(0);
   const [ultimaAnalizaRisc, setUltimaAnalizaRisc] = useState<string | null>(null);
+  const [mesajeTrimise, setMesajeTrimise] = useState<Record<string, boolean>>({});
+  const [mesajTrimiteLoading, setMesajTrimiteLoading] = useState<Record<string, boolean>>({});
   const [aiTab, setAiTab] = useState<"recenzii" | "clientiInactivi" | "postari" | null>(null);
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
@@ -1132,12 +1134,37 @@ export default function DashboardSalon() {
       const acum = new Date().toISOString();
       setClientiRisc(rezultat);
       setUltimaAnalizaRisc(acum);
+      setMesajeTrimise({}); // analiză nouă → resetăm starea „trimis"
       // Cache local 7 zile — evită apeluri AI repetate (cost)
-      try { localStorage.setItem(`calyhub_clienti_risc_${salonId}`, JSON.stringify({ data: acum, clienti: rezultat })); } catch {}
+      try { localStorage.setItem(`calyhub_clienti_risc_${salonId}`, JSON.stringify({ data: acum, clienti: rezultat, trimise: [] })); } catch {}
     } catch (e: any) {
       setClientiRiscEroare(e.message || "Eroare la încărcarea datelor");
     } finally {
       setClientiRiscLoading(false);
+    }
+  }
+
+  // Trimite mesajul de reactivare generat de AI direct în aplicația clientului (notificare in-app, fără cost SMS)
+  async function trimiteMesajReactivare(client: typeof clientiRisc[number]) {
+    if (!client.userId || mesajeTrimise[client.userId] || mesajTrimiteLoading[client.userId]) return;
+    setMesajTrimiteLoading(prev => ({ ...prev, [client.userId]: true }));
+    const { error } = await supabase.from("notificari").insert({
+      user_id: client.userId,
+      tip: "mesaj_salon",
+      mesaj: `💬 ${numeSalon}: ${client.mesajAI}`,
+      programare_id: null,
+    });
+    setMesajTrimiteLoading(prev => ({ ...prev, [client.userId]: false }));
+    if (error) {
+      console.error("Trimitere mesaj reactivare - eroare:", error);
+      setClientiRiscEroare("Nu am putut trimite mesajul. Încearcă din nou.");
+      return;
+    }
+    const next = { ...mesajeTrimise, [client.userId]: true };
+    setMesajeTrimise(next);
+    // Persistăm starea „trimis" în cache, ca să nu se retrimită după refresh
+    if (salonData?.id) {
+      try { localStorage.setItem(`calyhub_clienti_risc_${salonData.id}`, JSON.stringify({ data: ultimaAnalizaRisc, clienti: clientiRisc, trimise: Object.keys(next) })); } catch {}
     }
   }
 
@@ -1157,6 +1184,9 @@ export default function DashboardSalon() {
       if (parsed?.data && Array.isArray(parsed?.clienti)) {
         setUltimaAnalizaRisc(parsed.data);
         setClientiRisc(parsed.clienti);
+        if (Array.isArray(parsed.trimise)) {
+          setMesajeTrimise(Object.fromEntries(parsed.trimise.map((uid: string) => [uid, true])));
+        }
       }
     } catch {}
   }, [salonData?.id]);
@@ -2295,9 +2325,22 @@ export default function DashboardSalon() {
                                       style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: mesajeCopiate[client.userId] ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : (theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB"), color: mesajeCopiate[client.userId] ? "#10B981" : "#D97706", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all .2s" }}>
                                       {mesajeCopiate[client.userId] ? <><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Copiat!</> : <><Download size={13} color="#D97706" strokeWidth={2} /> Copiază mesajul</>}
                                     </button>
-                                    <button disabled style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${c.border}`, background: "transparent", color: c.muted, fontSize: 13, fontWeight: 700, cursor: "not-allowed", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                                      <Phone size={13} color={c.muted} strokeWidth={2} /> Trimite SMS (în curând)
-                                    </button>
+                                    {(() => {
+                                      const trimis = mesajeTrimise[client.userId];
+                                      const loading = mesajTrimiteLoading[client.userId];
+                                      return (
+                                        <button
+                                          onClick={() => trimiteMesajReactivare(client)}
+                                          disabled={trimis || loading}
+                                          style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: "none", background: trimis ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : "#D97706", color: trimis ? "#10B981" : "#fff", fontSize: 13, fontWeight: 800, cursor: (trimis || loading) ? "default" : "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loading ? .7 : 1 }}>
+                                          {trimis
+                                            ? <><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Trimis în aplicație</>
+                                            : loading
+                                              ? "Se trimite…"
+                                              : <><Send size={13} color="#fff" strokeWidth={2} /> Trimite în aplicație</>}
+                                        </button>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
                               </div>
