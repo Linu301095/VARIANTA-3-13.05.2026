@@ -928,8 +928,8 @@ export default function DashboardSalon() {
       if (prog) { setAgendaZi(prog.data); setHighlightProgramare(prog.id); }
       setTab("agenda");
     } else if (n.tip === "recenzie_noua") {
-      setStatExtins("rating");
-      setTab("statistici");
+      setTab("functii-ai");
+      setAiTab("recenzii");
     }
   }
 
@@ -1850,7 +1850,7 @@ export default function DashboardSalon() {
                                       </div>
                                     ) : (
                                       <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
-                                        <button onClick={() => setTab("functii-ai")}
+                                        <button onClick={() => { setTab("functii-ai"); setAiTab("recenzii"); }}
                                           style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #FF6B00", background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                                           <Sparkles size={13} strokeWidth={2} /> Răspunde cu AI
                                         </button>
@@ -2004,6 +2004,13 @@ export default function DashboardSalon() {
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
                                   <div style={{ fontSize: 12, color: c.xmuted, marginTop: 4 }}>{formatTimp(n.created_at)}</div>
+                                  {n.tip === "recenzie_noua" && aiAccess.recenzii && (
+                                    <button
+                                      onClick={e => { e.stopPropagation(); deschideNotificare(n); }}
+                                      style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: "1.5px solid #FF6B00", background: "transparent", color: "#FF6B00", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                      <Sparkles size={11} strokeWidth={2} /> Răspunde cu AI
+                                    </button>
+                                  )}
                                 </div>
                                 {!n.citit && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6B00", flexShrink: 0, marginTop: 4 }} />}
                               </div>
