@@ -1043,7 +1043,7 @@ export default function DashboardSalon() {
       // 1. Fetch all finalized appointments for this salon
       const { data: prog } = await supabase
         .from("programari")
-        .select("user_id, data, serviciu, animal_id")
+        .select("id, user_id, data, serviciu, animal_id")
         .eq("salon_id", salonId)
         .eq("status", "finalizat")
         .not("user_id", "is", null)
@@ -1052,18 +1052,19 @@ export default function DashboardSalon() {
       if (!prog || prog.length === 0) { setClientiRisc([]); return; }
 
       // 2. Group by user_id, compute last visit + average interval
-      const byUser: Record<string, { dates: string[]; servicii: string[]; animalIds: string[] }> = {};
+      const byUser: Record<string, { dates: string[]; servicii: string[]; animalIds: string[]; lastProgId: string }> = {};
       for (const p of prog) {
         if (!p.user_id) continue;
-        if (!byUser[p.user_id]) byUser[p.user_id] = { dates: [], servicii: [], animalIds: [] };
+        if (!byUser[p.user_id]) byUser[p.user_id] = { dates: [], servicii: [], animalIds: [], lastProgId: p.id };
         byUser[p.user_id].dates.push(p.data);
+        byUser[p.user_id].lastProgId = p.id; // ordered ASC → ultimul suprascrie
         if (p.serviciu) byUser[p.user_id].servicii.push(p.serviciu);
         if (p.animal_id && !byUser[p.user_id].animalIds.includes(p.animal_id)) byUser[p.user_id].animalIds.push(p.animal_id);
       }
 
       const today = new Date();
       const atRiskUserIds: string[] = [];
-      const atRiskMeta: Record<string, { ultimaVizita: string; zileAbsenta: number; intervalMediu: number; ultimulServiciu: string; animalId: string | null }> = {};
+      const atRiskMeta: Record<string, { ultimaVizita: string; zileAbsenta: number; intervalMediu: number; ultimulServiciu: string; animalId: string | null; lastProgId: string }> = {};
 
       for (const [userId, { dates, servicii, animalIds }] of Object.entries(byUser)) {
         if (dates.length < 2) continue; // need at least 2 visits to compute interval
@@ -1087,6 +1088,7 @@ export default function DashboardSalon() {
             intervalMediu,
             ultimulServiciu: servicii[servicii.length - 1] || "grooming",
             animalId: animalIds[0] || null,
+            lastProgId: byUser[userId].lastProgId,
           };
         }
       }
@@ -1118,6 +1120,7 @@ export default function DashboardSalon() {
           zileAbsenta: meta.zileAbsenta,
           intervalMediu: meta.intervalMediu,
           ultimulServiciu: meta.ultimulServiciu,
+          ultimaProgramareId: meta.lastProgId,
         };
       });
 
@@ -1152,7 +1155,7 @@ export default function DashboardSalon() {
       user_id: client.userId,
       tip: "mesaj_salon",
       mesaj: `💬 ${numeSalon}: ${client.mesajAI}`,
-      programare_id: null,
+      programare_id: (client as any).ultimaProgramareId || null,
     });
     setMesajTrimiteLoading(prev => ({ ...prev, [client.userId]: false }));
     if (error) {
@@ -2322,7 +2325,7 @@ export default function DashboardSalon() {
                                         setMesajeCopiate(prev => ({ ...prev, [client.userId]: true }));
                                         setTimeout(() => setMesajeCopiate(prev => ({ ...prev, [client.userId]: false })), 2500);
                                       }}
-                                      style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: mesajeCopiate[client.userId] ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : (theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB"), color: mesajeCopiate[client.userId] ? "#10B981" : "#D97706", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all .2s" }}>
+                                      style={{ flex: 1, minWidth: 120, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: mesajeCopiate[client.userId] ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : (theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB"), color: mesajeCopiate[client.userId] ? "#10B981" : "#D97706", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all .2s" }}>
                                       {mesajeCopiate[client.userId] ? <><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Copiat!</> : <><Download size={13} color="#D97706" strokeWidth={2} /> Copiază mesajul</>}
                                     </button>
                                     {(() => {
@@ -2332,7 +2335,7 @@ export default function DashboardSalon() {
                                         <button
                                           onClick={() => trimiteMesajReactivare(client)}
                                           disabled={trimis || loading}
-                                          style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: "none", background: trimis ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : "#D97706", color: trimis ? "#10B981" : "#fff", fontSize: 13, fontWeight: 800, cursor: (trimis || loading) ? "default" : "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loading ? .7 : 1 }}>
+                                          style={{ flex: 1, minWidth: 120, padding: "10px 0", borderRadius: 10, border: "none", background: trimis ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : "#D97706", color: trimis ? "#10B981" : "#fff", fontSize: 13, fontWeight: 800, cursor: (trimis || loading) ? "default" : "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loading ? .7 : 1 }}>
                                           {trimis
                                             ? <><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Trimis în aplicație</>
                                             : loading
@@ -2341,6 +2344,9 @@ export default function DashboardSalon() {
                                         </button>
                                       );
                                     })()}
+                                    <button disabled style={{ flex: 1, minWidth: 120, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${c.border}`, background: "transparent", color: c.muted, fontSize: 13, fontWeight: 700, cursor: "not-allowed", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                      <Phone size={13} color={c.muted} strokeWidth={2} /> Trimite SMS (în curând)
+                                    </button>
                                   </div>
                                 </div>
                               </div>
