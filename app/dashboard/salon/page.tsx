@@ -527,6 +527,10 @@ export default function DashboardSalon() {
   const [isMobile, setIsMobile] = useState(false);
   const [programari, setProgramari] = useState<ProgramareSalon[]>([]);
   const [notificari, setNotificari] = useState<Notificare[]>([]);
+  const [clientiRisc, setClientiRisc] = useState<{ userId: string; numeClient: string; telefon: string | null; numeAnimal: string | null; rasaAnimal: string | null; ultimaVizita: string; zileAbsenta: number; intervalMediu: number; mesajAI: string }[]>([]);
+  const [clientiRiscLoading, setClientiRiscLoading] = useState(false);
+  const [clientiRiscEroare, setClientiRiscEroare] = useState<string | null>(null);
+  const [mesajeCopiate, setMesajeCopiate] = useState<Record<string, boolean>>({});
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -747,6 +751,107 @@ export default function DashboardSalon() {
         .order("created_at", { ascending: false })
         .limit(50);
       if (data) setNotificari(data);
+    }
+
+    async function incarcaClientiRisc(salonId: string) {
+      setClientiRiscLoading(true);
+      setClientiRiscEroare(null);
+      try {
+        // 1. Fetch all finalized appointments for this salon
+        const { data: prog } = await supabase
+          .from("programari")
+          .select("user_id, data, serviciu, animal_id")
+          .eq("salon_id", salonId)
+          .eq("status", "finalizat")
+          .not("user_id", "is", null)
+          .order("data", { ascending: true });
+
+        if (!prog || prog.length === 0) { setClientiRisc([]); return; }
+
+        // 2. Group by user_id, compute last visit + average interval
+        const byUser: Record<string, { dates: string[]; servicii: string[]; animalIds: string[] }> = {};
+        for (const p of prog) {
+          if (!p.user_id) continue;
+          if (!byUser[p.user_id]) byUser[p.user_id] = { dates: [], servicii: [], animalIds: [] };
+          byUser[p.user_id].dates.push(p.data);
+          if (p.serviciu) byUser[p.user_id].servicii.push(p.serviciu);
+          if (p.animal_id && !byUser[p.user_id].animalIds.includes(p.animal_id)) byUser[p.user_id].animalIds.push(p.animal_id);
+        }
+
+        const today = new Date();
+        const atRiskUserIds: string[] = [];
+        const atRiskMeta: Record<string, { ultimaVizita: string; zileAbsenta: number; intervalMediu: number; ultimulServiciu: string; animalId: string | null }> = {};
+
+        for (const [userId, { dates, servicii, animalIds }] of Object.entries(byUser)) {
+          if (dates.length < 2) continue; // need at least 2 visits to compute interval
+          const sorted = [...dates].sort();
+          const lastDate = new Date(sorted[sorted.length - 1]);
+          const zileAbsenta = Math.floor((today.getTime() - lastDate.getTime()) / 86400000);
+
+          // average interval between consecutive visits
+          let totalInterval = 0;
+          for (let i = 1; i < sorted.length; i++) {
+            const diff = (new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / 86400000;
+            totalInterval += diff;
+          }
+          const intervalMediu = Math.round(totalInterval / (sorted.length - 1));
+
+          if (intervalMediu > 0 && zileAbsenta > intervalMediu * 1.2) {
+            atRiskUserIds.push(userId);
+            atRiskMeta[userId] = {
+              ultimaVizita: sorted[sorted.length - 1],
+              zileAbsenta,
+              intervalMediu,
+              ultimulServiciu: servicii[servicii.length - 1] || "grooming",
+              animalId: animalIds[0] || null,
+            };
+          }
+        }
+
+        if (atRiskUserIds.length === 0) { setClientiRisc([]); return; }
+
+        // 3. Fetch profiles + animals for at-risk users
+        const allAnimalIds = [...new Set(Object.values(atRiskMeta).map(m => m.animalId).filter(Boolean) as string[])];
+        const [{ data: profiles }, { data: animals }] = await Promise.all([
+          supabase.from("profiluri").select("id, nume, telefon").in("id", atRiskUserIds),
+          allAnimalIds.length > 0 ? supabase.from("animale").select("id, nume, rasa").in("id", allAnimalIds) : Promise.resolve({ data: [] }),
+        ]);
+
+        const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
+        const animalMap = Object.fromEntries((animals || []).map((a: any) => [a.id, a]));
+
+        // 4. Build ClientRisc[] payload
+        const clientiPayload = atRiskUserIds.slice(0, 10).map(userId => {
+          const meta = atRiskMeta[userId];
+          const profil = profileMap[userId];
+          const animal = meta.animalId ? animalMap[meta.animalId] : null;
+          return {
+            userId,
+            numeClient: profil?.nume || "Client",
+            telefon: profil?.telefon || null,
+            numeAnimal: animal?.nume || null,
+            rasaAnimal: animal?.rasa || null,
+            ultimaVizita: meta.ultimaVizita,
+            zileAbsenta: meta.zileAbsenta,
+            intervalMediu: meta.intervalMediu,
+            ultimulServiciu: meta.ultimulServiciu,
+          };
+        });
+
+        // 5. POST to API route to generate AI messages
+        const res = await fetch("/api/ai/clienti-risc", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clienti: clientiPayload }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Eroare server");
+        setClientiRisc(json.clienti || []);
+      } catch (e: any) {
+        setClientiRiscEroare(e.message || "Eroare la încărcarea datelor");
+      } finally {
+        setClientiRiscLoading(false);
+      }
     }
 
     async function loadProgramari(salonId: string) {
@@ -1846,6 +1951,95 @@ export default function DashboardSalon() {
             {/* NOTIFICARI */}
             {tab === "notificari" && (
               <div>
+
+                {/* CLIENȚI INACTIVI — AI Anti-Churn */}
+                <div style={{ marginBottom: 28 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 10, background: theme === "dark" ? "rgba(245,158,11,.15)" : "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Sparkles size={16} color="#D97706" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Clienți inactivi</div>
+                        <div style={{ fontSize: 11.5, color: c.muted, fontWeight: 600 }}>Asistent AI · clienți care nu au mai revenit</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => salon?.id && incarcaClientiRisc(salon.id)}
+                      disabled={clientiRiscLoading}
+                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB", color: "#D97706", fontSize: 12.5, fontWeight: 800, cursor: clientiRiscLoading ? "default" : "pointer", fontFamily: "Nunito, sans-serif", opacity: clientiRiscLoading ? 0.7 : 1 }}>
+                      <Sparkles size={13} color="#D97706" strokeWidth={2} />
+                      {clientiRiscLoading ? "Se analizează..." : "Analizează acum"}
+                    </button>
+                  </div>
+
+                  {clientiRiscEroare && (
+                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", color: "#EF4444", fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
+                      {clientiRiscEroare}
+                    </div>
+                  )}
+
+                  {!clientiRiscLoading && clientiRisc.length === 0 && !clientiRiscEroare && (
+                    <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 13.5, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}` }}>
+                      Apasă „Analizează acum" pentru a vedea clienții care nu au mai revenit.
+                    </div>
+                  )}
+
+                  {clientiRisc.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      {clientiRisc.map(client => (
+                        <div key={client.userId} style={{ background: c.surface, borderRadius: 16, overflow: "hidden", border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.3)" : "#FDE68A"}` }}>
+                          <div style={{ height: 3, background: "linear-gradient(90deg, #D97706 0%, #F59E0B 100%)" }} />
+                          <div style={{ padding: "14px 16px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+                              <div>
+                                <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{client.numeClient}</div>
+                                {client.numeAnimal && (
+                                  <div style={{ fontSize: 12, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                                    <PawPrint size={11} color={c.muted} strokeWidth={2} /> {client.numeAnimal}{client.rasaAnimal ? ` · ${client.rasaAnimal}` : ""}
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: "#D97706", background: theme === "dark" ? "rgba(245,158,11,.15)" : "#FEF3C7", padding: "3px 10px", borderRadius: 50 }}>
+                                  {client.zileAbsenta} zile absent
+                                </div>
+                                <div style={{ fontSize: 11, color: c.muted, marginTop: 3 }}>obișnuit: la {client.intervalMediu} zile</div>
+                              </div>
+                            </div>
+
+                            <div style={{ height: 1, background: c.border2, marginBottom: 12 }} />
+
+                            <div style={{ fontSize: 12.5, color: c.muted, fontWeight: 700, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                              <Sparkles size={12} color="#D97706" strokeWidth={2} /> Mesaj de reactivare sugerat de AI
+                            </div>
+                            <div style={{ fontSize: 13, color: c.text, lineHeight: 1.65, background: theme === "dark" ? "rgba(245,158,11,.08)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(245,158,11,.2)" : "#FDE68A"}`, borderRadius: 10, padding: "10px 14px", marginBottom: 12 }}>
+                              {client.mesajAI}
+                            </div>
+
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(client.mesajAI);
+                                  setMesajeCopiate(prev => ({ ...prev, [client.userId]: true }));
+                                  setTimeout(() => setMesajeCopiate(prev => ({ ...prev, [client.userId]: false })), 2500);
+                                }}
+                                style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: mesajeCopiate[client.userId] ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : (theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB"), color: mesajeCopiate[client.userId] ? "#10B981" : "#D97706", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all .2s" }}>
+                                {mesajeCopiate[client.userId] ? <><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Copiat!</> : <><Download size={13} color="#D97706" strokeWidth={2} /> Copiază mesajul</>}
+                              </button>
+                              <button disabled style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${c.border}`, background: "transparent", color: c.muted, fontSize: 13, fontWeight: 700, cursor: "not-allowed", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                <Phone size={13} color={c.muted} strokeWidth={2} /> Trimite SMS (în curând)
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ height: 1, background: c.border, marginBottom: 22 }} />
+
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>Notificări</h2>
                   {necitite > 0 && (
