@@ -1449,7 +1449,7 @@ export default function DashboardSalon() {
             {/* Left: logo + name OR back button when in sub-tab */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexShrink: 0 }}>
               {!(isMobile && isSubTab) && (
-                <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain", flexShrink: 0 }} priority />
+                <Image src={theme === "dark" ? "/logo-dark.png" : "/logo.png"} alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain", flexShrink: 0 }} priority />
               )}
               {!isMobile && !isSubTab && (
                 <>

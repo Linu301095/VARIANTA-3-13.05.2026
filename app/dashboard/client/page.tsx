@@ -2131,7 +2131,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             {/* On mobile with sub-tab or onBack active, hide logo and show back button instead */}
             {!(isMobile && (tab !== "saloane" || onBack)) && (
-              <Image src="/logo.png" alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
+              <Image src={theme === "dark" ? "/logo-dark.png" : "/logo.png"} alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
             )}
             {(tab !== "saloane" || onBack) && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
