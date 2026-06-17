@@ -1961,23 +1961,37 @@ export default function DashboardClient() {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           {g.items.map(n => {
-                            const salonIdNotif = n.tip === "mesaj_salon" && n.programare_id
+                            // Toate notificările de la salon au programare_id → aflăm salonul ca să-i arătăm poza
+                            const salonIdNotif = n.programare_id
                               ? programari.find(p => p.id === n.programare_id)?.salon_id
                               : null;
                             const salonNotif = salonIdNotif
                               ? saloaneList.find(s => String(s.id) === String(salonIdNotif))
                               : null;
+                            const esteAI = n.tip === "raspuns_recenzie" || n.tip === "mesaj_salon";
+                            // Iconița de tip (folosită ca badge pe poză SAU ca avatar fallback dacă salonul n-are poză)
+                            const iconTip = esteAI
+                              ? <Sparkles size={20} color="#D97706" strokeWidth={2} />
+                              : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} />
+                              : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} />
+                              : <Bell size={20} color="#FF6B00" strokeWidth={2} />;
+                            const badgeTip = esteAI
+                              ? <Sparkles size={11} color="#D97706" strokeWidth={2.6} />
+                              : n.tip === "confirmat" ? <CheckCircle2 size={12} color="#10B981" strokeWidth={2.6} />
+                              : n.tip === "anulat" ? <XCircle size={12} color="#EF4444" strokeWidth={2.6} />
+                              : <Bell size={11} color="#FF6B00" strokeWidth={2.6} />;
                             return (
                               <div key={n.id} onClick={() => deschideNotificare(n)}
                                 style={{ background: n.citit ? c.surface : c.orangeAccent, borderRadius: 14, padding: "14px 18px", border: n.citit ? `1.5px solid ${c.border}` : "2px solid #FF6B00", cursor: "pointer", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                                <div style={{ flexShrink: 0, marginTop: 2 }}>
-                                  {n.tip === "mesaj_salon" && salonNotif?.poza_url
-                                    ? <img src={salonNotif.poza_url} alt={salonNotif.nume} style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", display: "block" }} />
-                                    : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} />
-                                    : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} />
-                                    : n.tip === "raspuns_recenzie" ? <Star size={20} color="#F59E0B" strokeWidth={2} />
-                                    : n.tip === "mesaj_salon" ? <Sparkles size={20} color="#D97706" strokeWidth={2} />
-                                    : <Bell size={20} color="#FF6B00" strokeWidth={2} />}
+                                <div style={{ flexShrink: 0, marginTop: 2, position: "relative" }}>
+                                  {salonNotif?.poza_url ? (
+                                    <>
+                                      <img src={salonNotif.poza_url} alt={salonNotif.nume} style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", display: "block" }} />
+                                      <div style={{ position: "absolute", bottom: -4, right: -4, width: 19, height: 19, borderRadius: "50%", background: c.surface, border: `1.5px solid ${c.surface}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,.25)" }}>
+                                        {badgeTip}
+                                      </div>
+                                    </>
+                                  ) : iconTip}
                                 </div>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: 14, fontWeight: n.citit ? 600 : 800, color: c.text, lineHeight: 1.5 }}>{n.mesaj.replace(/^\p{Emoji_Presentation}️?\s*/u, '')}</div>
