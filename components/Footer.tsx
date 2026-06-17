@@ -4,9 +4,16 @@ import { Lock, Shield, HelpCircle, Mail } from "lucide-react";
 
 type Variant = "full" | "auth" | "payment" | "client" | "salon" | "admin";
 
-const LOGO = (
+// Pagini publice: logo-ul original pe pilulă albă (cum era înainte)
+const LOGO_PUBLIC = (
   <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
-    {/* Footer-ul e mereu pe fundal întunecat → varianta dark (silueta albă, portocaliul păstrat), fără pilulă albă */}
+    <Image src="/logo.png" alt="CalyHub" width={120} height={42}
+      style={{ height: "38px", width: "auto", objectFit: "contain", background: "#fff", borderRadius: "10px", padding: "4px 10px" }} />
+  </Link>
+);
+// Dashboard-uri (dark mode) + admin: varianta dark (silueta albă, portocaliul păstrat), fără pilulă
+const LOGO_DARK = (
+  <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
     <Image src="/logo-dark.png" alt="CalyHub" width={120} height={42}
       style={{ height: "40px", width: "auto", objectFit: "contain" }} />
   </Link>
@@ -38,6 +45,9 @@ function SocialIcons() {
 }
 
 export default function Footer({ variant = "full", onAjutor }: { variant?: Variant; onAjutor?: () => void }) {
+  // Dashboard client/salon (au dark mode) + admin → logo dark; restul (pagini publice) → logo original cu pilulă albă
+  const LOGO = (variant === "client" || variant === "salon" || variant === "admin") ? LOGO_DARK : LOGO_PUBLIC;
+
   /* ----- FULL (landing page) — 4 coloane ----- */
   if (variant === "full") {
     return (
