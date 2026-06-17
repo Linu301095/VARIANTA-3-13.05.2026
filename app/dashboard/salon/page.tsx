@@ -37,7 +37,7 @@ type AnimalIstoric = {
   vizite: VizitaIstoric[]; totalCheltuit: number; ultimaVizita: string | null;
 };
 
-type Tab = "agenda" | "statistici" | "program" | "notificari" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
+type Tab = "agenda" | "statistici" | "program" | "notificari" | "functii-ai" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 type ServiciuOferit = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
@@ -532,6 +532,7 @@ export default function DashboardSalon() {
   const [clientiRiscEroare, setClientiRiscEroare] = useState<string | null>(null);
   const [mesajeCopiate, setMesajeCopiate] = useState<Record<string, boolean>>({});
   const [reducereRisc, setReducereRisc] = useState(0);
+  const [ultimaAnalizaRisc, setUltimaAnalizaRisc] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -861,13 +862,24 @@ export default function DashboardSalon() {
 
   const numeSalon = salonData?.nume || "Salonul tau";
   const numeComplet = user?.nume?.split(" ")[0] || "Manager";
-  const SUB_TABS: Tab[] = ["profil-salon", "servicii", "echipa", "animale", "abonament", "setari", "ajutor"];
+  const SUB_TABS: Tab[] = ["functii-ai", "profil-salon", "servicii", "echipa", "animale", "abonament", "setari", "ajutor"];
   const isSubTab = SUB_TABS.includes(tab);
   const TAB_LABELS: Record<Tab, string> = {
-    agenda: "Agenda", statistici: "Statistici", program: "Program", notificari: "Notificări",
+    agenda: "Agenda", statistici: "Statistici", program: "Program", notificari: "Notificări", "functii-ai": "Funcții AI",
     "profil-salon": "Profilul salonului", servicii: "Serviciile mele",
     echipa: "Echipa mea", animale: "Istoric animale", abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
   };
+
+  // Acces agenți AI în funcție de plan (sursa: localStorage calyhub_abonament -> planId)
+  const planIdCurent = (() => {
+    try { return String(JSON.parse(localStorage.getItem("calyhub_abonament") || "{}").planId || "").toLowerCase(); } catch { return ""; }
+  })();
+  const aiAccess = {
+    recenzii: ["basic", "pro", "business"].includes(planIdCurent),
+    clientiInactivi: ["pro", "business"].includes(planIdCurent),
+    postari: ["business"].includes(planIdCurent),
+  };
+  const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Gratuit";
   const necitite = notificari.filter(n => !n.citit).length;
 
   async function accepta(id: string) {
@@ -1113,13 +1125,38 @@ export default function DashboardSalon() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Eroare server");
-      setClientiRisc(json.clienti || []);
+      const rezultat = json.clienti || [];
+      const acum = new Date().toISOString();
+      setClientiRisc(rezultat);
+      setUltimaAnalizaRisc(acum);
+      // Cache local 7 zile — evită apeluri AI repetate (cost)
+      try { localStorage.setItem(`calyhub_clienti_risc_${salonId}`, JSON.stringify({ data: acum, clienti: rezultat })); } catch {}
     } catch (e: any) {
       setClientiRiscEroare(e.message || "Eroare la încărcarea datelor");
     } finally {
       setClientiRiscLoading(false);
     }
   }
+
+  // Câte zile au trecut de la ultima analiză (null dacă nu există)
+  const zileDeLaAnalizaRisc = ultimaAnalizaRisc
+    ? Math.floor((Date.now() - new Date(ultimaAnalizaRisc).getTime()) / 86400000)
+    : null;
+  const analizaRiscDisponibila = zileDeLaAnalizaRisc === null || zileDeLaAnalizaRisc >= 7;
+
+  // Încarcă analiza salvată (cache 7 zile) la deschiderea salonului
+  useEffect(() => {
+    if (!salonData?.id) return;
+    try {
+      const raw = localStorage.getItem(`calyhub_clienti_risc_${salonData.id}`);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed?.data && Array.isArray(parsed?.clienti)) {
+        setUltimaAnalizaRisc(parsed.data);
+        setClientiRisc(parsed.clienti);
+      }
+    } catch {}
+  }, [salonData?.id]);
 
   function setRaspunsState(id: string, patch: Partial<{ editare: boolean; draft: string; generand: boolean; trimitand: boolean; eroare: string | null }>) {
     setRaspunsAiState(prev => {
@@ -1799,61 +1836,23 @@ export default function DashboardSalon() {
                                     </div>
                                     <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.text}</p>
 
-                                    {/* Răspuns salon — AI sau existent */}
-                                    {(() => {
-                                      const st = raspunsAiState[r.id];
-                                      if (r.raspuns_salon && !st?.editare) {
-                                        return (
-                                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
-                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                                              <span style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1 }}>Răspunsul salonului</span>
-                                              {r.raspuns_at && <span style={{ fontSize: 10.5, color: c.muted }}>{new Date(r.raspuns_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</span>}
-                                            </div>
-                                            <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.raspuns_salon}</p>
-                                          </div>
-                                        );
-                                      }
-                                      if (st?.editare) {
-                                        return (
-                                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
-                                            <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                                              <Sparkles size={12} strokeWidth={2} /> Răspuns AI {st.generand ? "— se generează…" : "(editabil)"}
-                                            </div>
-                                            <textarea
-                                              value={st.draft}
-                                              onChange={e => setRaspunsState(r.id, { draft: e.target.value })}
-                                              placeholder={st.generand ? "Claude scrie un răspuns personalizat…" : "Scrie sau editează răspunsul aici…"}
-                                              disabled={st.generand}
-                                              rows={3}
-                                              style={{ width: "100%", boxSizing: "border-box", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 12.5, fontFamily: "Nunito, sans-serif", lineHeight: 1.6, padding: "9px 11px", resize: "vertical" }}
-                                            />
-                                            {st.eroare && <div style={{ fontSize: 11.5, color: "#DC2626", marginTop: 6 }}>{st.eroare}</div>}
-                                            <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                                              <button onClick={() => genereazaRaspunsAi(r)} disabled={st.generand}
-                                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: `1.5px solid #FF6B00`, background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: st.generand ? "default" : "pointer", opacity: st.generand ? .6 : 1, fontFamily: "Nunito, sans-serif" }}>
-                                                <Sparkles size={13} strokeWidth={2} /> {st.draft ? "Regenerează" : "Generează"}
-                                              </button>
-                                              <button onClick={() => trimiteRaspunsRecenzie(r)} disabled={st.generand || st.trimitand || !st.draft.trim()}
-                                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 12, fontWeight: 800, cursor: (st.generand || st.trimitand || !st.draft.trim()) ? "default" : "pointer", opacity: (st.generand || st.trimitand || !st.draft.trim()) ? .5 : 1, fontFamily: "Nunito, sans-serif" }}>
-                                                <Send size={13} strokeWidth={2} /> {st.trimitand ? "Se trimite…" : "Trimite răspuns"}
-                                              </button>
-                                              <button onClick={() => setRaspunsState(r.id, { editare: false, draft: "", eroare: null })} disabled={st.generand || st.trimitand}
-                                                style={{ padding: "7px 14px", borderRadius: 50, border: "none", background: "transparent", color: c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                                                Renunță
-                                              </button>
-                                            </div>
-                                          </div>
-                                        );
-                                      }
-                                      return (
-                                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
-                                          <button onClick={() => genereazaRaspunsAi(r)}
-                                            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #FF6B00", background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                                            <Sparkles size={13} strokeWidth={2} /> Generează răspuns AI
-                                          </button>
+                                    {/* Răspuns salon — doar afișare. Generarea AI se face în „Funcții AI". */}
+                                    {r.raspuns_salon ? (
+                                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                                          <span style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1 }}>Răspunsul salonului</span>
+                                          {r.raspuns_at && <span style={{ fontSize: 10.5, color: c.muted }}>{new Date(r.raspuns_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</span>}
                                         </div>
-                                      );
-                                    })()}
+                                        <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.raspuns_salon}</p>
+                                      </div>
+                                    ) : (
+                                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                        <button onClick={() => setTab("functii-ai")}
+                                          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #FF6B00", background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                          <Sparkles size={13} strokeWidth={2} /> Răspunde cu AI
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -1953,121 +1952,6 @@ export default function DashboardSalon() {
             {/* NOTIFICARI */}
             {tab === "notificari" && (
               <div>
-
-                {/* CLIENȚI INACTIVI — AI Anti-Churn */}
-                <div style={{ marginBottom: 28 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 10, background: theme === "dark" ? "rgba(245,158,11,.15)" : "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <Sparkles size={16} color="#D97706" strokeWidth={2} />
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Clienți inactivi</div>
-                        <div style={{ fontSize: 11.5, color: c.muted, fontWeight: 600 }}>Asistent AI · clienți care nu au mai revenit</div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => salonData?.id && incarcaClientiRisc(salonData.id)}
-                      disabled={clientiRiscLoading}
-                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB", color: "#D97706", fontSize: 12.5, fontWeight: 800, cursor: clientiRiscLoading ? "default" : "pointer", fontFamily: "Nunito, sans-serif", opacity: clientiRiscLoading ? 0.7 : 1 }}>
-                      <Sparkles size={13} color="#D97706" strokeWidth={2} />
-                      {clientiRiscLoading ? "Se analizează..." : "Analizează acum"}
-                    </button>
-                  </div>
-
-                  {/* Reducere opțională inclusă în mesajul AI */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-                    <span style={{ fontSize: 12.5, color: c.muted, fontWeight: 700 }}>Reducere de reactivare (opțional):</span>
-                    {[0, 10, 15, 20].map(v => {
-                      const activ = reducereRisc === v;
-                      return (
-                        <button
-                          key={v}
-                          onClick={() => setReducereRisc(v)}
-                          disabled={clientiRiscLoading}
-                          style={{ padding: "5px 12px", borderRadius: 50, fontSize: 12.5, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: clientiRiscLoading ? "default" : "pointer", border: `1.5px solid ${activ ? "#D97706" : c.border}`, background: activ ? "#D97706" : "transparent", color: activ ? "#fff" : c.muted, transition: "all .15s" }}>
-                          {v === 0 ? "Fără" : `${v}%`}
-                        </button>
-                      );
-                    })}
-                    {reducereRisc > 0 && (
-                      <span style={{ fontSize: 11.5, color: "#D97706", fontWeight: 700 }}>Cod inclus: REVIN{reducereRisc}</span>
-                    )}
-                  </div>
-
-                  {clientiRiscEroare && (
-                    <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", color: "#EF4444", fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
-                      {clientiRiscEroare}
-                    </div>
-                  )}
-
-                  {!clientiRiscLoading && clientiRisc.length === 0 && !clientiRiscEroare && (
-                    <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 13.5, background: c.surface, borderRadius: 14, border: `1.5px dashed ${c.border}` }}>
-                      Apasă „Analizează acum" pentru a vedea clienții care nu au mai revenit.
-                    </div>
-                  )}
-
-                  {clientiRisc.length > 0 && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                      {clientiRisc.map(client => (
-                        <div key={client.userId} style={{ background: c.surface, borderRadius: 16, overflow: "hidden", border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.3)" : "#FDE68A"}` }}>
-                          <div style={{ height: 3, background: "linear-gradient(90deg, #D97706 0%, #F59E0B 100%)" }} />
-                          <div style={{ padding: "14px 16px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
-                              <div>
-                                <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{client.numeClient}</div>
-                                {client.numeAnimal && (
-                                  <div style={{ fontSize: 12, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-                                    <PawPrint size={11} color={c.muted} strokeWidth={2} /> {client.numeAnimal}{client.rasaAnimal ? ` · ${client.rasaAnimal}` : ""}
-                                  </div>
-                                )}
-                              </div>
-                              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                <div style={{ fontSize: 12, fontWeight: 800, color: "#D97706", background: theme === "dark" ? "rgba(245,158,11,.15)" : "#FEF3C7", padding: "3px 10px", borderRadius: 50 }}>
-                                  {client.zileAbsenta} zile absent
-                                </div>
-                                <div style={{ fontSize: 11, color: c.muted, marginTop: 3 }}>obișnuit: la {client.intervalMediu} zile</div>
-                              </div>
-                            </div>
-
-                            <div style={{ height: 1, background: c.border2, marginBottom: 12 }} />
-
-                            <div style={{ fontSize: 12.5, color: c.muted, fontWeight: 700, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
-                              <Sparkles size={12} color="#D97706" strokeWidth={2} /> Mesaj de reactivare sugerat de AI
-                            </div>
-                            <div style={{ fontSize: 13, color: c.text, lineHeight: 1.65, background: theme === "dark" ? "rgba(245,158,11,.08)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(245,158,11,.2)" : "#FDE68A"}`, borderRadius: 10, padding: "10px 14px", marginBottom: 12 }}>
-                              {client.mesajAI}
-                            </div>
-
-                            {client.cod && client.reducere ? (
-                              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 800, color: "#D97706", background: theme === "dark" ? "rgba(245,158,11,.1)" : "#FEF3C7", border: `1px dashed ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FBBF24"}`, borderRadius: 8, padding: "7px 11px", marginBottom: 12 }}>
-                                <Tag size={12} color="#D97706" strokeWidth={2.2} /> Cod inclus: {client.cod} · {client.reducere}% reducere — de aplicat manual la plată
-                              </div>
-                            ) : null}
-
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(client.mesajAI);
-                                  setMesajeCopiate(prev => ({ ...prev, [client.userId]: true }));
-                                  setTimeout(() => setMesajeCopiate(prev => ({ ...prev, [client.userId]: false })), 2500);
-                                }}
-                                style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: mesajeCopiate[client.userId] ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : (theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB"), color: mesajeCopiate[client.userId] ? "#10B981" : "#D97706", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all .2s" }}>
-                                {mesajeCopiate[client.userId] ? <><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Copiat!</> : <><Download size={13} color="#D97706" strokeWidth={2} /> Copiază mesajul</>}
-                              </button>
-                              <button disabled style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${c.border}`, background: "transparent", color: c.muted, fontSize: 13, fontWeight: 700, cursor: "not-allowed", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                                <Phone size={13} color={c.muted} strokeWidth={2} /> Trimite SMS (în curând)
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ height: 1, background: c.border, marginBottom: 22 }} />
-
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <h2 style={{ fontSize: 18, fontWeight: 900, color: c.text }}>Notificări</h2>
                   {necitite > 0 && (
@@ -2126,6 +2010,284 @@ export default function DashboardSalon() {
                       );
                     });
                   })()}
+                </div>
+              </div>
+            )}
+
+            {/* FUNCȚII AI */}
+            {tab === "functii-ai" && (
+              <div style={{ maxWidth: 920 }}>
+                <PageHeader icon={Sparkles} title="Funcții AI" sub="Asistenții AI care lucrează pentru salonul tău" />
+
+                {/* Banner plan curent */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", background: theme === "dark" ? "rgba(255,107,0,.1)" : "#FFF3EA", border: "1.5px solid rgba(255,107,0,.3)", borderRadius: 16, padding: "13px 18px", marginBottom: 22 }}>
+                  <div style={{ fontSize: 13.5, color: c.text, fontWeight: 700 }}>
+                    Planul tău actual: <span style={{ color: "#FF6B00", fontWeight: 900 }}>{planLabelCurent}</span>
+                  </div>
+                  <button onClick={() => setTab("abonament")} style={{ fontSize: 12.5, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "7px 16px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Vezi planurile</button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+                  {/* ============ AGENT 1 — RĂSPUNSURI AI LA RECENZII ============ */}
+                  <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${aiAccess.recenzii ? "rgba(255,107,0,.3)" : c.border}`, overflow: "hidden" }}>
+                    <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.border}` }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: theme === "dark" ? "rgba(255,107,0,.15)" : "#FFF3EA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Star size={20} color="#FF6B00" strokeWidth={2} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>Răspunsuri AI la recenzii</div>
+                        <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Generează răspunsuri profesionale la recenziile clienților</div>
+                      </div>
+                      {aiAccess.recenzii
+                        ? <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>Activ</span>
+                        : <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Lock size={11} strokeWidth={2.4} /> Plan Basic</span>}
+                    </div>
+
+                    {!aiAccess.recenzii ? (
+                      <div style={{ padding: "22px 18px", textAlign: "center" }}>
+                        <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil începând cu planul <strong style={{ color: "#FF6B00" }}>Basic</strong>. Răspunde clienților în câteva secunde, cu un ton care întărește reputația salonului.</div>
+                        <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Basic</button>
+                      </div>
+                    ) : (
+                      <div style={{ padding: "16px 18px" }}>
+                        {recenziiSalon.length === 0 ? (
+                          <div style={{ padding: "16px 0", textAlign: "center" }}>
+                            <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><Star size={26} color="#F59E0B" strokeWidth={1.5} /></div>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 2 }}>Încă nu ai recenzii</div>
+                            <div style={{ fontSize: 12, color: c.muted }}>Clienții pot lăsa o recenzie după o programare finalizată.</div>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            {recenziiSalon.map(r => (
+                              <div key={r.id} style={{ background: c.surface2, borderRadius: 12, padding: "12px 14px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    {r.avatar_url
+                                      ? <img src={r.avatar_url} alt={r.nume} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                                      : <div style={{ width: 32, height: 32, borderRadius: "50%", background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: "#FF6B00", flexShrink: 0 }}>{r.nume.charAt(0)}</div>}
+                                    <div>
+                                      <div style={{ fontSize: 13, fontWeight: 800, color: c.text }}>{r.nume}</div>
+                                      <div style={{ fontSize: 11, color: c.muted }}>{new Date(r.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</div>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: "flex", gap: 1 }}>{Array.from({ length: r.rating }).map((_, i) => <Star key={i} size={12} color="#F59E0B" strokeWidth={2} fill="#F59E0B" />)}</div>
+                                </div>
+                                <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.text}</p>
+
+                                {(() => {
+                                  const st = raspunsAiState[r.id];
+                                  if (r.raspuns_salon && !st?.editare) {
+                                    return (
+                                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                                          <span style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1 }}>Răspunsul salonului</span>
+                                          {r.raspuns_at && <span style={{ fontSize: 10.5, color: c.muted }}>{new Date(r.raspuns_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</span>}
+                                        </div>
+                                        <p style={{ fontSize: 12.5, color: c.text2, lineHeight: 1.6, margin: 0 }}>{r.raspuns_salon}</p>
+                                      </div>
+                                    );
+                                  }
+                                  if (st?.editare) {
+                                    return (
+                                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                        <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                                          <Sparkles size={12} strokeWidth={2} /> Răspuns AI {st.generand ? "— se generează…" : "(editabil)"}
+                                        </div>
+                                        <textarea
+                                          value={st.draft}
+                                          onChange={e => setRaspunsState(r.id, { draft: e.target.value })}
+                                          placeholder={st.generand ? "Claude scrie un răspuns personalizat…" : "Scrie sau editează răspunsul aici…"}
+                                          disabled={st.generand}
+                                          rows={3}
+                                          style={{ width: "100%", boxSizing: "border-box", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 12.5, fontFamily: "Nunito, sans-serif", lineHeight: 1.6, padding: "9px 11px", resize: "vertical" }}
+                                        />
+                                        {st.eroare && <div style={{ fontSize: 11.5, color: "#DC2626", marginTop: 6 }}>{st.eroare}</div>}
+                                        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                                          <button onClick={() => genereazaRaspunsAi(r)} disabled={st.generand}
+                                            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: `1.5px solid #FF6B00`, background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: st.generand ? "default" : "pointer", opacity: st.generand ? .6 : 1, fontFamily: "Nunito, sans-serif" }}>
+                                            <Sparkles size={13} strokeWidth={2} /> {st.draft ? "Regenerează" : "Generează"}
+                                          </button>
+                                          <button onClick={() => trimiteRaspunsRecenzie(r)} disabled={st.generand || st.trimitand || !st.draft.trim()}
+                                            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 12, fontWeight: 800, cursor: (st.generand || st.trimitand || !st.draft.trim()) ? "default" : "pointer", opacity: (st.generand || st.trimitand || !st.draft.trim()) ? .5 : 1, fontFamily: "Nunito, sans-serif" }}>
+                                            <Send size={13} strokeWidth={2} /> {st.trimitand ? "Se trimite…" : "Trimite răspuns"}
+                                          </button>
+                                          <button onClick={() => setRaspunsState(r.id, { editare: false, draft: "", eroare: null })} disabled={st.generand || st.trimitand}
+                                            style={{ padding: "7px 14px", borderRadius: 50, border: "none", background: "transparent", color: c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                            Renunță
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                      <button onClick={() => genereazaRaspunsAi(r)}
+                                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #FF6B00", background: "transparent", color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                        <Sparkles size={13} strokeWidth={2} /> Generează răspuns AI
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ============ AGENT 2 — CLIENȚI INACTIVI ============ */}
+                  <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${aiAccess.clientiInactivi ? "rgba(245,158,11,.35)" : c.border}`, overflow: "hidden" }}>
+                    <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.border}` }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: theme === "dark" ? "rgba(245,158,11,.15)" : "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Users size={20} color="#D97706" strokeWidth={2} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>Clienți inactivi</div>
+                        <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Identifică clienții care nu au mai revenit și pregătește mesajul de reactivare</div>
+                      </div>
+                      {aiAccess.clientiInactivi
+                        ? <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>Activ</span>
+                        : <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Lock size={11} strokeWidth={2.4} /> Plan Pro</span>}
+                    </div>
+
+                    {!aiAccess.clientiInactivi ? (
+                      <div style={{ padding: "22px 18px", textAlign: "center" }}>
+                        <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil începând cu planul <strong style={{ color: "#FF6B00" }}>Pro</strong>. Recâștigă clienții care nu au mai trecut pe la salon, cu mesaje pregătite de AI.</div>
+                        <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Pro</button>
+                      </div>
+                    ) : (
+                      <div style={{ padding: "16px 18px" }}>
+                        {/* Bara de control: ultima analiză + buton */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+                          <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>
+                            {ultimaAnalizaRisc
+                              ? <>Ultima analiză: <strong style={{ color: c.text }}>{new Date(ultimaAnalizaRisc).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</strong>{!analizaRiscDisponibila && <> · disponibilă din nou în {7 - (zileDeLaAnalizaRisc ?? 0)} zile</>}</>
+                              : "Nicio analiză făcută încă."}
+                          </div>
+                          <button
+                            onClick={() => salonData?.id && analizaRiscDisponibila && incarcaClientiRisc(salonData.id)}
+                            disabled={clientiRiscLoading || !analizaRiscDisponibila}
+                            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 50, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB", color: "#D97706", fontSize: 12.5, fontWeight: 800, cursor: (clientiRiscLoading || !analizaRiscDisponibila) ? "not-allowed" : "pointer", fontFamily: "Nunito, sans-serif", opacity: (clientiRiscLoading || !analizaRiscDisponibila) ? 0.55 : 1 }}>
+                            <Sparkles size={13} color="#D97706" strokeWidth={2} />
+                            {clientiRiscLoading ? "Se analizează..." : analizaRiscDisponibila ? "Analizează acum" : "Analiză recentă"}
+                          </button>
+                        </div>
+
+                        {!analizaRiscDisponibila && (
+                          <div style={{ fontSize: 11.5, color: c.xmuted, marginBottom: 14, fontStyle: "italic" }}>
+                            Analiza se poate reface o dată la 7 zile — datele afișate mai jos sunt din ultima analiză.
+                          </div>
+                        )}
+
+                        {/* Reducere opțională inclusă în mesajul AI */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+                          <span style={{ fontSize: 12.5, color: c.muted, fontWeight: 700 }}>Reducere de reactivare (opțional):</span>
+                          {[0, 10, 15, 20].map(v => {
+                            const activ = reducereRisc === v;
+                            return (
+                              <button
+                                key={v}
+                                onClick={() => setReducereRisc(v)}
+                                disabled={clientiRiscLoading}
+                                style={{ padding: "5px 12px", borderRadius: 50, fontSize: 12.5, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: clientiRiscLoading ? "default" : "pointer", border: `1.5px solid ${activ ? "#D97706" : c.border}`, background: activ ? "#D97706" : "transparent", color: activ ? "#fff" : c.muted, transition: "all .15s" }}>
+                                {v === 0 ? "Fără" : `${v}%`}
+                              </button>
+                            );
+                          })}
+                          {reducereRisc > 0 && (
+                            <span style={{ fontSize: 11.5, color: "#D97706", fontWeight: 700 }}>Cod inclus: REVIN{reducereRisc}</span>
+                          )}
+                        </div>
+
+                        {clientiRiscEroare && (
+                          <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.3)", color: "#EF4444", fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
+                            {clientiRiscEroare}
+                          </div>
+                        )}
+
+                        {!clientiRiscLoading && clientiRisc.length === 0 && !clientiRiscEroare && (
+                          <div style={{ padding: "20px", textAlign: "center", color: c.muted, fontSize: 13.5, background: c.surface2, borderRadius: 14, border: `1.5px dashed ${c.border}` }}>
+                            {ultimaAnalizaRisc ? "Nicio programare nu indică un client inactiv momentan." : "Apasă butonul „Analizează acum” pentru a vedea clienții care nu au mai revenit."}
+                          </div>
+                        )}
+
+                        {clientiRisc.length > 0 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                            {clientiRisc.map(client => (
+                              <div key={client.userId} style={{ background: c.surface2, borderRadius: 16, overflow: "hidden", border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.3)" : "#FDE68A"}` }}>
+                                <div style={{ height: 3, background: "linear-gradient(90deg, #D97706 0%, #F59E0B 100%)" }} />
+                                <div style={{ padding: "14px 16px 16px" }}>
+                                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+                                    <div>
+                                      <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{client.numeClient}</div>
+                                      {client.numeAnimal && (
+                                        <div style={{ fontSize: 12, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                                          <PawPrint size={11} color={c.muted} strokeWidth={2} /> {client.numeAnimal}{client.rasaAnimal ? ` · ${client.rasaAnimal}` : ""}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 800, color: "#D97706", background: theme === "dark" ? "rgba(245,158,11,.15)" : "#FEF3C7", padding: "3px 10px", borderRadius: 50 }}>
+                                        {client.zileAbsenta} zile absent
+                                      </div>
+                                      <div style={{ fontSize: 11, color: c.muted, marginTop: 3 }}>obișnuit: la {client.intervalMediu} zile</div>
+                                    </div>
+                                  </div>
+
+                                  <div style={{ height: 1, background: c.border2, marginBottom: 12 }} />
+
+                                  <div style={{ fontSize: 12.5, color: c.muted, fontWeight: 700, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                                    <Sparkles size={12} color="#D97706" strokeWidth={2} /> Mesaj de reactivare sugerat de AI
+                                  </div>
+                                  <div style={{ fontSize: 13, color: c.text, lineHeight: 1.65, background: theme === "dark" ? "rgba(245,158,11,.08)" : "#FFFBEB", border: `1px solid ${theme === "dark" ? "rgba(245,158,11,.2)" : "#FDE68A"}`, borderRadius: 10, padding: "10px 14px", marginBottom: 12 }}>
+                                    {client.mesajAI}
+                                  </div>
+
+                                  {client.cod && client.reducere ? (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 800, color: "#D97706", background: theme === "dark" ? "rgba(245,158,11,.1)" : "#FEF3C7", border: `1px dashed ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FBBF24"}`, borderRadius: 8, padding: "7px 11px", marginBottom: 12 }}>
+                                      <Tag size={12} color="#D97706" strokeWidth={2.2} /> Cod inclus: {client.cod} · {client.reducere}% reducere — de aplicat manual la plată
+                                    </div>
+                                  ) : null}
+
+                                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(client.mesajAI);
+                                        setMesajeCopiate(prev => ({ ...prev, [client.userId]: true }));
+                                        setTimeout(() => setMesajeCopiate(prev => ({ ...prev, [client.userId]: false })), 2500);
+                                      }}
+                                      style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(245,158,11,.4)" : "#FDE68A"}`, background: mesajeCopiate[client.userId] ? (theme === "dark" ? "rgba(16,185,129,.15)" : "#D1FAE5") : (theme === "dark" ? "rgba(245,158,11,.1)" : "#FFFBEB"), color: mesajeCopiate[client.userId] ? "#10B981" : "#D97706", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all .2s" }}>
+                                      {mesajeCopiate[client.userId] ? <><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Copiat!</> : <><Download size={13} color="#D97706" strokeWidth={2} /> Copiază mesajul</>}
+                                    </button>
+                                    <button disabled style={{ flex: 1, minWidth: 130, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${c.border}`, background: "transparent", color: c.muted, fontSize: 13, fontWeight: 700, cursor: "not-allowed", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                      <Phone size={13} color={c.muted} strokeWidth={2} /> Trimite SMS (în curând)
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ============ AGENT 3 — POSTĂRI SOCIALE (în curând) ============ */}
+                  <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, overflow: "hidden", opacity: 0.85 }}>
+                    <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: c.surface2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <ImageIcon size={20} color={c.muted} strokeWidth={2} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>Postări sociale</div>
+                        <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Generează postări pentru social media în câteva secunde</div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>În curând</span>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             )}
@@ -2859,8 +3021,13 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
   const planNume = (() => {
     try { const a = JSON.parse(localStorage.getItem("calyhub_abonament") || "{}"); return a.planNume || null; } catch { return null; }
   })();
+  const planIdUM = (() => {
+    try { return String(JSON.parse(localStorage.getItem("calyhub_abonament") || "{}").planId || "").toLowerCase(); } catch { return ""; }
+  })();
+  const aiBlocat = !["basic", "pro", "business"].includes(planIdUM);
 
-  const items: { icon: LucideIcon; label: string; sub: string; t: Tab }[] = [
+  const items: { icon: LucideIcon; label: string; sub: string; t: Tab; locked?: boolean }[] = [
+    { icon: Sparkles, label: "Funcții AI", sub: "Asistenții AI ai salonului", t: "functii-ai", locked: aiBlocat },
     { icon: Store, label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
     { icon: Scissors, label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
     { icon: Users, label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
@@ -2905,8 +3072,11 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
                 onMouseLeave={() => setHovered(null)}
                 style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: isActive ? c.orangeAccent : isHovered ? c.surface2 : "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", transition: "background .12s" }}>
                 <span style={{ width: 34, height: 34, borderRadius: 10, background: isActive ? "#FF6B00" : c.surface3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "background .12s" }}><item.icon size={18} color={isActive ? "#fff" : c.muted} strokeWidth={2} /></span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#FF6B00" : c.text }}>{item.label}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#FF6B00" : c.text, display: "flex", alignItems: "center", gap: 6 }}>
+                    {item.label}
+                    {item.locked && <Lock size={11} color={c.xmuted} strokeWidth={2.4} />}
+                  </div>
                   <div style={{ fontSize: 11, color: c.xmuted, marginTop: 1 }}>{item.sub}</div>
                 </div>
               </button>
