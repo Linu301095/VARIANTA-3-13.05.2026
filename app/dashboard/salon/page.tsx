@@ -533,6 +533,7 @@ export default function DashboardSalon() {
   const [mesajeCopiate, setMesajeCopiate] = useState<Record<string, boolean>>({});
   const [reducereRisc, setReducereRisc] = useState(0);
   const [ultimaAnalizaRisc, setUltimaAnalizaRisc] = useState<string | null>(null);
+  const [aiTab, setAiTab] = useState<"recenzii" | "clientiInactivi" | "postari" | null>(null);
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -880,6 +881,8 @@ export default function DashboardSalon() {
     postari: ["business"].includes(planIdCurent),
   };
   const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Gratuit";
+  // Tab implicit în „Funcții AI" = primul agent disponibil din plan
+  const aiTabActiv = aiTab ?? (aiAccess.recenzii ? "recenzii" : aiAccess.clientiInactivi ? "clientiInactivi" : "recenzii");
   const necitite = notificari.filter(n => !n.citit).length;
 
   async function accepta(id: string) {
@@ -2027,9 +2030,31 @@ export default function DashboardSalon() {
                   <button onClick={() => setTab("abonament")} style={{ fontSize: 12.5, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "7px 16px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Vezi planurile</button>
                 </div>
 
+                {/* Selector agent AI */}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+                  {([
+                    { key: "recenzii", label: "Răspunsuri la recenzii", icon: Star, acces: aiAccess.recenzii, badge: null },
+                    { key: "clientiInactivi", label: "Clienți inactivi", icon: Users, acces: aiAccess.clientiInactivi, badge: null },
+                    { key: "postari", label: "Postări sociale", icon: ImageIcon, acces: false, badge: "în curând" },
+                  ] as const).map(ag => {
+                    const activ = aiTabActiv === ag.key;
+                    return (
+                      <button key={ag.key} onClick={() => setAiTab(ag.key)}
+                        style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? (theme === "dark" ? "rgba(255,107,0,.12)" : "#FFF3EA") : c.surface, color: activ ? "#FF6B00" : c.text, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
+                        <ag.icon size={15} color={activ ? "#FF6B00" : c.muted} strokeWidth={2} />
+                        {ag.label}
+                        {!ag.acces && (ag.badge
+                          ? <span style={{ fontSize: 10, fontWeight: 800, color: c.muted, background: c.surface2, padding: "1px 7px", borderRadius: 50 }}>{ag.badge}</span>
+                          : <Lock size={11} color={c.xmuted} strokeWidth={2.4} />)}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
                   {/* ============ AGENT 1 — RĂSPUNSURI AI LA RECENZII ============ */}
+                  {aiTabActiv === "recenzii" && (
                   <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${aiAccess.recenzii ? "rgba(255,107,0,.3)" : c.border}`, overflow: "hidden" }}>
                     <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.border}` }}>
                       <div style={{ width: 40, height: 40, borderRadius: 12, background: theme === "dark" ? "rgba(255,107,0,.15)" : "#FFF3EA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -2136,8 +2161,10 @@ export default function DashboardSalon() {
                       </div>
                     )}
                   </div>
+                  )}
 
                   {/* ============ AGENT 2 — CLIENȚI INACTIVI ============ */}
+                  {aiTabActiv === "clientiInactivi" && (
                   <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${aiAccess.clientiInactivi ? "rgba(245,158,11,.35)" : c.border}`, overflow: "hidden" }}>
                     <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.border}` }}>
                       <div style={{ width: 40, height: 40, borderRadius: 12, background: theme === "dark" ? "rgba(245,158,11,.15)" : "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -2273,8 +2300,10 @@ export default function DashboardSalon() {
                       </div>
                     )}
                   </div>
+                  )}
 
                   {/* ============ AGENT 3 — POSTĂRI SOCIALE (în curând) ============ */}
+                  {aiTabActiv === "postari" && (
                   <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, overflow: "hidden", opacity: 0.85 }}>
                     <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ width: 40, height: 40, borderRadius: 12, background: c.surface2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -2287,6 +2316,7 @@ export default function DashboardSalon() {
                       <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>În curând</span>
                     </div>
                   </div>
+                  )}
 
                 </div>
               </div>
