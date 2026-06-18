@@ -1173,13 +1173,13 @@ export default function DashboardSalon() {
     }
   }
 
-  // Câte zile au trecut de la ultima analiză (null dacă nu există)
-  const zileDeLaAnalizaRisc = ultimaAnalizaRisc
-    ? Math.floor((Date.now() - new Date(ultimaAnalizaRisc).getTime()) / 86400000)
+  // Ore trecute de la ultima analiză (null dacă nu există)
+  const oreDeLaAnalizaRisc = ultimaAnalizaRisc
+    ? Math.floor((Date.now() - new Date(ultimaAnalizaRisc).getTime()) / 3600000)
     : null;
-  const analizaRiscDisponibila = zileDeLaAnalizaRisc === null || zileDeLaAnalizaRisc >= 7;
+  const analizaRiscDisponibila = oreDeLaAnalizaRisc === null || oreDeLaAnalizaRisc >= 24;
 
-  // Încarcă analiza salvată (cache 7 zile) la deschiderea salonului
+  // Încarcă analiza salvată (cache 24 ore) la deschiderea salonului
   useEffect(() => {
     if (!salonData?.id) return;
     try {
@@ -2256,7 +2256,7 @@ export default function DashboardSalon() {
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
                           <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>
                             {ultimaAnalizaRisc
-                              ? <>Ultima analiză: <strong style={{ color: c.text }}>{new Date(ultimaAnalizaRisc).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</strong>{!analizaRiscDisponibila && <> · disponibilă din nou în {7 - (zileDeLaAnalizaRisc ?? 0)} zile</>}</>
+                              ? <>Ultima analiză: <strong style={{ color: c.text }}>{new Date(ultimaAnalizaRisc).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</strong>{!analizaRiscDisponibila && <> · disponibilă din nou în {24 - (oreDeLaAnalizaRisc ?? 0)} {(24 - (oreDeLaAnalizaRisc ?? 0)) === 1 ? "oră" : "ore"}</>}</>
                               : "Nicio analiză făcută încă."}
                           </div>
                           <button
@@ -2270,7 +2270,7 @@ export default function DashboardSalon() {
 
                         {!analizaRiscDisponibila && (
                           <div style={{ fontSize: 11.5, color: c.xmuted, marginBottom: 14, fontStyle: "italic" }}>
-                            Analiza se poate reface o dată la 7 zile — datele afișate mai jos sunt din ultima analiză.
+                            Analiza se poate reface o dată la 24 de ore — datele afișate mai jos sunt din ultima analiză.
                           </div>
                         )}
 
