@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import Cropper from "react-easy-crop";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, type LucideIcon } from "lucide-react";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -15,6 +15,9 @@ type ProgramareSalon = {
   client: string;
   clientAvatar?: string | null;
   animal: string;
+  animalNume?: string | null;
+  rasa?: string | null;
+  specie?: string | null;
   talie?: string | null;
   serviciu: string;
   ora: string;
@@ -536,7 +539,9 @@ export default function DashboardSalon() {
   const [ultimaAnalizaRisc, setUltimaAnalizaRisc] = useState<string | null>(null);
   const [mesajeTrimise, setMesajeTrimise] = useState<Record<string, boolean>>({});
   const [mesajTrimiteLoading, setMesajTrimiteLoading] = useState<Record<string, boolean>>({});
-  const [aiTab, setAiTab] = useState<"recenzii" | "clientiInactivi" | "postari" | null>(null);
+  const [aiTab, setAiTab] = useState<"recenzii" | "clientiInactivi" | "fisaIngrijire" | "postari" | null>(null);
+  // Fișă post-grooming: stare per programare { draft, generand, trimitand, trimis, eroare }
+  const [fisaState, setFisaState] = useState<Record<string, { draft: string; generand: boolean; trimitand: boolean; trimis: boolean; eroare: string | null }>>({});
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -802,6 +807,9 @@ export default function DashboardSalon() {
           client: clientNume,
           clientAvatar: esteApp ? (profil?.avatar_url || null) : null,
           animal: animalText,
+          animalNume: esteApp ? (animal?.nume || null) : null,
+          rasa: esteApp ? (animal?.rasa || null) : null,
+          specie: esteApp ? (animal?.specie || null) : null,
           talie: talieEf || null,
           serviciu: p.serviciu,
           ora: p.ora,
@@ -882,6 +890,7 @@ export default function DashboardSalon() {
   const aiAccess = {
     recenzii: ["basic", "pro", "business"].includes(planIdCurent),
     clientiInactivi: ["pro", "business"].includes(planIdCurent),
+    fisaIngrijire: ["pro", "business"].includes(planIdCurent),
     postari: ["business"].includes(planIdCurent),
   };
   const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Trial";
@@ -1171,6 +1180,48 @@ export default function DashboardSalon() {
     if (salonData?.id) {
       try { localStorage.setItem(`calyhub_clienti_risc_${salonData.id}`, JSON.stringify({ data: ultimaAnalizaRisc, clienti: clientiRisc, trimise: Object.keys(next) })); } catch {}
     }
+  }
+
+  // ===== FIȘĂ ÎNGRIJIRE POST-GROOMING =====
+  function setFisa(id: string, patch: Partial<{ draft: string; generand: boolean; trimitand: boolean; trimis: boolean; eroare: string | null }>) {
+    setFisaState(prev => {
+      const baza = prev[id] || { draft: "", generand: false, trimitand: false, trimis: false, eroare: null };
+      return { ...prev, [id]: { ...baza, ...patch } };
+    });
+  }
+
+  async function genereazaFisa(p: ProgramareSalon) {
+    setFisa(p.id, { generand: true, eroare: null });
+    try {
+      const res = await fetch("/api/ai/fisa-ingrijire", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ animal: p.animalNume, rasa: p.rasa, specie: p.specie, serviciu: p.serviciu, salonNume: numeSalon }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Eroare server");
+      setFisa(p.id, { draft: json.fisa || "", generand: false });
+    } catch (e: any) {
+      setFisa(p.id, { generand: false, eroare: e.message || "Nu am putut genera fișa" });
+    }
+  }
+
+  async function trimiteFisa(p: ProgramareSalon) {
+    const st = fisaState[p.id];
+    if (!st?.draft.trim() || !p.user_id || st.trimitand || st.trimis) return;
+    setFisa(p.id, { trimitand: true, eroare: null });
+    const { error } = await supabase.from("notificari").insert({
+      user_id: p.user_id,
+      tip: "fisa_ingrijire",
+      mesaj: `📋 ${numeSalon}: ${st.draft.trim()}`,
+      programare_id: p.id,
+    });
+    if (error) {
+      console.error("Trimitere fișă îngrijire - eroare:", error);
+      setFisa(p.id, { trimitand: false, eroare: "Nu am putut trimite fișa. Încearcă din nou." });
+      return;
+    }
+    setFisa(p.id, { trimitand: false, trimis: true });
   }
 
   // Ore trecute de la ultima analiză (null dacă nu există)
@@ -2101,6 +2152,7 @@ export default function DashboardSalon() {
                   {([
                     { key: "recenzii", label: "Răspunsuri la recenzii", icon: Star, acces: aiAccess.recenzii, badge: null },
                     { key: "clientiInactivi", label: "Clienți inactivi", icon: Users, acces: aiAccess.clientiInactivi, badge: null },
+                    { key: "fisaIngrijire", label: "Fișă post-grooming", icon: ClipboardList, acces: aiAccess.fisaIngrijire, badge: null },
                     { key: "postari", label: "Postări sociale", icon: ImageIcon, acces: false, badge: "în curând" },
                   ] as const).map(ag => {
                     const activ = aiTabActiv === ag.key;
@@ -2384,7 +2436,99 @@ export default function DashboardSalon() {
                   </div>
                   )}
 
-                  {/* ============ AGENT 3 — POSTĂRI SOCIALE (în curând) ============ */}
+                  {/* ============ AGENT 3 — FIȘĂ ÎNGRIJIRE POST-GROOMING ============ */}
+                  {aiTabActiv === "fisaIngrijire" && (() => {
+                    const finalizate = programari
+                      .filter(p => p.status === "finalizat" && p.esteApp && p.user_id && p.animalNume)
+                      .sort((a, b) => (b.data + b.ora).localeCompare(a.data + a.ora))
+                      .slice(0, 20);
+                    return (
+                    <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${aiAccess.fisaIngrijire ? "rgba(59,130,246,.35)" : c.border}`, overflow: "hidden" }}>
+                      <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.border}` }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: theme === "dark" ? "rgba(59,130,246,.15)" : "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <ClipboardList size={20} color="#3B82F6" strokeWidth={2} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>Fișă îngrijire post-grooming</div>
+                          <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Trimite clientului sfaturi de îngrijire personalizate pe rasă, după fiecare vizită</div>
+                        </div>
+                        {aiAccess.fisaIngrijire
+                          ? <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>Activ</span>
+                          : <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Lock size={11} strokeWidth={2.4} /> Plan Pro</span>}
+                      </div>
+
+                      {!aiAccess.fisaIngrijire ? (
+                        <div style={{ padding: "22px 18px", textAlign: "center" }}>
+                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil începând cu planul <strong style={{ color: "#FF6B00" }}>Pro</strong>. Oferă-le clienților sfaturi de îngrijire pe măsura rasei animalului — un plus de profesionalism care îi aduce înapoi.</div>
+                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Pro</button>
+                        </div>
+                      ) : finalizate.length === 0 ? (
+                        <div style={{ padding: "22px 18px", textAlign: "center" }}>
+                          <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><ClipboardList size={26} color="#3B82F6" strokeWidth={1.5} /></div>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 2 }}>Nicio programare finalizată încă</div>
+                          <div style={{ fontSize: 12, color: c.muted }}>După ce o programare din aplicație devine finalizată, poți trimite clientului o fișă de îngrijire.</div>
+                        </div>
+                      ) : (
+                        <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
+                          {finalizate.map(p => {
+                            const st = fisaState[p.id];
+                            return (
+                              <div key={p.id} style={{ background: c.surface2, borderRadius: 12, padding: "12px 14px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                                    {p.clientAvatar
+                                      ? <img src={p.clientAvatar} alt={p.client} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                                      : <div style={{ width: 32, height: 32, borderRadius: "50%", background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: "#FF6B00", flexShrink: 0 }}>{p.client.charAt(0)}</div>}
+                                    <div style={{ minWidth: 0 }}>
+                                      <div style={{ fontSize: 13, fontWeight: 800, color: c.text }}>{p.animalNume}{p.rasa ? ` · ${p.rasa}` : ""}</div>
+                                      <div style={{ fontSize: 11, color: c.muted }}>{p.client} · {p.serviciu} · {new Date(p.data).toLocaleDateString("ro-RO", { day: "numeric", month: "long" })}</div>
+                                    </div>
+                                  </div>
+                                  {st?.trimis
+                                    ? <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "5px 11px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0 }}><CheckCircle2 size={13} strokeWidth={2.4} /> Trimisă</span>
+                                    : !st || (!st.draft && !st.generand)
+                                      ? <button onClick={() => genereazaFisa(p)}
+                                          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #3B82F6", background: "transparent", color: "#3B82F6", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                                          <Sparkles size={13} strokeWidth={2} /> Generează fișa
+                                        </button>
+                                      : null}
+                                </div>
+
+                                {st && (st.generand || st.draft) && !st.trimis && (
+                                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${c.border}` }}>
+                                    <div style={{ fontSize: 11, fontWeight: 800, color: "#3B82F6", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                                      <Sparkles size={12} strokeWidth={2} /> Fișă AI {st.generand ? "— se generează…" : "(editabilă)"}
+                                    </div>
+                                    <textarea
+                                      value={st.draft}
+                                      onChange={e => setFisa(p.id, { draft: e.target.value })}
+                                      disabled={st.generand}
+                                      rows={8}
+                                      style={{ width: "100%", boxSizing: "border-box", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 12.5, fontFamily: "Nunito, sans-serif", lineHeight: 1.6, padding: "9px 11px", resize: "vertical" }}
+                                    />
+                                    {st.eroare && <div style={{ fontSize: 11.5, color: "#DC2626", marginTop: 6 }}>{st.eroare}</div>}
+                                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                                      <button onClick={() => genereazaFisa(p)} disabled={st.generand}
+                                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #3B82F6", background: "transparent", color: "#3B82F6", fontSize: 12, fontWeight: 800, cursor: st.generand ? "default" : "pointer", opacity: st.generand ? .6 : 1, fontFamily: "Nunito, sans-serif" }}>
+                                        <Sparkles size={13} strokeWidth={2} /> Regenerează
+                                      </button>
+                                      <button onClick={() => trimiteFisa(p)} disabled={st.generand || st.trimitand || !st.draft.trim()}
+                                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "none", background: "#3B82F6", color: "#fff", fontSize: 12, fontWeight: 800, cursor: (st.generand || st.trimitand || !st.draft.trim()) ? "default" : "pointer", opacity: (st.generand || st.trimitand || !st.draft.trim()) ? .5 : 1, fontFamily: "Nunito, sans-serif" }}>
+                                        <Send size={13} strokeWidth={2} /> {st.trimitand ? "Se trimite…" : "Trimite clientului"}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    );
+                  })()}
+
+                  {/* ============ AGENT 4 — POSTĂRI SOCIALE (în curând) ============ */}
                   {aiTabActiv === "postari" && (
                   <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, overflow: "hidden", opacity: 0.85 }}>
                     <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12 }}>
