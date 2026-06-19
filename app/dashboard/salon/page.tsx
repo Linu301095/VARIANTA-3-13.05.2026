@@ -1068,11 +1068,29 @@ export default function DashboardSalon() {
   }, [consultantMesaje]);
 
   // Contor intrebari azi (din localStorage)
+  // Contor intrebari azi — sursa: Supabase (cross-device), fallback localStorage
   useEffect(() => {
     if (!salonData?.id) return;
-    const key = `calyhub_consultant_${salonData.id}_${new Date().toISOString().slice(0, 10)}`;
+    let activ = true;
+    const zi = new Date().toISOString().slice(0, 10);
+    const key = `calyhub_consultant_${salonData.id}_${zi}`;
+    // fallback imediat din localStorage (evita flash) pana raspunde DB-ul
     setIntrebariAzi(Number(localStorage.getItem(key) || 0));
-  }, [salonData?.id, consultantMesaje.length]);
+    (async () => {
+      const { data } = await supabase
+        .from("consultant_utilizare")
+        .select("intrebari")
+        .eq("salon_id", salonData.id)
+        .eq("zi", zi)
+        .maybeSingle();
+      if (!activ) return;
+      if (data && typeof data.intrebari === "number") {
+        setIntrebariAzi(data.intrebari);
+        try { localStorage.setItem(key, String(data.intrebari)); } catch {}
+      }
+    })();
+    return () => { activ = false; };
+  }, [salonData?.id]);
 
   // Incarca istoricul conversatiei consultantului din Supabase (un rand per salon)
   useEffect(() => {
@@ -1365,7 +1383,11 @@ export default function DashboardSalon() {
       setClientiRisc(rezultat);
       setUltimaAnalizaRisc(acum);
       setMesajeTrimise({}); // analiză nouă → resetăm starea „trimis"
-      // Cache local 7 zile — evită apeluri AI repetate (cost)
+      // Sursa de adevar: Supabase (cross-device). localStorage ramane fallback rapid.
+      await supabase.from("clienti_risc_analiza").upsert(
+        { salon_id: salonId, data: acum, clienti: rezultat, trimise: [], updated_at: acum },
+        { onConflict: "salon_id" }
+      );
       try { localStorage.setItem(`calyhub_clienti_risc_${salonId}`, JSON.stringify({ data: acum, clienti: rezultat, trimise: [] })); } catch {}
     } catch (e: any) {
       setClientiRiscEroare(e.message || "Eroare la încărcarea datelor");
@@ -1392,9 +1414,14 @@ export default function DashboardSalon() {
     }
     const next = { ...mesajeTrimise, [client.userId]: true };
     setMesajeTrimise(next);
-    // Persistăm starea „trimis" în cache, ca să nu se retrimită după refresh
+    // Persistăm starea „trimis" în Supabase (cross-device) + localStorage fallback
     if (salonData?.id) {
-      try { localStorage.setItem(`calyhub_clienti_risc_${salonData.id}`, JSON.stringify({ data: ultimaAnalizaRisc, clienti: clientiRisc, trimise: Object.keys(next) })); } catch {}
+      const trimise = Object.keys(next);
+      await supabase.from("clienti_risc_analiza").upsert(
+        { salon_id: salonData.id, data: ultimaAnalizaRisc, clienti: clientiRisc, trimise, updated_at: new Date().toISOString() },
+        { onConflict: "salon_id" }
+      );
+      try { localStorage.setItem(`calyhub_clienti_risc_${salonData.id}`, JSON.stringify({ data: ultimaAnalizaRisc, clienti: clientiRisc, trimise })); } catch {}
     }
   }
 
@@ -1408,10 +1435,12 @@ export default function DashboardSalon() {
     setConsultantMesaje(mesajeNoi);
     setConsultantInput("");
     setConsultantLoading(true);
-    if (key) {
-      const n = intrebariAzi + 1;
-      localStorage.setItem(key, String(n));
+    // Increment atomic in Supabase (contor comun pe toate dispozitivele)
+    if (salonId) {
+      const { data: total } = await supabase.rpc("consultant_incrementeaza", { p_salon_id: salonId });
+      const n = typeof total === "number" ? total : intrebariAzi + 1;
       setIntrebariAzi(n);
+      if (key) { try { localStorage.setItem(key, String(n)); } catch {} }
     }
     const snapshot = computeSnapshot(programari, recenziiSalon, numeSalon);
     try {
@@ -1478,21 +1507,37 @@ export default function DashboardSalon() {
     : null;
   const analizaRiscDisponibila = oreDeLaAnalizaRisc === null || oreDeLaAnalizaRisc >= 24;
 
-  // Încarcă analiza salvată (cache 24 ore) la deschiderea salonului
+  // Încarcă analiza salvată (cache 24 ore) — sursa: Supabase (cross-device)
   useEffect(() => {
     if (!salonData?.id) return;
+    let activ = true;
+    const aplica = (data: string, clienti: any[], trimise: string[]) => {
+      setUltimaAnalizaRisc(data);
+      setClientiRisc(clienti);
+      setMesajeTrimise(Object.fromEntries(trimise.map((uid: string) => [uid, true])));
+    };
+    // fallback imediat din localStorage (evita flash) pana raspunde DB-ul
     try {
       const raw = localStorage.getItem(`calyhub_clienti_risc_${salonData.id}`);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (parsed?.data && Array.isArray(parsed?.clienti)) {
-        setUltimaAnalizaRisc(parsed.data);
-        setClientiRisc(parsed.clienti);
-        if (Array.isArray(parsed.trimise)) {
-          setMesajeTrimise(Object.fromEntries(parsed.trimise.map((uid: string) => [uid, true])));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.data && Array.isArray(parsed?.clienti)) {
+          aplica(parsed.data, parsed.clienti, Array.isArray(parsed.trimise) ? parsed.trimise : []);
         }
       }
     } catch {}
+    (async () => {
+      const { data } = await supabase
+        .from("clienti_risc_analiza")
+        .select("data, clienti, trimise")
+        .eq("salon_id", salonData.id)
+        .maybeSingle();
+      if (!activ || !data) return;
+      if (data.data && Array.isArray(data.clienti)) {
+        aplica(data.data, data.clienti, Array.isArray(data.trimise) ? data.trimise : []);
+      }
+    })();
+    return () => { activ = false; };
   }, [salonData?.id]);
 
   function setRaspunsState(id: string, patch: Partial<{ editare: boolean; draft: string; generand: boolean; trimitand: boolean; eroare: string | null }>) {
