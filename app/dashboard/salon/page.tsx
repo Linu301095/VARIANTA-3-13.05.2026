@@ -2747,40 +2747,45 @@ export default function DashboardSalon() {
                     const snapshot = computeSnapshot(programari, recenziiSalon, numeSalon);
                     const sugestii = computeSugestii(snapshot);
                     const ramase = 30 - intrebariAzi;
+                    const p = isMobile ? "12px 14px" : "16px 18px";
+                    const pInner = isMobile ? "12px 14px" : "16px 18px";
                     return (
-                    <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${aiAccess.consultant ? "rgba(99,102,241,.35)" : c.border}`, overflow: "hidden" }}>
-                      <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.border}` }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 12, background: theme === "dark" ? "rgba(99,102,241,.15)" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <MessageSquare size={20} color="#6366F1" strokeWidth={2} />
+                    <div style={{ background: c.surface, borderRadius: isMobile ? 14 : 18, border: `1.5px solid ${aiAccess.consultant ? "rgba(99,102,241,.35)" : c.border}`, overflow: "hidden" }}>
+                      {/* Header */}
+                      <div style={{ padding: p, display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${c.border}` }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: theme === "dark" ? "rgba(99,102,241,.15)" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <MessageSquare size={18} color="#6366F1" strokeWidth={2} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>Consultant AI</div>
-                          <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Analizează activitatea salonului și răspunde la orice întrebare de business</div>
+                          <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 900, color: c.text }}>Consultant AI</div>
+                          {!isMobile && <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Analizează activitatea salonului și răspunde la orice întrebare de business</div>}
                         </div>
                         {aiAccess.consultant
-                          ? <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>Activ</span>
-                          : <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Lock size={11} strokeWidth={2.4} /> Plan Business</span>}
+                          ? <span style={{ fontSize: 10, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "3px 9px", borderRadius: 50, flexShrink: 0 }}>Activ</span>
+                          : <span style={{ fontSize: 10, fontWeight: 800, color: c.muted, background: c.surface2, padding: "3px 9px", borderRadius: 50, display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}><Lock size={10} strokeWidth={2.4} />{!isMobile && " Plan Business"}</span>}
                       </div>
 
                       {!aiAccess.consultant ? (
-                        <div style={{ padding: "22px 18px", textAlign: "center" }}>
-                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. Consultantul AI analizează datele reale ale salonului tău și oferă sfaturi concrete de creștere a afacerii.</div>
-                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Business</button>
+                        <div style={{ padding: pInner, textAlign: "center" }}>
+                          <div style={{ fontSize: 13, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. Consultantul AI analizează datele reale ale salonului tău și oferă sfaturi concrete de creștere a afacerii.</div>
+                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif", width: isMobile ? "100%" : "auto" }}>Activează planul Business</button>
                         </div>
                       ) : (
-                        <div style={{ padding: "16px 18px" }}>
+                        <div style={{ padding: pInner }}>
 
                           {/* Sugestii proactive */}
                           {sugestii.length > 0 && (
-                            <div style={{ marginBottom: 16 }}>
-                              <div style={{ fontSize: 11, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>✨ Insights detectate din datele tale</div>
+                            <div style={{ marginBottom: 14 }}>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1.1, marginBottom: 7 }}>✨ Insights detectate din datele tale</div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                                 {sugestii.map((s, i) => (
-                                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: theme === "dark" ? "rgba(99,102,241,.08)" : "#EEF2FF", borderRadius: 10, padding: "9px 12px", border: `1px solid ${theme === "dark" ? "rgba(99,102,241,.2)" : "#C7D2FE"}` }}>
-                                    <span style={{ fontSize: 16, flexShrink: 0 }}>{s.icon}</span>
-                                    <span style={{ flex: 1, fontSize: 12.5, color: c.text, fontWeight: 600, lineHeight: 1.4 }}>{s.text}</span>
+                                  <div key={i} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 7 : 10, background: theme === "dark" ? "rgba(99,102,241,.08)" : "#EEF2FF", borderRadius: 10, padding: isMobile ? "10px 11px" : "9px 12px", border: `1px solid ${theme === "dark" ? "rgba(99,102,241,.2)" : "#C7D2FE"}` }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
+                                      <span style={{ fontSize: 15, flexShrink: 0 }}>{s.icon}</span>
+                                      <span style={{ flex: 1, fontSize: isMobile ? 12 : 12.5, color: c.text, fontWeight: 600, lineHeight: 1.4 }}>{s.text}</span>
+                                    </div>
                                     <button onClick={() => trimiteMesajConsultant(s.intrebare)} disabled={consultantLoading || ramase <= 0}
-                                      style={{ fontSize: 12, fontWeight: 800, color: "#6366F1", background: "none", border: "1.5px solid #6366F1", borderRadius: 50, padding: "5px 12px", cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0, opacity: (consultantLoading || ramase <= 0) ? .5 : 1 }}>
+                                      style={{ fontSize: 11, fontWeight: 800, color: "#6366F1", background: "none", border: "1.5px solid #6366F1", borderRadius: 50, padding: "5px 12px", cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0, opacity: (consultantLoading || ramase <= 0) ? .5 : 1, alignSelf: isMobile ? "flex-end" : "auto" }}>
                                       Analizează
                                     </button>
                                   </div>
@@ -2790,16 +2795,16 @@ export default function DashboardSalon() {
                           )}
 
                           {/* Rapoarte rapide */}
-                          <div style={{ marginBottom: 16 }}>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>Rapoarte rapide</div>
-                            <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                          <div style={{ marginBottom: 14 }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1.1, marginBottom: 7 }}>Rapoarte rapide</div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                               {[
-                                { label: "Raport luna aceasta", q: `Genereaza un raport complet pentru ${snapshot.luna}: ce a mers bine, ce nu, si 3 recomandari concrete.` },
-                                { label: "Comparatie cu luna trecuta", q: `Compara luna aceasta cu luna trecuta si explica diferentele la programari si incasari.` },
-                                { label: "Top 3 imbunatatiri", q: "Ce 3 lucruri concrete ar trebui sa imbunatatesc urgent in salonul meu pentru a creste veniturile?" },
+                                { label: "📊 Raport luna aceasta", q: `Genereaza un raport complet pentru ${snapshot.luna}: ce a mers bine, ce nu, si 3 recomandari concrete.` },
+                                { label: "📈 Comparatie cu luna trecuta", q: `Compara luna aceasta cu luna trecuta si explica diferentele la programari si incasari.` },
+                                { label: "🚀 Top 3 imbunatatiri urgente", q: "Ce 3 lucruri concrete ar trebui sa imbunatatesc urgent in salonul meu pentru a creste veniturile?" },
                               ].map((r, i) => (
                                 <button key={i} onClick={() => trimiteMesajConsultant(r.q)} disabled={consultantLoading || ramase <= 0}
-                                  style={{ fontSize: 12, fontWeight: 800, color: "#6366F1", background: theme === "dark" ? "rgba(99,102,241,.08)" : "#EEF2FF", border: "1.5px solid #C7D2FE", borderRadius: 50, padding: "7px 14px", cursor: "pointer", fontFamily: "Nunito, sans-serif", opacity: (consultantLoading || ramase <= 0) ? .5 : 1 }}>
+                                  style={{ fontSize: 12, fontWeight: 700, color: "#6366F1", background: theme === "dark" ? "rgba(99,102,241,.08)" : "#EEF2FF", border: "1.5px solid #C7D2FE", borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "Nunito, sans-serif", opacity: (consultantLoading || ramase <= 0) ? .5 : 1, textAlign: "left", width: "100%" }}>
                                   {r.label}
                                 </button>
                               ))}
@@ -2808,11 +2813,11 @@ export default function DashboardSalon() {
 
                           {/* Chat */}
                           {consultantMesaje.length > 0 && (
-                            <div style={{ maxHeight: 380, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, marginBottom: 12, padding: "4px 0" }}>
+                            <div style={{ maxHeight: isMobile ? 280 : 380, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 10, padding: "4px 0", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
                               {consultantMesaje.map((m, i) => (
                                 <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
                                   <div style={{
-                                    maxWidth: "82%",
+                                    maxWidth: isMobile ? "90%" : "82%",
                                     background: m.role === "user"
                                       ? (theme === "dark" ? "rgba(255,107,0,.18)" : "#FFF3EA")
                                       : c.surface2,
@@ -2820,14 +2825,15 @@ export default function DashboardSalon() {
                                       ? "1.5px solid rgba(255,107,0,.4)"
                                       : `1.5px solid ${c.border}`,
                                     borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-                                    padding: "10px 13px",
-                                    fontSize: 13,
+                                    padding: isMobile ? "8px 11px" : "10px 13px",
+                                    fontSize: isMobile ? 12.5 : 13,
                                     color: c.text,
                                     lineHeight: 1.6,
                                     fontWeight: m.role === "user" ? 700 : 500,
                                     whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
                                   }}>
-                                    {m.role === "assistant" && <div style={{ fontSize: 10, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>✨ Consultant AI</div>}
+                                    {m.role === "assistant" && <div style={{ fontSize: 9, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>✨ Consultant AI</div>}
                                     {m.content}
                                   </div>
                                 </div>
@@ -2835,8 +2841,8 @@ export default function DashboardSalon() {
                               {consultantLoading && (
                                 <div style={{ display: "flex", justifyContent: "flex-start" }}>
                                   <div style={{ background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: "14px 14px 14px 4px", padding: "10px 14px", fontSize: 12, color: c.muted }}>
-                                    <span style={{ display: "inline-flex", gap: 4 }}>
-                                      {[0, 1, 2].map(j => <span key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366F1", opacity: 0.7, display: "inline-block" }}>.</span>)}
+                                    <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+                                      {[0, 1, 2].map(j => <span key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366F1", opacity: 0.7, display: "inline-block" }} />)}
                                     </span>
                                   </div>
                                 </div>
@@ -2846,29 +2852,31 @@ export default function DashboardSalon() {
                           )}
 
                           {/* Input */}
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <input
+                          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                            <textarea
                               value={consultantInput}
                               onChange={e => setConsultantInput(e.target.value)}
-                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); trimiteMesajConsultant(consultantInput); } }}
+                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !isMobile) { e.preventDefault(); trimiteMesajConsultant(consultantInput); } }}
                               disabled={consultantLoading || ramase <= 0}
-                              placeholder={ramase <= 0 ? "Limita zilnica atinsa (30/30)" : "Intreaba consultantul... (ex: Cum cresc incasarile vinerea?)"}
-                              style={{ flex: 1, borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 13, fontFamily: "Nunito, sans-serif", padding: "10px 16px", outline: "none" }}
+                              rows={isMobile ? 2 : 1}
+                              placeholder={ramase <= 0 ? "Limita zilnica atinsa (30/30)" : "Intreaba consultantul..."}
+                              style={{ flex: 1, borderRadius: 14, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 13, fontFamily: "Nunito, sans-serif", padding: "10px 14px", outline: "none", resize: "none", lineHeight: 1.5, minHeight: isMobile ? 54 : 42 }}
                             />
                             <button onClick={() => trimiteMesajConsultant(consultantInput)} disabled={consultantLoading || !consultantInput.trim() || ramase <= 0}
-                              style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: "#6366F1", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: (consultantLoading || !consultantInput.trim() || ramase <= 0) ? "default" : "pointer", opacity: (consultantLoading || !consultantInput.trim() || ramase <= 0) ? .45 : 1, flexShrink: 0 }}>
-                              <Send size={15} strokeWidth={2} />
+                              style={{ width: 42, height: 42, borderRadius: 12, border: "none", background: "#6366F1", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: (consultantLoading || !consultantInput.trim() || ramase <= 0) ? "default" : "pointer", opacity: (consultantLoading || !consultantInput.trim() || ramase <= 0) ? .45 : 1, flexShrink: 0, marginBottom: isMobile ? 6 : 1 }}>
+                              <Send size={16} strokeWidth={2} />
                             </button>
                           </div>
+                          {isMobile && <div style={{ fontSize: 10, color: c.xmuted, marginTop: 5, textAlign: "center" }}>Apasă butonul portocaliu pentru a trimite</div>}
 
                           {/* Footer chat */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 7 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: isMobile ? 10 : 7, flexWrap: "wrap", gap: 4 }}>
                             <span style={{ fontSize: 11, color: ramase <= 5 ? "#D97706" : c.xmuted, fontWeight: ramase <= 5 ? 700 : 500 }}>
-                              {ramase}/30 intrebari disponibile azi
+                              {ramase}/30 întrebări disponibile azi
                             </span>
                             {consultantMesaje.length > 0 && (
-                              <button onClick={() => setConsultantMesaje([])} style={{ fontSize: 11, color: c.xmuted, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0 }}>
-                                Sterge conversatia
+                              <button onClick={() => setConsultantMesaje([])} style={{ fontSize: 11, color: c.xmuted, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0, minHeight: 32 }}>
+                                Șterge conversația
                               </button>
                             )}
                           </div>
