@@ -93,13 +93,14 @@ export default function AbonamentSalon() {
 
   const promoActiva = locuriRamase === null || locuriRamase > 0;
 
-  function alegePlan() {
+  async function alegePlan() {
     setLoading(true);
     const plan = PLANURI.find(p => p.id === ales)!;
     const dataExpirare = new Date();
     if (promoActiva) dataExpirare.setMonth(dataExpirare.getMonth() + 3);
     else dataExpirare.setMonth(dataExpirare.getMonth() + 1);
-    localStorage.setItem("calyhub_abonament", JSON.stringify({
+
+    const abonamentObj = {
       planId: plan.id,
       planNume: plan.nume,
       pret: plan.pret,
@@ -107,7 +108,17 @@ export default function AbonamentSalon() {
       dataExpirare: dataExpirare.toISOString(),
       trialGratuit: promoActiva,
       autoRenew: true,
-    }));
+    };
+
+    // Salvam planul în Supabase (sursă de adevăr, cross-device)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("saloane").update({ plan: plan.id }).eq("user_id", user.id);
+    }
+
+    // Pastram si localStorage ca fallback imediat (evita flash la redirect)
+    try { localStorage.setItem("calyhub_abonament", JSON.stringify(abonamentObj)); } catch {}
+
     setTimeout(() => router.push("/dashboard/salon"), 700);
   }
 
