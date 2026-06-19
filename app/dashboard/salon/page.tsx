@@ -706,6 +706,7 @@ export default function DashboardSalon() {
   const [consultantLoading, setConsultantLoading] = useState(false);
   const [intrebariAzi, setIntrebariAzi] = useState(0);
   const consultantChatEndRef = React.useRef<HTMLDivElement>(null);
+  const consultantLoadedRef = React.useRef(false); // true după ce am încărcat conversația din DB
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -1070,6 +1071,41 @@ export default function DashboardSalon() {
     const key = `calyhub_consultant_${salonData.id}_${new Date().toISOString().slice(0, 10)}`;
     setIntrebariAzi(Number(localStorage.getItem(key) || 0));
   }, [salonData?.id, consultantMesaje.length]);
+
+  // Incarca istoricul conversatiei consultantului din Supabase (un rand per salon)
+  useEffect(() => {
+    if (!salonData?.id) return;
+    let activ = true;
+    consultantLoadedRef.current = false;
+    (async () => {
+      const { data } = await supabase
+        .from("consultant_conversatii")
+        .select("mesaje")
+        .eq("salon_id", salonData.id)
+        .maybeSingle();
+      if (!activ) return;
+      if (data?.mesaje && Array.isArray(data.mesaje)) {
+        setConsultantMesaje(data.mesaje as ConsultantMesaj[]);
+      }
+      consultantLoadedRef.current = true;
+    })();
+    return () => { activ = false; };
+  }, [salonData?.id]);
+
+  // Salveaza conversatia in Supabase la fiecare schimbare (dupa ce s-a incarcat)
+  useEffect(() => {
+    if (!salonData?.id || !consultantLoadedRef.current) return;
+    const salonId = salonData.id;
+    const t = setTimeout(() => {
+      // pastram ultimele 50 de mesaje ca sa nu crestem randul la nesfarsit
+      const mesajeDeStocat = consultantMesaje.slice(-50);
+      supabase
+        .from("consultant_conversatii")
+        .upsert({ salon_id: salonId, mesaje: mesajeDeStocat, updated_at: new Date().toISOString() }, { onConflict: "salon_id" })
+        .then(() => {});
+    }, 400);
+    return () => clearTimeout(t);
+  }, [consultantMesaje, salonData?.id]);
   const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Trial";
   // Tab implicit în „Funcții AI" = primul agent disponibil din plan
   const aiTabActiv = aiTab ?? (aiAccess.recenzii ? "recenzii" : aiAccess.clientiInactivi ? "clientiInactivi" : "recenzii");
