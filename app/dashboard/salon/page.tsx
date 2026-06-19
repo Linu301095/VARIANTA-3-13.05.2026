@@ -1058,6 +1058,7 @@ export default function DashboardSalon() {
         .eq("salon_id", salonId)
         .eq("status", "finalizat")
         .not("user_id", "is", null)
+        .neq("user_id", userId)
         .order("data", { ascending: true });
 
       if (!prog || prog.length === 0) { setClientiRisc([]); return; }
