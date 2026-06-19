@@ -1048,8 +1048,10 @@ export default function DashboardSalon() {
     echipa: "Echipa mea", animale: "Istoric animale", abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
   };
 
-  // Acces agenți AI în funcție de plan (sursa: localStorage calyhub_abonament -> planId)
+  // Acces agenți AI în funcție de plan (sursa: saloane.plan din Supabase — cross-device)
+  // Fallback pe localStorage pentru cazul în care salonData nu s-a incarcat inca
   const planIdCurent = (() => {
+    if (salonData?.plan) return String(salonData.plan).toLowerCase();
     try { return String(JSON.parse(localStorage.getItem("calyhub_abonament") || "{}").planId || "").toLowerCase(); } catch { return ""; }
   })();
   const aiAccess = {
@@ -1791,7 +1793,7 @@ export default function DashboardSalon() {
 
             {/* Right: user menu */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} avatarUrl={avatarUrl} pozaUrl={pozaUrl} />
+              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} avatarUrl={avatarUrl} pozaUrl={pozaUrl} planId={planIdCurent} />
             </div>
           </div>
         </header>
@@ -3665,16 +3667,14 @@ export default function DashboardSalon() {
   );
 }
 
-function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl, pozaUrl }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null; pozaUrl?: string | null }) {
+function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl, pozaUrl, planId }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null; pozaUrl?: string | null; planId?: string }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<Tab | "logout" | null>(null);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
-  const planNume = (() => {
-    try { const a = JSON.parse(localStorage.getItem("calyhub_abonament") || "{}"); return a.planNume || null; } catch { return null; }
-  })();
-  const planIdUM = (() => {
+  const planIdUM = planId || (() => {
     try { return String(JSON.parse(localStorage.getItem("calyhub_abonament") || "{}").planId || "").toLowerCase(); } catch { return ""; }
   })();
+  const planNume = planIdUM ? planIdUM.charAt(0).toUpperCase() + planIdUM.slice(1) : null;
   const aiBlocat = !["basic", "pro", "business"].includes(planIdUM);
 
   const items: { icon: LucideIcon; label: string; sub: string; t: Tab; locked?: boolean }[] = [
