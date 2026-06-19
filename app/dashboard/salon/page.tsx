@@ -890,7 +890,7 @@ export default function DashboardSalon() {
   const aiAccess = {
     recenzii: ["basic", "pro", "business"].includes(planIdCurent),
     clientiInactivi: ["pro", "business"].includes(planIdCurent),
-    fisaIngrijire: ["pro", "business"].includes(planIdCurent),
+    fisaIngrijire: ["business"].includes(planIdCurent),
     postari: ["business"].includes(planIdCurent),
   };
   const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Trial";
@@ -2458,13 +2458,13 @@ export default function DashboardSalon() {
                         </div>
                         {aiAccess.fisaIngrijire
                           ? <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>Activ</span>
-                          : <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Lock size={11} strokeWidth={2.4} /> Plan Pro</span>}
+                          : <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Lock size={11} strokeWidth={2.4} /> Plan Business</span>}
                       </div>
 
                       {!aiAccess.fisaIngrijire ? (
                         <div style={{ padding: "22px 18px", textAlign: "center" }}>
-                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil începând cu planul <strong style={{ color: "#FF6B00" }}>Pro</strong>. Oferă-le clienților sfaturi de îngrijire pe măsura rasei animalului — un plus de profesionalism care îi aduce înapoi.</div>
-                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Pro</button>
+                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. Oferă-le clienților sfaturi de îngrijire pe măsura rasei animalului — un plus de profesionalism care îi aduce înapoi.</div>
+                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Business</button>
                         </div>
                       ) : finalizate.length === 0 ? (
                         <div style={{ padding: "22px 18px", textAlign: "center" }}>
