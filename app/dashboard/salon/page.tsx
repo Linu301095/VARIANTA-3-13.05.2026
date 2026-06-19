@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import Cropper from "react-easy-crop";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, type LucideIcon } from "lucide-react";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -32,6 +32,7 @@ type ProgramareSalon = {
 };
 
 type Notificare = { id: string; tip: string; mesaj: string; citit: boolean; created_at: string; programare_id: string | null };
+type ConsultantMesaj = { role: "user" | "assistant"; content: string };
 
 type VizitaIstoric = { id: string; serviciu: string; pret: number; data: string; ora: string; status: StatusProg };
 type AnimalIstoric = {
@@ -510,6 +511,163 @@ function AgendaCalendar({
   );
 }
 
+// ===== CONSULTANT AI — funcții pure =====
+
+const LUNI_RO = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
+const ZILE_SAPTAMANA = ["Duminica", "Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata"];
+
+function computeSnapshot(
+  programari: ProgramareSalon[],
+  recenzii: { rating: number; created_at: string }[],
+  salonNume: string
+) {
+  const now = new Date();
+  const an = now.getFullYear();
+  const lunaIdx = now.getMonth();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const isoLunaAc = `${an}-${pad(lunaIdx + 1)}`;
+  const prevIdx = lunaIdx === 0 ? 11 : lunaIdx - 1;
+  const prevAn = lunaIdx === 0 ? an - 1 : an;
+  const isoLunaAnt = `${prevAn}-${pad(prevIdx + 1)}`;
+
+  const fin = programari.filter(p => p.status === "finalizat");
+  const lunaAc = fin.filter(p => p.data.startsWith(isoLunaAc));
+  const lunaAnt = fin.filter(p => p.data.startsWith(isoLunaAnt));
+  const venAc = lunaAc.reduce((s, p) => s + p.pret, 0);
+  const venAnt = lunaAnt.reduce((s, p) => s + p.pret, 0);
+
+  const bySrv: Record<string, { count: number; venit: number }> = {};
+  for (const p of lunaAc) {
+    if (!p.serviciu) continue;
+    if (!bySrv[p.serviciu]) bySrv[p.serviciu] = { count: 0, venit: 0 };
+    bySrv[p.serviciu].count++;
+    bySrv[p.serviciu].venit += p.pret;
+  }
+  const topServicii = Object.entries(bySrv)
+    .map(([nume, v]) => ({ nume, count: v.count, venit: v.venit }))
+    .sort((a, b) => b.venit - a.venit)
+    .slice(0, 3);
+
+  const byDow: Record<number, number> = {};
+  for (const p of fin) {
+    const dow = new Date(p.data + "T12:00:00").getDay();
+    byDow[dow] = (byDow[dow] || 0) + 1;
+  }
+  const weeks = Math.max(1, new Set(fin.map(p => {
+    const d = new Date(p.data + "T12:00:00");
+    const s = new Date(d); s.setDate(d.getDate() - d.getDay());
+    return s.toISOString().slice(0, 10);
+  })).size);
+  const ziSaptamana = Object.entries(byDow)
+    .filter(([dow]) => Number(dow) !== 0)
+    .map(([dow, cnt]) => ({ zi: ZILE_SAPTAMANA[Number(dow)], medie: Math.round((cnt / weeks) * 10) / 10 }))
+    .sort((a, b) => b.medie - a.medie);
+
+  const byGroomer: Record<string, { count: number; venit: number }> = {};
+  for (const p of lunaAc) {
+    const g = p.groomer || "Neatribuit";
+    if (!byGroomer[g]) byGroomer[g] = { count: 0, venit: 0 };
+    byGroomer[g].count++;
+    byGroomer[g].venit += p.pret;
+  }
+  const groomeri = Object.entries(byGroomer)
+    .map(([nume, v]) => ({ nume, count: v.count, venit: v.venit }))
+    .sort((a, b) => b.venit - a.venit);
+
+  const lastVisit: Record<string, string> = {};
+  for (const p of fin) {
+    if (!p.user_id) continue;
+    if (!lastVisit[p.user_id] || p.data > lastVisit[p.user_id]) lastVisit[p.user_id] = p.data;
+  }
+  const clientiInactivi = Object.values(lastVisit).filter(d =>
+    Math.floor((now.getTime() - new Date(d + "T12:00:00").getTime()) / 86400000) > 45
+  ).length;
+
+  const recLuna = recenzii.filter(r => r.created_at.slice(0, 7) === isoLunaAc);
+  const ratingMediu = recLuna.length > 0
+    ? Math.round(recLuna.reduce((s, r) => s + r.rating, 0) / recLuna.length * 10) / 10
+    : null;
+
+  return {
+    salonNume,
+    luna: `${LUNI_RO[lunaIdx]} ${an}`,
+    programari: {
+      lunaCurenta: lunaAc.length,
+      lunaAnterioara: lunaAnt.length,
+      variatieProc: lunaAnt.length > 0 ? Math.round(((lunaAc.length - lunaAnt.length) / lunaAnt.length) * 100) : 0,
+    },
+    incasari: {
+      lunaCurenta: venAc,
+      lunaAnterioara: venAnt,
+      variatieProc: venAnt > 0 ? Math.round(((venAc - venAnt) / venAnt) * 100) : 0,
+    },
+    topServicii,
+    ziSaptamana,
+    groomeri,
+    clientiInactivi,
+    ratingMediu,
+    numarRecenzii: recLuna.length,
+    totalRecenzii: recenzii.length,
+  };
+}
+
+function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: string; text: string; intrebare: string }[] {
+  const sugestii: { icon: string; text: string; intrebare: string }[] = [];
+
+  const ziActive = snapshot.ziSaptamana.filter(z => z.medie > 0);
+  if (ziActive.length >= 2) {
+    const buna = ziActive[0];
+    const slaba = ziActive[ziActive.length - 1];
+    const proc = buna.medie > 0 ? Math.round((slaba.medie / buna.medie) * 100) : 0;
+    if (proc < 45) {
+      sugestii.push({
+        icon: "📅",
+        text: `${slaba.zi} are ${proc}% din ocuparea de ${buna.zi} — cum umpli agenda?`,
+        intrebare: `${slaba.zi} are o medie de ${slaba.medie} programari, fata de ${buna.medie} ${buna.zi}. Ce pot face concret sa cresc ocuparea in ziua ${slaba.zi}?`,
+      });
+    }
+  }
+
+  if (snapshot.clientiInactivi >= 3) {
+    sugestii.push({
+      icon: "👥",
+      text: `${snapshot.clientiInactivi} clienti fideli nu au revenit in 45+ zile`,
+      intrebare: `Am ${snapshot.clientiInactivi} clienti cu vizite repetate care nu au mai revenit in 45+ zile. Ce strategie de reactivare recomanzi pentru un salon de grooming?`,
+    });
+  }
+
+  if (snapshot.incasari.variatieProc < -10 && snapshot.incasari.lunaAnterioara > 0) {
+    sugestii.push({
+      icon: "📉",
+      text: `Incasarile au scazut cu ${Math.abs(snapshot.incasari.variatieProc)}% fata de luna trecuta`,
+      intrebare: `Incasarile mele au scazut cu ${Math.abs(snapshot.incasari.variatieProc)}% fata de luna anterioara (${snapshot.incasari.lunaAnterioara} RON -> ${snapshot.incasari.lunaCurenta} RON). Care sunt cauzele probabile si ce pot face?`,
+    });
+  }
+
+  if (snapshot.incasari.variatieProc > 15 && snapshot.incasari.lunaAnterioara > 0) {
+    sugestii.push({
+      icon: "📈",
+      text: `Crestere de ${snapshot.incasari.variatieProc}% fata de luna trecuta — cum consolidez?`,
+      intrebare: `Salonul meu a crescut cu ${snapshot.incasari.variatieProc}% la incasari fata de luna trecuta. Ce pot face pentru a mentine si consolida aceasta crestere?`,
+    });
+  }
+
+  if (snapshot.topServicii.length > 0 && snapshot.programari.lunaCurenta > 0) {
+    const total = snapshot.topServicii.reduce((s, v) => s + v.count, 0);
+    const top = snapshot.topServicii[0];
+    const proc = total > 0 ? Math.round((top.count / total) * 100) : 0;
+    if (proc > 55) {
+      sugestii.push({
+        icon: "✂️",
+        text: `"${top.nume}" domina cu ${proc}% din programari — ma specializez sau diversific?`,
+        intrebare: `Serviciul "${top.nume}" reprezinta ${proc}% din toate programarile mele luna aceasta. Ar trebui sa ma specializez mai mult sau sa diversific oferta?`,
+      });
+    }
+  }
+
+  return sugestii.slice(0, 3);
+}
+
 export default function DashboardSalon() {
   const router = useRouter();
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -539,9 +697,15 @@ export default function DashboardSalon() {
   const [ultimaAnalizaRisc, setUltimaAnalizaRisc] = useState<string | null>(null);
   const [mesajeTrimise, setMesajeTrimise] = useState<Record<string, boolean>>({});
   const [mesajTrimiteLoading, setMesajTrimiteLoading] = useState<Record<string, boolean>>({});
-  const [aiTab, setAiTab] = useState<"recenzii" | "clientiInactivi" | "fisaIngrijire" | "postari" | null>(null);
+  const [aiTab, setAiTab] = useState<"recenzii" | "clientiInactivi" | "fisaIngrijire" | "consultant" | "postari" | null>(null);
   // Fișă post-grooming: stare per programare { draft, generand, trimitand, trimis, eroare }
   const [fisaState, setFisaState] = useState<Record<string, { draft: string; generand: boolean; trimitand: boolean; trimis: boolean; eroare: string | null }>>({});
+  // Consultant AI
+  const [consultantMesaje, setConsultantMesaje] = useState<ConsultantMesaj[]>([]);
+  const [consultantInput, setConsultantInput] = useState("");
+  const [consultantLoading, setConsultantLoading] = useState(false);
+  const [intrebariAzi, setIntrebariAzi] = useState(0);
+  const consultantChatEndRef = React.useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
@@ -891,8 +1055,21 @@ export default function DashboardSalon() {
     recenzii: ["basic", "pro", "business"].includes(planIdCurent),
     clientiInactivi: ["pro", "business"].includes(planIdCurent),
     fisaIngrijire: ["business"].includes(planIdCurent),
+    consultant: ["business"].includes(planIdCurent),
     postari: ["business"].includes(planIdCurent),
   };
+
+  // Scroll chat la ultimul mesaj
+  useEffect(() => {
+    consultantChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [consultantMesaje]);
+
+  // Contor intrebari azi (din localStorage)
+  useEffect(() => {
+    if (!salonData?.id) return;
+    const key = `calyhub_consultant_${salonData.id}_${new Date().toISOString().slice(0, 10)}`;
+    setIntrebariAzi(Number(localStorage.getItem(key) || 0));
+  }, [salonData?.id, consultantMesaje.length]);
   const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Trial";
   // Tab implicit în „Funcții AI" = primul agent disponibil din plan
   const aiTabActiv = aiTab ?? (aiAccess.recenzii ? "recenzii" : aiAccess.clientiInactivi ? "clientiInactivi" : "recenzii");
@@ -1180,6 +1357,38 @@ export default function DashboardSalon() {
     // Persistăm starea „trimis" în cache, ca să nu se retrimită după refresh
     if (salonData?.id) {
       try { localStorage.setItem(`calyhub_clienti_risc_${salonData.id}`, JSON.stringify({ data: ultimaAnalizaRisc, clienti: clientiRisc, trimise: Object.keys(next) })); } catch {}
+    }
+  }
+
+  // ===== CONSULTANT AI =====
+  async function trimiteMesajConsultant(intrebare: string) {
+    if (!intrebare.trim() || consultantLoading || intrebariAzi >= 30) return;
+    const salonId = salonData?.id;
+    const key = salonId ? `calyhub_consultant_${salonId}_${new Date().toISOString().slice(0, 10)}` : null;
+    const mesajNou: ConsultantMesaj = { role: "user", content: intrebare.trim() };
+    const mesajeNoi = [...consultantMesaje, mesajNou];
+    setConsultantMesaje(mesajeNoi);
+    setConsultantInput("");
+    setConsultantLoading(true);
+    if (key) {
+      const n = intrebariAzi + 1;
+      localStorage.setItem(key, String(n));
+      setIntrebariAzi(n);
+    }
+    const snapshot = computeSnapshot(programari, recenziiSalon, numeSalon);
+    try {
+      const res = await fetch("/api/ai/consultant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mesaje: mesajeNoi, snapshot, salonNume: numeSalon }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Eroare server");
+      setConsultantMesaje(prev => [...prev, { role: "assistant", content: json.raspuns }]);
+    } catch (e: any) {
+      setConsultantMesaje(prev => [...prev, { role: "assistant", content: `Nu am putut genera raspunsul: ${e.message || "eroare necunoscuta"}` }]);
+    } finally {
+      setConsultantLoading(false);
     }
   }
 
@@ -2154,6 +2363,7 @@ export default function DashboardSalon() {
                     { key: "recenzii", label: "Răspunsuri la recenzii", icon: Star, acces: aiAccess.recenzii, badge: null },
                     { key: "clientiInactivi", label: "Clienți inactivi", icon: Users, acces: aiAccess.clientiInactivi, badge: null },
                     { key: "fisaIngrijire", label: "Fișă post-grooming", icon: ClipboardList, acces: aiAccess.fisaIngrijire, badge: null },
+                    { key: "consultant", label: "Consultant AI", icon: MessageSquare, acces: aiAccess.consultant, badge: null },
                     { key: "postari", label: "Postări sociale", icon: ImageIcon, acces: false, badge: "în curând" },
                   ] as const).map(ag => {
                     const activ = aiTabActiv === ag.key;
@@ -2526,6 +2736,143 @@ export default function DashboardSalon() {
                               </div>
                             );
                           })}
+                        </div>
+                      )}
+                    </div>
+                    );
+                  })()}
+
+                  {/* ============ AGENT CONSULTANT AI ============ */}
+                  {aiTabActiv === "consultant" && (() => {
+                    const snapshot = computeSnapshot(programari, recenziiSalon, numeSalon);
+                    const sugestii = computeSugestii(snapshot);
+                    const ramase = 30 - intrebariAzi;
+                    return (
+                    <div style={{ background: c.surface, borderRadius: 18, border: `1.5px solid ${aiAccess.consultant ? "rgba(99,102,241,.35)" : c.border}`, overflow: "hidden" }}>
+                      <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.border}` }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: theme === "dark" ? "rgba(99,102,241,.15)" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <MessageSquare size={20} color="#6366F1" strokeWidth={2} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>Consultant AI</div>
+                          <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Analizează activitatea salonului și răspunde la orice întrebare de business</div>
+                        </div>
+                        {aiAccess.consultant
+                          ? <span style={{ fontSize: 11, fontWeight: 800, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 50, flexShrink: 0 }}>Activ</span>
+                          : <span style={{ fontSize: 11, fontWeight: 800, color: c.muted, background: c.surface2, padding: "4px 10px", borderRadius: 50, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Lock size={11} strokeWidth={2.4} /> Plan Business</span>}
+                      </div>
+
+                      {!aiAccess.consultant ? (
+                        <div style={{ padding: "22px 18px", textAlign: "center" }}>
+                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. Consultantul AI analizează datele reale ale salonului tău și oferă sfaturi concrete de creștere a afacerii.</div>
+                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Business</button>
+                        </div>
+                      ) : (
+                        <div style={{ padding: "16px 18px" }}>
+
+                          {/* Sugestii proactive */}
+                          {sugestii.length > 0 && (
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>✨ Insights detectate din datele tale</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                {sugestii.map((s, i) => (
+                                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: theme === "dark" ? "rgba(99,102,241,.08)" : "#EEF2FF", borderRadius: 10, padding: "9px 12px", border: `1px solid ${theme === "dark" ? "rgba(99,102,241,.2)" : "#C7D2FE"}` }}>
+                                    <span style={{ fontSize: 16, flexShrink: 0 }}>{s.icon}</span>
+                                    <span style={{ flex: 1, fontSize: 12.5, color: c.text, fontWeight: 600, lineHeight: 1.4 }}>{s.text}</span>
+                                    <button onClick={() => trimiteMesajConsultant(s.intrebare)} disabled={consultantLoading || ramase <= 0}
+                                      style={{ fontSize: 12, fontWeight: 800, color: "#6366F1", background: "none", border: "1.5px solid #6366F1", borderRadius: 50, padding: "5px 12px", cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0, opacity: (consultantLoading || ramase <= 0) ? .5 : 1 }}>
+                                      Analizează
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Rapoarte rapide */}
+                          <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: c.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>Rapoarte rapide</div>
+                            <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                              {[
+                                { label: "Raport luna aceasta", q: `Genereaza un raport complet pentru ${snapshot.luna}: ce a mers bine, ce nu, si 3 recomandari concrete.` },
+                                { label: "Comparatie cu luna trecuta", q: `Compara luna aceasta cu luna trecuta si explica diferentele la programari si incasari.` },
+                                { label: "Top 3 imbunatatiri", q: "Ce 3 lucruri concrete ar trebui sa imbunatatesc urgent in salonul meu pentru a creste veniturile?" },
+                              ].map((r, i) => (
+                                <button key={i} onClick={() => trimiteMesajConsultant(r.q)} disabled={consultantLoading || ramase <= 0}
+                                  style={{ fontSize: 12, fontWeight: 800, color: "#6366F1", background: theme === "dark" ? "rgba(99,102,241,.08)" : "#EEF2FF", border: "1.5px solid #C7D2FE", borderRadius: 50, padding: "7px 14px", cursor: "pointer", fontFamily: "Nunito, sans-serif", opacity: (consultantLoading || ramase <= 0) ? .5 : 1 }}>
+                                  {r.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Chat */}
+                          {consultantMesaje.length > 0 && (
+                            <div style={{ maxHeight: 380, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, marginBottom: 12, padding: "4px 0" }}>
+                              {consultantMesaje.map((m, i) => (
+                                <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                                  <div style={{
+                                    maxWidth: "82%",
+                                    background: m.role === "user"
+                                      ? (theme === "dark" ? "rgba(255,107,0,.18)" : "#FFF3EA")
+                                      : c.surface2,
+                                    border: m.role === "user"
+                                      ? "1.5px solid rgba(255,107,0,.4)"
+                                      : `1.5px solid ${c.border}`,
+                                    borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                                    padding: "10px 13px",
+                                    fontSize: 13,
+                                    color: c.text,
+                                    lineHeight: 1.6,
+                                    fontWeight: m.role === "user" ? 700 : 500,
+                                    whiteSpace: "pre-wrap",
+                                  }}>
+                                    {m.role === "assistant" && <div style={{ fontSize: 10, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>✨ Consultant AI</div>}
+                                    {m.content}
+                                  </div>
+                                </div>
+                              ))}
+                              {consultantLoading && (
+                                <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                                  <div style={{ background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: "14px 14px 14px 4px", padding: "10px 14px", fontSize: 12, color: c.muted }}>
+                                    <span style={{ display: "inline-flex", gap: 4 }}>
+                                      {[0, 1, 2].map(j => <span key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366F1", opacity: 0.7, display: "inline-block" }}>.</span>)}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                              <div ref={consultantChatEndRef} />
+                            </div>
+                          )}
+
+                          {/* Input */}
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <input
+                              value={consultantInput}
+                              onChange={e => setConsultantInput(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); trimiteMesajConsultant(consultantInput); } }}
+                              disabled={consultantLoading || ramase <= 0}
+                              placeholder={ramase <= 0 ? "Limita zilnica atinsa (30/30)" : "Intreaba consultantul... (ex: Cum cresc incasarile vinerea?)"}
+                              style={{ flex: 1, borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 13, fontFamily: "Nunito, sans-serif", padding: "10px 16px", outline: "none" }}
+                            />
+                            <button onClick={() => trimiteMesajConsultant(consultantInput)} disabled={consultantLoading || !consultantInput.trim() || ramase <= 0}
+                              style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: "#6366F1", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: (consultantLoading || !consultantInput.trim() || ramase <= 0) ? "default" : "pointer", opacity: (consultantLoading || !consultantInput.trim() || ramase <= 0) ? .45 : 1, flexShrink: 0 }}>
+                              <Send size={15} strokeWidth={2} />
+                            </button>
+                          </div>
+
+                          {/* Footer chat */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 7 }}>
+                            <span style={{ fontSize: 11, color: ramase <= 5 ? "#D97706" : c.xmuted, fontWeight: ramase <= 5 ? 700 : 500 }}>
+                              {ramase}/30 intrebari disponibile azi
+                            </span>
+                            {consultantMesaje.length > 0 && (
+                              <button onClick={() => setConsultantMesaje([])} style={{ fontSize: 11, color: c.xmuted, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 0 }}>
+                                Sterge conversatia
+                              </button>
+                            )}
+                          </div>
+
                         </div>
                       )}
                     </div>
