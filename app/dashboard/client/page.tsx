@@ -1968,7 +1968,7 @@ export default function DashboardClient() {
                             const salonNotif = salonIdNotif
                               ? saloaneList.find(s => String(s.id) === String(salonIdNotif))
                               : null;
-                            const esteAI = n.tip === "raspuns_recenzie" || n.tip === "mesaj_salon";
+                            const esteAI = n.tip === "raspuns_recenzie" || n.tip === "mesaj_salon" || n.tip === "fisa_ingrijire";
                             // Iconița de tip (folosită ca badge pe poză SAU ca avatar fallback dacă salonul n-are poză)
                             const iconTip = esteAI
                               ? <Sparkles size={20} color="#D97706" strokeWidth={2} />
