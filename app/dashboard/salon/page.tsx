@@ -2162,9 +2162,12 @@ export default function DashboardSalon() {
                         style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? (theme === "dark" ? "rgba(255,107,0,.12)" : "#FFF3EA") : c.surface, color: activ ? "#FF6B00" : c.text, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
                         <ag.icon size={15} color={activ ? "#FF6B00" : c.muted} strokeWidth={2} />
                         {ag.label}
-                        {!ag.acces && (ag.badge
-                          ? <span style={{ fontSize: 10, fontWeight: 800, color: c.muted, background: c.surface2, padding: "1px 7px", borderRadius: 50 }}>{ag.badge}</span>
-                          : <Lock size={11} color={c.xmuted} strokeWidth={2.4} />)}
+                        {!ag.acces && (
+                          <>
+                            {ag.badge && <span style={{ fontSize: 10, fontWeight: 800, color: c.muted, background: c.surface2, padding: "1px 7px", borderRadius: 50 }}>{ag.badge}</span>}
+                            <Lock size={11} color={c.xmuted} strokeWidth={2.4} />
+                          </>
+                        )}
                       </button>
                     );
                   })}
