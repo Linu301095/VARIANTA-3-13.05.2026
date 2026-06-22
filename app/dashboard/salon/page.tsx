@@ -3101,7 +3101,7 @@ export default function DashboardSalon() {
                         return (
                           <React.Fragment key={ag.key}>
                           <button
-                            onClick={() => setAiTab(ag.key)}
+                            onClick={() => setAiTab(sel ? null : ag.key)}
                             style={{
                               position: "relative", display: "flex", flexDirection: ag.comingSoon && !isMobile ? "row" : "column",
                               alignItems: ag.comingSoon && !isMobile ? "center" : "flex-start",
