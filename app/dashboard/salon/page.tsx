@@ -1209,7 +1209,7 @@ export default function DashboardSalon() {
   }, [qaList, salonData?.id]);
   const planLabelCurent = planIdCurent ? planIdCurent.charAt(0).toUpperCase() + planIdCurent.slice(1) : "Trial";
   // Tab implicit în „Funcții AI" = primul agent disponibil din plan
-  const aiTabActiv = aiTab ?? (aiAccess.recenzii ? "recenzii" : aiAccess.clientiInactivi ? "clientiInactivi" : "recenzii");
+  const aiTabActiv = aiTab;
   const necitite = notificari.filter(n => !n.citit).length;
 
   async function accepta(id: string) {
