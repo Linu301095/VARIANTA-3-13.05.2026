@@ -2540,41 +2540,72 @@ export default function DashboardSalon() {
               <div style={{ maxWidth: 920 }}>
                 <PageHeader icon={Sparkles} title="Funcții AI" sub="Asistenții AI care lucrează pentru salonul tău" />
 
-                {/* Banner plan curent */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", background: theme === "dark" ? "rgba(255,107,0,.1)" : "#FFF3EA", border: "1.5px solid rgba(255,107,0,.3)", borderRadius: 16, padding: "13px 18px", marginBottom: 22 }}>
-                  <div style={{ fontSize: 13.5, color: c.text, fontWeight: 700 }}>
-                    Planul tău actual: <span style={{ color: "#FF6B00", fontWeight: 900 }}>{planLabelCurent}</span>
-                  </div>
-                  <button onClick={() => setTab("abonament")} style={{ fontSize: 12.5, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "7px 16px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Vezi planurile</button>
-                </div>
+                {/* Neural Cards Grid */}
+                {(() => {
+                  const AI_DEFS = [
+                    { key: "recenzii" as const,        label: "Răspunsuri la recenzii", desc: "Generează răspunsuri profesionale la recenzii",  Icon: Star,          color: "#F59E0B", rgb: "245,158,11",  acces: aiAccess.recenzii,        comingSoon: false },
+                    { key: "clientiInactivi" as const, label: "Clienți inactivi",        desc: "Reactivează clienții care nu au mai revenit",    Icon: Users,         color: "#EF4444", rgb: "239,68,68",   acces: aiAccess.clientiInactivi, comingSoon: false },
+                    { key: "fisaIngrijire" as const,   label: "Fișă post-grooming",      desc: "Sfaturi de îngrijire personalizate pe rasă",     Icon: ClipboardList, color: "#06B6D4", rgb: "6,182,212",   acces: aiAccess.fisaIngrijire,   comingSoon: false },
+                    { key: "consultant" as const,      label: "Consultant AI",            desc: "Rapoarte de business din datele tale reale",     Icon: Sparkles,      color: "#6366F1", rgb: "99,102,241",  acces: aiAccess.consultant,      comingSoon: false },
+                    { key: "postari" as const,         label: "Postări sociale",          desc: "Generează conținut pentru social media",         Icon: ImageIcon,     color: "#EC4899", rgb: "236,72,153",  acces: false,                    comingSoon: true  },
+                  ];
+                  const agentActiv = AI_DEFS.find(a => a.key === aiTabActiv);
+                  const accentColor = agentActiv?.color ?? "#6366F1";
+                  const accentRgb   = agentActiv?.rgb   ?? "99,102,241";
+                  return (<>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 24 }}>
+                      {AI_DEFS.map((ag, idx) => {
+                        const sel = aiTabActiv === ag.key;
+                        return (
+                          <button key={ag.key}
+                            onClick={() => setAiTab(ag.key)}
+                            style={{
+                              position: "relative", display: "flex", flexDirection: ag.comingSoon && !isMobile ? "row" : "column",
+                              alignItems: ag.comingSoon && !isMobile ? "center" : "flex-start",
+                              gap: ag.comingSoon && !isMobile ? 14 : 0,
+                              textAlign: "left", padding: ag.comingSoon ? "14px 18px" : "18px 18px 20px",
+                              borderRadius: 18, fontFamily: "Nunito, sans-serif",
+                              border: sel ? `2px solid ${ag.color}` : `1px solid ${theme === "dark" ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)"}`,
+                              background: sel
+                                ? theme === "dark"
+                                  ? `linear-gradient(135deg, rgba(${ag.rgb},.13) 0%, rgba(${ag.rgb},.05) 100%)`
+                                  : `linear-gradient(135deg, rgba(${ag.rgb},.08) 0%, rgba(${ag.rgb},.03) 100%)`
+                                : c.surface,
+                              boxShadow: sel ? `0 0 0 1px ${ag.color}22, 0 8px 28px ${ag.color}18` : c.cardShadow,
+                              cursor: "pointer", transition: "all .2s",
+                              opacity: ag.comingSoon ? .72 : 1,
+                              gridColumn: (ag.comingSoon && !isMobile) ? "span 2" : undefined,
+                            }}>
+                            {/* Număr ordine */}
+                            <div style={{ fontSize: 10, fontWeight: 900, color: ag.color, opacity: sel ? .65 : .28, letterSpacing: 1.5, marginBottom: ag.comingSoon && !isMobile ? 0 : 10, flexShrink: 0 }}>0{idx + 1}</div>
+                            {/* Icoană */}
+                            <div style={{ width: ag.comingSoon && !isMobile ? 38 : 46, height: ag.comingSoon && !isMobile ? 38 : 46, borderRadius: 14, background: `rgba(${ag.rgb},${sel ? .18 : .10})`, boxShadow: sel ? `0 0 18px ${ag.color}28` : "none", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: ag.comingSoon && !isMobile ? 0 : 14, flexShrink: 0, transition: "box-shadow .2s" }}>
+                              <ag.Icon size={ag.comingSoon && !isMobile ? 18 : 22} color={ag.color} strokeWidth={1.8} />
+                            </div>
+                            {/* Texte */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: ag.comingSoon && !isMobile ? 13 : 14, fontWeight: 900, color: c.text, marginBottom: 3 }}>{ag.label}</div>
+                              <div style={{ fontSize: 11.5, color: c.muted, lineHeight: 1.5, fontWeight: 600 }}>{ag.desc}</div>
+                            </div>
+                            {/* Badge status */}
+                            <div style={{ position: "absolute", top: 13, right: 13 }}>
+                              {ag.comingSoon
+                                ? <span style={{ fontSize: 9, fontWeight: 900, color: ag.color, background: `rgba(${ag.rgb},.13)`, padding: "3px 8px", borderRadius: 50, letterSpacing: .8, textTransform: "uppercase" as const }}>În curând</span>
+                                : ag.acces
+                                  ? <span style={{ fontSize: 9, fontWeight: 900, color: "#10B981", background: "rgba(16,185,129,.12)", padding: "3px 8px", borderRadius: 50, letterSpacing: .8, textTransform: "uppercase" as const }}>Activ</span>
+                                  : <span style={{ fontSize: 9, fontWeight: 900, color: c.muted, background: c.surface2, padding: "3px 8px", borderRadius: 50, display: "flex", alignItems: "center", gap: 3, letterSpacing: .5, textTransform: "uppercase" as const }}><Lock size={9} strokeWidth={2.5} />Blocat</span>
+                              }
+                            </div>
+                            {/* Bara accent jos */}
+                            {!ag.comingSoon && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, borderRadius: "0 0 18px 18px", background: sel ? ag.color : "transparent", transition: "background .2s" }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                {/* Selector agent AI */}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-                  {([
-                    { key: "recenzii", label: "Răspunsuri la recenzii", icon: Star, acces: aiAccess.recenzii, badge: null },
-                    { key: "clientiInactivi", label: "Clienți inactivi", icon: Users, acces: aiAccess.clientiInactivi, badge: null },
-                    { key: "fisaIngrijire", label: "Fișă post-grooming", icon: ClipboardList, acces: aiAccess.fisaIngrijire, badge: null },
-                    { key: "consultant", label: "Consultant AI", icon: MessageSquare, acces: aiAccess.consultant, badge: null },
-                    { key: "postari", label: "Postări sociale", icon: ImageIcon, acces: false, badge: "în curând" },
-                  ] as const).map(ag => {
-                    const activ = aiTabActiv === ag.key;
-                    return (
-                      <button key={ag.key} onClick={() => setAiTab(ag.key)}
-                        style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? (theme === "dark" ? "rgba(255,107,0,.12)" : "#FFF3EA") : c.surface, color: activ ? "#FF6B00" : c.text, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
-                        <ag.icon size={15} color={activ ? "#FF6B00" : c.muted} strokeWidth={2} />
-                        {ag.label}
-                        {!ag.acces && (
-                          <>
-                            {ag.badge && <span style={{ fontSize: 10, fontWeight: 800, color: c.muted, background: c.surface2, padding: "1px 7px", borderRadius: 50 }}>{ag.badge}</span>}
-                            <Lock size={11} color={c.xmuted} strokeWidth={2.4} />
-                          </>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {/* Conținut agent activ */}
+                    <div style={{ borderLeft: `3px solid ${accentColor}`, paddingLeft: isMobile ? 12 : 18, marginLeft: 2, borderRadius: "0 0 0 4px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
                   {/* ============ AGENT 1 — RĂSPUNSURI AI LA RECENZII ============ */}
                   {aiTabActiv === "recenzii" && (
@@ -3111,7 +3142,10 @@ export default function DashboardSalon() {
                   </div>
                   )}
 
-                </div>
+                    </div>{/* end flex-column content */}
+                    </div>{/* end borderLeft panel */}
+                  </>);
+                })()}
               </div>
             )}
 
