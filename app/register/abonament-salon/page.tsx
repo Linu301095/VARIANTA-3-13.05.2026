@@ -71,6 +71,7 @@ const PLANURI: Plan[] = [
       { text: "Listare promovata in oras", included: true },
       { text: "Remindere WhatsApp + SMS nelimitate", included: true },
       { text: "✨ Fisa AI ingrijire post-grooming", included: true },
+      { text: "✨ Consultant AI — rapoarte de business lunare", included: true },
       { text: "✨ Generator AI postari social media (in curand)", included: true },
       { text: "Multi-locatie (in curand)", included: true },
       { text: "Suport prioritar 24/7 + manager dedicat", included: true },

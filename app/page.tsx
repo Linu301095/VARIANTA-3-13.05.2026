@@ -290,7 +290,7 @@ export default function HomePage() {
               Nu doar un calendar online.<br /><span style={{ color: "#FF8C42" }}>Asistenți AI pentru salonul tău.</span>
             </h2>
             <p style={{ fontSize: 15.5, color: "rgba(255,255,255,.6)", lineHeight: 1.75, marginBottom: 32 }}>
-              CalyHub vine cu asistenți AI care lucrează pentru tine în fundal — răspund la recenzii, îți semnalează clienții care nu au mai revenit și generează postări pentru social media dintr-o poză.
+              CalyHub vine cu asistenți AI care lucrează pentru tine în fundal — răspund la recenzii, îți semnalează clienții care nu au mai revenit, generează postări pentru social media și îți pregătesc rapoarte de business lunare din datele tale reale.
             </p>
             <Link href="/cum-functioneaza#asistenti-ai" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 30px", borderRadius: 50, background: "#FF8C42", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,140,66,.4)" }}>
               <Sparkles size={16} strokeWidth={2} /> Descoperă asistenții AI →
