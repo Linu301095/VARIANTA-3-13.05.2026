@@ -189,3 +189,136 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 ## PROGRES GENERAL (~78% overall până la lansare)
 - Aplicație web ~82% · SEO 100% · Copy 100% · Auth socială 20% · Plăți 10% · Email/SMS 15% · e-Factura 0% · Legal 10% · Fiscal 0% · App nativă 0%
 - **Estimare până la lansare corectă: 3-4 săptămâni** (din care ~1 săpt. juridic/fiscal, nu dev)
+
+---
+
+# RAPORT COMPLET CALYHUB — 22 Iunie 2026
+
+## BLOC 1 — APLICAȚIE WEB
+
+### ✅ Gata și funcțional
+
+**Core produs**
+- Autentificare email + parolă
+- Înregistrare client (profil, animal, poză, avatar)
+- Înregistrare salon (wizard 4 pași: date firmă, servicii, echipă)
+- Booking client (căutare, filtrare rating/serviciu, rezervare slot)
+- Confirmare / refuz programare de către salon
+- Agendă salon (în așteptare primele, calendar vizual)
+- Notificări in-app (client + salon) cu optimistic update
+- Dark mode, Mobile UX ~90%
+
+**Dashboard salon**
+- Agendă, statistici reale, echipă, programări, export Excel
+- Recenzii — scriere, afișare, rating agregat pe carduri (~85%)
+
+**Funcții AI — toate 4 implementate și cross-device**
+- Răspunsuri AI la recenzii (Plan Basic)
+- Alertă + mesaj reactivare clienți inactivi (Plan Pro)
+- Fișă îngrijire post-grooming (Plan Business)
+- Consultant AI — rapoarte premium cached + 5 întrebări/lună (Plan Business) ← nou
+- Neural Cards UI redesign cu culori per agent ← nou
+- Toate datele AI sincronizate cross-device via Supabase ← nou
+
+**Dashboard admin** (~50%) — Overview/Clienți/Saloane/Programări/Abonamente cu date reale; Recenzii/Suport/Marketing/Setări cu mock
+
+**Pagini publice** — Home, Cum funcționează, Despre noi, Prețuri, Termeni, Confidențialitate
+**SEO** — 100% pe toate paginile publice
+**Consultant AI prezent** pe toate paginile cu liste de funcții AI ← nou
+
+### ❌ Lipsește / Nefuncțional
+
+**🔐 Autentificare socială**
+- Google OAuth — buton vizual, fără cod
+- Facebook OAuth — buton vizual, fără cod
+- Telefon SMS OTP — buton vizual, fără cod
+- Ruta `/auth/callback` — nu există
+
+**📧 Comunicare**
+- Email confirmare programare — nimic trimis (Resend, ~1 zi dev)
+- Email bun venit la înregistrare salon
+- SMS reminder 24h — „în curând"
+
+**💳 Plăți**
+- Stripe / Netopia — zero integrare, abonamente sunt vizuale
+- Webhook activare/dezactivare plan automat
+- Câmpuri reale abonament în DB (`stripe_customer_id`, etc.) — acum în localStorage
+
+**🧾 Facturare**
+- SmartBill API, e-Factura SPV ANAF — zero integrare
+
+**📋 Legal / GDPR**
+- Pagina Confidențialitate — inexactități juridice (cookie-uri nedeclarate corect, SMS, „bcrypt")
+- CUI firmă lipsă din site — obligatoriu legal
+- DPA CalyHub ↔ saloane, contract cadru B2B
+
+**🔍 UX minor**
+- Distanță „1.2 km" hardcodată (Google Maps API)
+- Filtrare saloane pe preț lipsă
+
+## BLOC 2 — FIRMĂ & LEGAL (CalyHub SRL)
+- ✅ SRL înregistrat la ONRC
+- ❌ Coduri CAEN actualizate (6201, 6311, 6312) — la ONRC, ~200-400 RON
+- ❌ Cont bancar pe firmă (obligatoriu înainte de Stripe/Netopia; Revolut Business recomandat)
+- ❌ CUI afișat pe site (obligatoriu legal)
+- ❌ Contract cadru B2B cu salonul (consultant juridic)
+- ❌ DPA GDPR (CalyHub processor ↔ salon operator)
+- ❌ NDA pentru colaboratori externi
+
+## BLOC 3 — FISCAL
+- ❌ Regim fiscal ales (micro 1%/3% vs profit 16%) — cu contabil
+- ❌ Înregistrare TVA (opțional sub 300K RON/an) — cu contabil
+- ❌ Software facturare compatibil e-Factura (SmartBill recomandat)
+- ❌ Transmitere factură în SPV ANAF (e-Factura) — obligatoriu B2B din iulie 2024
+- ✅ Casă de marcat — NU e necesară (SaaS B2B)
+
+## BLOC 4 — APLICAȚIE NATIVĂ (App Store / Google Play)
+- **Varianta 1 — PWA:** aplicația web se „instalează" pe telefon, notificări push, 2-3 zile dev, NU trece prin store-uri (instalare din browser). Nu apare în App Store/Play.
+- **Varianta 2 — React Native / Expo:** aplicație nativă reală, apare în store-uri, ~2-3 luni dev de la zero. Costuri: $99/an Apple + $25 o dată Google.
+- **Varianta 3 — Capacitor/Ionic:** wrapper peste web existent, mai rapid decât RN, performanță mai slabă.
+- **Recomandare:** lansare cu PWA, apoi React Native după primii clienți/venituri.
+
+## PROGRES PER DOMENIU
+
+| Domeniu | Mai 29 | 22 Iunie | Delta |
+|---|---|---|---|
+| Aplicație web core | 85% | 88% | +3% |
+| Funcții AI | 65% | 92% | +27% |
+| Cross-device sync | 20% | 95% | +75% |
+| UI/UX design | 80% | 86% | +6% |
+| SEO | 100% | 100% | — |
+| Copy public | 100% | 100% | — |
+| Auth socială | 20% | 20% | — |
+| Plăți | 10% | 10% | — |
+| Email/SMS | 15% | 15% | — |
+| e-Factura | 0% | 0% | — |
+| Legal / GDPR | 10% | 10% | — |
+| Fiscal | 0% | 0% | — |
+| App nativă | 0% | 0% | — |
+
+## PROGRES GENERAL (~82% overall până la lansare)
+- Aplicație web ~88% · Funcții AI 92% · Cross-device sync 95% · SEO 100% · Copy 100% · Auth socială 20% · Plăți 10% · Email/SMS 15% · e-Factura 0% · Legal 10% · Fiscal 0% · App nativă 0%
+- **Estimare până la lansare: 2-3 săptămâni** (din care ~1 săpt. juridic/fiscal, nu dev; dev pur rămas ~6-7 zile)
+
+## BLOC 5 — ORDINE RECOMANDATĂ PÂNĂ LA LANSARE
+
+**Săpt. 1 — Non-dev (firmă)**
+1. Actualizare coduri CAEN la ONRC
+2. Cont bancar pe firmă (Revolut Business)
+3. Regim fiscal cu contabil
+4. Consultant juridic: contract B2B + DPA GDPR
+
+**Săpt. 2 — Dev (~4 zile)**
+5. Cont Stripe (necesită IBAN firmă) + webhook activare plan
+6. CUI în footer + confidențialitate
+7. Corectare pagină Confidențialitate (juridic)
+
+**Săpt. 3 — Dev (~2 zile)**
+8. Email confirmare programare (Resend)
+9. Email bun venit salon
+
+**Opțional pre-lansare (~1 zi)**
+10. Google OAuth + Facebook OAuth activate
+
+**Post-lansare (după primii clienți)**
+- SMS reminder Twilio · Telefon OTP login · SmartBill/e-Factura · Code splitting dashboard · Hartă Google Maps · PWA → React Native
