@@ -2543,11 +2543,11 @@ export default function DashboardSalon() {
                 {/* Neural Cards Grid */}
                 {(() => {
                   const AI_DEFS = [
-                    { key: "recenzii" as const,        label: "Răspunsuri la recenzii", desc: "Generează răspunsuri profesionale la recenzii",  Icon: Star,          color: "#F59E0B", rgb: "245,158,11",  acces: aiAccess.recenzii,        comingSoon: false },
-                    { key: "clientiInactivi" as const, label: "Clienți inactivi",        desc: "Reactivează clienții care nu au mai revenit",    Icon: Users,         color: "#EF4444", rgb: "239,68,68",   acces: aiAccess.clientiInactivi, comingSoon: false },
-                    { key: "fisaIngrijire" as const,   label: "Fișă post-grooming",      desc: "Sfaturi de îngrijire personalizate pe rasă",     Icon: ClipboardList, color: "#06B6D4", rgb: "6,182,212",   acces: aiAccess.fisaIngrijire,   comingSoon: false },
-                    { key: "consultant" as const,      label: "Consultant AI",            desc: "Rapoarte de business din datele tale reale",     Icon: Sparkles,      color: "#6366F1", rgb: "99,102,241",  acces: aiAccess.consultant,      comingSoon: false },
-                    { key: "postari" as const,         label: "Postări sociale",          desc: "Generează conținut pentru social media",         Icon: ImageIcon,     color: "#EC4899", rgb: "236,72,153",  acces: false,                    comingSoon: true  },
+                    { key: "recenzii" as const,        label: "Răspunsuri la recenzii", desc: "Generează răspunsuri profesionale la recenzii",  Icon: Star,          color: "#F59E0B", rgb: "245,158,11",  acces: aiAccess.recenzii,        comingSoon: false, plan: "Basic"    },
+                    { key: "clientiInactivi" as const, label: "Clienți inactivi",        desc: "Reactivează clienții care nu au mai revenit",    Icon: Users,         color: "#EF4444", rgb: "239,68,68",   acces: aiAccess.clientiInactivi, comingSoon: false, plan: "Pro"      },
+                    { key: "fisaIngrijire" as const,   label: "Fișă post-grooming",      desc: "Sfaturi de îngrijire personalizate pe rasă",     Icon: ClipboardList, color: "#06B6D4", rgb: "6,182,212",   acces: aiAccess.fisaIngrijire,   comingSoon: false, plan: "Business" },
+                    { key: "consultant" as const,      label: "Consultant AI",            desc: "Rapoarte de business din datele tale reale",     Icon: Sparkles,      color: "#6366F1", rgb: "99,102,241",  acces: aiAccess.consultant,      comingSoon: false, plan: "Business" },
+                    { key: "postari" as const,         label: "Postări sociale",          desc: "Generează conținut pentru social media",         Icon: ImageIcon,     color: "#EC4899", rgb: "236,72,153",  acces: false,                    comingSoon: true,  plan: null       },
                   ];
                   const agentActiv = AI_DEFS.find(a => a.key === aiTabActiv);
                   const accentColor = agentActiv?.color ?? "#6366F1";
@@ -2563,7 +2563,7 @@ export default function DashboardSalon() {
                               position: "relative", display: "flex", flexDirection: ag.comingSoon && !isMobile ? "row" : "column",
                               alignItems: ag.comingSoon && !isMobile ? "center" : "flex-start",
                               gap: ag.comingSoon && !isMobile ? 14 : 0,
-                              textAlign: "left", padding: ag.comingSoon ? "14px 18px" : "18px 18px 20px",
+                              textAlign: "left", padding: ag.comingSoon ? "14px 18px" : (!ag.acces && ag.plan ? "18px 18px 46px" : "18px 18px 20px"),
                               borderRadius: 18, fontFamily: "Nunito, sans-serif",
                               border: sel ? `2px solid ${ag.color}` : `1px solid ${theme === "dark" ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)"}`,
                               background: sel
@@ -2596,8 +2596,16 @@ export default function DashboardSalon() {
                                   : <span style={{ fontSize: 9, fontWeight: 900, color: c.muted, background: c.surface2, padding: "3px 8px", borderRadius: 50, display: "flex", alignItems: "center", gap: 3, letterSpacing: .5, textTransform: "uppercase" as const }}><Lock size={9} strokeWidth={2.5} />Blocat</span>
                               }
                             </div>
-                            {/* Bara accent jos */}
-                            {!ag.comingSoon && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, borderRadius: "0 0 18px 18px", background: sel ? ag.color : "transparent", transition: "background .2s" }} />}
+                            {/* Bara jos — accent (activ) sau info plan (blocat) */}
+                            {!ag.comingSoon && ag.acces && (
+                              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, borderRadius: "0 0 18px 18px", background: sel ? ag.color : "transparent", transition: "background .2s" }} />
+                            )}
+                            {!ag.comingSoon && !ag.acces && ag.plan && (
+                              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, borderTop: `1px solid ${theme === "dark" ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.06)"}`, borderRadius: "0 0 18px 18px", padding: "7px 13px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: theme === "dark" ? "rgba(255,255,255,.03)" : "rgba(0,0,0,.02)" }}>
+                                <span style={{ fontSize: 10.5, color: c.muted, fontWeight: 700 }}>Disponibil în planul <strong style={{ color: c.text2 }}>{ag.plan}</strong></span>
+                                <span onClick={e => { e.stopPropagation(); setTab("abonament"); }} style={{ fontSize: 10.5, fontWeight: 800, color: ag.color, cursor: "pointer", whiteSpace: "nowrap" as const, flexShrink: 0 }}>Schimbă planul →</span>
+                              </div>
+                            )}
                           </button>
                         );
                       })}
