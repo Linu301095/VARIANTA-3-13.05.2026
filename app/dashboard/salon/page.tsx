@@ -164,6 +164,74 @@ type ColorSet = typeof C.light;
 type ThemeCtxType = { theme: "light" | "dark"; c: ColorSet; toggleTheme: (t: "light" | "dark") => void };
 const ThemeCtx = createContext<ThemeCtxType>({ theme: "light", c: C.light, toggleTheme: () => {} });
 
+function randeazaInline(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const regex = /\*\*([^*]+)\*\*|\*([^*]+)\*/g;
+  let last = 0, m: RegExpExecArray | null;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    if (m[1]) parts.push(<strong key={m.index} style={{ fontWeight: 900 }}>{m[1]}</strong>);
+    else if (m[2]) parts.push(<em key={m.index}>{m[2]}</em>);
+    last = regex.lastIndex;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length > 0 ? parts : text;
+}
+
+function RaportFormatat({ text, c, isMobile }: { text: string; c: ColorSet; isMobile: boolean }) {
+  const lines = text.split("\n");
+  const nodes: React.ReactNode[] = [];
+  lines.forEach((line, i) => {
+    const t = line.trim();
+    if (!t) {
+      nodes.push(<div key={i} style={{ height: 6 }} />);
+    } else if (t.startsWith("### ")) {
+      nodes.push(
+        <div key={i} style={{ fontSize: isMobile ? 12 : 12.5, fontWeight: 900, color: c.text2, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 14, marginBottom: 3 }}>
+          {randeazaInline(t.slice(4))}
+        </div>
+      );
+    } else if (t.startsWith("## ")) {
+      nodes.push(
+        <div key={i} style={{ fontSize: isMobile ? 13 : 14, fontWeight: 900, color: "#6366F1", marginTop: nodes.length > 0 ? 16 : 0, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 3, height: 14, background: "#6366F1", borderRadius: 2, flexShrink: 0, display: "inline-block" }} />
+          {randeazaInline(t.slice(3))}
+        </div>
+      );
+    } else if (t.startsWith("# ")) {
+      nodes.push(
+        <div key={i} style={{ fontSize: isMobile ? 14 : 15, fontWeight: 900, color: c.text, marginTop: nodes.length > 0 ? 16 : 0, marginBottom: 6 }}>
+          {randeazaInline(t.slice(2))}
+        </div>
+      );
+    } else if (/^[-*]\s/.test(t)) {
+      nodes.push(
+        <div key={i} style={{ display: "flex", gap: 7, marginBottom: 4, paddingLeft: 2 }}>
+          <span style={{ color: "#6366F1", fontWeight: 900, fontSize: 16, lineHeight: "1.45", flexShrink: 0, marginTop: -1 }}>•</span>
+          <span style={{ fontSize: isMobile ? 12.5 : 13, color: c.text, lineHeight: 1.6 }}>{randeazaInline(t.slice(2))}</span>
+        </div>
+      );
+    } else {
+      const numM = t.match(/^(\d+)\.\s(.+)/);
+      if (numM) {
+        nodes.push(
+          <div key={i} style={{ display: "flex", gap: 7, marginBottom: 4, paddingLeft: 2 }}>
+            <span style={{ color: "#6366F1", fontWeight: 900, fontSize: 12, lineHeight: "1.6", flexShrink: 0, minWidth: 18 }}>{numM[1]}.</span>
+            <span style={{ fontSize: isMobile ? 12.5 : 13, color: c.text, lineHeight: 1.6 }}>{randeazaInline(numM[2])}</span>
+          </div>
+        );
+      } else {
+        nodes.push(
+          <div key={i} style={{ fontSize: isMobile ? 12.5 : 13, color: c.text, lineHeight: 1.65, marginBottom: 1 }}>
+            {randeazaInline(t)}
+          </div>
+        );
+      }
+    }
+  });
+  return <>{nodes}</>;
+}
+
 const btnPrimary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 16px rgba(255,107,0,.35)" };
 
 /* ───────────────────────── Agenda — calendar pe zi ───────────────────────── */
@@ -2952,7 +3020,7 @@ export default function DashboardSalon() {
                                   </div>
                                 ) : (
                                   <>
-                                    <div style={{ fontSize: isMobile ? 12.5 : 13, color: c.text, lineHeight: 1.65, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{rapoarte[consRaportDeschis]!.continut}</div>
+                                    <div style={{ wordBreak: "break-word" }}><RaportFormatat text={rapoarte[consRaportDeschis]!.continut} c={c} isMobile={isMobile} /></div>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, paddingTop: 10, borderTop: `1px solid ${c.border}`, flexWrap: "wrap", gap: 6 }}>
                                       <span style={{ fontSize: 10.5, color: c.xmuted, fontWeight: 600 }}>Generat {new Date(rapoarte[consRaportDeschis]!.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                                       <button onClick={() => genereazaRaport(consRaportDeschis, true)} disabled={!!raportLoading}
@@ -2980,9 +3048,9 @@ export default function DashboardSalon() {
                                       <div style={{ maxWidth: isMobile ? "90%" : "82%", background: theme === "dark" ? "rgba(255,107,0,.18)" : "#FFF3EA", border: "1.5px solid rgba(255,107,0,.4)", borderRadius: "14px 14px 4px 14px", padding: isMobile ? "8px 11px" : "9px 13px", fontSize: isMobile ? 12.5 : 13, color: c.text, fontWeight: 700, lineHeight: 1.55, wordBreak: "break-word" }}>{qa.q}</div>
                                     </div>
                                     <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                                      <div style={{ maxWidth: isMobile ? "92%" : "85%", background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: "14px 14px 14px 4px", padding: isMobile ? "9px 12px" : "11px 14px", fontSize: isMobile ? 12.5 : 13, color: c.text, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                                        <div style={{ fontSize: 9, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>✨ Consultant AI</div>
-                                        {qa.a}
+                                      <div style={{ maxWidth: isMobile ? "92%" : "85%", background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: "14px 14px 14px 4px", padding: isMobile ? "9px 12px" : "11px 14px", wordBreak: "break-word" }}>
+                                        <div style={{ fontSize: 9, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>✨ Consultant AI</div>
+                                        <RaportFormatat text={qa.a} c={c} isMobile={isMobile} />
                                       </div>
                                     </div>
                                   </div>
