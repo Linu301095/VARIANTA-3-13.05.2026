@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import Cropper from "react-easy-crop";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, type LucideIcon } from "lucide-react";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
 type ProgramareSalon = {
@@ -680,8 +680,8 @@ function computeSnapshot(
   };
 }
 
-function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: string; text: string; intrebare: string }[] {
-  const sugestii: { icon: string; text: string; intrebare: string }[] = [];
+function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: LucideIcon; text: string; intrebare: string }[] {
+  const sugestii: { icon: LucideIcon; text: string; intrebare: string }[] = [];
 
   const ziActive = snapshot.ziSaptamana.filter(z => z.medie > 0);
   if (ziActive.length >= 2) {
@@ -690,7 +690,7 @@ function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: 
     const proc = buna.medie > 0 ? Math.round((slaba.medie / buna.medie) * 100) : 0;
     if (proc < 45) {
       sugestii.push({
-        icon: "📅",
+        icon: CalendarDays,
         text: `${slaba.zi} are ${proc}% din ocuparea de ${buna.zi} — cum umpli agenda?`,
         intrebare: `${slaba.zi} are o medie de ${slaba.medie} programari, fata de ${buna.medie} ${buna.zi}. Ce pot face concret sa cresc ocuparea in ziua ${slaba.zi}?`,
       });
@@ -699,7 +699,7 @@ function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: 
 
   if (snapshot.clientiInactivi >= 3) {
     sugestii.push({
-      icon: "👥",
+      icon: Users,
       text: `${snapshot.clientiInactivi} clienti fideli nu au revenit in 45+ zile`,
       intrebare: `Am ${snapshot.clientiInactivi} clienti cu vizite repetate care nu au mai revenit in 45+ zile. Ce strategie de reactivare recomanzi pentru un salon de grooming?`,
     });
@@ -707,7 +707,7 @@ function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: 
 
   if (snapshot.incasari.variatieProc < -10 && snapshot.incasari.lunaAnterioara > 0) {
     sugestii.push({
-      icon: "📉",
+      icon: TrendingDown,
       text: `Incasarile au scazut cu ${Math.abs(snapshot.incasari.variatieProc)}% fata de luna trecuta`,
       intrebare: `Incasarile mele au scazut cu ${Math.abs(snapshot.incasari.variatieProc)}% fata de luna anterioara (${snapshot.incasari.lunaAnterioara} RON -> ${snapshot.incasari.lunaCurenta} RON). Care sunt cauzele probabile si ce pot face?`,
     });
@@ -715,7 +715,7 @@ function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: 
 
   if (snapshot.incasari.variatieProc > 15 && snapshot.incasari.lunaAnterioara > 0) {
     sugestii.push({
-      icon: "📈",
+      icon: TrendingUp,
       text: `Crestere de ${snapshot.incasari.variatieProc}% fata de luna trecuta — cum consolidez?`,
       intrebare: `Salonul meu a crescut cu ${snapshot.incasari.variatieProc}% la incasari fata de luna trecuta. Ce pot face pentru a mentine si consolida aceasta crestere?`,
     });
@@ -727,7 +727,7 @@ function computeSugestii(snapshot: ReturnType<typeof computeSnapshot>): { icon: 
     const proc = total > 0 ? Math.round((top.count / total) * 100) : 0;
     if (proc > 55) {
       sugestii.push({
-        icon: "✂️",
+        icon: Scissors,
         text: `"${top.nume}" domina cu ${proc}% din programari — ma specializez sau diversific?`,
         intrebare: `Serviciul "${top.nume}" reprezinta ${proc}% din toate programarile mele luna aceasta. Ar trebui sa ma specializez mai mult sau sa diversific oferta?`,
       });
@@ -2939,11 +2939,11 @@ export default function DashboardSalon() {
                     const sugestii = computeSugestii(snapshot);
                     const ramaseIntrebari = 5 - intrebariLuna;
                     const lunaCurentaLabel = new Date().toLocaleDateString("ro-RO", { month: "long", year: "numeric" });
-                    const RAPOARTE_DEF = [
-                      { tip: "lunar", icon: "📊", label: "Raportul lunii", desc: "Ce a mers, ce nu, 3 recomandări" },
-                      { tip: "preturi", icon: "💰", label: "Analiză prețuri & încasări", desc: "Unde câștigi și unde pierzi bani" },
-                      { tip: "crestere", icon: "📈", label: "Plan de creștere", desc: "3 acțiuni concrete, prioritizate" },
-                      { tip: "echipa", icon: "👥", label: "Performanța echipei", desc: "Productivitatea groomerilor" },
+                    const RAPOARTE_DEF: { tip: string; Icon: LucideIcon; iconColor: string; label: string; desc: string }[] = [
+                      { tip: "lunar", Icon: BarChart3, iconColor: "#FF6B00", label: "Raportul lunii", desc: "Ce a mers, ce nu, 3 recomandări" },
+                      { tip: "preturi", Icon: Wallet, iconColor: "#10B981", label: "Analiză prețuri & încasări", desc: "Unde câștigi și unde pierzi bani" },
+                      { tip: "crestere", Icon: TrendingUp, iconColor: "#6366F1", label: "Plan de creștere", desc: "3 acțiuni concrete, prioritizate" },
+                      { tip: "echipa", Icon: Users, iconColor: "#F59E0B", label: "Performanța echipei", desc: "Productivitatea groomerilor" },
                     ];
                     const p = isMobile ? "12px 14px" : "16px 18px";
                     const pInner = isMobile ? "12px 14px" : "16px 18px";
@@ -2974,11 +2974,11 @@ export default function DashboardSalon() {
                           {/* Insights gratuite (zero cost) */}
                           {sugestii.length > 0 && (
                             <div style={{ marginBottom: 16 }}>
-                              <div style={{ fontSize: 10, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1.1, marginBottom: 7 }}>✨ Ce am observat în datele tale</div>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1.1, marginBottom: 7, display: "flex", alignItems: "center", gap: 5 }}><Sparkles size={11} color="#6366F1" strokeWidth={2} /> Ce am observat în datele tale</div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                                 {sugestii.map((s, i) => (
                                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, background: theme === "dark" ? "rgba(99,102,241,.08)" : "#EEF2FF", borderRadius: 10, padding: isMobile ? "10px 11px" : "9px 12px", border: `1px solid ${theme === "dark" ? "rgba(99,102,241,.2)" : "#C7D2FE"}` }}>
-                                    <span style={{ fontSize: 15, flexShrink: 0 }}>{s.icon}</span>
+                                    {React.createElement(s.icon, { size: 16, color: "#6366F1", strokeWidth: 2, style: { flexShrink: 0 } })}
                                     <span style={{ flex: 1, fontSize: isMobile ? 12 : 12.5, color: c.text, fontWeight: 600, lineHeight: 1.4 }}>{s.text}</span>
                                   </div>
                                 ))}
@@ -2997,7 +2997,7 @@ export default function DashboardSalon() {
                                 return (
                                   <button key={r.tip} onClick={() => genereazaRaport(r.tip)} disabled={!!raportLoading}
                                     style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: deschis ? (theme === "dark" ? "rgba(99,102,241,.14)" : "#EEF2FF") : c.surface2, border: `1.5px solid ${deschis ? "#6366F1" : c.border}`, borderRadius: 12, padding: "11px 13px", cursor: raportLoading ? "default" : "pointer", fontFamily: "Nunito, sans-serif", opacity: (raportLoading && !seGenereaza) ? .55 : 1, width: "100%" }}>
-                                    <span style={{ fontSize: 20, flexShrink: 0 }}>{r.icon}</span>
+                                    <span style={{ width: 32, height: 32, borderRadius: 8, background: theme === "dark" ? "rgba(255,255,255,.06)" : "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><r.Icon size={17} color={r.iconColor} strokeWidth={2} /></span>
                                     <span style={{ flex: 1, minWidth: 0 }}>
                                       <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: c.text }}>{r.label}</span>
                                       <span style={{ display: "block", fontSize: 11, color: c.muted, fontWeight: 600, lineHeight: 1.3 }}>{r.desc}</span>
@@ -3049,7 +3049,7 @@ export default function DashboardSalon() {
                                     </div>
                                     <div style={{ display: "flex", justifyContent: "flex-start" }}>
                                       <div style={{ maxWidth: isMobile ? "92%" : "85%", background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: "14px 14px 14px 4px", padding: isMobile ? "9px 12px" : "11px 14px", wordBreak: "break-word" }}>
-                                        <div style={{ fontSize: 9, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>✨ Consultant AI</div>
+                                        <div style={{ fontSize: 9, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}><Sparkles size={9} color="#6366F1" strokeWidth={2} /> Consultant AI</div>
                                         <RaportFormatat text={qa.a} c={c} isMobile={isMobile} />
                                       </div>
                                     </div>
