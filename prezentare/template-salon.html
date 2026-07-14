@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalyHub pentru saloane — Prezentare</title>
+<style>/*FONTS_CSS*/</style>
+<style>
+:root{
+  --bg:#FBF8F4; --surface:#FFFFFF; --surface2:#F6F1EB; --surface3:#F0E9E1;
+  --line:#ECE4DB; --line2:#E0D6CB;
+  --text:#1F1A15; --muted:#847769; --dim:#B3A797;
+  --orange:#FF6B00; --orangeText:#D95F00; --orange2:#FF8C42; --orangeSoft:#FFF3EA;
+  --green:#0FA671; --greenSoft:#E7F8F1;
+  --amber:#E08900; --coral:#EF4444; --cyan:#0891B2; --violet:#6366F1; --pink:#EC4899;
+  --shadow:0 2px 16px rgba(120,90,60,.08); --shadowLg:0 14px 40px rgba(120,90,60,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{background:#E7E0D8;font-family:'Nunito',system-ui,sans-serif;color:var(--text);
+  display:flex;flex-direction:column;align-items:center;gap:26px;padding:34px 16px}
+.page{position:relative;width:210mm;min-height:297mm;background:var(--bg);overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.22);border-radius:4px}
+.pad{padding:19mm 17mm}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--orangeText)}
+h1{font-size:56px;font-weight:900;line-height:1.04;letter-spacing:-1.5px;text-wrap:balance}
+h2{font-size:37px;font-weight:900;line-height:1.1;letter-spacing:-.8px;text-wrap:balance}
+h3{font-size:20px;font-weight:900;letter-spacing:-.3px}
+.lead{color:var(--muted);font-size:15px;line-height:1.75;font-weight:500;max-width:62ch}
+.pill{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line2);border-radius:50px;
+  padding:8px 15px;font-size:12.5px;font-weight:800;color:var(--text);background:var(--surface)}
+.icon{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.foot{position:absolute;left:17mm;right:17mm;bottom:11mm;display:flex;justify-content:space-between;
+  align-items:center;font-size:10.5px;color:var(--dim);font-weight:700}
+.brand{font-size:20px;font-weight:900;letter-spacing:-.5px;color:var(--text)}
+.brand .h{color:var(--orange)}
+.logo{height:40px;width:auto;object-fit:contain}
+.photo{position:relative;background:var(--surface3);border:1px solid var(--line);border-radius:20px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center}
+.photo::after{content:attr(data-label);position:absolute;bottom:12px;left:14px;font-size:9.5px;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--orangeText);background:rgba(255,255,255,.8);
+  padding:4px 9px;border-radius:6px}
+.photo .ph{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--dim)}
+.photo .ph svg{width:34px;height:34px}
+.photo .ph span{font-size:11px;font-weight:800;letter-spacing:1px}
+.photo>img{width:100%;height:100%;object-fit:cover;display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.chk{display:flex;gap:11px;align-items:flex-start}
+.chk svg{width:17px;height:17px;color:var(--orange);margin-top:2px;flex-shrink:0}
+.chk span{font-size:13px;color:var(--muted);line-height:1.55;font-weight:600}
+.chk b{color:var(--text);font-weight:800}
+.phone{background:#fff;border:5px solid #EDE4DA;border-radius:22px;padding:5px;box-shadow:var(--shadowLg)}
+.phone img{width:100%;display:block;border-radius:15px}
+.feat{display:flex;gap:10px}
+.feat .dot{width:7px;height:7px;border-radius:50%;background:var(--orange);margin-top:6px;flex-shrink:0}
+.feat .t{font-size:12.5px;font-weight:900}
+.feat .d{font-size:11px;color:var(--muted);font-weight:600;line-height:1.5}
+@media print{
+  body{background:#fff;gap:0;padding:0}
+  .page{box-shadow:none;border-radius:0;page-break-after:always;width:210mm;height:297mm}
+  .page:last-child{page-break-after:auto}
+}
+@page{size:A4 portrait;margin:0}
+</style>
+</head>
+<body>
+
+<!-- ===== P1 HERO ===== -->
+<section class="page" style="display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14mm 17mm 0">
+    <img class="logo" src="LOGO_DATA_URI" alt="CalyHub">
+    <span class="pill" style="color:var(--orangeText);border-color:var(--line2)">Pentru saloane · calyhub.ro</span>
+  </div>
+  <div style="padding:20px 17mm 0">
+    <div class="photo" style="height:118mm"><img src="IMG_CAT" alt="Salon de grooming"></div>
+  </div>
+  <div style="padding:26px 17mm 0">
+    <div class="eyebrow" style="margin-bottom:14px">PROGRAMĂRI GROOMING · AGENDĂ · ASISTENȚI AI</div>
+    <h1>Agenda ta, plină.<br>Fără un telefon dat.</h1>
+    <p class="lead" style="margin-top:16px;font-size:16px">
+      CalyHub îți aduce tot salonul pe un singur ecran — programări online, echipă, încasări și
+      clienți — plus patru asistenți AI care lucrează în fundal. Web și mobil, aceleași funcții.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+      <span class="pill">Programări 24/7</span>
+      <span class="pill">4 Asistenți AI</span>
+      <span class="pill">Statistici &amp; Excel</span>
+      <span class="pill">Primele 3 luni gratuite</span>
+    </div>
+  </div>
+  <div class="foot"><span class="brand">Caly<span class="h">Hub</span></span><span>Prezentare pentru saloane</span><span>calyhub.ro · pag. 01</span></div>
+</section>
+
+<!-- ===== P2 PLATFORMĂ ===== -->
+<section class="page">
+  <div class="pad">
+    <div class="eyebrow">PLATFORMA COMPLETĂ</div>
+    <h2 style="margin-top:14px">Tot ce ține salonul plin,<br>într-un singur loc</h2>
+    <p class="lead" style="margin-top:14px">Patru piloni care transformă timpul pierdut la telefon în programări, clienți fideli și decizii luate pe cifre reale.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px">
+      <div class="card">
+        <div style="width:42px;height:42px;border-radius:12px;background:var(--orangeSoft);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><svg viewBox="0 0 24 24" class="icon" style="width:21px;height:21px;color:var(--orange)"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <h3>Programări online 24/7</h3>
+        <p style="color:var(--muted);font-size:13px;line-height:1.65;margin-top:8px;font-weight:600">Clienții rezervă singuri, cu prețuri exacte pe talia animalului. Tu confirmi cu un click — fără telefoane, fără agende de hârtie.</p>
+      </div>
+      <div class="card">
+        <div style="width:42px;height:42px;border-radius:12px;background:var(--orangeSoft);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><svg viewBox="0 0 24 24" class="icon" style="width:21px;height:21px;color:var(--orange)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3>Agendă &amp; echipă</h3>
+        <p style="color:var(--muted);font-size:13px;line-height:1.65;margin-top:8px;font-weight:600">Calendar live per specialist, orar individual, blocări manuale și sloturi de 30 min. Protecție anti-dublă-rezervare, în așteptare primele.</p>
+      </div>
+      <div class="card">
+        <div style="width:42px;height:42px;border-radius:12px;background:var(--orangeSoft);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><svg viewBox="0 0 24 24" class="icon" style="width:21px;height:21px;color:var(--orange)"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></div>
+        <h3>Statistici reale</h3>
+        <p style="color:var(--muted);font-size:13px;line-height:1.65;margin-top:8px;font-weight:600">Încasări, top servicii, productivitate per groomer, evoluție lunară și distribuție pe talie — toate cu date reale și export Excel.</p>
+      </div>
+      <div class="card">
+        <div style="width:42px;height:42px;border-radius:12px;background:var(--orangeSoft);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><svg viewBox="0 0 24 24" class="icon" style="width:21px;height:21px;color:var(--orange)"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"/></svg></div>
+        <h3>4 Asistenți AI</h3>
+        <p style="color:var(--muted);font-size:13px;line-height:1.65;margin-top:8px;font-weight:600">De la răspunsuri la recenzii până la rapoarte de business lunare — inteligență care lucrează în fundal și îți ține clienții aproape.</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px">
+      <div class="card" style="padding:16px 14px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--orange)">24/7</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:700;line-height:1.4">Programări online, fără call-center</div></div>
+      <div class="card" style="padding:16px 14px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--orange)">4</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:700;line-height:1.4">Asistenți AI pentru salon</div></div>
+      <div class="card" style="padding:16px 14px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--orange)">30 min</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:700;line-height:1.4">Slot precis, preț per talie</div></div>
+      <div class="card" style="padding:16px 14px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--orange)">3</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:700;line-height:1.4">Planuri, de la 69 RON / lună</div></div>
+    </div>
+
+    <div class="photo" style="height:150px;margin-top:16px"><img src="IMG_ZEN" alt="Recepție salon">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(20,15,10,.82) 100%)"></div>
+      <div style="position:absolute;left:18px;bottom:16px;z-index:2">
+        <div class="eyebrow" style="color:#FFB980">VIZIBILITATE TOTALĂ</div>
+        <div style="font-size:16px;font-weight:900;margin-top:5px;color:#fff">Fiecare programare, fiecare client — sub control, în timp real.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand">Caly<span class="h">Hub</span></span><span>Prezentare generală</span><span>calyhub.ro · pag. 02</span></div>
+</section>
+
+<!-- ===== P3 PENTRU SALON ===== -->
+<section class="page">
+  <div class="pad">
+    <div class="eyebrow">PENTRU SALONUL TĂU</div>
+    <h2 style="margin-top:14px">Mai puțin haos.<br>Mai multe programări onorate.</h2>
+
+    <div style="display:grid;grid-template-columns:0.85fr 1.15fr;gap:22px;margin-top:26px;align-items:start">
+      <div class="photo" data-label="Slot foto — stație de lucru" style="height:260px">
+        <div class="ph"><svg viewBox="0 0 24 24" class="icon"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>SLOT FOTO — stație de lucru</span></div>
+      </div>
+      <div>
+        <h3>Agenda care se umple singură</h3>
+        <p style="color:var(--muted);font-size:13.5px;line-height:1.7;margin-top:9px;font-weight:600">Fiecare specialist are calendarul lui, cu orar individual și blocări manuale. Cererile noi apar primele, iar tu confirmi sau refuzi cu un click — de pe web sau de pe telefon.</p>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Calendar live per specialist</b>, sloturi de 30 min</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Confirmare / refuz</b> dintr-un click</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>În așteptare primele</b> — nimic nu-ți scapă</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Blocări manuale</b> (telefonic / walk-in / pauze)</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Orar individual</b> per groomer + servicii proprii</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:22px;margin-top:24px;align-items:start">
+      <div>
+        <h3>Deciziile, pe cifre reale</h3>
+        <p style="color:var(--muted);font-size:13.5px;line-height:1.7;margin-top:9px;font-weight:600">Vezi cât ai încasat azi și luna asta, ce servicii aduc cei mai mulți bani și cine performează din echipă. Toate calculate din programările reale, gata de export.</p>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Încasări Azi / Lună</b> și evoluție lunară</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Top servicii</b> și distribuție pe talie</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Productivitate per groomer</b></span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Export Excel</b> cu secțiuni selectabile</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>Recenzii cu rating agregat</b> pe profilul salonului</span></div>
+        </div>
+      </div>
+      <div class="photo" data-label="Slot foto — echipa" style="height:245px">
+        <div class="ph"><svg viewBox="0 0 24 24" class="icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>SLOT FOTO — echipa</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand">Caly<span class="h">Hub</span></span><span>Panoul salonului</span><span>calyhub.ro · pag. 03</span></div>
+</section>
+
+<!-- ===== P4 APLICAȚIA ÎN ACȚIUNE ===== -->
+<section class="page">
+  <div class="pad">
+    <div class="eyebrow">APLICAȚIA, ÎN MÂNA TA</div>
+    <h2 style="margin-top:14px">Aceeași putere, pe web și pe telefon</h2>
+    <p class="lead" style="margin-top:14px">Ce faci pe web apare instant pe telefon și invers — aceleași date, aceeași experiență. Mai jos, capturi reale din aplicație.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px">
+      <div><div class="phone"><img src="IMG_AGENDA" alt="Agenda salonului"></div><div style="text-align:center;margin-top:10px;font-size:12px;font-weight:900">Agendă live</div><div style="text-align:center;font-size:10px;color:var(--muted);font-weight:600;line-height:1.4;margin-top:2px">Calendar per specialist, pe zile</div></div>
+      <div><div class="phone"><img src="IMG_STATS" alt="Statistici salon"></div><div style="text-align:center;margin-top:10px;font-size:12px;font-weight:900">Statistici &amp; Excel</div><div style="text-align:center;font-size:10px;color:var(--muted);font-weight:600;line-height:1.4;margin-top:2px">Încasări, programări, rating</div></div>
+      <div><div class="phone"><img src="IMG_ECHIPA" alt="Echipa salonului"></div><div style="text-align:center;margin-top:10px;font-size:12px;font-weight:900">Echipa ta</div><div style="text-align:center;font-size:10px;color:var(--muted);font-weight:600;line-height:1.4;margin-top:2px">Groomeri și orarul fiecăruia</div></div>
+      <div><div class="phone"><img src="IMG_ANIMALE" alt="Istoric animale"></div><div style="text-align:center;margin-top:10px;font-size:12px;font-weight:900">Istoric animale</div><div style="text-align:center;font-size:10px;color:var(--muted);font-weight:600;line-height:1.4;margin-top:2px">Fișa fiecărui client, cu vizite</div></div>
+    </div>
+
+    <div class="eyebrow" style="margin-top:28px">TOTUL INCLUS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 26px;margin-top:14px">
+      <div class="feat"><span class="dot"></span><div><div class="t">Programări online 24/7</div><div class="d">Clienții rezervă singuri, cu prețuri per talie. Tu confirmi cu un click.</div></div></div>
+      <div class="feat"><span class="dot"></span><div><div class="t">Calendar live per specialist</div><div class="d">Orar individual, blocări și sloturi de 30 min, anti-dublă-rezervare.</div></div></div>
+      <div class="feat"><span class="dot"></span><div><div class="t">Statistici &amp; export Excel</div><div class="d">Încasări, top servicii, productivitate groomer, evoluție lunară.</div></div></div>
+      <div class="feat"><span class="dot"></span><div><div class="t">4 Asistenți AI</div><div class="d">Recenzii, clienți inactivi, fișă post-grooming, consultant de business.</div></div></div>
+      <div class="feat"><span class="dot"></span><div><div class="t">Recenzii &amp; rating</div><div class="d">Rating agregat pe carduri și pe profilul public al salonului.</div></div></div>
+      <div class="feat"><span class="dot"></span><div><div class="t">Date reale, cross-device</div><div class="d">Lucrezi pe web, continui pe telefon — aceleași date, peste tot.</div></div></div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand">Caly<span class="h">Hub</span></span><span>Aplicația web + mobil</span><span>calyhub.ro · pag. 04</span></div>
+</section>
+
+<!-- ===== P5 FUNCȚII AI ===== -->
+<section class="page">
+  <div class="pad">
+    <div class="eyebrow">INTELIGENȚĂ CARE LUCREAZĂ PENTRU TINE</div>
+    <h2 style="margin-top:14px">Patru asistenți AI,<br>în salonul tău</h2>
+    <p class="lead" style="margin-top:14px">Nu doar o agendă online. CalyHub folosește datele reale despre clienți, animale și programări ca să-ți economisească timp și să-ți țină clienții aproape.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px">
+      <div class="card" style="border-color:rgba(224,137,0,.35);position:relative;padding-bottom:32px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="width:46px;height:46px;border-radius:14px;background:rgba(224,137,0,.12);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" class="icon" style="width:22px;height:22px;color:var(--amber)"><polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9"/></svg></div>
+          <span style="font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--green);background:var(--greenSoft);padding:3px 9px;border-radius:50px">Plan Basic</span>
+        </div>
+        <h3 style="margin-top:14px">Răspunsuri la recenzii</h3>
+        <p style="color:var(--muted);font-size:12.5px;line-height:1.6;margin-top:7px;font-weight:600">Citește recenzia, identifică animalul și rasa din istoric și redactează un răspuns profesional, gata de trimis cu un click. Reputația salonului, îngrijită automat.</p>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--amber);border-radius:0 0 18px 18px"></div>
+      </div>
+      <div class="card" style="border-color:rgba(239,68,68,.3);position:relative;padding-bottom:32px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="width:46px;height:46px;border-radius:14px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" class="icon" style="width:22px;height:22px;color:var(--coral)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg></div>
+          <span style="font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--green);background:var(--greenSoft);padding:3px 9px;border-radius:50px">Plan Pro</span>
+        </div>
+        <h3 style="margin-top:14px">Clienți inactivi</h3>
+        <p style="color:var(--muted);font-size:12.5px;line-height:1.6;margin-top:7px;font-weight:600">Identifică clienții fideli care nu au mai revenit și pregătește mesajul de reactivare, cu cod de reducere opțional. Tu doar apeși trimite.</p>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--coral);border-radius:0 0 18px 18px"></div>
+      </div>
+      <div class="card" style="border-color:rgba(8,145,178,.3);position:relative;padding-bottom:32px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="width:46px;height:46px;border-radius:14px;background:rgba(8,145,178,.1);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" class="icon" style="width:22px;height:22px;color:var(--cyan)"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h4"/></svg></div>
+          <span style="font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--green);background:var(--greenSoft);padding:3px 9px;border-radius:50px">Plan Business</span>
+        </div>
+        <h3 style="margin-top:14px">Fișă post-grooming</h3>
+        <p style="color:var(--muted);font-size:12.5px;line-height:1.6;margin-top:7px;font-weight:600">Trimite clientului sfaturi de îngrijire personalizate pe rasa animalului, după fiecare vizită — un plus de profesionalism care îl aduce înapoi.</p>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--cyan);border-radius:0 0 18px 18px"></div>
+      </div>
+      <div class="card" style="border-color:rgba(99,102,241,.3);position:relative;padding-bottom:32px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="width:46px;height:46px;border-radius:14px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" class="icon" style="width:22px;height:22px;color:var(--violet)"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"/></svg></div>
+          <span style="font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--green);background:var(--greenSoft);padding:3px 9px;border-radius:50px">Plan Business</span>
+        </div>
+        <h3 style="margin-top:14px">Consultant AI</h3>
+        <p style="color:var(--muted);font-size:12.5px;line-height:1.6;margin-top:7px;font-weight:600">Rapoarte de business lunare din datele tale reale: ce a mers, ce trebuie îmbunătățit, plan de creștere, analiză de prețuri și performanța echipei.</p>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--violet);border-radius:0 0 18px 18px"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;display:flex;align-items:center;gap:14px;border-style:dashed;background:var(--surface2)">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(236,72,153,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" class="icon" style="width:20px;height:20px;color:var(--pink)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
+      <div style="flex:1"><h3 style="font-size:15px">Postări sociale din poze</h3><p style="color:var(--muted);font-size:12px;font-weight:600;margin-top:2px">AI recunoaște rasa din poză și scrie caption + hashtag-uri pentru Instagram și Facebook.</p></div>
+      <span style="font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--pink);background:rgba(236,72,153,.1);padding:4px 10px;border-radius:50px">În curând</span>
+    </div>
+    <p style="margin-top:14px;font-size:12px;color:var(--dim);font-weight:700;text-align:center">Toate datele AI sunt sincronizate cross-device — lucrezi pe web, continui pe telefon.</p>
+  </div>
+  <div class="foot"><span class="brand">Caly<span class="h">Hub</span></span><span>Asistenți AI</span><span>calyhub.ro · pag. 05</span></div>
+</section>
+
+<!-- ===== P6 PLANURI ===== -->
+<section class="page">
+  <div class="pad">
+    <div class="eyebrow">PLANURI &amp; PREȚURI</div>
+    <h2 style="margin-top:14px">Un plan pentru fiecare etapă</h2>
+    <p class="lead" style="margin-top:14px">O singură subscripție pe tot salonul — nu plătești per angajat. Prețuri cu facturare anuală; primele 3 luni sunt gratuite.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:24px;align-items:start">
+      <!-- Basic -->
+      <div class="card">
+        <div style="font-size:13px;font-weight:900;color:var(--orange)">Basic</div>
+        <div style="font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px">Groomer singur sau cu un asistent</div>
+        <div style="margin-top:14px;display:flex;align-items:baseline;gap:4px"><span style="font-size:34px;font-weight:900">57</span><span style="font-size:13px;color:var(--muted);font-weight:800">RON / lună</span></div>
+        <div style="font-size:10.5px;color:var(--dim);font-weight:700">facturat anual · 69 lei lunar</div>
+        <div style="height:1px;background:var(--line);margin:14px 0"></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Până la 2 useri</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Galerie 5 poze · statistici esențiale</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Remindere WhatsApp + 30 SMS / lună</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>AI:</b> răspunsuri la recenzii</span></div>
+        </div>
+      </div>
+      <!-- Pro -->
+      <div class="card" style="border:2px solid var(--orange);box-shadow:var(--shadowLg);position:relative">
+        <span style="position:absolute;top:-11px;left:22px;background:var(--orange);color:#fff;font-size:10px;font-weight:900;letter-spacing:.5px;padding:3px 11px;border-radius:50px">CEL MAI POPULAR</span>
+        <div style="font-size:13px;font-weight:900;color:var(--orange)">Pro</div>
+        <div style="font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px">Salon cu echipă, 3-6 persoane</div>
+        <div style="margin-top:14px;display:flex;align-items:baseline;gap:4px"><span style="font-size:34px;font-weight:900">99</span><span style="font-size:13px;color:var(--muted);font-weight:800">RON / lună</span></div>
+        <div style="font-size:10.5px;color:var(--dim);font-weight:700">facturat anual · 119 lei lunar</div>
+        <div style="height:1px;background:var(--line);margin:14px 0"></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>3-6 useri cu orar individual</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Booking pe specialist · galerie 10 poze</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Statistici complete + productivitate</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Remindere WhatsApp + 100 SMS / lună</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>AI:</b> alertă clienți inactivi</span></div>
+        </div>
+      </div>
+      <!-- Business -->
+      <div class="card">
+        <div style="font-size:13px;font-weight:900;color:var(--orange)">Business</div>
+        <div style="font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px">Salon mare sau lanț</div>
+        <div style="margin-top:14px;display:flex;align-items:baseline;gap:4px"><span style="font-size:34px;font-weight:900">182</span><span style="font-size:13px;color:var(--muted);font-weight:800">RON / lună</span></div>
+        <div style="font-size:10.5px;color:var(--dim);font-weight:700">facturat anual · 219 lei lunar</div>
+        <div style="height:1px;background:var(--line);margin:14px 0"></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Useri nelimitați · promovare în oraș</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Remindere WhatsApp + SMS nelimitate</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Suport prioritar 24/7 + manager dedicat</span></div>
+          <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span><b>AI:</b> fișă post-grooming + Consultant AI</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;background:var(--surface2);border:none">
+      <div class="eyebrow" style="margin-bottom:10px">INCLUS ÎN TOATE PLANURILE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px 26px">
+        <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Programări, clienți și animale nelimitate</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Pagină publică de rezervări + listare în oraș</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Prețuri &amp; durate per talie — unic în România</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icon"><polyline points="20 6 9 17 4 12"/></svg><span>Recenzii, dosar per client, aplicație mobilă</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand">Caly<span class="h">Hub</span></span><span>Planuri &amp; prețuri</span><span>calyhub.ro · pag. 06</span></div>
+</section>
+
+<!-- ===== P7 CTA ===== -->
+<section class="page" style="display:flex;flex-direction:column">
+  <div style="padding:17mm 17mm 0">
+    <div class="photo" style="height:120mm"><img src="IMG_ZEN" alt="Salon de grooming"></div>
+  </div>
+  <div style="padding:30px 17mm 0">
+    <div class="eyebrow">ÎNCEPE ASTĂZI</div>
+    <h1 style="font-size:44px;margin-top:14px">Salonul tău merită să fie plin.<br>În fiecare zi.</h1>
+    <p class="lead" style="margin-top:16px;font-size:15.5px">
+      Programări online 24/7, o agendă care se organizează singură și patru asistenți AI care lucrează
+      pentru tine — pe web și pe telefon. Înregistrează-ți salonul și primești primele 3 luni gratuite.
+    </p>
+    <div style="display:flex;gap:40px;margin-top:24px">
+      <div><div class="eyebrow" style="font-size:10px">WEB</div><div style="font-size:14px;font-weight:800;margin-top:5px">calyhub.ro</div></div>
+      <div><div class="eyebrow" style="font-size:10px">APLICAȚIE</div><div style="font-size:14px;font-weight:800;margin-top:5px">Web + Mobil</div></div>
+      <div><div class="eyebrow" style="font-size:10px">CONTACT</div><div style="font-size:14px;font-weight:800;margin-top:5px">parteneri@calyhub.ro</div></div>
+    </div>
+  </div>
+  <img class="logo" src="LOGO_DATA_URI" alt="CalyHub" style="height:34px;position:absolute;bottom:16mm;left:17mm">
+</section>
+
+</body>
+</html>
