@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalyHub — Programări online pentru saloane de grooming și înfrumusețare</title>
+<style>/*FONTS_CSS*/</style>
+<style>
+:root{--bg:#FBF8F4;--surface:#fff;--surface2:#F5F0E9;--line:#EAE2D8;--text:#1A1512;--muted:#7C7064;--dim:#B3A797;
+ --orange:#FF6B00;--orangeText:#D95F00;--orangeSoft:#FFF3EA;--dark:#17120E;--green:#0FA671;--greenSoft:#E7F8F1;
+ --amber:#E08900;--coral:#EF4444;--cyan:#0891B2;--violet:#6366F1;
+ --shadow:0 1px 3px rgba(120,90,60,.06),0 10px 34px rgba(120,90,60,.08);--shadowLg:0 24px 60px rgba(120,90,60,.18)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'Nunito',system-ui,sans-serif;color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 26px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--orangeText)}
+h1{font-size:clamp(34px,5vw,56px);font-weight:900;line-height:1.02;letter-spacing:-1.8px;text-wrap:balance}
+h2{font-size:clamp(26px,3.4vw,38px);font-weight:900;letter-spacing:-.8px;text-wrap:balance}
+h3{font-size:19px;font-weight:900;letter-spacing:-.3px}
+.lead{color:var(--muted);font-size:17px;line-height:1.7;font-weight:500}
+.icn{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:50px;font-size:14.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;border:1.5px solid transparent}
+.btn-p{background:var(--orange);color:#fff;box-shadow:0 8px 22px rgba(255,107,0,.32)}
+.btn-s{background:#fff;color:var(--text);border-color:var(--line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow)}
+.chk{display:flex;gap:11px;align-items:flex-start}
+.chk svg{width:18px;height:18px;color:var(--orange);margin-top:2px;flex-shrink:0}
+.chk span{font-size:14px;color:var(--muted);line-height:1.5;font-weight:600}
+.chk b{color:var(--text);font-weight:800}
+.photo{border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.phone{background:#fff;border:5px solid #EDE4DA;border-radius:26px;padding:5px;box-shadow:var(--shadowLg)}
+.phone img{width:100%;display:block;border-radius:19px}
+/* header */
+header{position:sticky;top:0;z-index:50;background:rgba(251,248,244,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-links a{font-size:14px;font-weight:700;color:var(--text);text-decoration:none}
+section{padding:70px 0}
+</style></head>
+<body>
+
+<header><div class="wrap"><div class="nav">
+  <img src="LOGO_DATA_URI" alt="CalyHub" style="height:46px;width:auto">
+  <div class="nav-links">
+    <a href="#">Cum funcționează</a>
+    <a href="#">Prețuri</a>
+    <a href="#" style="color:var(--muted)">Conectare</a>
+    <a href="#" class="btn btn-p" style="padding:10px 20px">Înregistrare gratuită</a>
+  </div>
+</div></div></header>
+
+<!-- HERO -->
+<section style="padding-top:56px;padding-bottom:40px"><div class="wrap">
+  <div style="display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center">
+    <div>
+      <div class="eyebrow" style="margin-bottom:18px">PROGRAMĂRI ONLINE · GROOMING &amp; BEAUTY</div>
+      <h1>Toate programările de îngrijire, într-o <span style="color:var(--orange)">singură platformă</span>.</h1>
+      <p class="lead" style="margin-top:20px">
+        CalyHub conectează clienții cu saloanele de grooming și de înfrumusețare din orașul lor.
+        Programări online 24/7, agende gestionate inteligent și asistenți AI — pentru animale și pentru oameni.
+      </p>
+      <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap">
+        <a href="#" class="btn btn-p">Caută un salon</a>
+        <a href="#" class="btn btn-s">Înscrie-ți salonul →</a>
+      </div>
+      <div style="display:flex;gap:24px;margin-top:30px;flex-wrap:wrap">
+        <div><div style="font-size:22px;font-weight:900;color:var(--orange)">24/7</div><div style="font-size:12px;color:var(--muted);font-weight:700">programări online</div></div>
+        <div style="width:1px;background:var(--line)"></div>
+        <div><div style="font-size:22px;font-weight:900;color:var(--orange)">2</div><div style="font-size:12px;color:var(--muted);font-weight:700">segmente · grooming &amp; beauty</div></div>
+        <div style="width:1px;background:var(--line)"></div>
+        <div><div style="font-size:22px;font-weight:900;color:var(--orange)">4</div><div style="font-size:12px;color:var(--muted);font-weight:700">asistenți AI incluși</div></div>
+      </div>
+    </div>
+    <div class="photo" style="height:440px"><img src="IMG_ZEN" alt="Salon"></div>
+  </div>
+</div></section>
+
+<!-- SEGMENTE -->
+<section><div class="wrap">
+  <div style="text-align:center;max-width:640px;margin:0 auto 40px">
+    <div class="eyebrow">DOUĂ SEGMENTE, O PLATFORMĂ</div>
+    <h2 style="margin-top:12px">Îngrijire pentru animale și pentru oameni</h2>
+    <p class="lead" style="margin-top:12px;font-size:16px">Aceeași experiență de programare, oricare ar fi salonul. Clientul alege lumea în care intră.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card" style="padding:28px">
+      <div style="display:flex;align-items:center;gap:13px;margin-bottom:14px">
+        <div style="width:48px;height:48px;border-radius:14px;background:var(--orangeSoft);display:flex;align-items:center;justify-content:center;color:var(--orange)"><svg class="icn" style="width:24px;height:24px" viewBox="0 0 24 24"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-3a5 5 0 0 1 3-5z"/></svg></div>
+        <div><h3>Grooming</h3><div style="font-size:12.5px;color:var(--muted);font-weight:700">saloane pentru animale</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--muted);font-weight:600;line-height:1.6">Tuns, îmbăiere, deghajare și îngrijire completă, cu tarife pe talia animalului și profil pentru fiecare animăluț.</p>
+    </div>
+    <div class="card" style="padding:28px;background:var(--dark);border-color:var(--dark)">
+      <div style="display:flex;align-items:center;gap:13px;margin-bottom:14px">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,107,0,.16);display:flex;align-items:center;justify-content:center;color:var(--orange)"><svg class="icn" style="width:24px;height:24px" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
+        <div><h3 style="color:#fff">Beauty</h3><div style="font-size:12.5px;color:#B9AE9F;font-weight:700">saloane pentru oameni</div></div>
+      </div>
+      <p style="font-size:14px;color:#B9AE9F;font-weight:600;line-height:1.6">Frizerie, coafor, manichiură și cosmetică. Programare individuală, cu specialistul și ora pe care le alegi.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- PENTRU CLIENTI -->
+<section style="background:var(--surface2)"><div class="wrap">
+  <div style="display:grid;grid-template-columns:.9fr 1.1fr;gap:44px;align-items:center">
+    <div class="photo" style="height:400px"><img src="IMG_DOG" alt="Client"></div>
+    <div>
+      <div class="eyebrow">PENTRU CLIENȚI</div>
+      <h2 style="margin-top:12px">Găsești și rezervi<br>în câteva minute</h2>
+      <p class="lead" style="margin-top:14px;font-size:16px">Cauți salonul potrivit, vezi prețul exact și rezervi direct din aplicație — fără telefoane, fără așteptare.</p>
+      <div style="display:flex;flex-direction:column;gap:13px;margin-top:22px">
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Filtre pe oraș, serviciu și rating</b>, cu prețuri transparente</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Rezervare online 24/7</b>, cu confirmare direct în aplicație</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Profil pentru animalul tău</b> — opțional, dacă alegi grooming</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Recenzii reale</b> și istoricul programărilor, într-un singur cont</span></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- PENTRU SALOANE -->
+<section><div class="wrap">
+  <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:44px;align-items:center">
+    <div>
+      <div class="eyebrow">PENTRU SALOANE</div>
+      <h2 style="margin-top:12px">Un panou care îți<br>ține agenda plină</h2>
+      <p class="lead" style="margin-top:14px;font-size:16px">Programări online, calendar per specialist, statistici reale și instrumente AI — totul pe web și pe telefon.</p>
+      <div style="display:flex;flex-direction:column;gap:13px;margin-top:22px">
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Calendar live per specialist</b>, sloturi de 30 min, anti-dublă-rezervare</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Statistici reale</b> — încasări, top servicii, productivitate, export Excel</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Echipă cu orar individual</b> și profil public al salonului</span></div>
+        <div class="chk"><svg viewBox="0 0 24 24" class="icn"><polyline points="20 6 9 17 4 12"/></svg><span><b>Date sincronizate</b> pe web și mobil, în timp real</span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;justify-content:center">
+      <div class="phone" style="width:180px"><img src="IMG_AGENDA" alt="Agendă"></div>
+      <div class="phone" style="width:180px;margin-top:30px"><img src="IMG_STATS" alt="Statistici"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- AI -->
+<section style="background:var(--surface2)"><div class="wrap">
+  <div style="text-align:center;max-width:640px;margin:0 auto 40px">
+    <div class="eyebrow">INTELIGENȚĂ INCLUSĂ</div>
+    <h2 style="margin-top:12px">Patru asistenți AI care lucrează pentru salon</h2>
+    <p class="lead" style="margin-top:12px;font-size:16px">Instrumente care economisesc timp și țin clienții aproape — pornind de la datele reale ale salonului.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+    <div class="card"><div style="width:42px;height:42px;border-radius:12px;background:rgba(224,137,0,.12);display:flex;align-items:center;justify-content:center;color:var(--amber);margin-bottom:12px"><svg class="icn" style="width:21px;height:21px" viewBox="0 0 24 24"><polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9"/></svg></div><h3 style="font-size:15px">Răspunsuri la recenzii</h3><p style="font-size:12.5px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.55">Răspunsuri profesionale, generate automat.</p></div>
+    <div class="card"><div style="width:42px;height:42px;border-radius:12px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;color:var(--coral);margin-bottom:12px"><svg class="icn" style="width:21px;height:21px" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg></div><h3 style="font-size:15px">Clienți inactivi</h3><p style="font-size:12.5px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.55">Reactivează clienții care nu au mai revenit.</p></div>
+    <div class="card"><div style="width:42px;height:42px;border-radius:12px;background:rgba(8,145,178,.1);display:flex;align-items:center;justify-content:center;color:var(--cyan);margin-bottom:12px"><svg class="icn" style="width:21px;height:21px" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg></div><h3 style="font-size:15px">Sfaturi post-serviciu</h3><p style="font-size:12.5px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.55">Recomandări personalizate pentru client.</p></div>
+    <div class="card"><div style="width:42px;height:42px;border-radius:12px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;color:var(--violet);margin-bottom:12px"><svg class="icn" style="width:21px;height:21px" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"/></svg></div><h3 style="font-size:15px">Consultant AI</h3><p style="font-size:12.5px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.55">Rapoarte de business lunare, din date reale.</p></div>
+  </div>
+</div></section>
+
+<!-- AVANTAJ: doar intersectia -->
+<section><div class="wrap">
+  <div class="card" style="background:var(--dark);border:none;color:#fff;padding:clamp(32px,5vw,52px);text-align:center">
+    <div class="eyebrow" style="color:var(--orange)">AVANTAJUL CALYHUB</div>
+    <h2 style="margin-top:14px;color:#fff;max-width:16ch;margin-left:auto;margin-right:auto">Deținem intersecția</h2>
+    <p style="font-size:17px;color:#C9BEB2;font-weight:500;line-height:1.7;margin-top:16px;max-width:56ch;margin-left:auto;margin-right:auto">
+      Piața e segmentată. Nimeni nu operează ambele lumi din același loc — grooming și înfrumusețare,
+      pentru animale și pentru oameni. Iar acolo este poziția noastră.
+    </p>
+  </div>
+</div></section>
+
+<!-- CTA FINAL -->
+<section style="padding-top:20px"><div class="wrap">
+  <div style="text-align:center;max-width:660px;margin:0 auto">
+    <h2>Începe astăzi</h2>
+    <p class="lead" style="margin-top:12px;font-size:16px">Rezervă primul serviciu în câteva minute, sau înscrie-ți salonul și primești primele 3 luni gratuite.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+      <a href="#" class="btn btn-p">Caută un salon</a>
+      <a href="#" class="btn btn-s">Înscrie-ți salonul →</a>
+    </div>
+  </div>
+</div></section>
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--line);padding:34px 0;margin-top:40px"><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+  <img src="LOGO_DATA_URI" alt="CalyHub" style="height:40px;width:auto">
+  <div style="font-size:13px;color:var(--muted);font-weight:600">Frumusețe · Îngrijire · Încredere</div>
+  <div style="font-size:12.5px;color:var(--dim);font-weight:700">© 2026 CalyHub</div>
+</div></footer>
+
+</body></html>
