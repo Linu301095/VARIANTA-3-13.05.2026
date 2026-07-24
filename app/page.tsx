@@ -4,8 +4,9 @@ import Link from "next/link";
 import Footer from "../components/Footer";
 import ResetTheme from "../components/ResetTheme";
 import ScrollReveal from "../components/ScrollReveal";
+import HeroSearch from "../components/HeroSearch";
 import {
-  PawPrint, Scissors, Search, MapPin, Calendar, BarChart3, Users, Sparkles,
+  PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
   Clock, Tag, Gift, Smartphone, Star, MessageSquare, ClipboardList, PlayCircle, Check,
 } from "lucide-react";
 
@@ -103,25 +104,7 @@ export default function HomePage() {
               și instrumente AI pentru saloane.
             </p>
 
-            {/* toggle */}
-            <div className="ch-hero-anim" style={{ display: "inline-flex", gap: 4, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 50, padding: 4, marginTop: 30, boxShadow: "0 2px 16px rgba(120,90,60,.08)", animationDelay: ".42s" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 50, padding: "9px 18px", fontSize: 13.5, fontWeight: 800, background: C.orange, color: "#fff" }}><PawPrint size={15} strokeWidth={2} /> Grooming</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 50, padding: "9px 18px", fontSize: 13.5, fontWeight: 800, background: "transparent", color: C.muted }}><Scissors size={15} strokeWidth={2} /> Înfrumusețare</span>
-            </div>
-
-            {/* search */}
-            <div className="ch-hero-anim" style={{ display: "flex", alignItems: "center", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 20, boxShadow: "0 20px 50px rgba(120,90,60,.14)", maxWidth: 660, margin: "14px auto 0", padding: 6, textAlign: "left", animationDelay: ".52s" }}>
-              <div style={{ flex: 1.5, display: "flex", alignItems: "center", gap: 11, padding: "12px 16px", minWidth: 0 }}>
-                <Search size={19} color={C.muted} strokeWidth={2} />
-                <span style={{ fontSize: 14.5, color: C.dim, fontWeight: 600 }}>Serviciu, salon sau specialist</span>
-              </div>
-              <div style={{ width: 1, height: 30, background: C.line, flexShrink: 0 }} />
-              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 11, padding: "12px 16px", minWidth: 0 }}>
-                <MapPin size={19} color={C.muted} strokeWidth={2} />
-                <span style={{ fontSize: 14.5, color: C.dim, fontWeight: 600 }}>Orașul tău</span>
-              </div>
-              <Link href="/register" style={{ ...btnPrimary, padding: "14px 24px", borderRadius: 12, flexShrink: 0 }}><Search size={17} strokeWidth={2.4} /> Caută</Link>
-            </div>
+            <HeroSearch />
 
             <div className="ch-hero-anim" style={{ marginTop: 18, display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap", alignItems: "center", fontSize: 13.5, fontWeight: 700, animationDelay: ".64s" }}>
               <Link href="/cum-functioneaza" style={{ color: C.text, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7 }}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează</Link>
