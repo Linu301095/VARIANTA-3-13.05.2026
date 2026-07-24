@@ -119,10 +119,16 @@ export default function HomePage() {
                   {iconBox(PawPrint)}
                   <div><div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Ești client</div><h2 style={{ fontSize: 19, fontWeight: 900, marginTop: 2, color: C.text }}>Găsește și rezervă</h2></div>
                 </div>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 14 }}>Salon de grooming pentru animalul tău sau frizerie și coafor pentru tine — cauți, compari prețuri și rezervi online în câteva minute.</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 18 }}>
-                  {chk(<>Prețuri transparente și disponibilitate live</>)}
-                  {chk(<>Istoric și recomandări după fiecare vizită</>)}
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 14 }}>Salon de grooming pentru animalul tău sau frizerie și coafor pentru tine — cauți, compari și rezervi online în câteva minute.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Prețuri transparente</b> și disponibilitate live</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Rezervare 24/7</b> cu confirmare instantă</>)}
+                  {chk(<>Alegi <b style={{ color: C.text, fontWeight: 800 }}>specialistul</b> și ora preferată</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Istoric și recomandări</b> după fiecare vizită</>)}
+                </div>
+                <div style={{ background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 14, padding: "11px 14px", marginBottom: 18 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Check size={15} strokeWidth={2.6} /> Gratuit pentru clienți</div>
+                  <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără cost, fără card — plătești doar serviciul, la salon</div>
                 </div>
                 <Link href="/register" style={{ ...btnPrimary, marginTop: "auto" }}>Caută un salon →</Link>
               </div>
@@ -131,7 +137,13 @@ export default function HomePage() {
                   {iconBox(Scissors)}
                   <div><div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Ai un salon</div><h2 style={{ fontSize: 19, fontWeight: 900, marginTop: 2, color: C.text }}>Umple-ți agenda</h2></div>
                 </div>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 14 }}>Grooming sau înfrumusețare — programări online 24/7, statistici reale și 4 asistenți AI care îți fidelizează clienții.</p>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 14 }}>Grooming sau înfrumusețare — programări online, agendă digitală și instrumente care îți fidelizează clienții.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Programări online 24/7</b>, fără un telefon dat</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Calendar per specialist</b> și statistici reale</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>4 asistenți AI</b> care îți fidelizează clienții</>)}
+                  {chk(<>Recenzii, istoric client și <b style={{ color: C.text, fontWeight: 800 }}>export Excel</b></>)}
+                </div>
                 <div style={{ background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 14, padding: "11px 14px", marginBottom: 18 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> Primele 3 luni gratuite</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără card · 0% comision · anulezi oricând</div>
