@@ -244,7 +244,7 @@ export default function HomePage() {
             </div>
             {/* Instrumente AI — incluse pentru saloane */}
             <div data-reveal style={{ textAlign: "center", maxWidth: 700, margin: "50px auto 26px" }}>
-              <div style={eyebrow}>INSTRUMENTE AI · INCLUSE</div>
+              <div style={eyebrow}><Sparkles size={13} strokeWidth={2.4} /> INSTRUMENTE AI</div>
               <h3 style={{ fontSize: "clamp(20px,2.6vw,26px)", fontWeight: 900, letterSpacing: -0.5, color: C.text, marginTop: 10 }}>Patru asistenți AI care îți cresc afacerea</h3>
             </div>
             <div className="ch-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>

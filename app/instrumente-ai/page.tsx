@@ -109,7 +109,7 @@ export default function InstrumenteAI() {
               <div style={{ position: "absolute", inset: -14, background: "radial-gradient(circle, rgba(255,107,0,.28), transparent 70%)", filter: "blur(8px)" }} />
               <Sparkle size={54} style={{ position: "relative" }} />
             </div>
-            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}><Sparkle size={13} /> INSTRUMENTE AI · INCLUSE PENTRU SALOANE</div>
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}><Sparkle size={13} /> INSTRUMENTE AI · PENTRU SALOANE</div>
             <h1 className="ch-hero-anim" style={{ fontSize: "clamp(34px,5.4vw,54px)", fontWeight: 900, lineHeight: 1.04, letterSpacing: -1.5, color: C.text, animationDelay: ".2s" }}>
               Inteligență care lucrează<br />pentru <span style={{ color: C.orange }}>salonul tău</span>.
             </h1>
