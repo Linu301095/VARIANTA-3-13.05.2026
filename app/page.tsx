@@ -43,7 +43,9 @@ const tile: React.CSSProperties = {
   padding: 22, boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
 };
 const eyebrow: React.CSSProperties = {
-  fontSize: 11, fontWeight: 800, letterSpacing: 2.5, textTransform: "uppercase", color: C.orangeText,
+  display: "inline-flex", alignItems: "center", gap: 7,
+  fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
+  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
 };
 const btnPrimary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -260,7 +262,7 @@ export default function HomePage() {
               ))}
             </div>
             <div data-reveal style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 34 }}>
-              <Link href="/cum-functioneaza#asistenti-ai" style={btnSecondary}>Vezi instrumentele AI →</Link>
+              <Link href="/instrumente-ai" style={btnSecondary}>Vezi instrumentele AI →</Link>
               <Link href="/register" style={btnPrimary}>Înscrie-ți salonul gratuit →</Link>
             </div>
           </div>
