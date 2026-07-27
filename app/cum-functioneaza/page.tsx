@@ -2,393 +2,181 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
-import { PawPrint, Scissors, Search, Calendar, BarChart3, Smartphone, Star, Shield, Wallet, User, Gift, Bell, ClipboardList, Ban, Settings, Download, FileText, Store, AlertTriangle, Sparkles, MessageSquare, BellRing, ImagePlus, type LucideIcon } from "lucide-react";
+import ResetTheme from "../../components/ResetTheme";
+import ScrollReveal from "../../components/ScrollReveal";
+import {
+  PawPrint, Scissors, Search, Calendar, Bell, Store, SlidersHorizontal,
+  BarChart3, Sparkles, Check, type LucideIcon,
+} from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cum funcționează CalyHub — Programări grooming în 4 pași",
+  title: "Cum funcționează CalyHub — Programări în câțiva pași",
   description:
-    "Rezervă la salonul de grooming în 10 secunde. Profil animal cu talie, prețuri transparente per talie, istoric salvat automat. 4 pași simpli pentru stăpâni și saloane.",
+    "Vezi cum funcționează CalyHub: clienții găsesc și rezervă la saloane de grooming și de înfrumusețare în câteva minute, iar saloanele își digitalizează agenda și primesc programări online 24/7.",
   alternates: { canonical: "/cum-functioneaza" },
   openGraph: {
-    title: "Cum funcționează CalyHub — Programări grooming în 4 pași",
-    description: "Programări grooming online în 10 secunde. Profil animal, prețuri per talie, istoric automat. Vezi cum funcționează.",
+    title: "Cum funcționează CalyHub",
+    description: "De la căutare la rezervare pentru clienți, de la înregistrare la programări pentru saloane — grooming și înfrumusețare, într-o singură platformă.",
     url: "/cum-functioneaza",
+    type: "website",
   },
 };
 
-const STEPS_CLIENT: { nr: string; Icon: LucideIcon; titlu: string; desc: string }[] = [
-  { nr: "01", Icon: ClipboardList, titlu: "Cont gratuit + profil animal complet", desc: "Te înregistrezi în 2 minute. Adaugi rasă, talie (Mică/Medie/Mare), vârstă, kg, alergii și poză. Salonul te cunoaște deja înainte să intri pe ușă." },
-  { nr: "02", Icon: Search, titlu: "Alegi salonul potrivit", desc: "Filtrezi după oraș, serviciu și preț. Vezi prețuri exacte per talia animalului tău, galerie foto reală a salonului și orar live." },
-  { nr: "03", Icon: Calendar, titlu: "Rezervi în 10 secunde", desc: "Sloturi 30min vizibile live — verde liber, portocaliu rezervat, roșu blocat. Alegi, confirmi, primești notificare instant în aplicație." },
-  { nr: "04", Icon: PawPrint, titlu: "Istoric salvat automat", desc: "Toate vizitele se salvează: serviciu, preț, salon, dată. Animalul tău are dosar propriu, ca la doctor. Plus poză și recenzii ulterioare." },
+const C = {
+  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
+  text: "#1A1A1A", muted: "#6B7280", dim: "#9CA3AF",
+  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+};
+
+const eyebrow: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: 7,
+  fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
+  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+};
+const btnPrimary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: C.orange, color: "#fff",
+  fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 22px rgba(255,107,0,.32)",
+};
+const btnSecondary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
+  fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
+};
+
+type Step = { nr: string; Icon: LucideIcon; t: string; d: string };
+
+const PASI_CLIENT: Step[] = [
+  { nr: "01", Icon: Search, t: "Caută salonul potrivit", d: "Alegi lumea — grooming pentru animalul tău sau înfrumusețare pentru tine. Filtrezi după oraș, serviciu și rating, vezi prețuri exacte și galeria salonului." },
+  { nr: "02", Icon: Calendar, t: "Rezervă în câteva minute", d: "Alegi slotul liber și specialistul preferat, adaugi o observație și trimiți. Fără telefoane, fără așteptare — disponibilitate în timp real." },
+  { nr: "03", Icon: Bell, t: "Primești confirmarea", d: "Salonul confirmă direct în aplicație. Ai istoricul complet, recomandări după fiecare vizită și lași o recenzie — totul într-un singur cont." },
 ];
 
-const STEPS_SALON: { nr: string; Icon: LucideIcon; titlu: string; desc: string }[] = [
-  { nr: "01", Icon: Store, titlu: "Înregistrezi salonul", desc: "Datele firmei, copertă, galerie până la 10 foto, echipa, descriere. Profilul salonului apare instant în lista clienților din oraș." },
-  { nr: "02", Icon: Settings, titlu: "Configurezi calendarul", desc: "Stabilești orarul săptămânal și marchezi oricând sloturile ocupate — telefonic, walk-in sau pauze. Sistemul blochează automat suprapunerile." },
-  { nr: "03", Icon: Wallet, titlu: "Prețuri diferite per talie", desc: "Preț și durată diferite pentru Mică/Medie/Mare. Reflectă exact cum lucrezi: un câine mare cere mai mult timp și șampon. Clientul vede prețul corect pentru talia lui." },
-  { nr: "04", Icon: BarChart3, titlu: "Statistici pe orice perioadă + rapoarte", desc: "Încasări, programări și clienți filtrate pe Azi / Ieri / Săptămână / Lună / An sau interval ales de tine. Evoluție lunară, top servicii, productivitate pe groomer și export Excel cu un click." },
+const PASI_SALON: Step[] = [
+  { nr: "01", Icon: Store, t: "Înregistrezi salonul", d: "Alegi tipul — grooming sau înfrumusețare. Adaugi servicii, prețuri, echipă și galerie. Profilul apare instant în lista clienților din orașul tău." },
+  { nr: "02", Icon: SlidersHorizontal, t: "Configurezi agenda", d: "Orar per specialist, sloturi de 30 de minute și blocări manuale (telefonic, walk-in, pauze). Sistemul previne automat dubla-rezervare." },
+  { nr: "03", Icon: BarChart3, t: "Primești programări", d: "Confirmi cu un click, urmărești statistici reale și folosești cei 4 asistenți AI care îți fidelizează clienții. Totul, pe web și pe telefon." },
 ];
 
-const BENEFICII_CLIENT: { Icon: LucideIcon; titlu: string; desc: string }[] = [
-  { Icon: PawPrint, titlu: "Profilul animalului tău, complet și mereu la îndemână", desc: "Talia (Mică/Medie/Mare) e salvată în profil, așa că prețul pe care îl vezi e exact cel pentru câinele tău, nu un estimat generic." },
-  { Icon: Calendar, titlu: "Disponibilitate în timp real", desc: "Vezi exact ce ore sunt libere și rezervi pe loc, fără telefoane și fără să aștepți confirmarea pe mesaj." },
-  { Icon: Bell, titlu: "Confirmare rapidă, direct în aplicație", desc: "Salonul îți confirmă programarea în câteva minute, cu notificare direct în cont — fără conversații pe WhatsApp." },
-  { Icon: FileText, titlu: "Tot istoricul, într-un singur loc", desc: "Fiecare programare se adaugă automat în dosar: serviciu, preț, salon, dată. Nimic nu se pierde." },
-  { Icon: Wallet, titlu: "Preț clar, înainte de programare", desc: "Vezi exact cât plătești pentru animalul tău încă din momentul rezervării." },
-  { Icon: Star, titlu: "Un cont pentru toată familia blănoasă", desc: "Adaugi câte animale vrei, fiecare cu profilul și istoricul lui. Gestionezi totul dintr-un singur loc." },
-];
-
-const BENEFICII_SALON: { Icon: LucideIcon; titlu: string; desc: string }[] = [
-  { Icon: Wallet, titlu: "Tarife clare", desc: "Prețuri și durate diferite per talie." },
-  { Icon: Ban, titlu: "Calendarul tău, fără suprapuneri", desc: "Controlezi complet disponibilitatea — deschizi sau închizi sloturi oricând, inclusiv pentru programări telefonice sau pauze. Calendarul online reflectă întotdeauna realitatea." },
-  { Icon: Scissors, titlu: "Vezi performanța fiecărui groomer", desc: "Câte programări și ce încasări are fiecare specialist, pe perioada aleasă. Ai imaginea clară a echipei, fără calcule manuale." },
-  { Icon: User, titlu: "Clienții tăi, organizați", desc: "Acces instant la istoricul fiecărui client: ce animale are, ce servicii a făcut, ce alergii trebuie evitate." },
-  { Icon: Shield, titlu: "Protecție împotriva anulărilor repetate", desc: "Vezi cine anulează frecvent și poți bloca, cu un click, clienții care îți afectează agenda. Timpul tău rămâne protejat." },
-  { Icon: Smartphone, titlu: "Control total, de pe orice dispozitiv", desc: "Gestionezi calendarul direct din telefon, oricând. Nu trebuie să fii în salon ca să fii la curent." },
-  { Icon: Gift, titlu: "Primele 3 luni, gratuite", desc: "Testezi toate funcțiile cu programări reale. Fără card, fără angajament — anulezi oricând." },
-];
+function Steps({ pasi }: { pasi: Step[] }) {
+  return (
+    <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+      {pasi.map((s) => (
+        <div key={s.nr} data-reveal className="step-card" style={{ position: "relative", overflow: "hidden", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 24, padding: 28, boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)" }}>
+          <div className="step-num" style={{ position: "absolute", top: 16, right: 22, fontSize: 46, fontWeight: 900, color: C.orangeSoft, lineHeight: 1 }}>{s.nr}</div>
+          <div className="step-icon" style={{ width: 52, height: 52, borderRadius: 14, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><s.Icon size={26} color={C.orange} strokeWidth={2} /></div>
+          <h3 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginBottom: 8 }}>{s.t}</h3>
+          <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.65 }}>{s.d}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function CumFunctioneaza() {
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
+      <ResetTheme />
+
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
-          <nav className="hdr-nav" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
-            <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
+          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
+            <Link href="/instrumente-ai" className="nav-hide-sm" style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>Instrumente AI</Link>
+            <Link href="/preturi" className="nav-hide-sm" style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>Prețuri</Link>
+            <Link href="/login" className="hdr-btn" style={{ fontSize: 14, fontWeight: 700, color: C.muted, textDecoration: "none" }}>Conectare</Link>
+            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
       </header>
 
       <main style={{ flex: 1 }}>
-
         {/* HERO */}
-        <section style={{ background: "#fff", padding: "72px 20px 60px", textAlign: "center" }}>
-          <div style={{ maxWidth: 700, margin: "0 auto" }}>
-            <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Cum funcționează CalyHub</div>
-            <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15, marginBottom: 18 }}>
-              Simplu pentru stăpâni.<br />
-              <span style={{ color: "#FF6B00" }}>Profitabil pentru saloane.</span>
+        <section style={{ position: "relative", overflow: "hidden", padding: "76px 20px 40px" }}>
+          <div className="ch-orb" style={{ width: 340, height: 340, background: "rgba(255,107,0,.20)", top: -120, left: "14%" }} />
+          <div className="ch-orb b" style={{ width: 300, height: 300, background: "rgba(255,140,66,.16)", top: 10, right: "10%" }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 780, margin: "0 auto", textAlign: "center" }}>
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 20, animationDelay: ".05s" }}>CUM FUNCȚIONEAZĂ</div>
+            <h1 className="ch-hero-anim" style={{ fontSize: "clamp(32px,5vw,52px)", fontWeight: 900, lineHeight: 1.04, letterSpacing: -1.5, color: C.text, animationDelay: ".15s" }}>
+              Simplu pentru clienți.<br /><span style={{ color: C.orange }}>Profitabil pentru saloane.</span>
             </h1>
-            <p style={{ fontSize: 17, color: "#6B7280", lineHeight: 1.7, maxWidth: 560, margin: "0 auto" }}>
-              Construit special pentru grooming: profil cu talia animalului, prețuri clare per talie și istoric salvat automat la fiecare vizită.
+            <p className="ch-hero-anim" style={{ margin: "20px auto 0", maxWidth: "58ch", fontSize: 18, lineHeight: 1.7, fontWeight: 500, color: C.muted, animationDelay: ".28s" }}>
+              Grooming pentru animale și înfrumusețare pentru oameni, într-o singură platformă. Clienții găsesc și rezervă
+              în câteva minute; saloanele își digitalizează agenda și primesc programări online 24/7.
             </p>
           </div>
         </section>
 
-        {/* PENTRU STĂPÂNI */}
-        <section style={{ padding: "72px 20px", background: "#fff" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center" }}><PawPrint size={26} color="#FF6B00" strokeWidth={1.8} /></div>
+        {/* PENTRU CLIENTI */}
+        <section style={{ padding: "44px 20px 64px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 15, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PawPrint size={26} color={C.orange} strokeWidth={2} /></div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2 }}>Ai un animal de companie</div>
-                <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Cum faci o programare în 4 pași</h2>
+                <div data-reveal style={{ ...eyebrow, marginBottom: 6 }}>Pentru clienți</div>
+                <h2 data-reveal style={{ fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>Găsești și rezervi în 3 pași</h2>
               </div>
             </div>
-
-            {/* 4 Pași client */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24, marginBottom: 48 }}>
-              {STEPS_CLIENT.map(s => (
-                <div key={s.nr} className="step-card" style={{ background: "#fff", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden", boxShadow: "0 2px 10px rgba(255,107,0,.07)" }}>
-                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#FFF3EA", lineHeight: 1 }}>{s.nr}</div>
-                  <div className="step-icon" style={{ marginBottom: 14 }}><s.Icon size={32} color="#FF6B00" strokeWidth={1.8} /></div>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{s.titlu}</h3>
-                  <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{s.desc}</p>
-                </div>
-              ))}
+            <Steps pasi={PASI_CLIENT} />
+            <div data-reveal style={{ marginTop: 22, background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 20, padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <Check size={18} color={C.orange} strokeWidth={2.6} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 13.5, color: C.text, fontWeight: 700 }}>Un singur cont pentru toate programările — animalul tău la grooming și tu la frizerie sau coafor. Contul e <b>gratuit</b>; plătești doar serviciul, la salon.</span>
             </div>
-
-            {/* MOCKUP CLIENT REAL — profil animal + istoric vizite */}
-            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "2.5px solid #FF6B00", boxShadow: "0 4px 20px rgba(255,107,0,.08)", marginBottom: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Contul Mariei</div>
-                <h3 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A", marginBottom: 10 }}>Salonul știe tot înainte să ajungi</h3>
-                <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, marginBottom: 16 }}>
-                  Maria a adăugat profilul lui Rex o singură dată. De atunci, la fiecare programare, salonul primește automat rasa, talia, alergiile și istoricul vizitelor anterioare.
-                </p>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ background: "#fff", border: "1.5px solid #FFDCC6", color: "#FF6B00", padding: "5px 12px", borderRadius: 50, fontSize: 12, fontWeight: 800 }}>✅ Fără formulare repetate</span>
-                  <span style={{ background: "#fff", border: "1.5px solid #FFDCC6", color: "#FF6B00", padding: "5px 12px", borderRadius: 50, fontSize: 12, fontWeight: 800 }}>✅ Alergie vizibilă automat</span>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {/* Card profil animal */}
-                <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6", boxShadow: "0 4px 16px rgba(255,107,0,.1)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center" }}><PawPrint size={24} color="#FF6B00" strokeWidth={1.8} /></div>
-                    <div>
-                      <div style={{ fontSize: 16, fontWeight: 900, color: "#1A1A1A" }}>Rex</div>
-                      <div style={{ fontSize: 12, color: "#6B7280" }}>Golden Retriever · 3 ani · 28 kg</div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ background: "#FFF3EA", color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>Mare</span>
-                    <span style={{ background: "#FEF2F2", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={10} strokeWidth={2} /> Alergie ovăz</span>
-                    <span style={{ background: "#F0FDF4", color: "#16A34A", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>✓ Vaccinat</span>
-                  </div>
-                </div>
-                {/* Istoric vizite */}
-                <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6" }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Ultimele vizite</div>
-                  {[
-                    { data: "12 Mai 2026", salon: "Salon PetStyle Cluj", serviciu: "Tuns + Spălat", pret: "180 RON" },
-                    { data: "14 Mar 2026", salon: "Salon PetStyle Cluj", serviciu: "Spălat + Uscat", pret: "120 RON" },
-                    { data: "08 Ian 2026", salon: "Pawsome Grooming", serviciu: "Tuns complet", pret: "175 RON" },
-                  ].map((v, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 2 ? "1px solid #F3F4F6" : "none" }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>{v.serviciu}</div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF" }}>{v.data} · {v.salon}</div>
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00" }}>{v.pret}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Beneficii client — 6 carduri */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
-              {BENEFICII_CLIENT.map(b => (
-                <div key={b.titlu} className="benefit-card" style={{ background: "#fff", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #FFDCC6", display: "flex", gap: 14 }}>
-                  <div className="benefit-icon" style={{ flexShrink: 0 }}><b.Icon size={26} color="#FF6B00" strokeWidth={1.8} /></div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 4 }}>{b.titlu}</div>
-                    <div style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.6 }}>{b.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 32px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
-                <PawPrint size={16} strokeWidth={2} /> Creează cont gratuit →
-              </Link>
+            <div style={{ textAlign: "center", marginTop: 32 }}>
+              <Link href="/register" style={btnPrimary}>Creează cont gratuit →</Link>
             </div>
           </div>
         </section>
-
-        {/* SEPARATOR */}
-        <div style={{ height: 2, background: "linear-gradient(90deg, transparent, #FF6B00, transparent)" }} />
 
         {/* PENTRU SALOANE */}
-        <section style={{ padding: "72px 20px", background: "#fff" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 16, background: "#FFF3EA", border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center" }}><Scissors size={26} color="#FF6B00" strokeWidth={1.8} /></div>
+        <section style={{ background: C.surface2, padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 15, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={26} color={C.orange} strokeWidth={2} /></div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2 }}>Ai un salon de grooming</div>
-                <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Ești live în 4 pași</h2>
+                <div data-reveal style={{ ...eyebrow, marginBottom: 6 }}>Pentru saloane · parteneri</div>
+                <h2 data-reveal style={{ fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>Ești live în 3 pași</h2>
               </div>
             </div>
+            <Steps pasi={PASI_SALON} />
 
-            {/* 4 Pași salon */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24, marginBottom: 48 }}>
-              {STEPS_SALON.map(s => (
-                <div key={s.nr} className="step-card" style={{ background: "#fff", borderRadius: 22, padding: "28px 26px", border: "2px solid #FF6B00", position: "relative", overflow: "hidden" }}>
-                  <div className="step-num" style={{ position: "absolute", top: 18, right: 22, fontSize: 42, fontWeight: 900, color: "#FFF3EA", lineHeight: 1 }}>{s.nr}</div>
-                  <div className="step-icon" style={{ marginBottom: 14 }}><s.Icon size={32} color="#FF6B00" strokeWidth={1.8} /></div>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{s.titlu}</h3>
-                  <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{s.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* MOCKUP SALON REAL — agenda zilei cu programări + stats */}
-            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "2.5px solid #FF6B00", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Exemplu real — Salon PetStyle Cluj</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 900, color: "#1A1A1A", marginBottom: 10 }}>Agenda ta de vineri — dintr-o privire</h3>
-                  <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, marginBottom: 16 }}>
-                    Andrei vede instant cine vine, ce animal, ce talie, ce serviciu și cât plătește — fără să caute prin WhatsApp sau caiet.
-                  </p>
-                  {/* Mini stats */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                    {[
-                      { val: "640 RON", label: "Azi" },
-                      { val: "8", label: "Programări" },
-                      { val: "3M · 3M · 2Ma", label: "Mici·Medii·Mari" },
-                    ].map(s => (
-                      <div key={s.label} style={{ background: "#FFF3EA", borderRadius: 12, padding: "12px 10px", textAlign: "center" }}>
-                        <div style={{ fontSize: 15, fontWeight: 900, color: "#FF6B00" }}>{s.val}</div>
-                        <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2, fontWeight: 700 }}>{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Lista programări */}
-                <div style={{ background: "#fff", borderRadius: 18, padding: "16px 18px", border: "1.5px solid #FFDCC6" }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Vineri 23 Mai — programări</div>
-                  {[
-                    { ora: "09:00", client: "Maria P.", animal: "Rex", rasa: "Golden", talie: "Mare", serviciu: "Tuns + Spălat", pret: "180 RON", status: "confirmat" },
-                    { ora: "10:30", client: "Ion D.", animal: "Bella", rasa: "Bichon", talie: "Mică", serviciu: "Spălat + Uscat", pret: "80 RON", status: "confirmat" },
-                    { ora: "12:00", client: "Ana M.", animal: "Milo", rasa: "Labrador", talie: "Mare", serviciu: "Tuns complet", pret: "180 RON", status: "așteptare" },
-                    { ora: "14:00", client: "Radu C.", animal: "Coco", rasa: "Pudel", talie: "Medie", serviciu: "Tuns + Unghii", pret: "130 RON", status: "confirmat" },
-                  ].map((p, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < 3 ? "1px solid #F3F4F6" : "none" }}>
-                      <div style={{ fontSize: 13, fontWeight: 900, color: "#FF6B00", minWidth: 44 }}>{p.ora}</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: "#1A1A1A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {p.client} · <span style={{ fontWeight: 600 }}>{p.animal}</span> ({p.rasa})
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
-                          <span style={{ background: "#FFF3EA", color: "#FF6B00", padding: "1px 7px", borderRadius: 50, fontSize: 10, fontWeight: 800 }}>{p.talie}</span>
-                          <span style={{ fontSize: 11, color: "#6B7280" }}>{p.serviciu}</span>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>{p.pret}</div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: p.status === "confirmat" ? "#16A34A" : "#D97706", marginTop: 1 }}>
-                          {p.status === "confirmat" ? "✓ Confirmat" : "· Așteptare"}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* AI teaser -> pagina dedicata */}
+            <div data-reveal className="ch-card" style={{ marginTop: 22, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 24, padding: "24px 26px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)" }}>
+              <div style={{ width: 50, height: 50, borderRadius: 14, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Sparkles size={24} color={C.orange} strokeWidth={2} /></div>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text }}>Patru asistenți AI, incluși</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, marginTop: 3, lineHeight: 1.5 }}>Răspunsuri la recenzii, reactivarea clienților inactivi, recomandări post-serviciu și consultant de business.</p>
               </div>
+              <Link href="/instrumente-ai" style={btnSecondary}>Vezi instrumentele AI →</Link>
             </div>
 
-            {/* SHOWCASE STATISTICI — centrul de control */}
-            <div className="mockup-card" style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "2.5px solid #FF6B00", marginBottom: 48, boxShadow: "0 4px 20px rgba(255,107,0,.08)" }}>
-              <div style={{ textAlign: "center", marginBottom: 26 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Centrul de statistici</div>
-                <h3 style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A", marginBottom: 8 }}>Afacerea ta, în cifre reale — pe orice perioadă</h3>
-                <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 620, margin: "0 auto" }}>
-                  Apeși un buton și vezi exact cât ai încasat azi, ieri, săptămâna asta sau în orice interval. Plus evoluția lunară, serviciile cele mai cerute, ce produce fiecare groomer și un raport Excel descărcabil instant.
-                </p>
-              </div>
-
-              {/* Chips filtre perioadă */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 26 }}>
-                {["Azi", "Ieri", "Săptămână", "Lună", "An", "Interval"].map(p => (
-                  <span key={p} style={{ padding: "7px 16px", borderRadius: 50, fontSize: 13, fontWeight: 800, border: p === "Lună" ? "2px solid #FF6B00" : "1.5px solid #FFDCC6", background: p === "Lună" ? "#FF6B00" : "#fff", color: p === "Lună" ? "#fff" : "#6B7280" }}>{p}</span>
-                ))}
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
-                {/* Evoluție încasări */}
-                <div style={{ background: "#FFFBF7", borderRadius: 18, padding: "20px 22px", border: "1.5px solid #FFDCC6" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1 }}>Evoluție încasări</span>
-                    <span style={{ fontSize: 12, fontWeight: 900, color: "#16A34A", background: "rgba(22,163,74,.12)", padding: "3px 10px", borderRadius: 50 }}>▲ 18% vs luna trecută</span>
-                  </div>
-                  {[
-                    { luna: "Dec", val: 62 }, { luna: "Ian", val: 70 }, { luna: "Feb", val: 58 },
-                    { luna: "Mar", val: 84 }, { luna: "Apr", val: 78 }, { luna: "Mai", val: 100 },
-                  ].map(m => (
-                    <div key={m.luna} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
-                      <div style={{ width: 30, fontSize: 12, fontWeight: 700, color: "#9CA3AF", flexShrink: 0 }}>{m.luna}</div>
-                      <div style={{ flex: 1, height: 8, background: "#FFEAD9", borderRadius: 4 }}><div style={{ height: "100%", width: `${m.val}%`, background: "#FF6B00", borderRadius: 4 }} /></div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Top servicii */}
-                <div style={{ background: "#FFFBF7", borderRadius: 18, padding: "20px 22px", border: "1.5px solid #FFDCC6" }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Top servicii</div>
-                  {[
-                    { nume: "Tuns + Spălat", pct: 42, col: "#FF6B00" },
-                    { nume: "Spălat + Uscat", pct: 28, col: "#8B5CF6" },
-                    { nume: "Tuns complet", pct: 18, col: "#10B981" },
-                    { nume: "Tuns + Unghii", pct: 12, col: "#F59E0B" },
-                  ].map(s => (
-                    <div key={s.nume} style={{ marginBottom: 13 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{s.nume}</span><span style={{ fontSize: 13, fontWeight: 800, color: s.col }}>{s.pct}%</span></div>
-                      <div style={{ height: 6, background: "#FFEAD9", borderRadius: 3 }}><div style={{ height: "100%", width: `${s.pct}%`, background: s.col, borderRadius: 3 }} /></div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Productivitate groomeri */}
-                <div style={{ background: "#FFFBF7", borderRadius: 18, padding: "20px 22px", border: "1.5px solid #FFDCC6" }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Productivitate groomeri</div>
-                  {[
-                    { nume: "Maria", nr: "34 progr.", venit: "4.180 RON", pct: 100, col: "#FF6B00" },
-                    { nume: "Andrei", nr: "27 progr.", venit: "3.240 RON", pct: 78, col: "#8B5CF6" },
-                    { nume: "Elena", nr: "19 progr.", venit: "2.110 RON", pct: 54, col: "#10B981" },
-                  ].map(g => (
-                    <div key={g.nume} style={{ marginBottom: 13 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 8 }}><span style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "inline-flex", alignItems: "center", gap: 5 }}><Scissors size={12} color={g.col} strokeWidth={2} />{g.nume}</span><span style={{ fontSize: 12, fontWeight: 800, color: g.col, whiteSpace: "nowrap" }}>{g.nr} · {g.venit}</span></div>
-                      <div style={{ height: 6, background: "#FFEAD9", borderRadius: 3 }}><div style={{ height: "100%", width: `${g.pct}%`, background: g.col, borderRadius: 3 }} /></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Bara raport Excel */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 24, flexWrap: "wrap" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 50, background: "#1A1A1A", color: "#fff", fontSize: 14, fontWeight: 800 }}><Download size={15} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Descarcă raport Excel</span></span>
-                <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>Foi separate: venituri, programări, clienți, servicii, distribuție pe talie — pentru contabil sau pentru tine.</span>
-              </div>
+            <div style={{ textAlign: "center", marginTop: 32, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link href="/register" style={btnPrimary}>Înregistrează salonul gratuit →</Link>
+              <Link href="/preturi" style={btnSecondary}>Vezi planurile</Link>
             </div>
-
-            {/* Beneficii salon — 6 carduri */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
-              {BENEFICII_SALON.map(b => (
-                <div key={b.titlu} className="benefit-card" style={{ background: "#fff", borderRadius: 18, padding: "22px 20px", border: "1.5px solid #FFDCC6", display: "flex", gap: 14 }}>
-                  <div className="benefit-icon" style={{ flexShrink: 0 }}><b.Icon size={26} color="#FF6B00" strokeWidth={1.8} /></div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 4 }}>{b.titlu}</div>
-                    <div style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.6 }}>{b.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-              <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 32px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.35)" }}>
-                <Scissors size={16} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Înregistrează salonul gratuit →</span>
-              </Link>
-              <Link href="/preturi" className="planuri-btn" style={{ display: "inline-flex", alignItems: "center", padding: "14px 28px", borderRadius: 50, border: "2px solid #FF6B00", background: "transparent", fontSize: 15, fontWeight: 800, color: "#FF6B00", textDecoration: "none", whiteSpace: "nowrap" }}>Planuri</Link>
-              <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 4 }}>Fără card · Fără comision · Primele 3 luni gratuite</div>
-            </div>
-          </div>
-        </section>
-
-        {/* CENTRUL DE COMANDĂ AI — secțiune separată */}
-        <section id="asistenti-ai" style={{ background: "#1A1A1A", padding: "64px 20px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 40 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,140,66,.12)", border: "1px solid rgba(255,140,66,.3)", color: "#FF8C42", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", padding: "6px 16px", borderRadius: 50, marginBottom: 16 }}>
-                <Sparkles size={14} strokeWidth={2} /> Disponibil acum
-              </div>
-              <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 12 }}>
-                Ce ne face diferiți: <span style={{ color: "#FF8C42" }}>asistenți AI pentru salonul tău</span>
-              </h2>
-              <p style={{ fontSize: 14.5, color: "rgba(255,255,255,.6)", maxWidth: 620, margin: "0 auto", lineHeight: 1.7 }}>
-                CalyHub nu e doar o agendă online. Folosim datele deja existente despre clienți, animale și programări ca să te ajutăm să economisești timp și să ții clienții aproape.
-              </p>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 22 }}>
-              {[
-                { Icon: MessageSquare, title: "Răspunsuri AI la recenzii", desc: "Fiecare recenzie primită merită un răspuns — dar nu ai mereu timp să îl formulezi. Asistentul AI citește recenzia, identifică animalul și rasa din istoricul programării și redactează un răspuns profesional, personalizat, pe care îl poți edita sau trimite direct cu un click. Reputația salonului tău, îngrijită automat." },
-                { Icon: BellRing, title: "Alertă clienți inactivi", desc: "Știi că un client fidel care nu a mai revenit are șanse mult mai mari să se întoarcă dacă îl contactezi la momentul potrivit. Asistentul AI identifică exact acei clienți și îți pregătește mesajul — tot ce faci tu e să apeși trimite." },
-                { Icon: BarChart3, title: "Consultant AI", desc: "Analizează datele lunii și îți livrează un raport complet de business: ce a mers bine, ce trebuie îmbunătățit, 3 recomandări concrete. Plus analiză de prețuri, plan de creștere și performanța echipei — totul bazat pe cifrele tale reale, nu pe sfaturi generice." },
-                { Icon: ImagePlus, title: "Postări sociale din poze", desc: "Încarci poza cu rezultatul final al unui tuns — AI recunoaște automat rasa animalului și generează un caption atractiv plus un set de hashtag-uri relevante pentru Instagram și Facebook. Copiezi textul, postezi poza și gata. Conținut pentru social media în 10 secunde, fără să scrii un cuvânt." },
-              ].map(({ Icon, title, desc }) => (
-                <div key={title} style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 20, padding: "26px 24px" }}>
-                  <div style={{ width: 50, height: 50, borderRadius: 15, background: "rgba(255,140,66,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon size={25} color="#FF8C42" strokeWidth={1.8} /></div>
-                  <h3 style={{ fontSize: 16.5, fontWeight: 800, color: "#fff", marginBottom: 9 }}>{title}</h3>
-                  <p style={{ fontSize: 13.5, color: "rgba(255,255,255,.6)", lineHeight: 1.7 }}>{desc}</p>
-                </div>
-              ))}
-            </div>
+            <div style={{ textAlign: "center", fontSize: 13, color: C.dim, fontWeight: 600, marginTop: 14 }}>Fără card · 0% comision · primele 3 luni gratuite</div>
           </div>
         </section>
 
         {/* CTA FINAL */}
-        <section style={{ background: "#1A1A1A", padding: "64px 20px", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Gata să începi?</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", lineHeight: 1.7 }}>
-            Stăpâni — programare în 10 secunde, profil animal gata.<br />
-            Saloane — primele 3 luni gratuite, fără card.
-          </p>
+        <section style={{ padding: "64px 20px" }}>
+          <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
+              <h2 style={{ fontSize: "clamp(24px,3.2vw,36px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>Gata să începi?</h2>
+              <p style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12, maxWidth: "52ch", marginLeft: "auto", marginRight: "auto" }}>
+                Clienții rezervă în câteva minute, gratuit. Saloanele primesc primele 3 luni gratuite, fără card și fără comision.
+              </p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+                <Link href="/register" style={btnPrimary}>Caută un salon</Link>
+                <Link href="/register" style={btnSecondary}>Înscrie-ți salonul →</Link>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
 
       <Footer variant="full" />
+      <ScrollReveal />
     </div>
   );
 }
