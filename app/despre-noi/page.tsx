@@ -2,137 +2,247 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
-import { Heart, Star, Users, Lock, type LucideIcon } from "lucide-react";
+import ResetTheme from "../../components/ResetTheme";
+import ScrollReveal from "../../components/ScrollReveal";
+import {
+  Heart, Star, Users, Lock, Sparkles, Scissors, PawPrint, Clock, Tag,
+  ShieldCheck, Smartphone, Check, type LucideIcon,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Despre noi — Povestea CalyHub",
   description:
-    "Cum s-a născut CalyHub: o platformă creată din pasiune pentru animale, care simplifică programările la grooming pentru stăpâni și saloane din România.",
+    "CalyHub aduce programările de îngrijire într-un singur loc: saloane de înfrumusețare pentru oameni și saloane de grooming pentru animale. Povestea, misiunea și valorile noastre.",
+  keywords: ["despre CalyHub", "platforma programari", "saloane infrumusetare", "saloane grooming", "misiune CalyHub"],
   alternates: { canonical: "/despre-noi" },
   openGraph: {
     title: "Despre noi — Povestea CalyHub",
-    description: "Platformă creată din pasiune pentru animale și pentru saloane de grooming.",
+    description: "Un singur loc pentru toate programările de îngrijire — pentru tine și pentru animalul tău.",
     url: "/despre-noi",
+    type: "website",
   },
 };
 
-const VALORI: { Icon: LucideIcon; titlu: string; desc: string }[] = [
-  { Icon: Heart, titlu: "Pasiune pentru animale", desc: "Fiecare decizie de produs o luăm cu animalul în minte. Bunăstarea lor nu e o opțiune — e centrul a tot ce construim." },
-  { Icon: Star, titlu: "Standarde înalte", desc: "Vrem ca fiecare salon de pe CalyHub să ofere servicii la cele mai bune standarde. Filtrăm, verificăm, ridicăm ștacheta." },
-  { Icon: Users, titlu: "Parteneriat real", desc: "Saloanele nu sunt simpli furnizori — sunt parteneri în misiunea noastră. Le oferim uneltele ca să crească împreună cu noi." },
-  { Icon: Lock, titlu: "Transparență totală", desc: "Prețuri clare, fără comisioane ascunse. Ce vezi este ce primești — pentru toți cei implicați." },
+const C = {
+  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
+  text: "#1A1A1A", text2: "#374151", muted: "#6B7280", dim: "#9CA3AF",
+  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+};
+
+const eyebrow: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: 7,
+  fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
+  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+};
+const btnPrimary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: C.orange, color: "#fff",
+  fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 22px rgba(255,107,0,.32)",
+};
+const btnSecondary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
+  fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
+};
+const card: React.CSSProperties = {
+  background: C.surface, border: `1px solid ${C.line}`, borderRadius: 28, padding: 26,
+  boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
+};
+const tile: React.CSSProperties = {
+  background: C.surface, border: `1px solid ${C.line}`, borderRadius: 22, padding: 22,
+  boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
+};
+const h2s: React.CSSProperties = { fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text };
+const lead: React.CSSProperties = { fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7 };
+const para: React.CSSProperties = { fontSize: 16, color: C.text2, lineHeight: 1.85 };
+
+const VALORI: { Icon: LucideIcon; t: string; d: string }[] = [
+  { Icon: Tag, t: "Transparență totală", d: "Prețuri afișate înainte de rezervare, fără comisioane ascunse și fără costuri surpriză — nici pentru clienți, nici pentru saloane." },
+  { Icon: Heart, t: "Grijă, nu doar programări", d: "O programare e doar începutul. Istoric salvat, recomandări după fiecare vizită și relații care se construiesc în timp." },
+  { Icon: Users, t: "Parteneriat real cu saloanele", d: "Saloanele nu sunt simpli furnizori — sunt partenerii noștri. Le dăm uneltele digitale ca să crească, nu doar un loc de listare." },
+  { Icon: Star, t: "Standarde înalte", d: "Recenzii verificate, profiluri complete și saloane care lucrează digital. Ridicăm ștacheta pentru toată industria." },
+  { Icon: Sparkles, t: "Tehnologie care ajută", d: "AI-ul nostru nu e un moft de marketing: economisește timp real saloanelor și aduce valoare concretă clienților." },
+  { Icon: Lock, t: "Datele tale, protejate", d: "Datele clienților și ale saloanelor sunt tratate cu maximă seriozitate, conform legislației în vigoare." },
 ];
 
 const CIFRE = [
-  { val: "2026", label: "Anul fondării" },
-  { val: "RO", label: "Construit în România" },
-  { val: "0", label: "Comisioane ascunse" },
-  { val: "100%", label: "Dedicat grooming-ului" },
+  { val: "2", label: "Domenii · înfrumusețare & grooming" },
+  { val: "24/7", label: "Programări online" },
+  { val: "4", label: "Asistenți AI pentru saloane" },
+  { val: "0%", label: "Comision pe programări" },
 ];
 
 export default function DespreNoi() {
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
+      <ResetTheme />
+
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
-          <nav className="hdr-nav" style={{ display: "flex", gap: 8 }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
-            <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
+          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
+            <Link href="/instrumente-ai" className="nav-hide-sm" style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>Instrumente AI</Link>
+            <Link href="/preturi" className="nav-hide-sm" style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>Prețuri</Link>
+            <Link href="/login" className="hdr-btn" style={{ fontSize: 14, fontWeight: 700, color: C.muted, textDecoration: "none" }}>Conectare</Link>
+            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
       </header>
 
       <main style={{ flex: 1 }}>
-
         {/* HERO */}
-        <section style={{ background: "#fff", padding: "80px 20px", textAlign: "center" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24 }}>Povestea noastră</div>
-            <h1 style={{ fontSize: "clamp(30px,4.5vw,52px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15, marginBottom: 20 }}>
-              O idee cu rădăcini adânci,<br />
-              <span style={{ color: "#FF6B00" }}>născută din iubire pentru animale.</span>
+        <section style={{ position: "relative", overflow: "hidden", padding: "76px 20px 50px" }}>
+          <div className="ch-orb" style={{ width: 340, height: 340, background: "rgba(255,107,0,.20)", top: -120, left: "14%" }} />
+          <div className="ch-orb b" style={{ width: 300, height: 300, background: "rgba(255,140,66,.16)", top: 10, right: "10%" }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 820, margin: "0 auto", textAlign: "center" }}>
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 20, animationDelay: ".05s" }}>Despre noi</div>
+            <h1 className="ch-hero-anim" style={{ fontSize: "clamp(32px,5vw,52px)", fontWeight: 900, lineHeight: 1.04, letterSpacing: -1.5, color: C.text, animationDelay: ".15s" }}>
+              Construim locul unde<br /><span style={{ color: C.orange }}>îngrijirea începe</span>.
             </h1>
-            <p style={{ fontSize: 17, color: "#6B7280", lineHeight: 1.8, maxWidth: 560, margin: "0 auto" }}>
-              CalyHub nu este o aplicație construită peste noapte. Este rezultatul unor ani buni de gândire, observație și un singur scop clar: să ridicăm standardele îngrijirii animalelor în România.
+            <p className="ch-hero-anim" style={{ margin: "20px auto 0", maxWidth: "58ch", fontSize: 18, lineHeight: 1.7, fontWeight: 500, color: C.muted, animationDelay: ".28s" }}>
+              CalyHub aduce într-o singură platformă tot ce ține de îngrijire — saloane de înfrumusețare pentru tine
+              și saloane de grooming pentru animalul tău. Simplu pentru clienți, profitabil pentru saloane.
             </p>
+          </div>
+        </section>
+
+        {/* CIFRE */}
+        <section style={{ padding: "0 20px 56px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div className="ch-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+              {CIFRE.map((c) => (
+                <div key={c.label} data-reveal className="ch-tile" style={{ ...tile, textAlign: "center" }}>
+                  <div style={{ fontSize: 30, fontWeight: 900, color: C.orange, letterSpacing: -1 }}>{c.val}</div>
+                  <div style={{ fontSize: 12.5, color: C.muted, fontWeight: 700, marginTop: 6, lineHeight: 1.45 }}>{c.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* POVESTEA */}
-        <section style={{ padding: "72px 20px", background: "#fff" }}>
-          <div style={{ maxWidth: 760, margin: "0 auto" }}>
-            <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 16px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24 }}>De unde am pornit</div>
-            <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: "#1A1A1A", marginBottom: 28, lineHeight: 1.25 }}>O idee care a stat la copt ani buni</h2>
+        <section style={{ background: C.surface2, padding: "64px 20px" }}>
+          <div style={{ maxWidth: 780, margin: "0 auto" }}>
+            <div data-reveal style={eyebrow}>De unde am pornit</div>
+            <h2 data-reveal style={{ ...h2s, marginTop: 14, marginBottom: 26 }}>O idee care a stat la copt ani buni</h2>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-              <p style={{ fontSize: 17, color: "#1A1A1A", lineHeight: 1.85, fontWeight: 600 }}>
-                Sunt un iubitor de animale. Acesta a fost dintotdeauna punctul meu de pornire — și tot acolo se va întoarce mereu CalyHub.
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <p data-reveal style={{ fontSize: 17.5, color: C.text, lineHeight: 1.8, fontWeight: 700 }}>
+                Totul a pornit de la o observație simplă: îngrijirea — a ta sau a animalului tău — nu ar trebui să înceapă
+                niciodată cu un telefon dat în gol.
               </p>
 
-              <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                De ani buni mă gândesc la o aplicație care să schimbe în bine domeniul de grooming din România. Nu o aplicație care să rezolve o problemă mică sau să adauge încă un canal de comunicare — ci o platformă care să aducă o <strong style={{ color: "#FF6B00" }}>soluție reală</strong>, o soluție pe care orice stăpân de animale și orice salon profesionist și-ar dori-o.
+              <p data-reveal style={para}>
+                De ani buni ne gândim la o platformă care să schimbe în bine felul în care se fac programările în România.
+                Nu încă un canal de comunicare, nu încă o listă de firme — ci o <strong style={{ color: C.orangeText }}>soluție reală</strong>,
+                pe care și clientul, și salonul profesionist și-ar dori-o.
               </p>
 
-              <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Am observat ani la rând cât de fragmentată e industria. Saloane bune ascunse pe ulițe lăturalnice, fără vizibilitate. Stăpâni care își fac programări prin telefon, uneori sună la 5-6 locuri până găsesc disponibilitate. Animale care primesc servicii inconstante pentru că salonul nu are istoricul lor. Pierderi de timp, frustrări, oportunități ratate — și mai ales, animale care nu primesc întotdeauna ce merită.
+              <p data-reveal style={para}>
+                Am observat aceeași problemă peste tot, indiferent de domeniu. Saloane bune, ascunse pe străzi lăturalnice,
+                fără vizibilitate. Clienți care sună la cinci locuri până găsesc o oră liberă. Prețuri pe care le afli abia
+                la final. Agende de hârtie, programări pierdute și ore întregi consumate la telefon în loc de lucru efectiv.
               </p>
 
-              <div style={{ background: "#FFF3EA", borderLeft: "4px solid #FF6B00", padding: "22px 26px", borderRadius: "0 16px 16px 0", margin: "10px 0" }}>
-                <p style={{ fontSize: 17, color: "#1A1A1A", lineHeight: 1.8, fontWeight: 700, fontStyle: "italic" }}>
-                  „Animalul tău merită cele mai bune servicii. Nu mai puțin, nu altceva — cele mai bune."
+              <div data-reveal style={{ background: C.orangeSoft, borderLeft: `4px solid ${C.orange}`, padding: "22px 26px", borderRadius: "0 20px 20px 0", margin: "6px 0" }}>
+                <p style={{ fontSize: 17, color: C.text, lineHeight: 1.8, fontWeight: 700, fontStyle: "italic" }}>
+                  Îngrijirea bună nu ar trebui să fie complicată. Nici pentru tine, nici pentru animalul tău.
                 </p>
               </div>
 
-              <p style={{ fontSize: 16, color: "#374151", lineHeight: 1.85 }}>
-                Așa s-a născut CalyHub: din convingerea că tehnologia poate fi pusă în slujba binelui. O platformă care conectează stăpânii cu saloanele potrivite, ajută profesioniștii să crească și ridică ștacheta întregii industrii. Drumul abia începe — și e loc pentru toți cei care vor să facă parte din el.
+              <p data-reveal style={para}>
+                Am început cu grooming-ul, pentru că acolo lipsa de organizare era cea mai evidentă și pentru că iubim animalele.
+                Dar aceeași problemă o are și frizerul de la colț, și salonul de coafură din centru. Așa că am construit
+                platforma pentru <strong style={{ color: C.orangeText }}>amândouă lumile</strong>: îngrijire pentru oameni și
+                pentru animale, într-un singur loc, sub același cont.
               </p>
 
-              <div style={{ fontSize: 15, color: "#FF6B00", fontWeight: 800, marginTop: 12, fontStyle: "italic" }}>
-                — Fondatorul CalyHub
-              </div>
+              <p data-reveal style={para}>
+                Asta e CalyHub astăzi: o platformă care conectează clienții cu saloanele potrivite, ajută profesioniștii să
+                crească cu instrumente digitale reale și ridică ștacheta întregii industrii. Drumul abia începe — și e loc
+                pentru toți cei care vor să facă parte din el.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* CIFRE / STATEMENT */}
-        <section style={{ background: "#FF6B00", padding: "56px 20px" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 2 }}>
-            {CIFRE.map((c, i) => (
-              <div key={c.label} style={{ textAlign: "center", padding: "20px 16px", borderRight: i < CIFRE.length - 1 ? "1px solid rgba(255,255,255,.25)" : "none" }}>
-                <div style={{ fontSize: "clamp(28px,4vw,42px)", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{c.val}</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", fontWeight: 700, marginTop: 8, textTransform: "uppercase", letterSpacing: 1 }}>{c.label}</div>
+        {/* MISIUNE — cele doua lumi */}
+        <section style={{ padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+              <div>
+                <div data-reveal style={eyebrow}>Misiunea noastră</div>
+                <h2 data-reveal style={{ ...h2s, marginTop: 14 }}>Un singur loc pentru toată îngrijirea</h2>
+                <p data-reveal style={{ ...lead, marginTop: 14 }}>
+                  Când vrei o tunsoare sau vrei să duci animalul la grooming, totul ar trebui să fie simplu: cauți,
+                  vezi prețul, alegi ora și rezervi. Fără apeluri în timpul programului, fără mesaje fără răspuns,
+                  fără surprize la plată.
+                </p>
+                <p data-reveal style={{ ...lead, marginTop: 12 }}>
+                  De partea cealaltă, saloanele primesc o agendă digitală care lucrează pentru ele — și instrumente AI
+                  care le țin clienții aproape, fără efort suplimentar.
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* MISIUNE */}
-        <section style={{ padding: "72px 20px", background: "#FAFAFA" }}>
-          <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
-            <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 16px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 18 }}>Misiunea noastră</div>
-            <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.25, marginBottom: 20 }}>
-              Ca fiecare animal din România să primească <span style={{ color: "#FF6B00" }}>cele mai bune servicii</span> — fără compromis.
-            </h2>
-            <p style={{ fontSize: 16, color: "#6B7280", lineHeight: 1.8 }}>
-              Construim instrumentele care fac asta posibil: pentru stăpânii care vor ce e mai bun pentru animalul lor și pentru saloanele care vor să livreze servicii la cele mai înalte standarde.
-            </p>
+              <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div data-reveal className="ch-card" style={{ ...card, padding: 24 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 13, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}><Scissors size={23} color={C.orange} strokeWidth={2} /></div>
+                  <h3 style={{ fontSize: 17, fontWeight: 900, color: C.text }}>Pentru tine</h3>
+                  <p style={{ fontSize: 13, color: C.muted, fontWeight: 600, lineHeight: 1.55, marginTop: 6 }}>Frizerie, coafor, manichiură, cosmetică — rezervi online, cu specialistul preferat.</p>
+                </div>
+                <div data-reveal className="ch-card" style={{ ...card, padding: 24 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 13, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}><PawPrint size={23} color={C.orange} strokeWidth={2} /></div>
+                  <h3 style={{ fontSize: 17, fontWeight: 900, color: C.text }}>Pentru animalul tău</h3>
+                  <p style={{ fontSize: 13, color: C.muted, fontWeight: 600, lineHeight: 1.55, marginTop: 6 }}>Grooming cu profil salvat, preț pe talie și recomandări după fiecare vizită.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* VALORI */}
-        <section style={{ padding: "72px 20px", background: "#fff" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 16px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 }}>Ce ne ghidează</div>
-              <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: "#1A1A1A" }}>Valorile CalyHub</h2>
+        <section style={{ background: C.surface2, padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 38px" }}>
+              <div data-reveal style={eyebrow}>Valorile noastre</div>
+              <h2 data-reveal style={{ ...h2s, marginTop: 12 }}>În ce credem</h2>
+              <p data-reveal style={{ ...lead, marginTop: 12 }}>Principiile după care luăm fiecare decizie de produs — de la felul în care afișăm un preț, până la modul în care lucrăm cu saloanele partenere.</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
-              {VALORI.map(v => (
-                <div key={v.titlu} style={{ background: "#FAFAFA", borderRadius: 22, padding: "28px 24px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
-                  <div style={{ marginBottom: 14 }}><v.Icon size={36} color="#FF6B00" strokeWidth={1.8} /></div>
-                  <h3 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A1A", marginBottom: 10 }}>{v.titlu}</h3>
-                  <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>{v.desc}</p>
+            <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+              {VALORI.map(({ Icon, t, d }) => (
+                <div key={t} data-reveal className="ch-card" style={{ ...card, padding: 26 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 13, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}><Icon size={23} color={C.orange} strokeWidth={2} /></div>
+                  <h3 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.3, color: C.text }}>{t}</h3>
+                  <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8 }}>{d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CE NE FACE DIFERITI */}
+        <section style={{ padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 38px" }}>
+              <div data-reveal style={eyebrow}>Ce ne face diferiți</div>
+              <h2 data-reveal style={{ ...h2s, marginTop: 12 }}>Deținem intersecția</h2>
+              <p data-reveal style={{ ...lead, marginTop: 12 }}>
+                Piața e segmentată: unii fac programări pentru oameni, alții pentru animale. Nimeni nu le face pe amândouă
+                din același loc. Noi, da — și asta schimbă complet experiența unei familii.
+              </p>
+            </div>
+            <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+              {[
+                { Icon: Sparkles, t: "Ambele lumi, un singur cont", d: "Programarea ta la coafor și a animalului la grooming, din același loc." },
+                { Icon: Clock, t: "Istoric care nu se pierde", d: "Fiecare vizită rămâne salvată — pentru tine și pentru salon." },
+                { Icon: ShieldCheck, t: "Construit în România", d: "Gândit pentru piața locală, cu prețuri și obiceiuri de aici." },
+                { Icon: Smartphone, t: "Web și mobil", d: "Aceleași funcții, sincronizate în timp real, pe orice dispozitiv." },
+                { Icon: Users, t: "Saloane, nu doar listări", d: "Panou complet de management, nu un simplu profil de prezentare." },
+                { Icon: Check, t: "Gratuit pentru clienți", d: "Fără abonament și fără card — plătești doar serviciul, la salon." },
+              ].map(({ Icon, t, d }) => (
+                <div key={t} data-reveal className="ch-tile" style={tile}>
+                  <div style={{ width: 40, height: 40, borderRadius: 11, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={20} color={C.orange} strokeWidth={2} /></div>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{t}</div>
+                  <div style={{ fontSize: 12.5, color: C.muted, fontWeight: 600, marginTop: 5, lineHeight: 1.5 }}>{d}</div>
                 </div>
               ))}
             </div>
@@ -140,19 +250,25 @@ export default function DespreNoi() {
         </section>
 
         {/* CTA */}
-        <section style={{ background: "#1A1A1A", padding: "64px 20px", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Fă parte din poveste</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginBottom: 32, lineHeight: 1.7 }}>
-            Fie că ești stăpân sau deții un salon — locul tău e pe CalyHub.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{ padding: "14px 28px", borderRadius: 50, background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 6px 20px rgba(255,107,0,.4)" }}>Înregistrare gratuită</Link>
-            <Link href="/cum-functioneaza" style={{ padding: "14px 28px", borderRadius: 50, border: "1.5px solid rgba(255,255,255,.25)", color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>Cum funcționează →</Link>
+        <section style={{ padding: "0 20px 76px" }}>
+          <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
+              <h2 style={{ ...h2s, fontSize: "clamp(24px,3.2vw,36px)" }}>Hai să construim împreună</h2>
+              <p style={{ ...lead, marginTop: 12, maxWidth: "54ch", marginLeft: "auto", marginRight: "auto" }}>
+                Ești client și vrei să rezervi mai simplu, sau ai un salon și vrei o agendă care lucrează pentru tine?
+                În ambele cazuri, începi în câteva minute.
+              </p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+                <Link href="/register" style={btnPrimary}>Creează cont gratuit</Link>
+                <Link href="/cum-functioneaza" style={btnSecondary}>Vezi cum funcționează →</Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>
 
       <Footer variant="full" />
+      <ScrollReveal />
     </div>
   );
 }
