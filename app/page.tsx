@@ -11,18 +11,18 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "CalyHub — Programări online pentru saloane de grooming și înfrumusețare",
+  title: "CalyHub — Programări online pentru saloane de înfrumusețare și grooming",
   description:
-    "Găsește și rezervă la saloane de grooming pentru animalul tău sau la frizerii și saloane de coafură pentru tine. Programări online 24/7, gratuit pentru clienți. Pentru saloane: agendă digitală, statistici și asistenți AI — primele 3 luni gratuite.",
+    "Găsește și rezervă la frizerii și saloane de coafură pentru tine sau la saloane de grooming pentru animalul tău. Programări online 24/7, gratuit pentru clienți. Pentru saloane: agendă digitală, statistici și asistenți AI — primele 3 luni gratuite.",
   keywords: [
-    "programări online", "saloane grooming", "frizerie", "coafor", "înfrumusețare",
-    "grooming câini", "grooming pisici", "programare salon", "CalyHub", "rezervare salon",
+    "programări online", "frizerie", "coafor", "înfrumusețare", "salon beauty",
+    "saloane grooming", "grooming câini", "grooming pisici", "programare salon", "CalyHub", "rezervare salon",
   ],
   alternates: { canonical: "/" },
   openGraph: {
     title: "CalyHub — Programări de îngrijire, într-o singură platformă",
     description:
-      "Saloane de grooming pentru animale și saloane de înfrumusețare pentru oameni. Programări online 24/7, gratuit pentru clienți; agendă digitală și AI pentru saloane.",
+      "Saloane de înfrumusețare pentru oameni și saloane de grooming pentru animale. Programări online 24/7, gratuit pentru clienți; agendă digitală și AI pentru saloane.",
     url: "/",
     type: "website",
   },
@@ -96,7 +96,7 @@ export default function HomePage() {
           <div className="ch-orb c" style={{ width: 230, height: 230, background: "rgba(255,185,120,.18)", top: 330, left: "46%" }} />
 
           <div style={{ position: "relative", zIndex: 1, maxWidth: 860, margin: "0 auto", textAlign: "center" }}>
-            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 20, animationDelay: ".05s" }}>PROGRAMĂRI ONLINE · GROOMING &amp; ÎNFRUMUSEȚARE</div>
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 20, animationDelay: ".05s" }}>PROGRAMĂRI ONLINE · ÎNFRUMUSEȚARE &amp; GROOMING</div>
             <h1 className="ch-hero-anim" style={{ fontSize: "clamp(34px,5.4vw,56px)", fontWeight: 900, lineHeight: 1.03, letterSpacing: -1.5, color: C.text, animationDelay: ".15s" }}>
               Toate programările de îngrijire,<br />într-o <span style={{ color: C.orange }}>singură platformă</span>.
             </h1>
@@ -137,7 +137,7 @@ export default function HomePage() {
                   {iconBox(Scissors)}
                   <div><div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Ai un salon</div><h2 style={{ fontSize: 19, fontWeight: 900, marginTop: 2, color: C.text }}>Umple-ți agenda</h2></div>
                 </div>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 16, minHeight: 63 }}>Grooming sau înfrumusețare — programări online, agendă digitală și instrumente care îți fidelizează clienții.</p>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 16, minHeight: 63 }}>Înfrumusețare sau grooming — programări online, agendă digitală și instrumente care îți fidelizează clienții.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Programări online 24/7</b>, fără un telefon dat</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Calendar per specialist</b> și statistici reale</>)}
@@ -160,7 +160,7 @@ export default function HomePage() {
             <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
               <div data-reveal style={eyebrow}>DE CE CALYHUB</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Totul, într-un loc care lucrează pentru tine</h2>
-              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Grooming pentru animale și înfrumusețare pentru oameni, sub același cont. Prețuri la vedere, istoric salvat și recomandări după fiecare vizită — o experiență digitală completă.</p>
+              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Înfrumusețare pentru tine și grooming pentru animalul tău, sub același cont. Prețuri la vedere, istoric salvat și recomandări după fiecare vizită — o experiență digitală completă.</p>
             </div>
             <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
               {[
@@ -273,8 +273,8 @@ export default function HomePage() {
               <div style={eyebrow}>AVANTAJUL CALYHUB</div>
               <h2 style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 14 }}>Deținem intersecția</h2>
               <p style={{ fontSize: 17, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 16, maxWidth: "56ch", marginLeft: "auto", marginRight: "auto" }}>
-                Piața e segmentată. Nimeni nu operează ambele lumi din același loc — grooming și înfrumusețare,
-                pentru animale și pentru oameni. Iar acolo este poziția noastră.
+                Piața e segmentată. Nimeni nu operează ambele lumi din același loc — înfrumusețare și grooming,
+                pentru oameni și pentru animale. Iar acolo este poziția noastră.
               </p>
             </div>
           </div>

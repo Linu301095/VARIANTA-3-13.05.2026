@@ -8,10 +8,10 @@ const C = {
   text: "#1A1A1A", orange: "#FF6B00",
 };
 
-type Mod = "grooming" | "beauty";
+type Mod = "beauty" | "grooming";
 
 export default function HeroSearch() {
-  const [mod, setMod] = useState<Mod>("grooming");
+  const [mod, setMod] = useState<Mod>("beauty");
   const [q, setQ] = useState("");
   const [oras, setOras] = useState("");
   const router = useRouter();
@@ -35,13 +35,13 @@ export default function HeroSearch() {
     <>
       {/* toggle */}
       <div className="ch-hero-anim" style={{ display: "inline-flex", gap: 4, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 50, padding: 4, marginTop: 30, boxShadow: "0 2px 16px rgba(120,90,60,.08)", animationDelay: ".42s" }}>
-        <button type="button" onClick={() => setMod("grooming")} aria-pressed={grooming}
-          style={{ ...tabBase, background: grooming ? C.orange : "transparent", color: grooming ? "#fff" : C.muted }}>
-          <PawPrint size={15} strokeWidth={2} /> Grooming
-        </button>
         <button type="button" onClick={() => setMod("beauty")} aria-pressed={!grooming}
           style={{ ...tabBase, background: !grooming ? C.orange : "transparent", color: !grooming ? "#fff" : C.muted }}>
           <Scissors size={15} strokeWidth={2} /> Înfrumusețare
+        </button>
+        <button type="button" onClick={() => setMod("grooming")} aria-pressed={grooming}
+          style={{ ...tabBase, background: grooming ? C.orange : "transparent", color: grooming ? "#fff" : C.muted }}>
+          <PawPrint size={15} strokeWidth={2} /> Grooming
         </button>
       </div>
 

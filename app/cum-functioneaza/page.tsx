@@ -12,11 +12,11 @@ import {
 export const metadata: Metadata = {
   title: "Cum funcționează CalyHub — Programări în câțiva pași",
   description:
-    "Vezi cum funcționează CalyHub: clienții găsesc și rezervă la saloane de grooming și de înfrumusețare în câteva minute, iar saloanele își digitalizează agenda și primesc programări online 24/7.",
+    "Vezi cum funcționează CalyHub: clienții găsesc și rezervă la saloane de înfrumusețare și de grooming în câteva minute, iar saloanele își digitalizează agenda și primesc programări online 24/7.",
   alternates: { canonical: "/cum-functioneaza" },
   openGraph: {
     title: "Cum funcționează CalyHub",
-    description: "De la căutare la rezervare pentru clienți, de la înregistrare la programări pentru saloane — grooming și înfrumusețare, într-o singură platformă.",
+    description: "De la căutare la rezervare pentru clienți, de la înregistrare la programări pentru saloane — înfrumusețare și grooming, într-o singură platformă.",
     url: "/cum-functioneaza",
     type: "website",
   },
@@ -47,13 +47,13 @@ const btnSecondary: React.CSSProperties = {
 type Step = { nr: string; Icon: LucideIcon; t: string; d: string };
 
 const PASI_CLIENT: Step[] = [
-  { nr: "01", Icon: Search, t: "Caută salonul potrivit", d: "Alegi lumea — grooming pentru animalul tău sau înfrumusețare pentru tine. Filtrezi după oraș, serviciu și rating, vezi prețuri exacte și galeria salonului." },
+  { nr: "01", Icon: Search, t: "Caută salonul potrivit", d: "Alegi lumea — înfrumusețare pentru tine sau grooming pentru animalul tău. Filtrezi după oraș, serviciu și rating, vezi prețuri exacte și galeria salonului." },
   { nr: "02", Icon: Calendar, t: "Rezervă în câteva minute", d: "Alegi slotul liber și specialistul preferat, adaugi o observație și trimiți. Fără telefoane, fără așteptare — disponibilitate în timp real." },
   { nr: "03", Icon: Bell, t: "Primești confirmarea", d: "Salonul confirmă direct în aplicație. Ai istoricul complet, recomandări după fiecare vizită și lași o recenzie — totul într-un singur cont." },
 ];
 
 const PASI_SALON: Step[] = [
-  { nr: "01", Icon: Store, t: "Înregistrezi salonul", d: "Alegi tipul — grooming sau înfrumusețare. Adaugi servicii, prețuri, echipă și galerie. Profilul apare instant în lista clienților din orașul tău." },
+  { nr: "01", Icon: Store, t: "Înregistrezi salonul", d: "Alegi tipul — înfrumusețare sau grooming. Adaugi servicii, prețuri, echipă și galerie. Profilul apare instant în lista clienților din orașul tău." },
   { nr: "02", Icon: SlidersHorizontal, t: "Configurezi agenda", d: "Orar per specialist, sloturi de 30 de minute și blocări manuale (telefonic, walk-in, pauze). Sistemul previne automat dubla-rezervare." },
   { nr: "03", Icon: BarChart3, t: "Primești programări", d: "Confirmi cu un click, urmărești statistici reale și folosești cei 4 asistenți AI care îți fidelizează clienții. Totul, pe web și pe telefon." },
 ];
@@ -101,7 +101,7 @@ export default function CumFunctioneaza() {
               Simplu pentru clienți.<br /><span style={{ color: C.orange }}>Profitabil pentru saloane.</span>
             </h1>
             <p className="ch-hero-anim" style={{ margin: "20px auto 0", maxWidth: "58ch", fontSize: 18, lineHeight: 1.7, fontWeight: 500, color: C.muted, animationDelay: ".28s" }}>
-              Grooming pentru animale și înfrumusețare pentru oameni, într-o singură platformă. Clienții găsesc și rezervă
+              Înfrumusețare pentru oameni și grooming pentru animale, într-o singură platformă. Clienții găsesc și rezervă
               în câteva minute; saloanele își digitalizează agenda și primesc programări online 24/7.
             </p>
           </div>

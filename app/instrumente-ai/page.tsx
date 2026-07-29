@@ -9,7 +9,7 @@ import { Star, Users, ClipboardList, Sparkles, Image as ImageIcon, Check } from 
 export const metadata: Metadata = {
   title: "Instrumente AI pentru saloane — CalyHub",
   description:
-    "Patru asistenți AI incluși în CalyHub: răspunsuri automate la recenzii, reactivarea clienților inactivi, recomandări de îngrijire post-serviciu și consultant AI de business. Pentru saloane de grooming și înfrumusețare.",
+    "Patru asistenți AI incluși în CalyHub: răspunsuri automate la recenzii, reactivarea clienților inactivi, recomandări de îngrijire post-serviciu și consultant AI de business. Pentru saloane de înfrumusețare și grooming.",
   keywords: ["asistenți AI saloane", "AI grooming", "AI înfrumusețare", "consultant AI salon", "răspunsuri recenzii AI", "CalyHub AI"],
   alternates: { canonical: "/instrumente-ai" },
   openGraph: {
