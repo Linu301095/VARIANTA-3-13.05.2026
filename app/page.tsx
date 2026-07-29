@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import ResetTheme from "../components/ResetTheme";
 import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
+import { IconRezervare, IconCrestere } from "../components/SectionIcons";
 import {
   PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
   Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check,
@@ -183,6 +184,7 @@ export default function HomePage() {
         <section style={{ padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
+              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconRezervare size={60} /></div>
               <div data-reveal style={eyebrow}>PENTRU CLIENȚI</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Găsești, rezervi, revii — fără bătăi de cap</h2>
               <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Alege lumea în care intri și rezervă în câteva minute. Aceeași experiență simplă, fie că e vorba de animalul tău sau de tine.</p>
@@ -221,6 +223,7 @@ export default function HomePage() {
         <section style={{ background: C.surface2, padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 38px" }}>
+              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconCrestere size={60} /></div>
               <div data-reveal style={eyebrow}>PENTRU SALOANE · PARTENERI</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Transformă-ți salonul într-o afacere digitală</h2>
               <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Mai multe programări onorate, mai puțin timp pierdut la telefon. Agendă digitală, statistici reale și 4 asistenți AI care îți aduc clienții înapoi — primele 3 luni gratuite, fără comision.</p>
@@ -241,6 +244,9 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            <div data-reveal style={{ textAlign: "center", marginTop: 32 }}>
+              <Link href="/cum-functioneaza#parteneri" style={btnSecondary}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează pentru saloane →</Link>
+            </div>
             {/* Instrumente AI — teaser compact */}
             <div data-reveal style={{ textAlign: "center", maxWidth: 660, margin: "48px auto 0" }}>
               <div style={eyebrow}><Sparkles size={13} strokeWidth={2.4} /> INSTRUMENTE AI</div>
@@ -253,9 +259,6 @@ export default function HomePage() {
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 22 }}>
                 <Link href="/instrumente-ai" style={btnPrimary}><Sparkles size={16} strokeWidth={2.4} /> Descoperă instrumentele AI →</Link>
               </div>
-            </div>
-            <div data-reveal style={{ textAlign: "center", marginTop: 34 }}>
-              <Link href="/cum-functioneaza#parteneri" style={btnSecondary}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează pentru saloane →</Link>
             </div>
           </div>
         </section>
