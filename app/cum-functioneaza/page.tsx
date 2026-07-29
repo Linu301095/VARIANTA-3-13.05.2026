@@ -4,6 +4,7 @@ import Link from "next/link";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
+import { IconClienti, IconFoarfeca, MiniClienti, MiniFoarfeca } from "../../components/SectionIcons";
 import {
   PawPrint, Scissors, Search, Calendar, Bell, Store, SlidersHorizontal, BarChart3,
   Sparkles, Check, Tag, Clock, Star, Users, Smartphone, Gift, ShieldCheck, CreditCard,
@@ -158,8 +159,8 @@ export default function CumFunctioneaza() {
               cum funcționează — de la prima căutare până la agenda plină a salonului.
             </p>
             <div className="ch-hero-anim" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 28, animationDelay: ".4s" }}>
-              <Link href="#clienti" style={btnPrimary}><PawPrint size={17} strokeWidth={2.2} /> Sunt client</Link>
-              <Link href="#parteneri" style={btnSecondary}><Scissors size={17} color={C.orange} strokeWidth={2.2} /> Am un salon</Link>
+              <Link href="#clienti" style={btnPrimary}><MiniClienti size={18} color="#fff" /> Sunt client</Link>
+              <Link href="#parteneri" style={btnSecondary}><MiniFoarfeca size={18} color={C.orange} /> Am un salon</Link>
             </div>
           </div>
         </section>
@@ -167,12 +168,11 @@ export default function CumFunctioneaza() {
         {/* ============ PENTRU CLIENTI ============ */}
         <section id="clienti" style={{ padding: "44px 20px 64px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 15, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PawPrint size={26} color={C.orange} strokeWidth={2} /></div>
-              <div>
-                <div data-reveal style={{ ...eyebrow, marginBottom: 6 }}>Pentru clienți</div>
-                <h2 data-reveal style={h2}>Găsești și rezervi în 3 pași</h2>
-              </div>
+            <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 34px" }}>
+              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconClienti size={64} /></div>
+              <div data-reveal style={eyebrow}>Pentru clienți</div>
+              <h2 data-reveal style={{ ...h2, marginTop: 12 }}>Găsești și rezervi în 3 pași</h2>
+              <p data-reveal style={{ ...lead, marginTop: 12 }}>Pentru tine sau pentru animalul tău — aceeași experiență simplă, de la căutare până la confirmare.</p>
             </div>
             <Steps pasi={PASI_CLIENT} />
 
@@ -233,12 +233,11 @@ export default function CumFunctioneaza() {
         {/* ============ PENTRU PARTENERI ============ */}
         <section id="parteneri" style={{ background: C.surface2, padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 15, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={26} color={C.orange} strokeWidth={2} /></div>
-              <div>
-                <div data-reveal style={{ ...eyebrow, marginBottom: 6 }}>Pentru saloane · parteneri</div>
-                <h2 data-reveal style={h2}>Ești live în 3 pași</h2>
-              </div>
+            <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 34px" }}>
+              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconFoarfeca size={64} /></div>
+              <div data-reveal style={eyebrow}>Pentru saloane · parteneri</div>
+              <h2 data-reveal style={{ ...h2, marginTop: 12 }}>Ești live în 3 pași</h2>
+              <p data-reveal style={{ ...lead, marginTop: 12 }}>Salon de înfrumusețare sau de grooming — îți creezi profilul, îți configurezi agenda și începi să primești programări.</p>
             </div>
             <Steps pasi={PASI_SALON} />
 
