@@ -7,7 +7,7 @@ import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
 import {
   PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
-  Clock, Tag, Gift, Smartphone, Star, MessageSquare, ClipboardList, PlayCircle, Check,
+  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -240,28 +240,21 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            {/* Instrumente AI — incluse pentru saloane */}
-            <div data-reveal style={{ textAlign: "center", maxWidth: 700, margin: "50px auto 26px" }}>
+            {/* Instrumente AI — teaser compact */}
+            <div data-reveal style={{ textAlign: "center", maxWidth: 660, margin: "48px auto 0" }}>
               <div style={eyebrow}><Sparkles size={13} strokeWidth={2.4} /> INSTRUMENTE AI</div>
-              <h3 style={{ fontSize: "clamp(20px,2.6vw,26px)", fontWeight: 900, letterSpacing: -0.5, color: C.text, marginTop: 10 }}>Patru asistenți AI care îți cresc afacerea</h3>
+              <h3 style={{ fontSize: "clamp(20px,2.6vw,26px)", fontWeight: 900, letterSpacing: -0.5, color: C.text, marginTop: 12 }}>Patru asistenți AI care îți cresc afacerea</h3>
+              <p style={{ fontSize: 15.5, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>
+                Inteligență integrată direct în salonul tău: răspunde la recenzii, îți aduce înapoi clienții care nu au mai
+                revenit, trimite recomandări de îngrijire după fiecare vizită și îți livrează rapoarte de business din
+                datele tale reale. Fără setări, fără costuri suplimentare.
+              </p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 22 }}>
+                <Link href="/instrumente-ai" style={btnPrimary}><Sparkles size={16} strokeWidth={2.4} /> Descoperă instrumentele AI →</Link>
+              </div>
             </div>
-            <div className="ch-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
-              {[
-                { Icon: MessageSquare, t: "Răspunsuri la recenzii", d: "Răspunsuri profesionale, generate automat — reputația salonului, îngrijită." },
-                { Icon: Users, t: "Clienți inactivi", d: "Recâștigi clienții care nu au mai revenit, cu mesaje pregătite automat." },
-                { Icon: ClipboardList, t: "Recomandări post-serviciu", d: "Sfaturi de îngrijire personalizate, trimise clientului după fiecare vizită." },
-                { Icon: Sparkles, t: "Consultant AI", d: "Rapoarte de business lunare, cu recomandări concrete din datele tale reale." },
-              ].map(({ Icon, t, d }) => (
-                <div key={t} data-reveal className="ch-card" style={card}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={21} color={C.orange} strokeWidth={2} /></div>
-                  <h4 style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{t}</h4>
-                  <p style={{ fontSize: 12.5, color: C.muted, fontWeight: 600, marginTop: 6, lineHeight: 1.55 }}>{d}</p>
-                </div>
-              ))}
-            </div>
-            <div data-reveal style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 34 }}>
-              <Link href="/instrumente-ai" style={btnSecondary}>Vezi instrumentele AI →</Link>
-              <Link href="/register" style={btnPrimary}>Înscrie-ți salonul gratuit →</Link>
+            <div data-reveal style={{ display: "flex", justifyContent: "center", marginTop: 34 }}>
+              <Link href="/register" style={btnSecondary}>Înscrie-ți salonul gratuit →</Link>
             </div>
           </div>
         </section>
