@@ -380,4 +380,8 @@ label:hover {
   .ch-card:hover, .ch-tile:hover { transform: none; box-shadow: none; }
 }
 @media (max-width: 780px) { .nav-hide-sm { display: none !important; } }
+/* ancore sub header sticky */
+[id] { scroll-margin-top: 88px; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 @media (max-width: 900px) { .ch-grid-2, .ch-grid-3, .ch-grid-4 { grid-template-columns: 1fr !important; } }

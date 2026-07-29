@@ -56,13 +56,14 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
           <div style={{ flex: "1 1 260px", minWidth: 0 }}>
             {LOGO}
             <p style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.7, marginTop: 14, maxWidth: 320 }}>
-              Platforma #1 din România pentru programări la salon de grooming.
+              Programări online la saloane de înfrumusețare și de grooming — pentru tine și pentru animalul tău.
             </p>
             <div style={{ marginTop: 16 }}><SocialIcons /></div>
           </div>
 
           <nav style={{ display: "flex", flexWrap: "wrap", gap: "12px 24px", alignItems: "center", justifyContent: "flex-end" }}>
-            <Link href="/cum-functioneaza" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Cum funcționează</Link>
+            <Link href="/instrumente-ai" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Instrumente AI</Link>
+            <Link href="/preturi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Prețuri</Link>
             <Link href="/despre-noi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Despre noi</Link>
             <Link href="/contact" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Contact</Link>
             <Link href="/termeni" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Termeni și condiții</Link>

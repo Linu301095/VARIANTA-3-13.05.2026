@@ -79,7 +79,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
-            <Link href="/cum-functioneaza" className="nav-hide-sm" style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>Cum funcționează</Link>
+            <Link href="/instrumente-ai" className="nav-hide-sm" style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>Instrumente AI</Link>
             <Link href="/preturi" className="nav-hide-sm" style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>Prețuri</Link>
             <Link href="/login" className="hdr-btn" style={{ fontSize: 14, fontWeight: 700, color: C.muted, textDecoration: "none" }}>Conectare</Link>
             <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
@@ -106,9 +106,7 @@ export default function HomePage() {
 
             <HeroSearch />
 
-            <div className="ch-hero-anim" style={{ marginTop: 18, display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap", alignItems: "center", fontSize: 13.5, fontWeight: 700, animationDelay: ".64s" }}>
-              <Link href="/cum-functioneaza" style={{ color: C.text, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7 }}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează</Link>
-              <span style={{ width: 1, height: 16, background: C.line }} />
+            <div className="ch-hero-anim" style={{ marginTop: 18, fontSize: 13.5, fontWeight: 700, animationDelay: ".64s" }}>
               <span style={{ color: C.muted }}>Ai un salon? <Link href="/register" style={{ color: C.orangeText, fontWeight: 800, textDecoration: "none" }}>Înscrie-te gratuit →</Link></span>
             </div>
 
@@ -213,6 +211,9 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+            <div data-reveal style={{ textAlign: "center", marginTop: 32 }}>
+              <Link href="/cum-functioneaza#clienti" style={btnSecondary}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează pentru clienți →</Link>
+            </div>
           </div>
         </section>
 
@@ -252,6 +253,9 @@ export default function HomePage() {
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 22 }}>
                 <Link href="/instrumente-ai" style={btnPrimary}><Sparkles size={16} strokeWidth={2.4} /> Descoperă instrumentele AI →</Link>
               </div>
+            </div>
+            <div data-reveal style={{ textAlign: "center", marginTop: 34 }}>
+              <Link href="/cum-functioneaza#parteneri" style={btnSecondary}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează pentru saloane →</Link>
             </div>
           </div>
         </section>
