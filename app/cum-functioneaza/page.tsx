@@ -4,7 +4,7 @@ import Link from "next/link";
 import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
-import { IconClienti, IconFoarfeca, MiniClienti, MiniFoarfeca } from "../../components/SectionIcons";
+import { IconClienti, IconFoarfeca } from "../../components/SectionIcons";
 import {
   PawPrint, Scissors, Search, Calendar, Bell, Store, SlidersHorizontal, BarChart3,
   Sparkles, Check, Tag, Clock, Star, Users, Smartphone, Gift, ShieldCheck, CreditCard,
@@ -158,10 +158,6 @@ export default function CumFunctioneaza() {
               Înfrumusețare pentru oameni și grooming pentru animale, într-o singură platformă. Aici găsești pas cu pas
               cum funcționează — de la prima căutare până la agenda plină a salonului.
             </p>
-            <div className="ch-hero-anim" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 28, animationDelay: ".4s" }}>
-              <Link href="#clienti" style={btnPrimary}><MiniClienti size={18} color="#fff" /> Sunt client</Link>
-              <Link href="#parteneri" style={btnSecondary}><MiniFoarfeca size={18} color={C.orange} /> Am un salon</Link>
-            </div>
           </div>
         </section>
 
