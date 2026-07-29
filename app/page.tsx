@@ -253,9 +253,6 @@ export default function HomePage() {
                 <Link href="/instrumente-ai" style={btnPrimary}><Sparkles size={16} strokeWidth={2.4} /> Descoperă instrumentele AI →</Link>
               </div>
             </div>
-            <div data-reveal style={{ display: "flex", justifyContent: "center", marginTop: 34 }}>
-              <Link href="/register" style={btnSecondary}>Înscrie-ți salonul gratuit →</Link>
-            </div>
           </div>
         </section>
 
