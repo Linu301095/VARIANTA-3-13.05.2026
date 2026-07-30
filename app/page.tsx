@@ -273,11 +273,10 @@ export default function HomePage() {
                 </div>
               </div>
               <div data-reveal style={eyebrow}>PLANURI</div>
-              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Plătești pentru salon, nu pentru fiecare angajat</h2>
+              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Acces complet la platformă, de la primul plan</h2>
               <p data-reveal style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 14 }}>
-                O singură subscripție acoperă tot salonul — programări nelimitate, fără comision pe rezervări și fără
-                costuri ascunse. Alegi planul după mărimea echipei, nu după cât folosești platforma. Primele 3 luni sunt
-                gratuite, fără card la înscriere.
+                Fiecare plan include agenda digitală, programările online și agenții AI. Diferența e mărimea echipei
+                și instrumentele avansate — nu accesul la esențial.
               </p>
               <div data-reveal style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
                 {["Programări nelimitate", "0% comision", "Anulezi oricând", "Asistenți AI incluși"].map((t) => (
