@@ -155,14 +155,25 @@ export default function InstrumenteAI() {
         <section style={{ padding: "0 20px 76px" }}>
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
-              <div style={{ position: "relative", display: "inline-flex", marginBottom: 14 }}><Sparkle size={34} /></div>
-              <h2 style={{ fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>
-                Ca și cum ai avea un coleg care nu obosește
+              <div style={{ position: "relative", display: "inline-flex", marginBottom: 18 }}><Sparkle size={34} /></div>
+              <h2 style={{ fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 900, letterSpacing: -1, lineHeight: 1.12, color: C.text, maxWidth: "22ch", marginLeft: "auto", marginRight: "auto" }}>
+                Nu îți ia locul.<br /><span style={{ color: C.orange }}>Îți ia munca</span> pe care n-o mai apuci.
               </h2>
-              <p style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 14, maxWidth: "60ch", marginLeft: "auto", marginRight: "auto" }}>
-                În timp ce tu lucrezi cu clientul din fața ta, asistenții AI se ocupă de restul: răspund la recenzii,
-                îi cheamă înapoi pe cei care n-au mai venit, trimit sfaturi după fiecare vizită și îți spun lunar
-                unde stă salonul tău. <b style={{ color: C.text, fontWeight: 800 }}>Tu rămâi la ce știi mai bine — meseria ta.</b>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
+                {[
+                  ["Recenzii", "răspunse"],
+                  ["Clienți pierduți", "recuperați"],
+                  ["Cifrele lunii", "explicate"],
+                ].map(([a, b]) => (
+                  <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "#fff", border: "1px solid #FFDCC6", borderRadius: 50, padding: "10px 18px", fontSize: 14, fontWeight: 800, color: C.text, boxShadow: "0 2px 10px rgba(120,90,60,.06)" }}>
+                    {a}
+                    <span style={{ color: C.orange, fontSize: 16 }}>→</span>
+                    <span style={{ color: C.orangeText }}>{b}</span>
+                  </span>
+                ))}
+              </div>
+              <p style={{ fontSize: 15, color: C.muted, fontWeight: 600, marginTop: 26 }}>
+                Tu rămâi la meseria ta. Restul se rezolvă în fundal.
               </p>
             </div>
           </div>
