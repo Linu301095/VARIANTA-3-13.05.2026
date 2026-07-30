@@ -8,8 +8,9 @@ import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
 import { supabase } from "../../lib/supabase";
 import {
-  Check, Gift, Flame, Sparkles, Wallet, Users, Store, Building2, HelpCircle,
+  Check, Gift, Flame, Users, Store, Building2, HelpCircle,
 } from "lucide-react";
+import { IconPlanuri, SparkleAnim } from "../../components/SectionIcons";
 
 type Ciclu = "lunar" | "anual";
 
@@ -166,9 +167,7 @@ export default function Preturi() {
           <div className="ch-orb b" style={{ width: 300, height: 300, background: "rgba(255,140,66,.16)", top: 10, right: "10%" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
             <div className="ch-hero-anim" style={{ display: "inline-flex", marginBottom: 18, animationDelay: ".05s" }}>
-              <div style={{ width: 60, height: 60, borderRadius: 17, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Wallet size={28} color={C.orange} strokeWidth={2} />
-              </div>
+              <IconPlanuri size={64} />
             </div>
             <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}>PLANURI PENTRU SALOANE</div>
             <h1 className="ch-hero-anim" style={{ fontSize: "clamp(32px,5vw,50px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -1.5, color: C.text, animationDelay: ".2s" }}>
@@ -283,17 +282,17 @@ export default function Preturi() {
         {/* AGENTI AI */}
         <section style={{ padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div data-reveal className="ch-card" style={{ ...tile, borderRadius: 28, padding: "26px 28px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-              <div style={{ width: 50, height: 50, borderRadius: 14, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Sparkles size={24} color={C.orange} strokeWidth={2} />
+            <div data-reveal className="ch-card" style={{ ...tile, borderRadius: 28, padding: "32px 28px", textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                <SparkleAnim size={42} glow />
               </div>
-              <div style={{ flex: 1, minWidth: 240 }}>
-                <h3 style={{ fontSize: 19, fontWeight: 900, color: C.text }}>Agenții AI sunt incluși în plan</h3>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, marginTop: 4, lineHeight: 1.55 }}>
-                  Fără costuri separate și fără setări tehnice. Fiecare plan deblochează agenți suplimentari, activați din prima zi.
-                </p>
+              <h3 style={{ fontSize: 21, fontWeight: 900, letterSpacing: -0.4, color: C.text }}>Agenții AI sunt incluși în plan</h3>
+              <p style={{ fontSize: 14.5, color: C.muted, fontWeight: 600, marginTop: 8, lineHeight: 1.65, maxWidth: "56ch", marginLeft: "auto", marginRight: "auto" }}>
+                Fără costuri separate și fără setări tehnice. Fiecare plan deblochează agenți suplimentari, activați din prima zi.
+              </p>
+              <div style={{ marginTop: 20 }}>
+                <Link href="/instrumente-ai" style={btnSecondary}>Vezi agenții AI →</Link>
               </div>
-              <Link href="/instrumente-ai" style={btnSecondary}>Vezi agenții AI →</Link>
             </div>
           </div>
         </section>

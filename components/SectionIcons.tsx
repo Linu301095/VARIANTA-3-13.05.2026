@@ -41,6 +41,35 @@ export function IconHub({ size = 60 }: { size?: number }) {
   );
 }
 
+/** PLANURI — pachet de carduri suprapuse; cel de sus se ridică și primește bifa */
+export function IconPlanuri({ size = 60 }: { size?: number }) {
+  return (
+    <span style={{ display: "inline-flex", flexShrink: 0 }} aria-hidden="true">
+      <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+        <rect x="2" y="2" width="60" height="60" rx="17" fill={SOFT} stroke={BORDER} strokeWidth="1.5" />
+        {/* cardul de jos */}
+        <rect x="15" y="40" width="34" height="9" rx="4" fill={ORANGE} opacity=".28" />
+        {/* cardul din mijloc */}
+        <rect x="15" y="31" width="34" height="10" rx="4" fill={ORANGE} opacity=".5" />
+        {/* cardul de sus — se ridica */}
+        <g className="ch-plan-top">
+          <rect x="15" y="20" width="34" height="12" rx="5" fill={ORANGE} />
+          <path className="ch-plan-check" d="M25.5 26.2l3 3 6-6.4" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      </svg>
+      <style>{`
+        @keyframes chPlanLift { 0%,100%{transform:translateY(0)} 45%{transform:translateY(-4px)} }
+        @keyframes chPlanCheck { 0%,20%{stroke-dashoffset:14} 50%,88%{stroke-dashoffset:0} 100%{stroke-dashoffset:14} }
+        .ch-plan-check{stroke-dasharray:14;stroke-dashoffset:0}
+        @media (prefers-reduced-motion: no-preference){
+          .ch-plan-top{animation:chPlanLift 3s ease-in-out infinite}
+          .ch-plan-check{animation:chPlanCheck 3s ease-in-out infinite}
+        }
+      `}</style>
+    </span>
+  );
+}
+
 /** VENN — două cercuri cu intersecția care se aprinde („Deținem intersecția") */
 export function IconIntersectie({ size = 60 }: { size?: number }) {
   return (

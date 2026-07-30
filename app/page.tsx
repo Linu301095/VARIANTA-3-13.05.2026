@@ -5,10 +5,10 @@ import Footer from "../components/Footer";
 import ResetTheme from "../components/ResetTheme";
 import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
-import { IconRezervare, IconCrestere, IconHub, IconIntersectie, SparkleAnim } from "../components/SectionIcons";
+import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim } from "../components/SectionIcons";
 import {
   PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
-  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check, Wallet,
+  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -267,11 +267,7 @@ export default function HomePage() {
         <section style={{ background: C.surface2, padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto" }}>
-              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-                <div style={{ width: 60, height: 60, borderRadius: 17, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Wallet size={28} color={C.orange} strokeWidth={2} />
-                </div>
-              </div>
+              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconPlanuri size={60} /></div>
               <div data-reveal style={eyebrow}>PLANURI</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Acces complet la platformă, de la primul plan</h2>
               <p data-reveal style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 14 }}>
