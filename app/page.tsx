@@ -263,8 +263,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* AVANTAJ */}
-        <section style={{ padding: "64px 20px" }}>
+        {/* AVANTAJ + CTA FINAL */}
+        <section style={{ padding: "64px 20px 76px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div data-reveal style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconIntersectie size={60} /></div>
@@ -274,18 +274,17 @@ export default function HomePage() {
                 Piața e segmentată. Nimeni nu operează ambele lumi din același loc — înfrumusețare și grooming,
                 pentru oameni și pentru animale. Iar acolo este poziția noastră.
               </p>
-            </div>
-          </div>
-        </section>
 
-        {/* CTA FINAL */}
-        <section style={{ padding: "20px 20px 72px" }}>
-          <div data-reveal style={{ textAlign: "center", maxWidth: 680, margin: "0 auto" }}>
-            <h2 style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text }}>Începe astăzi</h2>
-            <p style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Rezervă primul serviciu în câteva minute, sau înscrie-ți salonul și primești primele 3 luni gratuite.</p>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-              <Link href="/register" style={btnPrimary}>Caută un salon</Link>
-              <Link href="/register" style={btnSecondary}>Înscrie-ți salonul →</Link>
+              <div style={{ height: 1, background: "#FFDCC6", maxWidth: 420, margin: "34px auto" }} />
+
+              <h3 style={{ fontSize: "clamp(22px,2.8vw,30px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>Începe astăzi</h3>
+              <p style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 10, maxWidth: "54ch", marginLeft: "auto", marginRight: "auto" }}>
+                Rezervă primul serviciu în câteva minute, sau înscrie-ți salonul și primești primele 3 luni gratuite.
+              </p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 22, flexWrap: "wrap" }}>
+                <Link href="/register" style={btnPrimary}>Caută un salon</Link>
+                <Link href="/register" style={btnSecondary}>Înscrie-ți salonul →</Link>
+              </div>
             </div>
           </div>
         </section>
