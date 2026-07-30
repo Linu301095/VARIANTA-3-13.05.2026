@@ -1,5 +1,27 @@
 # CalyHub — Reguli proiect
 
+## ÎN LUCRU — Categoria C: ecrane de acces (7 pagini, etapizat)
+
+Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
+
+| # | Etapa | Fișier | Stare |
+|---|---|---|---|
+| 1 | Conectare | `app/login/page.tsx` | ✅ gata (30.07.2026) |
+| 2 | Înregistrare | `app/register/page.tsx` | ⬜ urmează |
+| 3 | Configurare animal | `app/register/configurare-animal/page.tsx` | ⬜ |
+| 4 | Configurare salon | `app/register/configurare-salon/page.tsx` | ⬜ |
+| 5 | Abonament salon | `app/register/abonament-salon/page.tsx` | ⬜ |
+| 6 | Ai uitat parola | `app/forgot-password/page.tsx` | ⬜ |
+| 7 | Resetare parolă | `app/reset-password/page.tsx` | ⬜ |
+
+**Decizii deschise, de discutat la momentul potrivit (NU se implementează până nu confirmă utilizatorul):**
+
+1. **Unde alege salonul verticala** (Înfrumusețare / Grooming) — la înregistrare (Etapa 2) sau în wizardul de configurare (Etapa 4)? Recomandarea mea: la înregistrare, pentru că wizardul depinde de verticală (servicii, denumiri de rol). Utilizatorul a cerut explicit să revenim la discuție înainte de Etapa 2.
+2. **Coloană nouă în DB pentru verticală** — nu există nicăieri (`profiluri` salvează doar `tip`, `nume`, `telefon`). Indiferent de răspunsul la punctul 1, e nevoie de `saloane.domeniu` (enum `infrumusetare | grooming`) + metadata în `signUp`.
+3. **Bannerul „3 luni gratuite pentru parteneri fondatori · 0% comision"** din `app/register/page.tsx` — pe Home a fost scos și înlocuit cu „Remindere automate". Rămâne sau se scoate și de aici? (recomand scos, ca să nu promitem lucruri diferite în două locuri)
+
+**Ce NU se atinge în categoria C:** logica Supabase existentă (`signInWithPassword`, `signUp`, upsert profil, temă, redirect pe rol) și OAuth-ul social — butoanele Google/Facebook/telefon rămân decorative până la etapa lor din TODO-ul de lansare.
+
 ## SEO (OBLIGATORIU pentru orice pagină nouă)
 
 Orice pagină publică nouă adăugată în aplicație trebuie să respecte standardul SEO deja stabilit:
