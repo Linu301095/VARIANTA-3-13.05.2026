@@ -156,25 +156,20 @@ export default function InstrumenteAI() {
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
               <div style={{ position: "relative", display: "inline-flex", marginBottom: 18 }}><Sparkle size={34} /></div>
-              <h2 style={{ fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 900, letterSpacing: -1, lineHeight: 1.12, color: C.text, maxWidth: "22ch", marginLeft: "auto", marginRight: "auto" }}>
-                Nu îți ia locul.<br /><span style={{ color: C.orange }}>Îți ia munca</span> pe care n-o mai apuci.
+              <h2 style={{ fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 900, letterSpacing: -1, lineHeight: 1.14, color: C.text, maxWidth: "24ch", marginLeft: "auto", marginRight: "auto" }}>
+                AI care lucrează pe <span style={{ color: C.orange }}>datele salonului tău</span>, nu pe generalități.
               </h2>
+              <p style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 16, maxWidth: "58ch", marginLeft: "auto", marginRight: "auto" }}>
+                Fiecare răspuns, alertă și raport pornește din programările, clienții și încasările tale reale.
+                De asta recomandările sunt concrete — și se potrivesc exact salonului tău, nu unuia din manual.
+              </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 26 }}>
-                {[
-                  ["Recenzii", "răspunse"],
-                  ["Clienți pierduți", "recuperați"],
-                  ["Cifrele lunii", "explicate"],
-                ].map(([a, b]) => (
-                  <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "#fff", border: "1px solid #FFDCC6", borderRadius: 50, padding: "10px 18px", fontSize: 14, fontWeight: 800, color: C.text, boxShadow: "0 2px 10px rgba(120,90,60,.06)" }}>
-                    {a}
-                    <span style={{ color: C.orange, fontSize: 16 }}>→</span>
-                    <span style={{ color: C.orangeText }}>{b}</span>
+                {["Activate din prima zi", "Fără setări tehnice", "Nu înlocuiesc oamenii — le iau munca repetitivă"].map((t) => (
+                  <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff", border: "1px solid #FFDCC6", borderRadius: 50, padding: "9px 16px", fontSize: 13.5, fontWeight: 800, color: C.text, boxShadow: "0 2px 10px rgba(120,90,60,.06)" }}>
+                    <Check size={15} color={C.orange} strokeWidth={2.8} /> {t}
                   </span>
                 ))}
               </div>
-              <p style={{ fontSize: 15, color: C.muted, fontWeight: 600, marginTop: 26 }}>
-                Tu rămâi la meseria ta. Restul se rezolvă în fundal.
-              </p>
             </div>
           </div>
         </section>
