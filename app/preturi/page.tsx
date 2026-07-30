@@ -281,21 +281,16 @@ export default function Preturi() {
           </div>
         </section>
 
-        {/* AGENTI AI */}
-        <section style={{ padding: "64px 20px" }}>
-          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div data-reveal className="ch-card" style={{ ...tile, borderRadius: 28, padding: "32px 28px", textAlign: "center" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-                <SparkleAnim size={42} glow />
-              </div>
-              <h3 style={{ fontSize: 21, fontWeight: 900, letterSpacing: -0.4, color: C.text }}>Agenții AI sunt incluși în plan</h3>
-              <p style={{ fontSize: 14.5, color: C.muted, fontWeight: 600, marginTop: 8, lineHeight: 1.65, maxWidth: "56ch", marginLeft: "auto", marginRight: "auto" }}>
-                Fără costuri separate și fără setări tehnice. Fiecare plan deblochează agenți suplimentari, activați din prima zi.
-              </p>
-              <div style={{ marginTop: 20 }}>
-                <Link href="/instrumente-ai" style={btnSecondary}>Vezi agenții AI →</Link>
-              </div>
-            </div>
+        {/* AGENTI AI — linie subtila */}
+        <section style={{ padding: "8px 20px 44px" }}>
+          <div data-reveal style={{ maxWidth: 780, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
+            <SparkleAnim size={22} />
+            <span style={{ fontSize: 14.5, color: C.muted, fontWeight: 700 }}>
+              Agenții AI sunt <b style={{ color: C.text, fontWeight: 800 }}>incluși în plan</b>, fără costuri separate.
+            </span>
+            <Link href="/instrumente-ai" style={{ fontSize: 14.5, fontWeight: 800, color: C.orangeText, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}>
+              Vezi instrumentele AI →
+            </Link>
           </div>
         </section>
 
