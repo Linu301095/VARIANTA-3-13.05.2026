@@ -166,7 +166,7 @@ export default function Preturi() {
           <div className="ch-orb" style={{ width: 340, height: 340, background: "rgba(255,107,0,.20)", top: -120, left: "14%" }} />
           <div className="ch-orb b" style={{ width: 300, height: 300, background: "rgba(255,140,66,.16)", top: 10, right: "10%" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
-            <div className="ch-hero-anim" style={{ display: "inline-flex", marginBottom: 18, animationDelay: ".05s" }}>
+            <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginBottom: 18, animationDelay: ".05s" }}>
               <IconPlanuri size={64} />
             </div>
             <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}>PLANURI PENTRU SALOANE</div>
@@ -180,10 +180,12 @@ export default function Preturi() {
 
             {/* promo */}
             {promoActiva && (
-              <div className="ch-hero-anim" style={{ display: "inline-flex", alignItems: "center", gap: 9, marginTop: 24, background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "9px 18px", animationDelay: ".38s" }}>
-                <Flame size={16} color={C.orange} strokeWidth={2.2} />
-                <span style={{ fontSize: 13.5, fontWeight: 800, color: C.orangeText }}>
-                  {locuriRamase === null ? "Primele 3 luni gratuite pentru partenerii fondatori" : `Doar ${locuriRamase} din ${LOCURI_PROMO} locuri de partener fondator rămase`}
+              <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginTop: 24, animationDelay: ".38s" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 9, background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "9px 18px" }}>
+                  <Flame size={16} color={C.orange} strokeWidth={2.2} />
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: C.orangeText }}>
+                    {locuriRamase === null ? "Primele 3 luni gratuite pentru partenerii fondatori" : `Doar ${locuriRamase} din ${LOCURI_PROMO} locuri de partener fondator rămase`}
+                  </span>
                 </span>
               </div>
             )}

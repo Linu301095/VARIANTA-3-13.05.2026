@@ -93,7 +93,7 @@ export default function InstrumenteAI() {
           <div className="ch-orb" style={{ width: 340, height: 340, background: "rgba(99,102,241,.14)", top: -120, left: "14%" }} />
           <div className="ch-orb b" style={{ width: 300, height: 300, background: "rgba(255,107,0,.16)", top: 10, right: "10%" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 820, margin: "0 auto", textAlign: "center" }}>
-            <div className="ch-hero-anim" style={{ display: "inline-flex", marginBottom: 22, animationDelay: ".05s" }}>
+            <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginBottom: 22, animationDelay: ".05s" }}>
               <SparkleAnim size={54} glow />
             </div>
             <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}><Sparkle size={13} /> INSTRUMENTE AI · PENTRU SALOANE</div>
