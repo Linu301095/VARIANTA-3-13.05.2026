@@ -63,7 +63,7 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
 
           <nav style={{ display: "flex", flexWrap: "wrap", gap: "12px 24px", alignItems: "center", justifyContent: "flex-end" }}>
             <Link href="/instrumente-ai" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Instrumente AI</Link>
-            <Link href="/preturi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Prețuri</Link>
+            <Link href="/preturi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Planuri</Link>
             <Link href="/despre-noi" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Despre noi</Link>
             <Link href="/contact" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Contact</Link>
             <Link href="/termeni" className="footer-link" style={{ ...linkStyle, display: "inline-block", padding: 0 }}>Termeni și condiții</Link>
