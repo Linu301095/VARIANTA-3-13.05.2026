@@ -31,17 +31,6 @@ const eyebrow: React.CSSProperties = {
   fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
   background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
 };
-const btnPrimary: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-  padding: "14px 26px", borderRadius: 50, background: C.orange, color: "#fff",
-  fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 22px rgba(255,107,0,.32)",
-};
-const btnSecondary: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
-  fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
-};
-
 // Steluță / sparkle — motivul vizual al instrumentelor AI
 function Sparkle({ size = 24, color = C.orange, style }: { size?: number; color?: string; style?: React.CSSProperties }) {
   return (
@@ -162,20 +151,19 @@ export default function InstrumenteAI() {
           </div>
         </section>
 
-        {/* CTA */}
+        {/* CONCLUZIE */}
         <section style={{ padding: "0 20px 76px" }}>
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
               <div style={{ position: "relative", display: "inline-flex", marginBottom: 14 }}><Sparkle size={34} /></div>
-              <h2 style={{ fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>Toate incluse în abonamentul salonului</h2>
-              <p style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12, maxWidth: "54ch", marginLeft: "auto", marginRight: "auto" }}>
-                Fără costuri ascunse, fără integrări complicate. Înscrie-ți salonul și primești primele 3 luni gratuite,
-                cu asistenții AI activați din prima zi.
+              <h2 style={{ fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>
+                Ca și cum ai avea un coleg care nu obosește
+              </h2>
+              <p style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 14, maxWidth: "60ch", marginLeft: "auto", marginRight: "auto" }}>
+                În timp ce tu lucrezi cu clientul din fața ta, asistenții AI se ocupă de restul: răspund la recenzii,
+                îi cheamă înapoi pe cei care n-au mai venit, trimit sfaturi după fiecare vizită și îți spun lunar
+                unde stă salonul tău. <b style={{ color: C.text, fontWeight: 800 }}>Tu rămâi la ce știi mai bine — meseria ta.</b>
               </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Înscrie-ți salonul gratuit →</Link>
-                <Link href="/preturi" style={btnSecondary}>Vezi planurile</Link>
-              </div>
             </div>
           </div>
         </section>
