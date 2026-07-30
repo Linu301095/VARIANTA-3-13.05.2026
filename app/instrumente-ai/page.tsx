@@ -5,6 +5,7 @@ import Footer from "../../components/Footer";
 import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
 import { Star, Users, ClipboardList, Sparkles, Image as ImageIcon, Check } from "lucide-react";
+import { SparkleAnim } from "../../components/SectionIcons";
 
 export const metadata: Metadata = {
   title: "Instrumente AI pentru saloane — CalyHub",
@@ -92,9 +93,8 @@ export default function InstrumenteAI() {
           <div className="ch-orb" style={{ width: 340, height: 340, background: "rgba(99,102,241,.14)", top: -120, left: "14%" }} />
           <div className="ch-orb b" style={{ width: 300, height: 300, background: "rgba(255,107,0,.16)", top: 10, right: "10%" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 820, margin: "0 auto", textAlign: "center" }}>
-            <div className="ch-hero-anim" style={{ position: "relative", display: "inline-flex", marginBottom: 22, animationDelay: ".05s" }}>
-              <div style={{ position: "absolute", inset: -14, background: "radial-gradient(circle, rgba(255,107,0,.28), transparent 70%)", filter: "blur(8px)" }} />
-              <Sparkle size={54} style={{ position: "relative" }} />
+            <div className="ch-hero-anim" style={{ display: "inline-flex", marginBottom: 22, animationDelay: ".05s" }}>
+              <SparkleAnim size={54} glow />
             </div>
             <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}><Sparkle size={13} /> INSTRUMENTE AI · PENTRU SALOANE</div>
             <h1 className="ch-hero-anim" style={{ fontSize: "clamp(34px,5.4vw,54px)", fontWeight: 900, lineHeight: 1.04, letterSpacing: -1.5, color: C.text, animationDelay: ".2s" }}>
@@ -155,7 +155,7 @@ export default function InstrumenteAI() {
         <section style={{ padding: "0 20px 76px" }}>
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
-              <div style={{ position: "relative", display: "inline-flex", marginBottom: 20 }}><Sparkle size={38} /></div>
+              <div style={{ display: "inline-flex", marginBottom: 20 }}><SparkleAnim size={40} glow /></div>
               <h2 style={{ fontSize: "clamp(26px,3.8vw,42px)", fontWeight: 900, letterSpacing: -1.2, lineHeight: 1.12, color: C.text, maxWidth: "24ch", marginLeft: "auto", marginRight: "auto" }}>
                 Agenți AI care lucrează pe <span style={{ color: C.orange }}>datele salonului tău</span>, nu pe generalități.
               </h2>

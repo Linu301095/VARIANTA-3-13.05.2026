@@ -2,6 +2,101 @@ const ORANGE = "#FF6B00";
 const SOFT = "#FFF3EA";
 const BORDER = "#FFDCC6";
 
+/** HUB — noduri care converg spre centru („De ce CalyHub": totul într-un loc) */
+export function IconHub({ size = 60 }: { size?: number }) {
+  const nodes = [
+    { x: 32, y: 13 }, { x: 51, y: 24 }, { x: 51, y: 44 },
+    { x: 32, y: 55 }, { x: 13, y: 44 }, { x: 13, y: 24 },
+  ];
+  return (
+    <span style={{ display: "inline-flex", flexShrink: 0 }} aria-hidden="true">
+      <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+        <rect x="2" y="2" width="60" height="60" rx="17" fill={SOFT} stroke={BORDER} strokeWidth="1.5" />
+        {/* raze */}
+        {nodes.map((n, i) => (
+          <line key={`l${i}`} className="ch-hub-ray" style={{ animationDelay: `${i * 0.16}s` }}
+            x1="32" y1="34" x2={n.x} y2={n.y} stroke={ORANGE} strokeWidth="1.8" strokeLinecap="round" opacity=".35" />
+        ))}
+        {/* noduri */}
+        {nodes.map((n, i) => (
+          <circle key={`n${i}`} className="ch-hub-node" style={{ animationDelay: `${i * 0.16}s` }}
+            cx={n.x} cy={n.y} r="3.6" fill={ORANGE} />
+        ))}
+        {/* centru */}
+        <circle className="ch-hub-core" cx="32" cy="34" r="8" fill={ORANGE} />
+        <circle className="ch-hub-halo" cx="32" cy="34" r="8" stroke={ORANGE} strokeWidth="1.6" opacity="0" />
+      </svg>
+      <style>{`
+        @keyframes chHubNode { 0%,100%{opacity:.45;r:3.2} 50%{opacity:1;r:4.2} }
+        @keyframes chHubRay { 0%,100%{opacity:.2} 50%{opacity:.6} }
+        @keyframes chHubHalo { 0%{opacity:.55;transform:scale(1)} 100%{opacity:0;transform:scale(1.9)} }
+        .ch-hub-halo{transform-origin:32px 34px}
+        @media (prefers-reduced-motion: no-preference){
+          .ch-hub-node{animation:chHubNode 2.6s ease-in-out infinite}
+          .ch-hub-ray{animation:chHubRay 2.6s ease-in-out infinite}
+          .ch-hub-halo{animation:chHubHalo 2.6s ease-out infinite}
+        }
+      `}</style>
+    </span>
+  );
+}
+
+/** VENN — două cercuri cu intersecția care se aprinde („Deținem intersecția") */
+export function IconIntersectie({ size = 60 }: { size?: number }) {
+  return (
+    <span style={{ display: "inline-flex", flexShrink: 0 }} aria-hidden="true">
+      <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+        <defs>
+          <clipPath id="ch-clipL"><circle cx="26" cy="33" r="14" /></clipPath>
+        </defs>
+        <rect x="2" y="2" width="60" height="60" rx="17" fill={SOFT} stroke={BORDER} strokeWidth="1.5" />
+        {/* cele doua cercuri */}
+        <circle className="ch-venn-a" cx="26" cy="33" r="14" stroke={ORANGE} strokeWidth="2.6" />
+        <circle className="ch-venn-b" cx="38" cy="33" r="14" stroke={ORANGE} strokeWidth="2.6" />
+        {/* intersectia = cercul drept decupat de cel stang */}
+        <g clipPath="url(#ch-clipL)">
+          <circle className="ch-venn-fill" cx="38" cy="33" r="14" fill={ORANGE} />
+        </g>
+      </svg>
+      <style>{`
+        @keyframes chVennFill { 0%,18%{opacity:0} 45%,82%{opacity:1} 100%{opacity:0} }
+        @keyframes chVennPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+        .ch-venn-fill{opacity:0}
+        @media (prefers-reduced-motion: no-preference){
+          .ch-venn-fill{animation:chVennFill 3.4s ease-in-out infinite}
+          .ch-venn-a{animation:chVennPulse 3.4s ease-in-out infinite}
+          .ch-venn-b{animation:chVennPulse 3.4s ease-in-out infinite .3s}
+        }
+        @media (prefers-reduced-motion: reduce){ .ch-venn-fill{opacity:1} }
+      `}</style>
+    </span>
+  );
+}
+
+/** STELUȚĂ AI animată (twinkle) — folosită în Home (secțiunea AI) și pe pagina Instrumente AI */
+export function SparkleAnim({ size = 38, glow = false }: { size?: number; glow?: boolean }) {
+  return (
+    <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }} aria-hidden="true">
+      {glow && <span style={{ position: "absolute", inset: -14, background: "radial-gradient(circle, rgba(255,107,0,.28), transparent 70%)", filter: "blur(8px)" }} />}
+      <svg width={size} height={size} viewBox="0 0 24 24" fill={ORANGE} style={{ position: "relative" }}>
+        <path className="ch-sp1" d="M12 1.6l1.75 6.9 6.9 1.75-6.9 1.75L12 18.9l-1.75-6.9L3.35 10.25l6.9-1.75z" style={{ transformOrigin: "12px 10.25px" }} />
+        <path className="ch-sp2" d="M19 2.4l.7 2.55 2.55.7-2.55.7-.7 2.55-.7-2.55-2.55-.7 2.55-.7z" style={{ transformOrigin: "19px 5.65px" }} />
+        <path className="ch-sp3" d="M5 15l.55 2 2 .55-2 .55L5 20.1l-.55-2-2-.55 2-.55z" style={{ transformOrigin: "5px 17.55px" }} />
+      </svg>
+      <style>{`
+        @keyframes chSpMain { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.09) rotate(8deg)} }
+        @keyframes chSpTwinkle { 0%,100%{opacity:.35;transform:scale(.75)} 50%{opacity:1;transform:scale(1.15)} }
+        .ch-sp2{opacity:.75} .ch-sp3{opacity:.6}
+        @media (prefers-reduced-motion: no-preference){
+          .ch-sp1{animation:chSpMain 3s ease-in-out infinite}
+          .ch-sp2{animation:chSpTwinkle 2.2s ease-in-out infinite}
+          .ch-sp3{animation:chSpTwinkle 2.2s ease-in-out infinite 1.1s}
+        }
+      `}</style>
+    </span>
+  );
+}
+
 /* ─────────── Forme reutilizabile ─────────── */
 /** Persoană (cap + umeri) — pentru „pentru tine" */
 const PERSON = (

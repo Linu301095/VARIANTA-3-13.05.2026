@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 import ResetTheme from "../components/ResetTheme";
 import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
-import { IconRezervare, IconCrestere } from "../components/SectionIcons";
+import { IconRezervare, IconCrestere, IconHub, IconIntersectie, SparkleAnim } from "../components/SectionIcons";
 import {
   PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
   Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check,
@@ -155,6 +155,7 @@ export default function HomePage() {
         <section style={{ background: C.surface2, padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
+              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconHub size={60} /></div>
               <div data-reveal style={eyebrow}>DE CE CALYHUB</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Totul, într-un loc care lucrează pentru tine</h2>
               <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Înfrumusețare pentru tine și grooming pentru animalul tău, sub același cont. Prețuri la vedere, istoric salvat și recomandări după fiecare vizită — o experiență digitală completă.</p>
@@ -247,6 +248,7 @@ export default function HomePage() {
             </div>
             {/* Instrumente AI — teaser compact */}
             <div data-reveal style={{ textAlign: "center", maxWidth: 660, margin: "48px auto 0" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><SparkleAnim size={44} glow /></div>
               <div style={eyebrow}><Sparkles size={13} strokeWidth={2.4} /> INSTRUMENTE AI</div>
               <h3 style={{ fontSize: "clamp(20px,2.6vw,26px)", fontWeight: 900, letterSpacing: -0.5, color: C.text, marginTop: 12 }}>Patru asistenți AI care îți cresc afacerea</h3>
               <p style={{ fontSize: 15.5, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>
@@ -265,6 +267,7 @@ export default function HomePage() {
         <section style={{ padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div data-reveal style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconIntersectie size={60} /></div>
               <div style={eyebrow}>AVANTAJUL CALYHUB</div>
               <h2 style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 14 }}>Deținem intersecția</h2>
               <p style={{ fontSize: 17, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 16, maxWidth: "56ch", marginLeft: "auto", marginRight: "auto" }}>
