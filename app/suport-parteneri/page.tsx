@@ -1,201 +1,212 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import Footer from "../../components/Footer";
+import ResetTheme from "../../components/ResetTheme";
+import ScrollReveal from "../../components/ScrollReveal";
+import {
+  Mail, LifeBuoy, Store, SlidersHorizontal, BarChart3, Sparkles,
+  ChevronDown, MessageSquare, type LucideIcon,
+} from "lucide-react";
 
-const CANALE = [
-  { icon: "📧", titlu: "Email prioritar", info: "parteneri@calyhub.ro", desc: "Răspuns în maximum 4 ore în zilele lucrătoare", culoare: "#FF6B00" },
-  { icon: "💬", titlu: "Chat în panou", info: "Disponibil 24/7", desc: "Direct din panoul de control al salonului — buton chat în dreapta jos", culoare: "#10B981" },
-  { icon: "📞", titlu: "Telefon dedicat", info: "0800 123 456", desc: "Luni–Vineri 09:00–18:00 · Apel gratuit din rețele naționale", culoare: "#8B5CF6" },
-  { icon: "📱", titlu: "WhatsApp Business", info: "+40 700 000 000", desc: "Pentru urgențe — răspuns în max. 30 minute în program", culoare: "#22C55E" },
-];
+const C = {
+  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
+  text: "#1A1A1A", muted: "#6B7280", dim: "#9CA3AF",
+  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+};
+const eyebrow: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: 7,
+  fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
+  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+};
+const btnPrimary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: C.orange, color: "#fff",
+  fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 22px rgba(255,107,0,.32)",
+};
+const btnSecondary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
+  fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
+};
+const card: React.CSSProperties = {
+  background: C.surface, border: `1px solid ${C.line}`, borderRadius: 28, padding: 26,
+  boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
+};
+const tile: React.CSSProperties = {
+  background: C.surface, border: `1px solid ${C.line}`, borderRadius: 22, padding: 22,
+  boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
+};
 
-const RESURSE = [
-  { icon: "🚀", titlu: "Ghid de onboarding", desc: "Pași pentru a-ți configura salonul corect: profil, servicii, echipă, program de lucru, fotografii." },
-  { icon: "📚", titlu: "Bază de cunoștințe", desc: "Articole detaliate despre fiecare funcționalitate. Cum gestionezi anulările, cum răspunzi la recenzii, cum activezi notificările SMS." },
-  { icon: "🎥", titlu: "Tutoriale video", desc: "Demonstrații pas-cu-pas pentru cele mai folosite funcții. Sub 5 minute fiecare, perfect pentru pauza de cafea." },
-  { icon: "👥", titlu: "Comunitate parteneri", desc: "Grup privat Facebook unde poți schimba sfaturi cu alți groomeri și saloane partenere CalyHub." },
+const GHIDURI: { Icon: LucideIcon; t: string; d: string; href: string }[] = [
+  { Icon: Store, t: "Cum îți înscrii salonul", d: "Alegi tipul salonului, adaugi servicii, prețuri, echipă și galerie foto.", href: "/cum-functioneaza#parteneri" },
+  { Icon: SlidersHorizontal, t: "Cum configurezi agenda", d: "Orar per specialist, sloturi de 30 de minute și blocări manuale.", href: "/cum-functioneaza#parteneri" },
+  { Icon: BarChart3, t: "Cum citești statisticile", d: "Încasări, top servicii, productivitate per specialist și export Excel.", href: "/cum-functioneaza#parteneri" },
+  { Icon: Sparkles, t: "Cum folosești agenții AI", d: "Recenzii, clienți inactivi, recomandări post-serviciu și consultant de business.", href: "/instrumente-ai" },
 ];
 
 const FAQ_PARTENERI = [
-  { q: "Cum îmi recuperez accesul dacă uit parola?", r: "Click pe \"Ai uitat parola?\" în pagina de conectare. Vei primi un link de resetare pe emailul asociat contului în maximum 2 minute." },
-  { q: "Cum modific prețurile serviciilor?", r: "Intri în panoul de control → Serviciile mele → click pe serviciul dorit. Modificările sunt vizibile clienților în maximum 5 minute. Programările deja confirmate păstrează prețul vechi." },
-  { q: "Ce fac dacă un client nu se prezintă?", r: "Marchezi programarea ca \"neprezentată\" din Agenda. Sistemul aplică automat politica de neprezentare configurată. Clientul cu 3 neprezentări într-un an primește restricție de programare." },
-  { q: "Pot să anulez o programare confirmată?", r: "Da, dar doar din motive justificate. Anulările repetate fără motiv pot duce la suspendarea contului. Clientul este notificat automat și poate face altă programare." },
-  { q: "Când primesc banii din programări?", r: "În 2-3 zile lucrătoare după finalizarea serviciului. Transferurile se fac către IBAN-ul configurat în Setări → Date facturare." },
-  { q: "Pot să-mi schimb planul de abonament?", r: "Da, oricând. Mergi la Abonamentul meu → Schimbă planul. Diferența de preț se calculează proporțional pentru luna în curs." },
-  { q: "Cum răspund la o recenzie negativă?", r: "În panoul Recenzii poți răspunde public la orice review. Recomandăm răspuns profesionist, scuze dacă e cazul, soluție concretă. Niciodată nu replicăm cu agresivitate." },
-  { q: "Pot avea mai mulți utilizatori pentru același salon?", r: "Da, în planul Pro și Business. Mergi la Echipa mea și invită membri cu roluri diferite: groomer, manager, contabil." },
+  { q: "Cum îmi recuperez accesul dacă uit parola?", r: "Apeși pe „Ai uitat parola?” în pagina de conectare. Primești un link de resetare pe emailul asociat contului." },
+  { q: "Cum modific serviciile și prețurile?", r: "Din panoul salonului, la secțiunea de servicii. Modificările apar imediat pe profilul public. Programările deja confirmate păstrează prețul de la momentul rezervării." },
+  { q: "Cum încasez banii de la clienți?", r: "Direct la salon, ca și până acum. CalyHub nu procesează plăți și nu percepe comision pe programări — tu plătești doar abonamentul lunar." },
+  { q: "Ce fac dacă un client nu se prezintă?", r: "Marchezi programarea corespunzător în agendă. Ai istoricul fiecărui client și, dacă e cazul, îl poți bloca din panoul salonului." },
+  { q: "Pot anula o programare confirmată?", r: "Da, din agendă. Clientul primește automat notificare în aplicație și poate alege alt interval." },
+  { q: "Pot avea mai mulți utilizatori pentru același salon?", r: "Da, în planurile Pro și Business. Adaugi specialiștii din secțiunea Echipa mea, fiecare cu orarul lui." },
+  { q: "Cum îmi schimb planul?", r: "Oricând, din secțiunea de abonament a panoului. Poți urca sau coborî planul în funcție de mărimea echipei." },
+  { q: "Cum răspund la o recenzie negativă?", r: "Din secțiunea Recenzii poți răspunde public. Agentul AI îți poate pregăti un răspuns profesional, pe care îl editezi înainte de trimitere." },
 ];
 
 export default function SuportParteneri() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [ticket, setTicket] = useState({ subiect: "", mesaj: "", urgenta: "normala" });
+  const [ticket, setTicket] = useState({ subiect: "", mesaj: "" });
   const [trimis, setTrimis] = useState(false);
 
   function trimiteTicket() {
     if (!ticket.subiect.trim() || !ticket.mesaj.trim()) return;
+    const subject = encodeURIComponent(ticket.subiect.trim());
+    const body = encodeURIComponent(ticket.mesaj.trim());
+    window.location.href = `mailto:parteneri@calyhub.ro?subject=${subject}&body=${body}`;
     setTrimis(true);
-    setTimeout(() => { setTrimis(false); setTicket({ subiect: "", mesaj: "", urgenta: "normala" }); }, 3500);
+    setTimeout(() => { setTrimis(false); setTicket({ subiect: "", mesaj: "" }); }, 3500);
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", boxSizing: "border-box", padding: "13px 16px", borderRadius: 14,
+    border: `1.5px solid ${C.line}`, background: "#fff", fontSize: 15,
+    fontFamily: "Nunito, sans-serif", outline: "none", color: C.text,
+  };
+  const gol = !ticket.subiect.trim() || !ticket.mesaj.trim();
+
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
+      <ResetTheme />
+
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
-          <nav className="hdr-nav" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
-            <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
+          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
       </header>
 
       <main style={{ flex: 1 }}>
-
-        <section style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", padding: "72px 20px", color: "#fff", textAlign: "center" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <div style={{ display: "inline-block", background: "rgba(255,255,255,.15)", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 22, border: "1px solid rgba(255,255,255,.25)" }}>⚡ Suport prioritar pentru parteneri</div>
-            <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, lineHeight: 1.15, marginBottom: 16 }}>
-              Ești partener CalyHub.<br />Te ajutăm să crești.
+        {/* HERO */}
+        <section style={{ position: "relative", overflow: "hidden", padding: "76px 20px 44px" }}>
+          <div className="ch-orb" style={{ width: 320, height: 320, background: "rgba(255,107,0,.18)", top: -130, left: "16%" }} />
+          <div className="ch-orb b" style={{ width: 280, height: 280, background: "rgba(255,140,66,.14)", top: 0, right: "10%" }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
+            <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginBottom: 18, animationDelay: ".05s" }}>
+              <div style={{ width: 60, height: 60, borderRadius: 17, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <LifeBuoy size={27} color={C.orange} strokeWidth={2} />
+              </div>
+            </div>
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}>Suport parteneri</div>
+            <h1 className="ch-hero-anim" style={{ fontSize: "clamp(30px,4.6vw,46px)", fontWeight: 900, lineHeight: 1.06, letterSpacing: -1.4, color: C.text, animationDelay: ".2s" }}>
+              Suntem alături de salonul tău
             </h1>
-            <p style={{ fontSize: 17, lineHeight: 1.7, opacity: .95, maxWidth: 560, margin: "0 auto" }}>
-              Echipa noastră de suport e dedicată exclusiv saloanelor partenere. Răspuns rapid, soluții reale, fără bot-uri.
+            <p className="ch-hero-anim" style={{ margin: "18px auto 0", maxWidth: "54ch", fontSize: 17.5, lineHeight: 1.7, fontWeight: 500, color: C.muted, animationDelay: ".3s" }}>
+              Ghiduri, răspunsuri la întrebările frecvente și o adresă directă de contact. Dacă rămâi blocat undeva,
+              scrie-ne și rezolvăm împreună.
             </p>
+            <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginTop: 24, animationDelay: ".38s" }}>
+              <a href="mailto:parteneri@calyhub.ro" style={btnPrimary}><Mail size={17} strokeWidth={2.2} /> parteneri@calyhub.ro</a>
+            </div>
           </div>
         </section>
 
-        <section style={{ padding: "64px 20px", background: "#fff" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 44 }}>
-              <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 16px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 }}>Canale de contact</div>
-              <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Alege cum vrei să ne contactezi</h2>
+        {/* GHIDURI */}
+        <section style={{ padding: "24px 20px 64px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 30px" }}>
+              <div data-reveal style={eyebrow}>Ghiduri rapide</div>
+              <h2 data-reveal style={{ fontSize: "clamp(22px,3vw,30px)", fontWeight: 900, letterSpacing: -0.6, color: C.text, marginTop: 12 }}>De unde începi</h2>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 18 }}>
-              {CANALE.map(c => (
-                <div key={c.titlu} style={{ background: "#fff", borderRadius: 20, padding: "26px 22px", border: "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)" }}>
-                  <div style={{ fontSize: 32, marginBottom: 14 }}>{c.icon}</div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{c.titlu}</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: c.culoare, marginBottom: 10, wordBreak: "break-all" }}>{c.info}</div>
-                  <div style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.6 }}>{c.desc}</div>
-                </div>
+            <div className="ch-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+              {GHIDURI.map(({ Icon, t, d, href }) => (
+                <Link key={t} href={href} data-reveal className="ch-tile" style={{ ...tile, textDecoration: "none", display: "block" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 11, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                    <Icon size={20} color={C.orange} strokeWidth={2} />
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{t}</div>
+                  <div style={{ fontSize: 12.5, color: C.muted, fontWeight: 600, marginTop: 5, lineHeight: 1.5 }}>{d}</div>
+                </Link>
               ))}
             </div>
           </div>
         </section>
 
-        <section style={{ padding: "20px", background: "#FAFAFA" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", background: "#1A1A1A", borderRadius: 24, padding: "36px 32px", color: "#fff" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 28 }}>
-              {[
-                ["⚡", "4h", "Timp mediu de răspuns"],
-                ["🎯", "98%", "Probleme rezolvate la primul contact"],
-                ["🛡️", "24/7", "Chat în panoul de control"],
-                ["💯", "500+", "Saloane partenere active"],
-              ].map(([icon, val, label]) => (
-                <div key={label as string} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 28, marginBottom: 6 }}>{icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: "#FF8C42" }}>{val}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", fontWeight: 700, marginTop: 4, textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section style={{ padding: "64px 20px", background: "#FAFAFA" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 44 }}>
-              <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 16px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 }}>Resurse utile</div>
-              <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Învață singur, oricând</h2>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 18 }}>
-              {RESURSE.map(r => (
-                <div key={r.titlu} style={{ background: "#fff", borderRadius: 18, padding: "24px 22px", border: "1.5px solid #EBEBEB" }}>
-                  <div style={{ fontSize: 30, marginBottom: 12 }}>{r.icon}</div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, color: "#1A1A1A", marginBottom: 8 }}>{r.titlu}</h3>
-                  <p style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.65 }}>{r.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section style={{ padding: "64px 20px", background: "#fff" }}>
-          <div style={{ maxWidth: 780, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 36 }}>
-              <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 16px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 }}>Întrebări frecvente</div>
-              <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A" }}>Răspunsuri rapide pentru saloane</h2>
+        {/* FAQ */}
+        <section style={{ background: C.surface2, padding: "56px 20px" }}>
+          <div style={{ maxWidth: 860, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 30px" }}>
+              <div data-reveal style={eyebrow}>Întrebări frecvente</div>
+              <h2 data-reveal style={{ fontSize: "clamp(22px,3vw,30px)", fontWeight: 900, letterSpacing: -0.6, color: C.text, marginTop: 12 }}>Ce întreabă partenerii</h2>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {FAQ_PARTENERI.map((item, i) => (
-                <div key={i} style={{ background: "#fff", borderRadius: 14, border: openFaq === i ? "2px solid #FF6B00" : "1.5px solid #EBEBEB", overflow: "hidden" }}>
-                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", gap: 12 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>{item.q}</span>
-                    <span style={{ fontSize: 12, color: "#9CA3AF", flexShrink: 0, transform: openFaq === i ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▼</span>
-                  </button>
-                  {openFaq === i && <div style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.75, padding: "0 20px 16px" }}>{item.r}</div>}
-                </div>
-              ))}
+              {FAQ_PARTENERI.map((f, i) => {
+                const open = openFaq === i;
+                return (
+                  <div key={f.q} data-reveal style={{ background: C.surface, border: `1px solid ${open ? "#FFDCC6" : C.line}`, borderRadius: 20, overflow: "hidden", transition: "border-color .2s" }}>
+                    <button type="button" onClick={() => setOpenFaq(open ? null : i)}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, padding: "18px 22px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
+                      <span style={{ fontSize: 15.5, fontWeight: 800, color: C.text }}>{f.q}</span>
+                      <ChevronDown size={19} color={C.orange} strokeWidth={2.4} style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform .25s" }} />
+                    </button>
+                    {open && (
+                      <div style={{ padding: "0 22px 20px", fontSize: 14.5, color: C.muted, fontWeight: 600, lineHeight: 1.7 }}>{f.r}</div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section style={{ padding: "64px 20px", background: "#FAFAFA" }}>
-          <div style={{ maxWidth: 640, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 30 }}>
-              <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 16px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 }}>Deschide ticket</div>
-              <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: "#1A1A1A", marginBottom: 8 }}>Nu ai găsit răspunsul?</h2>
-              <p style={{ fontSize: 14, color: "#6B7280" }}>Trimite-ne detaliile și primești răspuns prin email în max. 4 ore</p>
+        {/* CONTACT DIRECT */}
+        <section style={{ padding: "56px 20px 76px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 26 }}>
+              <div data-reveal style={eyebrow}><MessageSquare size={13} strokeWidth={2.4} /> Scrie-ne</div>
+              <h2 data-reveal style={{ fontSize: "clamp(22px,3vw,30px)", fontWeight: 900, letterSpacing: -0.6, color: C.text, marginTop: 12 }}>Nu ai găsit răspunsul?</h2>
+              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 10 }}>
+                Descrie pe scurt situația și îți răspundem pe email, în zilele lucrătoare.
+              </p>
             </div>
-
-            {trimis ? (
-              <div style={{ background: "#ECFDF5", border: "2px solid #10B981", borderRadius: 20, padding: "32px 28px", textAlign: "center" }}>
-                <div style={{ fontSize: 44, marginBottom: 12 }}>✅</div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: "#065F46", marginBottom: 8 }}>Ticket trimis cu succes!</div>
-                <div style={{ fontSize: 14, color: "#047857" }}>Vei primi răspuns la emailul contului în maximum 4 ore.</div>
-              </div>
-            ) : (
-              <div style={{ background: "#fff", borderRadius: 20, padding: "28px 26px", border: "1.5px solid #EBEBEB" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Subiect *</label>
-                    <input value={ticket.subiect} onChange={e => setTicket(t => ({ ...t, subiect: e.target.value }))}
-                      placeholder="Ex: Nu pot adăuga un serviciu nou"
-                      style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box" }} />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Nivel urgență</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                      {[["scazuta", "Scăzută", "#10B981"], ["normala", "Normală", "#FF6B00"], ["urgenta", "Urgentă", "#EF4444"]].map(([val, label, col]) => (
-                        <button key={val} onClick={() => setTicket(t => ({ ...t, urgenta: val }))}
-                          style={{ padding: "10px", borderRadius: 10, border: ticket.urgenta === val ? `2px solid ${col}` : "1.5px solid #EBEBEB", background: ticket.urgenta === val ? `${col}15` : "#fff", color: ticket.urgenta === val ? col : "#6B7280", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Descrie problema *</label>
-                    <textarea value={ticket.mesaj} onChange={e => setTicket(t => ({ ...t, mesaj: e.target.value }))}
-                      rows={5}
-                      placeholder="Cu cât mai multe detalii, cu atât te ajutăm mai repede..."
-                      style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1.5px solid #EBEBEB", fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
-                  </div>
-                  <button onClick={trimiteTicket}
-                    style={{ padding: "14px 24px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,107,0,.35)", fontFamily: "Nunito, sans-serif", marginTop: 6 }}>
-                    Trimite ticket →
-                  </button>
+            <div data-reveal className="ch-card" style={card}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 7 }}>Subiect</label>
+                  <input value={ticket.subiect} onChange={(e) => setTicket({ ...ticket, subiect: e.target.value })}
+                    placeholder="Ex: Nu îmi apare salonul în listă" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 7 }}>Mesaj</label>
+                  <textarea value={ticket.mesaj} onChange={(e) => setTicket({ ...ticket, mesaj: e.target.value })}
+                    placeholder="Descrie pe scurt ce se întâmplă…" rows={5} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
+                </div>
+                <button type="button" onClick={trimiteTicket} disabled={gol}
+                  style={{ ...btnPrimary, border: "none", cursor: gol ? "not-allowed" : "pointer", opacity: gol ? 0.55 : 1, fontFamily: "inherit" }}>
+                  {trimis ? "Se deschide emailul…" : "Trimite mesajul"}
+                </button>
+                <div style={{ fontSize: 12.5, color: C.dim, fontWeight: 600, textAlign: "center" }}>
+                  Se deschide clientul tău de email, către <b style={{ color: C.muted }}>parteneri@calyhub.ro</b>
                 </div>
               </div>
-            )}
+            </div>
+            <div data-reveal style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 26, flexWrap: "wrap" }}>
+              <Link href="/cum-functioneaza#parteneri" style={btnSecondary}>Vezi ghidul complet</Link>
+              <Link href="/preturi" style={btnSecondary}>Vezi planurile</Link>
+            </div>
           </div>
         </section>
       </main>
 
       <Footer variant="full" />
+      <ScrollReveal />
     </div>
   );
 }
