@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+import ResetTheme from "../../components/ResetTheme";
+import ScrollReveal from "../../components/ScrollReveal";
+import { FileText, Info } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Termeni și condiții — CalyHub",
   description:
-    "Termenii și condițiile de utilizare a platformei CalyHub pentru programări la saloane de grooming în România.",
+    "Termenii și condițiile de utilizare a platformei CalyHub pentru programări la saloane de înfrumusețare și de grooming din România.",
   alternates: { canonical: "/termeni" },
   robots: { index: true, follow: true },
 };
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
 const SECTIUNI = [
   {
     titlu: "1. Obiectul contractului",
-    continut: `Prezentul document reglementează condițiile de utilizare ale platformei CalyHub, accesibilă la adresa varianta-3-13-05-2026.vercel.app, operată de CalyHub SRL, cu sediul în București, România.
+    continut: `Prezentul document reglementează condițiile de utilizare ale platformei CalyHub, accesibilă la adresa calyhub.ro, operată de CalyHub SRL, cu sediul în București, România.
 
 Prin crearea unui cont și utilizarea serviciilor platformei, utilizatorul acceptă în mod expres și neechivoc termenii și condițiile prezentului document. Dacă nu ești de acord cu acești termeni, te rugăm să nu folosești platforma.`,
   },
@@ -22,10 +25,10 @@ Prin crearea unui cont și utilizarea serviciilor platformei, utilizatorul accep
     titlu: "2. Definiții",
     continut: `• "Platformă" — serviciul online CalyHub, incluzând website-ul, aplicația mobilă și API-urile asociate.
 • "Utilizator" — orice persoană fizică sau juridică care creează un cont pe platformă.
-• "Client" — utilizatorul care caută și rezervă servicii de grooming pentru animalul de companie.
-• "Salon" — utilizatorul de tip persoană juridică sau PFA care oferă servicii de grooming prin intermediul platformei.
-• "Programare" — rezervarea confirmată a unui serviciu de grooming între un Client și un Salon.
-• "Servicii" — toate funcționalitățile oferite de CalyHub, inclusiv calendarul online, notificările SMS și statisticile.`,
+• "Client" — utilizatorul care caută și rezervă servicii de îngrijire, pentru sine sau pentru animalul său de companie.
+• "Salon" — utilizatorul de tip persoană juridică sau PFA care oferă servicii de înfrumusețare (frizerie, coafor, cosmetică, manichiură) sau de grooming pentru animale, prin intermediul platformei.
+• "Programare" — rezervarea confirmată a unui serviciu între un Client și un Salon.
+• "Servicii" — toate funcționalitățile oferite de CalyHub, inclusiv calendarul online, notificările, statisticile și instrumentele AI puse la dispoziția saloanelor.`,
   },
   {
     titlu: "3. Crearea și gestionarea contului",
@@ -39,13 +42,13 @@ Prin crearea unui cont și utilizarea serviciilor platformei, utilizatorul accep
   },
   {
     titlu: "4. Condiții pentru saloane partenere",
-    continut: `4.1. Salonul partener confirmă că desfășoară activitate legală de grooming pe teritoriul României, deținând toate autorizațiile și documentele necesare conform legislației în vigoare.
+    continut: `4.1. Salonul partener confirmă că desfășoară activitate legală pe teritoriul României — de înfrumusețare pentru persoane sau de îngrijire pentru animale de companie — deținând toate autorizațiile și documentele necesare conform legislației în vigoare.
 
 4.2. Salonul se obligă să onoreze toate programările confirmate prin platformă. Anulările repetate sau nejustificate pot duce la suspendarea contului.
 
 4.3. Prețurile afișate pe platformă trebuie să fie reale și actualizate. Este interzisă afișarea de prețuri diferite față de cele practicate efectiv.
 
-4.4. CalyHub percepe un abonament lunar conform planului ales. Primul abonament include o perioadă de trial conform planului selectat. Plata se efectuează prin mijloace electronice securizate.`,
+4.4. CalyHub percepe un abonament lunar conform planului ales și nu percepe comision pe programările efectuate. Plata serviciilor prestate se face direct între Client și Salon, CalyHub neintervenind în această tranzacție.`,
   },
   {
     titlu: "5. Rezervări și anulări",
@@ -65,7 +68,7 @@ Este interzisă reproducerea, distribuirea, modificarea sau utilizarea comercial
   },
   {
     titlu: "7. Limitarea răspunderii",
-    continut: `7.1. CalyHub pune la dispoziție platforma ca intermediar tehnic și nu garantează calitatea serviciilor de grooming prestate de saloanele partenere.
+    continut: `7.1. CalyHub pune la dispoziție platforma ca intermediar tehnic și nu garantează calitatea serviciilor prestate de saloanele partenere.
 
 7.2. CalyHub nu răspunde pentru prejudiciile directe sau indirecte cauzate de: indisponibilitatea temporară a platformei, erori tehnice, forță majoră sau acțiuni ale terților.
 
@@ -85,49 +88,87 @@ Continuarea utilizării platformei după data intrării în vigoare a modificăr
   },
 ];
 
+const C = {
+  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
+  text: "#1A1A1A", text2: "#374151", muted: "#6B7280", dim: "#9CA3AF",
+  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+};
+const eyebrow: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: 7,
+  fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
+  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+};
+
 export default function Termeni() {
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAFA", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
+      <ResetTheme />
+
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
-          <nav className="hdr-nav" style={{ display: "flex", gap: 8 }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
-            <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
+          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
       </header>
 
       <main style={{ flex: 1 }}>
-        <section style={{ background: "#fff", padding: "56px 20px 48px", textAlign: "center" }}>
-          <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Document legal</div>
-          <h1 style={{ fontSize: "clamp(26px,4vw,42px)", fontWeight: 900, color: "#1A1A1A", marginBottom: 12 }}>Termeni și Condiții</h1>
-          <p style={{ fontSize: 15, color: "#6B7280" }}>Ultima actualizare: 14 mai 2026 · Versiunea 1.0</p>
+        {/* HERO */}
+        <section style={{ position: "relative", overflow: "hidden", padding: "72px 20px 40px" }}>
+          <div className="ch-orb" style={{ width: 300, height: 300, background: "rgba(255,107,0,.16)", top: -130, left: "18%" }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
+            <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginBottom: 18, animationDelay: ".05s" }}>
+              <div style={{ width: 58, height: 58, borderRadius: 16, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <FileText size={26} color={C.orange} strokeWidth={2} />
+              </div>
+            </div>
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}>Document legal</div>
+            <h1 className="ch-hero-anim" style={{ fontSize: "clamp(28px,4.4vw,44px)", fontWeight: 900, lineHeight: 1.06, letterSpacing: -1.3, color: C.text, animationDelay: ".2s" }}>
+              Termeni și condiții
+            </h1>
+            <p className="ch-hero-anim" style={{ fontSize: 14.5, color: C.dim, fontWeight: 700, marginTop: 14, animationDelay: ".28s" }}>
+              Ultima actualizare: 14 mai 2026 · Versiunea 1.0
+            </p>
+          </div>
         </section>
 
-        <section style={{ padding: "56px 20px", background: "#fff" }}>
-          <div style={{ maxWidth: 780, margin: "0 auto" }}>
-            <div style={{ background: "#FFF3EA", border: "1px solid #FFDCC6", borderRadius: 16, padding: "18px 22px", marginBottom: 40 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#FF6B00", marginBottom: 4 }}>ℹ️ Rezumat simplu</div>
-              <div style={{ fontSize: 14, color: "#374151", lineHeight: 1.7 }}>
-                Folosești CalyHub ca să găsești sau să oferi servicii de grooming. Datele tale sunt în siguranță, prețurile sunt transparente și poți anula oricând. Citind mai departe găsești toate detaliile legale.
+        {/* CONTINUT */}
+        <section style={{ padding: "20px 20px 76px" }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <div data-reveal style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 24, padding: "22px 26px", marginBottom: 32 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: C.orangeText, marginBottom: 6, display: "flex", alignItems: "center", gap: 7 }}>
+                <Info size={16} strokeWidth={2.4} /> Rezumat pe scurt
+              </div>
+              <div style={{ fontSize: 14.5, color: C.text2, lineHeight: 1.75, fontWeight: 500 }}>
+                Folosești CalyHub ca să găsești sau să oferi servicii de îngrijire — pentru tine sau pentru animalul tău.
+                Datele tale sunt în siguranță, prețurile sunt transparente și poți anula oricând. Mai jos găsești toate detaliile legale.
               </div>
             </div>
 
-            {SECTIUNI.map((s, i) => (
-              <div key={i} style={{ marginBottom: 36, paddingBottom: 36, borderBottom: i < SECTIUNI.length - 1 ? "1px solid #F3F4F6" : "none" }}>
-                <h2 style={{ fontSize: 18, fontWeight: 900, color: "#1A1A1A", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ width: 32, height: 32, borderRadius: 8, background: "#FFF3EA", color: "#FF6B00", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{i + 1}</span>
-                  {s.titlu.replace(/^\d+\. /, "")}
-                </h2>
-                <div style={{ fontSize: 14, color: "#374151", lineHeight: 1.85, whiteSpace: "pre-line" }}>{s.continut}</div>
-              </div>
-            ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {SECTIUNI.map((s, i) => (
+                <div key={i} data-reveal className="ch-card" style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 24, padding: "26px 28px", boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)" }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ width: 32, height: 32, borderRadius: 10, background: C.orangeSoft, color: C.orangeText, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13.5, fontWeight: 900, flexShrink: 0 }}>{i + 1}</span>
+                    {s.titlu.replace(/^\d+\. /, "")}
+                  </h2>
+                  <div style={{ fontSize: 14.5, color: C.muted, fontWeight: 500, lineHeight: 1.85, whiteSpace: "pre-line" }}>{s.continut}</div>
+                </div>
+              ))}
+            </div>
+
+            <div data-reveal style={{ marginTop: 26, textAlign: "center", fontSize: 14, color: C.muted, fontWeight: 600 }}>
+              Ai întrebări despre acest document? Scrie-ne la{" "}
+              <a href="mailto:legal@calyhub.ro" style={{ color: C.orangeText, fontWeight: 800, textDecoration: "none" }}>legal@calyhub.ro</a>
+            </div>
           </div>
         </section>
       </main>
 
       <Footer variant="full" />
+      <ScrollReveal />
     </div>
   );
 }
