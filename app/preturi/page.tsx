@@ -4,35 +4,72 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+import ResetTheme from "../../components/ResetTheme";
+import ScrollReveal from "../../components/ScrollReveal";
 import { supabase } from "../../lib/supabase";
-import { Scissors, Gift, Flame, ArrowRight } from "lucide-react";
+import {
+  Check, Gift, Flame, Sparkles, Wallet, Users, Store, Building2, HelpCircle,
+} from "lucide-react";
 
 type Ciclu = "lunar" | "anual";
 
 const LOCURI_PROMO = 10;
 
+const C = {
+  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
+  text: "#1A1A1A", muted: "#6B7280", dim: "#9CA3AF",
+  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+};
+
+const eyebrow: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: 7,
+  fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
+  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+};
+const btnPrimary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: C.orange, color: "#fff",
+  fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 22px rgba(255,107,0,.32)",
+};
+const btnSecondary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
+  fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
+};
+const tile: React.CSSProperties = {
+  background: C.surface, border: `1px solid ${C.line}`, borderRadius: 22, padding: 22,
+  boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
+};
+const h2s: React.CSSProperties = { fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text };
+const lead: React.CSSProperties = { fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7 };
+
 const PLANURI = [
   {
     id: "basic",
     nume: "Basic",
+    Icon: Store,
     tagline: "Salonul solo",
-    descriere: "Pentru groomer singur sau cu un asistent",
+    descriere: "Pentru un specialist singur sau cu un asistent",
     pretLunar: 69,
     pretAnual: 57,
     badge: null as string | null,
+    recomandat: false,
+    prefix: null as string | null,
     features: [
-      "Până la 2 useri (groomer + asistent)",
-      "Galerie 5 poze",
+      "Până la 2 useri (specialist + asistent)",
+      "Programări nelimitate, agendă digitală",
+      "Profil public + galerie 5 poze",
       "Statistici esențiale — Azi / Lună, rating, recenzii",
       "Raport Excel (perioada curentă)",
       "Remindere WhatsApp nelimitate + 30 SMS / lună",
       "Suport pe email",
-      "✨ Răspunsuri AI la recenzii",
+      "✨ Agent AI: răspunsuri la recenzii",
     ],
   },
   {
     id: "pro",
     nume: "Pro",
+    Icon: Users,
     tagline: "Salon cu echipă",
     descriere: "Pentru saloane în creștere, 3-6 persoane",
     pretLunar: 119,
@@ -42,79 +79,58 @@ const PLANURI = [
     prefix: "Tot ce e în Basic, plus:",
     features: [
       "3-6 useri, fiecare cu orar individual",
-      "Clientul alege specialistul + blocaj per groomer",
+      "Clientul alege specialistul + blocaj per specialist",
       "Galerie 10 poze",
-      "Statistici complete — filtre Azi / Ieri / Săptămână / Lună / An / Interval",
-      "Evoluție lunară, productivitate per groomer, distribuție talie",
+      "Statistici complete — filtre Azi / Săptămână / Lună / An / Interval",
+      "Evoluție lunară și productivitate per specialist",
       "Raport Excel complet (secțiuni selectabile)",
       "Remindere WhatsApp nelimitate + 100 SMS / lună",
       'Badge "Profil verificat"',
-      "✨ Alertă AI clienți inactivi",
+      "✨ Agent AI: alertă clienți inactivi",
     ],
   },
   {
     id: "business",
     nume: "Business",
+    Icon: Building2,
     tagline: "Salon mare / lanț",
-    descriere: "Pentru saloane mari sau cu mai mulți groomeri",
+    descriere: "Pentru saloane mari sau cu mai multe locații",
     pretLunar: 219,
     pretAnual: 182,
     badge: "All-in",
+    recomandat: false,
     prefix: "Tot ce e în Pro, plus:",
     features: [
-      "Useri nelimitați + login individual per groomer (în curând)",
+      "Useri nelimitați + login individual per specialist (în curând)",
       'Listare promovată în oraș — badge "Recomandat"',
       "Remindere WhatsApp + SMS nelimitate",
       "Suport prioritar 24/7 + manager dedicat",
       "Multi-locație (în curând)",
-      "✨ Fișă AI de îngrijire post-grooming",
-      "✨ Consultant AI — rapoarte de business lunare",
-      "✨ Generator AI de postări social media (în curând)",
+      "✨ Agent AI: recomandări post-serviciu",
+      "✨ Agent AI: Consultant de business",
     ],
   },
 ];
 
 const INCLUS_TOATE = [
   "O singură subscripție pe tot salonul — nu plătești per angajat",
+  "0% comision pe programări — încasezi integral la salon",
   "Programări, clienți și animale nelimitate",
   "Pagină publică de rezervări 24/7 + listare în orașul tău",
-  "Calendar + disponibilitate live (slot 30 min, anti-dublă-rezervare)",
+  "Calendar cu disponibilitate live (slot 30 min, anti-dublă-rezervare)",
   "Blocaje manuale (telefonic / walk-in / pauze)",
-  "Prețuri & durate per talie — unic în România",
-  "Remindere WhatsApp automate (confirmare + reminder)",
   "Recenzii + rating · dosar per client · protecție anti-no-show",
-  "Aplicație mobilă · migrare gratuită · backup zilnic",
+  "Web și mobil, cu datele sincronizate în timp real",
 ];
 
-const COMPARATIE: { rand: string; basic: string; pro: string; business: string }[] = [
-  { rand: "Useri", basic: "2", pro: "3-6", business: "∞" },
-  { rand: "Programări nelimitate", basic: "da", pro: "da", business: "da" },
-  { rand: "Prețuri per talie", basic: "da", pro: "da", business: "da" },
-  { rand: "Remindere WhatsApp", basic: "da", pro: "da", business: "da" },
-  { rand: "SMS bonus / lună", basic: "30", pro: "100", business: "∞" },
-  { rand: "Galerie poze", basic: "5", pro: "10", business: "10" },
-  { rand: "Booking pe specialist", basic: "nu", pro: "da", business: "da" },
-  { rand: "Orar individual per groomer", basic: "nu", pro: "da", business: "da" },
-  { rand: "Statistici cu filtre perioadă", basic: "nu", pro: "da", business: "da" },
-  { rand: "Productivitate per groomer", basic: "nu", pro: "da", business: "da" },
-  { rand: "Raport Excel", basic: "Bază", pro: "Complet", business: "Complet" },
-  { rand: "✨ Răspunsuri AI la recenzii", basic: "da", pro: "da", business: "da" },
-  { rand: "✨ Alertă AI clienți inactivi", basic: "nu", pro: "da", business: "da" },
-  { rand: "✨ Fișă AI îngrijire post-grooming", basic: "nu", pro: "nu", business: "da" },
-  { rand: "✨ Consultant AI (rapoarte business)", basic: "nu", pro: "nu", business: "da" },
-  { rand: "✨ Generator AI postări social media", basic: "nu", pro: "nu", business: "în curând" },
-  { rand: "Login separat per groomer", basic: "nu", pro: "nu", business: "în curând" },
-  { rand: "Promovare în oraș", basic: "nu", pro: "nu", business: "da" },
-  { rand: "Multi-locație", basic: "nu", pro: "nu", business: "în curând" },
-  { rand: "Suport", basic: "Email", pro: "Email", business: "24/7 dedicat" },
+const FAQ = [
+  { q: "Se aplică și pentru saloane de înfrumusețare?", a: "Da. Aceleași planuri acoperă și frizeriile, coaforurile, cosmetica și manichiura, și saloanele de grooming. Diferența e doar în felul cum configurezi serviciile." },
+  { q: "Ce înseamnă 0% comision?", a: "Nu luăm nimic din prețul serviciilor. Clientul plătește la salon, integral. Tu plătești doar abonamentul lunar." },
+  { q: "Ce se întâmplă după cele 3 luni gratuite?", a: "Alegi planul potrivit și continui. Nu se activează nimic automat și nu cerem card la înscriere." },
+  { q: "Pot schimba planul mai târziu?", a: "Da, oricând — treci pe un plan superior sau inferior în funcție de cum crește echipa." },
+  { q: "Plata anuală e obligatorie?", a: "Nu. Poți plăti lunar; facturarea anuală vine doar cu un preț mai bun." },
+  { q: "Agenții AI costă separat?", a: "Nu. Sunt incluși în plan, activați din prima zi, fără setări tehnice." },
 ];
-
-function CelulaComparatie({ v }: { v: string }) {
-  if (v === "da") return <span style={{ color: "#16A34A", fontWeight: 900, fontSize: 16 }}>✓</span>;
-  if (v === "nu") return <span style={{ color: "#D1D5DB", fontWeight: 900, fontSize: 16 }}>—</span>;
-  const inCurand = v === "în curând";
-  return <span style={{ fontSize: 12.5, fontWeight: 800, color: inCurand ? "#9CA3AF" : "#1A1A1A", fontStyle: inCurand ? "italic" : "normal" }}>{v}</span>;
-}
 
 export default function Preturi() {
   const [ciclu, setCiclu] = useState<Ciclu>("anual");
@@ -123,175 +139,202 @@ export default function Preturi() {
   useEffect(() => {
     (async () => {
       const { count } = await supabase.from("saloane").select("id", { count: "exact", head: true });
-      if (count !== null && count !== undefined) {
-        setLocuriRamase(Math.max(0, LOCURI_PROMO - count));
-      }
+      if (count !== null && count !== undefined) setLocuriRamase(Math.max(0, LOCURI_PROMO - count));
     })();
   }, []);
 
   const promoActiva = locuriRamase === null || locuriRamase > 0;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #EBEBEB", height: 66 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
+      <ResetTheme />
+
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
-          <nav className="hdr-nav" style={{ display: "flex", gap: 8 }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, border: "1.5px solid #DDD", background: "#fff", fontSize: 14, fontWeight: 700, color: "#1A1A1A", textDecoration: "none" }}>Conectare</Link>
-            <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: "#FF6B00", fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
+          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
       </header>
 
       <main style={{ flex: 1 }}>
         {/* HERO */}
-        <section style={{ background: "#fff", padding: "64px 20px 32px", textAlign: "center" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <div style={{ display: "inline-block", background: "#FFF3EA", color: "#FF6B00", padding: "6px 18px", borderRadius: 50, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Prețuri simple, fără surprize</div>
-            <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, color: "#1A1A1A", lineHeight: 1.15, marginBottom: 18 }}>
-              Totul pentru salon,<br /><span style={{ color: "#FF6B00", display: "inline-flex", alignItems: "center", gap: 8 }}>dintr-un singur abonament. <Scissors size={32} strokeWidth={2} /></span>
-            </h1>
-            <p style={{ fontSize: 17, color: "#6B7280", lineHeight: 1.7, maxWidth: 560, margin: "0 auto" }}>
-              O singură subscripție pe tot salonul — nu plătești per angajat. Programări nelimitate, remindere WhatsApp și statistici reale, incluse.
-            </p>
-          </div>
-        </section>
-
-        {/* BANNER PRIMII 10 */}
-        {promoActiva && (
-          <section style={{ padding: "0 20px 8px" }}>
-            <div style={{ maxWidth: 900, margin: "0 auto", background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 20, padding: "20px 26px", color: "#fff", textAlign: "center", boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
-              <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><Gift size={20} strokeWidth={2} /> Primele 3 luni GRATUITE</div>
-              <div style={{ fontSize: 14, opacity: .95 }}>
-                Doar pentru primele {LOCURI_PROMO} saloane înscrise pe CalyHub.
-                {locuriRamase !== null && (
-                  <strong style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Flame size={14} strokeWidth={2} style={{ flexShrink: 0 }} /><span style={{ whiteSpace: "nowrap" }}>Au mai rămas {locuriRamase} {locuriRamase === 1 ? "loc" : "locuri"} din {LOCURI_PROMO}.</span></strong>
-                )}
+        <section style={{ position: "relative", overflow: "hidden", padding: "76px 20px 40px" }}>
+          <div className="ch-orb" style={{ width: 340, height: 340, background: "rgba(255,107,0,.20)", top: -120, left: "14%" }} />
+          <div className="ch-orb b" style={{ width: 300, height: 300, background: "rgba(255,140,66,.16)", top: 10, right: "10%" }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+            <div className="ch-hero-anim" style={{ display: "inline-flex", marginBottom: 18, animationDelay: ".05s" }}>
+              <div style={{ width: 60, height: 60, borderRadius: 17, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Wallet size={28} color={C.orange} strokeWidth={2} />
               </div>
             </div>
-          </section>
-        )}
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 18, animationDelay: ".12s" }}>PLANURI PENTRU SALOANE</div>
+            <h1 className="ch-hero-anim" style={{ fontSize: "clamp(32px,5vw,50px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -1.5, color: C.text, animationDelay: ".2s" }}>
+              O subscripție pe salon.<br /><span style={{ color: C.orange }}>Nu per angajat.</span>
+            </h1>
+            <p className="ch-hero-anim" style={{ margin: "18px auto 0", maxWidth: "56ch", fontSize: 17.5, lineHeight: 1.7, fontWeight: 500, color: C.muted, animationDelay: ".3s" }}>
+              Aceleași planuri pentru saloane de înfrumusețare și de grooming. Programări nelimitate,
+              0% comision pe rezervări și agenți AI incluși. Primele 3 luni sunt gratuite, fără card la înscriere.
+            </p>
 
-        {/* TOGGLE */}
-        <section style={{ padding: "28px 20px 8px", textAlign: "center" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", background: "#F3F4F6", borderRadius: 50, padding: 4, gap: 2 }}>
-            {([["lunar", "Lunar"], ["anual", "Anual"]] as [Ciclu, string][]).map(([val, label]) => (
-              <button key={val} onClick={() => setCiclu(val)}
-                style={{ padding: "10px 26px", borderRadius: 50, border: "none", background: ciclu === val ? "#FF6B00" : "transparent", color: ciclu === val ? "#fff" : "#6B7280", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
-                {label}
-              </button>
-            ))}
+            {/* promo */}
+            {promoActiva && (
+              <div className="ch-hero-anim" style={{ display: "inline-flex", alignItems: "center", gap: 9, marginTop: 24, background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "9px 18px", animationDelay: ".38s" }}>
+                <Flame size={16} color={C.orange} strokeWidth={2.2} />
+                <span style={{ fontSize: 13.5, fontWeight: 800, color: C.orangeText }}>
+                  {locuriRamase === null ? "Primele 3 luni gratuite pentru partenerii fondatori" : `Doar ${locuriRamase} din ${LOCURI_PROMO} locuri de partener fondator rămase`}
+                </span>
+              </div>
+            )}
+
+            {/* toggle ciclu */}
+            <div className="ch-hero-anim" style={{ display: "inline-flex", gap: 4, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 50, padding: 4, marginTop: 26, boxShadow: "0 2px 16px rgba(120,90,60,.08)", animationDelay: ".46s" }}>
+              {(["lunar", "anual"] as Ciclu[]).map((c) => {
+                const activ = ciclu === c;
+                return (
+                  <button key={c} type="button" onClick={() => setCiclu(c)}
+                    style={{ border: "none", borderRadius: 50, padding: "9px 20px", fontFamily: "inherit", fontSize: 13.5, fontWeight: 800, cursor: "pointer", background: activ ? C.orange : "transparent", color: activ ? "#fff" : C.muted, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                    {c === "lunar" ? "Lunar" : "Anual"}
+                    {c === "anual" && <span style={{ fontSize: 10.5, fontWeight: 900, background: activ ? "rgba(255,255,255,.25)" : "rgba(255,107,0,.12)", color: activ ? "#fff" : C.orangeText, padding: "2px 7px", borderRadius: 50 }}>-17%</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#16A34A", marginTop: 10 }}>La plata anuală: 2 luni gratis (−17%)</div>
         </section>
 
-        {/* INCLUS ÎN TOATE */}
-        <section style={{ padding: "20px 20px 0" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", background: "#FFFBF7", border: "2px solid #FFDCC6", borderRadius: 22, padding: "26px 30px" }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 2, marginBottom: 16 }}>Inclus în toate planurile</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px 24px" }}>
-              {INCLUS_TOATE.map(f => (
-                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: "#4B5563", lineHeight: 1.5 }}>
-                  <span style={{ color: "#FF6B00", fontWeight: 900, flexShrink: 0 }}>✓</span> {f}
+        {/* PLANURI */}
+        <section style={{ padding: "24px 20px 64px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, alignItems: "start" }}>
+              {PLANURI.map((p) => {
+                const pret = ciclu === "anual" ? p.pretAnual : p.pretLunar;
+                return (
+                  <div key={p.id} data-reveal className="plan-card" style={{
+                    position: "relative", background: C.surface, borderRadius: 28, padding: 28,
+                    border: p.recomandat ? `2px solid ${C.orange}` : `1px solid ${C.line}`,
+                    boxShadow: p.recomandat ? "0 20px 50px rgba(255,107,0,.18)" : "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
+                  }}>
+                    {p.badge && (
+                      <span style={{ position: "absolute", top: -12, left: 24, background: p.recomandat ? C.orange : C.text, color: "#fff", fontSize: 10.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", padding: "4px 12px", borderRadius: 50 }}>{p.badge}</span>
+                    )}
+                    <div style={{ width: 46, height: 46, borderRadius: 13, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                      <p.Icon size={23} color={C.orange} strokeWidth={2} />
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{p.nume}</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: C.orangeText, marginTop: 2 }}>{p.tagline}</div>
+                    <div style={{ fontSize: 13, color: C.muted, fontWeight: 600, marginTop: 8, lineHeight: 1.5, minHeight: 40 }}>{p.descriere}</div>
+
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 16 }}>
+                      <span style={{ fontSize: 40, fontWeight: 900, color: C.text, letterSpacing: -1.5 }}>{pret}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: C.muted }}>lei / lună</span>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: C.dim, fontWeight: 700, marginTop: 2 }}>
+                      {ciclu === "anual" ? `facturat anual · ${p.pretLunar} lei dacă plătești lunar` : "facturat lunar"}
+                    </div>
+
+                    <div style={{ height: 1, background: C.line, margin: "18px 0" }} />
+
+                    {p.prefix && <div style={{ fontSize: 12, fontWeight: 800, color: C.orangeText, marginBottom: 10 }}>{p.prefix}</div>}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {p.features.map((f) => (
+                        <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                          <Check size={16} color={C.orange} strokeWidth={2.6} style={{ marginTop: 2, flexShrink: 0 }} />
+                          <span style={{ fontSize: 13, color: C.muted, fontWeight: 600, lineHeight: 1.5 }}>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Link href="/register" style={{ ...(p.recomandat ? btnPrimary : btnSecondary), width: "100%", marginTop: 22 }}>
+                      Începe gratuit →
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div data-reveal style={{ textAlign: "center", fontSize: 13, color: C.dim, fontWeight: 700, marginTop: 22 }}>
+              Fără card la înscriere · 0% comision · anulezi oricând
+            </div>
+          </div>
+        </section>
+
+        {/* INCLUS IN TOATE */}
+        <section style={{ background: C.surface2, padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: 660, margin: "0 auto 34px" }}>
+              <div data-reveal style={eyebrow}><Gift size={13} strokeWidth={2.4} /> Inclus în toate planurile</div>
+              <h2 data-reveal style={{ ...h2s, marginTop: 12 }}>Ce primești, indiferent de plan</h2>
+              <p data-reveal style={{ ...lead, marginTop: 12 }}>Fundația e aceeași pentru toți partenerii. Planurile diferă doar prin mărimea echipei și instrumentele avansate.</p>
+            </div>
+            <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 28px" }}>
+              {INCLUS_TOATE.map((t) => (
+                <div key={t} data-reveal style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
+                  <Check size={18} color={C.orange} strokeWidth={2.6} style={{ marginTop: 2, flexShrink: 0 }} />
+                  <span style={{ fontSize: 14.5, color: C.text, fontWeight: 700, lineHeight: 1.55 }}>{t}</span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* CARDURI PLANURI */}
-        <section style={{ padding: "32px 20px 16px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20, alignItems: "stretch" }}>
-            {PLANURI.map(p => {
-              const pret = ciclu === "lunar" ? p.pretLunar : p.pretAnual;
-              return (
-                <div key={p.id} className="plan-card" style={{
-                  background: "#fff",
-                  borderRadius: 24,
-                  padding: "30px 28px",
-                  border: p.recomandat ? "2.5px solid #FF6B00" : "2px solid #FFDCC6",
-                  position: "relative",
-                  boxShadow: p.recomandat ? "0 12px 36px rgba(255,107,0,.18)" : "0 2px 14px rgba(0,0,0,.05)",
-                  display: "flex",
-                  flexDirection: "column",
-                }}>
-                  {p.badge && (
-                    <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: p.recomandat ? "#16A34A" : "#FF6B00", color: "#fff", fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", padding: "5px 16px", borderRadius: 50, whiteSpace: "nowrap" }}>{p.badge}</div>
-                  )}
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#1A1A1A" }}>{p.nume}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#FF8C42", marginBottom: 6 }}>{p.tagline}</div>
-                  <div style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.5, marginBottom: 18, minHeight: 38 }}>{p.descriere}</div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
-                    <span style={{ fontSize: 40, fontWeight: 900, color: "#1A1A1A", lineHeight: 1 }}>{pret}</span>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: "#6B7280" }}>lei/lună</span>
-                  </div>
-                  <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 20, minHeight: 18 }}>
-                    {ciclu === "anual" ? `Facturat anual (${pret * 12} lei/an)` : `Sau ${p.pretAnual} lei/lună la plata anuală`}
-                  </div>
-                  {p.prefix && <div style={{ fontSize: 12.5, fontWeight: 800, color: "#6B7280", marginBottom: 12 }}>{p.prefix}</div>}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1, marginBottom: 24 }}>
-                    {p.features.map(f => (
-                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: "#374151", lineHeight: 1.5 }}>
-                        <span style={{ color: "#FF6B00", fontWeight: 900, flexShrink: 0 }}>✓</span> {f}
-                      </div>
-                    ))}
-                  </div>
-                  <Link href="/register" style={{ display: "block", textAlign: "center", padding: "13px", borderRadius: 50, background: p.recomandat ? "#FF6B00" : "#fff", color: p.recomandat ? "#fff" : "#FF6B00", fontSize: 14.5, fontWeight: 800, textDecoration: "none", border: p.recomandat ? "none" : "2px solid #FF6B00", marginTop: "auto", boxShadow: p.recomandat ? "0 6px 20px rgba(255,107,0,.35)" : "none" }}>
-                    {promoActiva ? "Începe gratuit 3 luni" : "Alege " + p.nume}
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* TABEL COMPARATIV */}
-        <section style={{ padding: "40px 20px" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto" }}>
-            <h2 style={{ fontSize: "clamp(20px,2.5vw,28px)", fontWeight: 900, color: "#1A1A1A", textAlign: "center", marginBottom: 28 }}>Compară planurile</h2>
-            <div style={{ overflowX: "auto", borderRadius: 18, border: "1.5px solid #EFEFEF" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
-                <thead>
-                  <tr style={{ background: "#FFF3EA" }}>
-                    <th style={{ textAlign: "left", padding: "14px 18px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>Funcție</th>
-                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>Basic</th>
-                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#FF6B00" }}>Pro</th>
-                    <th style={{ padding: "14px 12px", fontSize: 13, fontWeight: 900, color: "#1A1A1A" }}>Business</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {COMPARATIE.map((r, i) => (
-                    <tr key={r.rand} style={{ background: i % 2 === 0 ? "#fff" : "#FAFAFA", borderTop: "1px solid #F0F0F0" }}>
-                      <td style={{ padding: "12px 18px", fontSize: 13, fontWeight: 700, color: "#374151" }}>{r.rand}</td>
-                      <td style={{ padding: "12px", textAlign: "center" }}><CelulaComparatie v={r.basic} /></td>
-                      <td style={{ padding: "12px", textAlign: "center", background: "rgba(255,107,0,.04)" }}><CelulaComparatie v={r.pro} /></td>
-                      <td style={{ padding: "12px", textAlign: "center" }}><CelulaComparatie v={r.business} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* AGENTI AI */}
+        <section style={{ padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div data-reveal className="ch-card" style={{ ...tile, borderRadius: 28, padding: "26px 28px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+              <div style={{ width: 50, height: 50, borderRadius: 14, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Sparkles size={24} color={C.orange} strokeWidth={2} />
+              </div>
+              <div style={{ flex: 1, minWidth: 240 }}>
+                <h3 style={{ fontSize: 19, fontWeight: 900, color: C.text }}>Agenții AI sunt incluși în plan</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, marginTop: 4, lineHeight: 1.55 }}>
+                  Fără costuri separate și fără setări tehnice. Fiecare plan deblochează agenți suplimentari, activați din prima zi.
+                </p>
+              </div>
+              <Link href="/instrumente-ai" style={btnSecondary}>Vezi agenții AI →</Link>
             </div>
           </div>
         </section>
 
-        {/* CTA FINAL */}
-        <section style={{ padding: "20px 20px 64px", textAlign: "center" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto", background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 26, padding: "52px 30px", boxShadow: "0 16px 44px rgba(255,107,0,.28)" }}>
-            <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>Agenda ta plină începe azi</h2>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,.92)", marginBottom: 32, lineHeight: 1.7, maxWidth: 460, marginLeft: "auto", marginRight: "auto" }}>
-              {promoActiva ? "Fii printre primele 10 saloane din rețea și primești 3 luni gratuite. Fără card, fără riscuri." : "Configurezi salonul în câteva minute și începi să primești programări chiar de azi."}
-            </p>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "16px 30px", borderRadius: 50, background: "#fff", color: "#FF6B00", fontSize: "clamp(14px,3.6vw,16px)", fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(0,0,0,.18)", maxWidth: "100%", boxSizing: "border-box" }}>
-              <Scissors size={18} strokeWidth={2.2} style={{ flexShrink: 0 }} />
-              <span style={{ whiteSpace: "nowrap" }}>Înregistrează salonul gratuit</span>
-              <ArrowRight size={18} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-            </Link>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", marginTop: 14 }}>Fără card · Fără comision · Anulezi oricând</div>
+        {/* FAQ */}
+        <section style={{ background: C.surface2, padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: 660, margin: "0 auto 34px" }}>
+              <div data-reveal style={eyebrow}><HelpCircle size={13} strokeWidth={2.4} /> Întrebări despre planuri</div>
+              <h2 data-reveal style={{ ...h2s, marginTop: 12 }}>Ce vor să știe saloanele</h2>
+            </div>
+            <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              {FAQ.map(({ q, a }) => (
+                <div key={q} data-reveal className="ch-tile" style={tile}>
+                  <div style={{ fontSize: 15.5, fontWeight: 900, color: C.text }}>{q}</div>
+                  <div style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, marginTop: 7, lineHeight: 1.6 }}>{a}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section style={{ padding: "64px 20px 76px" }}>
+          <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
+              <h2 style={{ ...h2s, fontSize: "clamp(24px,3.2vw,36px)" }}>Începe cu 3 luni gratuite</h2>
+              <p style={{ ...lead, marginTop: 12, maxWidth: "52ch", marginLeft: "auto", marginRight: "auto" }}>
+                Îți configurezi salonul în câteva minute și primești programări online din prima zi. Fără card, fără comision.
+              </p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+                <Link href="/register" style={btnPrimary}>Înscrie-ți salonul gratuit →</Link>
+                <Link href="/cum-functioneaza#parteneri" style={btnSecondary}>Vezi cum funcționează</Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>
 
       <Footer variant="full" />
+      <ScrollReveal />
     </div>
   );
 }

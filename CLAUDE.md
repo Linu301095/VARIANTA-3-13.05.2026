@@ -50,6 +50,12 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 - Production (Vercel auto-deploy): `main`
 - Pentru ca modificările să apară pe Vercel, trebuie merge din branch-ul de dev în `main` și push pe `main`.
 
+## DE REVIZUIT (direcția nouă: înfrumusețare + grooming)
+
+- **PLANURILE (`app/preturi/page.tsx`) — de revizuit pe parcurs.** Structura actuală (Basic 57/69 · Pro 99/119 · Business 182/219 lei) a fost rescrisă pentru direcția nouă (saloane de înfrumusețare ȘI grooming), dar **prețurile, limitele de useri și distribuția funcțiilor per plan rămân de recalibrat** după ce validăm piața beauty. De reevaluat: dacă un salon de frizerie are nevoie de aceleași limite ca un salon de grooming, dacă „useri" e unitatea corectă de facturare, și dacă 3 planuri sunt suficiente sau trebuie un plan de intrare mai ieftin.
+
+- **AGENȚII AI — de revizuit pe parcurs.** Momentan: răspunsuri la recenzii (Basic), clienți inactivi (Pro), recomandări post-serviciu + Consultant AI (Business), postări sociale (în curând). **De reevaluat**: distribuția pe planuri, dacă „fișă post-grooming" trebuie separată de „recomandări post-serviciu beauty" (prompt-uri diferite), și dacă adăugăm agentul de **predicție rebooking** (relevant mai ales pe beauty, unde frecvența e mare — vezi `docs/BLUEPRINT-MULTI-VERTICALA.md` §9).
+
 ## TODO post-lansare
 
 - **Code splitting pe tab-uri (punctul E din optimizarea de performanță)** — `app/dashboard/client/page.tsx` (~2300 linii) și `app/dashboard/salon/page.tsx` (~2150 linii) sunt fișiere uriașe cu toate tab-urile la un loc. De spart fiecare tab într-un fișier separat (`tabs/saloane.tsx`, `tabs/programari.tsx`, etc.), de creat un Context provider pentru state-ul comun (user, salon, theme, notificari) și de folosit `dynamic(() => import(...))` pentru lazy loading. Estimare: 4-6 ore. Câștig: -40% bundle inițial. De făcut DUPĂ ce restul aplicației e stabilă post-lansare.

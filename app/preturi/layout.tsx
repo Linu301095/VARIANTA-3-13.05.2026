@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Prețuri CalyHub — Abonamente saloane grooming de la 57 lei/lună",
+  title: "Planuri CalyHub — Abonamente pentru saloane, de la 57 lei/lună",
   description:
-    "Planuri CalyHub pentru saloane de grooming: Basic, Pro și Business. Programări nelimitate, prețuri per talie, remindere WhatsApp, statistici și rapoarte Excel. Primele 3 luni gratuite.",
+    "Planurile CalyHub pentru saloane de înfrumusețare și de grooming: Basic, Pro și Business. O singură subscripție pe salon, programări nelimitate, 0% comision și asistenți AI incluși. Primele 3 luni gratuite.",
   alternates: { canonical: "/preturi" },
   keywords: [
+    "planuri calyhub",
     "preturi calyhub",
+    "abonament salon infrumusetare",
     "abonament salon grooming",
-    "software programari grooming",
-    "aplicatie salon caini",
-    "pret platforma grooming romania",
+    "software programari salon",
+    "aplicatie frizerie coafor",
+    "pret platforma salon romania",
   ],
   openGraph: {
-    title: "Prețuri CalyHub — Abonamente saloane grooming de la 57 lei/lună",
+    title: "Planuri CalyHub — Abonamente pentru saloane, de la 57 lei/lună",
     description:
-      "3 planuri pentru saloane de grooming, mai ieftine decât concurența. Remindere WhatsApp, statistici, rapoarte Excel. Primele 3 luni gratuite pentru primele 10 saloane.",
+      "Trei planuri pentru saloane de înfrumusețare și grooming. O subscripție pe salon, nu per angajat. 0% comision, asistenți AI incluși, primele 3 luni gratuite.",
     url: "/preturi",
     type: "website",
   },

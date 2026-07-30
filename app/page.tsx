@@ -8,7 +8,7 @@ import HeroSearch from "../components/HeroSearch";
 import { IconRezervare, IconCrestere, IconHub, IconIntersectie, SparkleAnim } from "../components/SectionIcons";
 import {
   PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
-  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check,
+  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check, Wallet,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -258,6 +258,36 @@ export default function HomePage() {
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 22 }}>
                 <Link href="/instrumente-ai" style={btnPrimary}><Sparkles size={16} strokeWidth={2.4} /> Descoperă instrumentele AI →</Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PLANURI */}
+        <section style={{ background: C.surface2, padding: "64px 20px" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto" }}>
+              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                <div style={{ width: 60, height: 60, borderRadius: 17, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Wallet size={28} color={C.orange} strokeWidth={2} />
+                </div>
+              </div>
+              <div data-reveal style={eyebrow}>PLANURI</div>
+              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Plătești pentru salon, nu pentru fiecare angajat</h2>
+              <p data-reveal style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 14 }}>
+                O singură subscripție acoperă tot salonul — programări nelimitate, fără comision pe rezervări și fără
+                costuri ascunse. Alegi planul după mărimea echipei, nu după cât folosești platforma. Primele 3 luni sunt
+                gratuite, fără card la înscriere.
+              </p>
+              <div data-reveal style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
+                {["Programări nelimitate", "0% comision", "Anulezi oricând", "Asistenți AI incluși"].map((t) => (
+                  <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff", border: `1px solid ${C.line}`, borderRadius: 50, padding: "9px 16px", fontSize: 13, fontWeight: 800, color: C.text }}>
+                    <Check size={15} color={C.orange} strokeWidth={2.8} /> {t}
+                  </span>
+                ))}
+              </div>
+              <div data-reveal style={{ marginTop: 30 }}>
+                <Link href="/preturi" style={btnPrimary}>Vezi planurile →</Link>
               </div>
             </div>
           </div>
