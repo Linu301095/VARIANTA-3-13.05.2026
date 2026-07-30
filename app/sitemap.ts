@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 const SITE_URL = "https://calyhub.ro";
 
 const CITIES = ["bucuresti", "cluj", "timisoara", "iasi", "brasov"];
+const DOMENII = ["infrumusetare", "grooming"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
@@ -21,12 +22,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/confidentialitate`, lastModified, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  const cityRoutes: MetadataRoute.Sitemap = CITIES.map((slug) => ({
-    url: `${SITE_URL}/saloane-grooming-${slug}`,
-    lastModified,
-    changeFrequency: "weekly",
-    priority: 0.9,
-  }));
+  const cityRoutes: MetadataRoute.Sitemap = DOMENII.flatMap((dom) =>
+    CITIES.map((slug) => ({
+      url: `${SITE_URL}/saloane-${dom}-${slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    }))
+  );
 
   return [...staticRoutes, ...cityRoutes];
 }
