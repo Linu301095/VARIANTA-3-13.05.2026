@@ -385,3 +385,9 @@ label:hover {
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 @media (max-width: 900px) { .ch-grid-2, .ch-grid-3, .ch-grid-4 { grid-template-columns: 1fr !important; } }
+
+/* ecrane de acces (conectare / inregistrare / parola) */
+.ch-cta:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,107,0,.42) !important; }
+.ch-cta:not(:disabled):active { transform: translateY(0); }
+.ch-social:hover { border-color: #FFC9A0 !important; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,26,26,.07); }
+@media (hover: none) { .ch-cta:hover, .ch-social:hover { transform: none; box-shadow: none; } }

@@ -3,8 +3,15 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Conectare — Intră în contul tău CalyHub",
   description:
-    "Conectează-te la contul tău CalyHub pentru a gestiona programările la salonul de grooming sau pentru a administra propriul salon.",
+    "Conectează-te la contul tău CalyHub pentru programările tale la salon — de înfrumusețare sau de grooming — ori pentru a administra agenda propriului salon.",
   alternates: { canonical: "/login" },
+  keywords: ["conectare CalyHub", "login salon", "cont CalyHub", "programari salon infrumusetare", "programari grooming"],
+  openGraph: {
+    title: "Conectare — CalyHub",
+    description: "Intră în contul tău CalyHub: programările tale sau agenda salonului.",
+    url: "/login",
+    type: "website",
+  },
   robots: { index: true, follow: true },
 };
 
