@@ -8,7 +8,7 @@ import HeroSearch from "../components/HeroSearch";
 import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim } from "../components/SectionIcons";
 import {
   PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
-  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check,
+  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check, Bell,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -198,6 +198,7 @@ export default function HomePage() {
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț exact</b> pe talia animalului tău</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Profil animal</b> cu rasă, talie și istoricul vizitelor</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Recomandări de îngrijire</b> după fiecare tuns</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Reminder pe WhatsApp sau SMS</b>, cu 24 de ore înainte</>)}
                 </div>
               </div>
               <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
@@ -209,6 +210,7 @@ export default function HomePage() {
                   {chk(<>Rezervi cu <b style={{ color: C.text, fontWeight: 800 }}>specialistul preferat</b> și ora aleasă</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Tot istoricul serviciilor</b>, într-un singur cont</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Sfaturi de îngrijire</b> după fiecare vizită</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Reminder pe WhatsApp sau SMS</b>, cu 24 de ore înainte</>)}
                 </div>
               </div>
             </div>
@@ -234,7 +236,7 @@ export default function HomePage() {
                 { Icon: Users, t: "Calendar per specialist", d: "Orar individual, sloturi de 30 min, anti-dublă-rezervare." },
                 { Icon: Star, t: "Clienți fideli", d: "Recenzii, istoric per client și reactivare automată." },
                 { Icon: Smartphone, t: "Web și mobil", d: "Aceleași date, sincronizate în timp real, oriunde ești." },
-                { Icon: Gift, t: "3 luni gratuite", d: "Fără comision, cu suport dedicat pentru parteneri." },
+                { Icon: Bell, t: "Remindere automate", d: "Trimise pe WhatsApp și SMS, fără efort din partea ta. Cea mai simplă metodă de a reduce neprezentările." },
               ].map(({ Icon, t, d }) => (
                 <div key={t} data-reveal className="ch-tile" style={tile}>
                   <div style={{ width: 40, height: 40, borderRadius: 11, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={20} color={C.orange} strokeWidth={2} /></div>

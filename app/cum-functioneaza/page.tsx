@@ -7,7 +7,7 @@ import ScrollReveal from "../../components/ScrollReveal";
 import { IconClienti, IconFoarfeca } from "../../components/SectionIcons";
 import {
   PawPrint, Scissors, Search, Calendar, Bell, Store, SlidersHorizontal, BarChart3,
-  Sparkles, Check, Tag, Clock, Star, Users, Smartphone, Gift, ShieldCheck, CreditCard,
+  Sparkles, Check, Tag, Clock, Star, Users, Smartphone, Gift, CreditCard,
   HelpCircle, ClipboardList, MessageSquare, type LucideIcon,
 } from "lucide-react";
 
@@ -73,7 +73,7 @@ const PASI_CLIENT: Step[] = [
   {
     nr: "03", Icon: Bell, t: "Primești confirmarea",
     d: "Salonul confirmă direct în aplicație, iar tu primești notificare. După vizită, lași o recenzie.",
-    puncte: ["Confirmare în aplicație, fără telefoane", "Istoric salvat automat", "Recomandări de îngrijire după vizită"],
+    puncte: ["Confirmare în aplicație, fără telefoane", "Reminder pe WhatsApp sau SMS înainte de vizită", "Istoric salvat și recomandări după vizită"],
   },
 ];
 
@@ -200,7 +200,7 @@ export default function CumFunctioneaza() {
               {[
                 { Icon: Tag, t: "Prețuri la vedere", d: "Vezi cât plătești înainte să rezervi, fără surprize la final." },
                 { Icon: Clock, t: "Istoric complet", d: "Toate vizitele tale și ale animalului, într-un singur loc." },
-                { Icon: Bell, t: "Notificări în aplicație", d: "Confirmare, reamintiri și mesaje de la salon, fără telefoane." },
+                { Icon: Bell, t: "Nu mai uiți de programare", d: "Cu 24 de ore înainte primești un reminder pe WhatsApp sau SMS. Simplu, fără să stai cu ochii pe calendar." },
                 { Icon: Star, t: "Recenzii verificate", d: "Alegi în siguranță, pe baza experienței altor clienți." },
                 { Icon: Sparkles, t: "Recomandări după vizită", d: "Sfaturi de îngrijire personalizate, trimise de salon." },
                 { Icon: Smartphone, t: "Web și mobil", d: "Rezervi de pe laptop, continui de pe telefon — aceleași date." },
@@ -244,7 +244,7 @@ export default function CumFunctioneaza() {
                 { Icon: Users, t: "Echipa ta", d: "Specialiști cu orar individual, servicii proprii și performanță vizibilă." },
                 { Icon: ClipboardList, t: "Dosar per client", d: "Istoricul fiecărui client și al fiecărui animal, la un click distanță." },
                 { Icon: MessageSquare, t: "Recenzii și rating", d: "Rating agregat pe profilul public, cu răspunsuri generate de AI." },
-                { Icon: ShieldCheck, t: "Control total", d: "Blocări manuale, confirmare/refuz și protecție împotriva no-show." },
+                { Icon: Bell, t: "Remindere automate", d: "Trimise pe WhatsApp și SMS, fără efort din partea ta. Cea mai simplă metodă de a reduce neprezentările." },
               ].map(({ Icon, t, d }) => (
                 <div key={t} data-reveal className="ch-tile" style={tile}>
                   <div style={{ width: 40, height: 40, borderRadius: 11, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={20} color={C.orange} strokeWidth={2} /></div>
