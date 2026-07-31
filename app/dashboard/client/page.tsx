@@ -416,12 +416,10 @@ export default function DashboardClient() {
         }
       }
 
+      // Animalul e optional: clientul fara animal ramane in cont, in lumea de infrumusetare.
       if (animaleData && animaleData.length > 0) {
         setAnimale(animaleData);
         setSelectedAnimalId(animaleData[0].id);
-      } else if (profile?.tip === "client") {
-        router.push("/register/configurare-animal");
-        return;
       }
 
       if (dbSaloane && dbSaloane.length > 0) {
