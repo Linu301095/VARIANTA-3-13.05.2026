@@ -1,6 +1,31 @@
 # CalyHub — Reguli proiect
 
-## ÎN LUCRU — Categoria C: ecrane de acces (7 pagini, etapizat)
+## ÎN LUCRU — Capitolul D: DASHBOARDURI (prioritate maximă)
+
+Am întrerupt intenționat categoria C după Etapa 3 ca să facem dashboardurile, pentru că
+ele sunt partea care decide dacă un salon de înfrumusețare rămâne sau pleacă.
+**DE REVENIT după: Etapa 5 (Abonament salon), Etapa 6 (Ai uitat parola), Etapa 7 (Resetare parolă).**
+
+| # | Etapa | Ce cuprinde | Stare |
+|---|---|---|---|
+| D1 | Clientul fără animal | Comutator „Pentru tine / Pentru animalul tău", căutare filtrată pe domeniu, rezervare fără animal la înfrumusețare | ⬜ urmează |
+| D2 | Limbajul dashboardului client | „groomer" → „specialist" unde e beauty, talia doar la grooming | ⬜ |
+| D3 | Dashboardul salonului pe verticală | Echipă, agendă, tabul „Animale" ascuns la beauty, prețuri fără talie | ⬜ |
+| D4 | Statistici + agenți AI pe verticală | Rapoartele și prompturile AI vorbesc limba verticalei | ⬜ |
+
+**Context măsurat (31.07.2026):** `app/dashboard/salon/page.tsx` (~2150 linii) conține 95 apariții
+„groomer", 152 „animal", 98 „talie". `app/dashboard/client/page.tsx` (~2570 linii) conține
+65 „groomer", 181 „animal", 47 „talie". Toată aplicația reală (căutare, profil salon, rezervare,
+agendă, statistici) stă în aceste două fișiere.
+
+**Regula pe care se sprijină tot capitolul (stabilită de utilizator):** un singur cont de client,
+cu profil de persoană; animalul e opțional. Fără animal → vede doar lumea de înfrumusețare.
+Cu animal → comutator între „Pentru tine" și „Pentru animalul tău". Animalul se poate adăuga
+oricând. Ca să rezervi la grooming trebuie să ai un animal în cont; la înfrumusețare nu.
+
+---
+
+## Categoria C: ecrane de acces (7 pagini, etapizat) — ÎN PAUZĂ după D
 
 Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 
