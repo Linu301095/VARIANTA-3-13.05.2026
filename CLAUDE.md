@@ -8,9 +8,9 @@ Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 |---|---|---|---|
 | 1 | Conectare | `app/login/page.tsx` | ✅ gata (30.07.2026) |
 | 2 | Înregistrare | `app/register/page.tsx` | ✅ gata (31.07.2026) |
-| 3 | Configurare animal | `app/register/configurare-animal/page.tsx` | ⬜ urmează |
+| 3 | Configurare animal | `app/register/configurare-animal/page.tsx` | ✅ gata (31.07.2026) — animalul e opțional |
 | 4 | Configurare salon | `app/register/configurare-salon/page.tsx` | ✅ gata (31.07.2026) — făcut odată cu Etapa 2, fiind dependent de verticală |
-| 5 | Abonament salon | `app/register/abonament-salon/page.tsx` | ⬜ |
+| 5 | Abonament salon | `app/register/abonament-salon/page.tsx` | ⬜ urmează |
 | 6 | Ai uitat parola | `app/forgot-password/page.tsx` | ⬜ |
 | 7 | Resetare parolă | `app/reset-password/page.tsx` | ⬜ |
 
@@ -21,7 +21,11 @@ Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 3. **Bannerul „3 luni gratuite pentru parteneri fondatori"** — scos din `/register`. A rămas doar mențiunea sobră „Fără card la înscriere · 0% comision".
 4. **Bifa de Termeni** — obligatorie ȘI salvată în bază (`profiluri.termeni_acceptati_la` + `termeni_versiune`), ca să existe dovada consimțământului.
 
-**SQL de rulat în Supabase:** `sql/etapa2_domeniu_si_termeni.sql` (adaugă `saloane.domeniu`, coloanele de termeni și indexul domeniu+oraș).
+**SQL de rulat în Supabase:**
+- `sql/etapa2_domeniu_si_termeni.sql` — ✅ rulat (adaugă `saloane.domeniu`, coloanele de termeni, index domeniu+oraș)
+- `sql/etapa3_animal_optional.sql` — face opționale coloanele `sex`, `rasa`, `greutate`, `varsta`, `alergii` din `animale`
+
+**Atenție:** `TERMENI_VERSIUNE` din `app/register/page.tsx` trebuie schimbat ori de câte ori se modifică textul din Termeni sau Confidențialitate.
 
 **Ce NU se atinge în categoria C:** logica Supabase existentă (`signInWithPassword`, `signUp`, upsert profil, temă, redirect pe rol) și OAuth-ul social — butoanele Google/Facebook/telefon rămân decorative până la etapa lor din TODO-ul de lansare.
 

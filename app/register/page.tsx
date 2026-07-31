@@ -224,6 +224,27 @@ export default function RegisterPage() {
               </button>
             </div>
 
+            {/* ── Ce înseamnă un cont de client ── */}
+            {tip === "client" && (
+              <div style={{ marginBottom: 20, background: "var(--pub-surface2)", border: `1px solid ${C.line}`, borderRadius: 18, padding: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 10 }}>Un singur cont, pentru amândouă lumile</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                    <Scissors size={15} color={C.orange} strokeWidth={2.2} style={{ marginTop: 2, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12.5, color: C.muted, fontWeight: 600, lineHeight: 1.5 }}>
+                      Rezervi pentru tine la frizerie, coafor, manichiură sau cosmetică.
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                    <PawPrint size={15} color={C.orange} strokeWidth={2.2} style={{ marginTop: 2, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12.5, color: C.muted, fontWeight: 600, lineHeight: 1.5 }}>
+                      Ai un animal? Îl adaugi când vrei și rezervi și la grooming, din același cont.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── Verticala salonului (doar pentru saloane) ── */}
             {tip === "salon" && (
               <div style={{ marginBottom: 20, background: "var(--pub-surface2)", border: `1px solid ${C.line}`, borderRadius: 18, padding: 16 }}>
