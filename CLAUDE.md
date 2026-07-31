@@ -7,18 +7,21 @@ Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 | # | Etapa | Fișier | Stare |
 |---|---|---|---|
 | 1 | Conectare | `app/login/page.tsx` | ✅ gata (30.07.2026) |
-| 2 | Înregistrare | `app/register/page.tsx` | ⬜ urmează |
-| 3 | Configurare animal | `app/register/configurare-animal/page.tsx` | ⬜ |
-| 4 | Configurare salon | `app/register/configurare-salon/page.tsx` | ⬜ |
+| 2 | Înregistrare | `app/register/page.tsx` | ✅ gata (31.07.2026) |
+| 3 | Configurare animal | `app/register/configurare-animal/page.tsx` | ⬜ urmează |
+| 4 | Configurare salon | `app/register/configurare-salon/page.tsx` | ✅ gata (31.07.2026) — făcut odată cu Etapa 2, fiind dependent de verticală |
 | 5 | Abonament salon | `app/register/abonament-salon/page.tsx` | ⬜ |
 | 6 | Ai uitat parola | `app/forgot-password/page.tsx` | ⬜ |
 | 7 | Resetare parolă | `app/reset-password/page.tsx` | ⬜ |
 
-**Decizii deschise, de discutat la momentul potrivit (NU se implementează până nu confirmă utilizatorul):**
+**Decizii luate (31.07.2026):**
 
-1. **Unde alege salonul verticala** (Înfrumusețare / Grooming) — la înregistrare (Etapa 2) sau în wizardul de configurare (Etapa 4)? Recomandarea mea: la înregistrare, pentru că wizardul depinde de verticală (servicii, denumiri de rol). Utilizatorul a cerut explicit să revenim la discuție înainte de Etapa 2.
-2. **Coloană nouă în DB pentru verticală** — nu există nicăieri (`profiluri` salvează doar `tip`, `nume`, `telefon`). Indiferent de răspunsul la punctul 1, e nevoie de `saloane.domeniu` (enum `infrumusetare | grooming`) + metadata în `signUp`.
-3. **Bannerul „3 luni gratuite pentru parteneri fondatori · 0% comision"** din `app/register/page.tsx` — pe Home a fost scos și înlocuit cu „Remindere automate". Rămâne sau se scoate și de aici? (recomand scos, ca să nu promitem lucruri diferite în două locuri)
+1. **Verticala se alege la ÎNREGISTRARE**, nu în wizard (varianta A). Motiv: wizardul depinde de ea (servicii, denumiri de rol, specii), iar alegerea e ireversibilă → stă la vedere, la început.
+2. **Salvarea verticalei — varianta 1:** merge în metadata `signUp` + `sessionStorage`, iar în tabelul `saloane` se scrie la finalul wizardului. Nu creăm rând în `saloane` la înregistrare (ar umple baza cu saloane fantomă).
+3. **Bannerul „3 luni gratuite pentru parteneri fondatori"** — scos din `/register`. A rămas doar mențiunea sobră „Fără card la înscriere · 0% comision".
+4. **Bifa de Termeni** — obligatorie ȘI salvată în bază (`profiluri.termeni_acceptati_la` + `termeni_versiune`), ca să existe dovada consimțământului.
+
+**SQL de rulat în Supabase:** `sql/etapa2_domeniu_si_termeni.sql` (adaugă `saloane.domeniu`, coloanele de termeni și indexul domeniu+oraș).
 
 **Ce NU se atinge în categoria C:** logica Supabase existentă (`signInWithPassword`, `signUp`, upsert profil, temă, redirect pe rol) și OAuth-ul social — butoanele Google/Facebook/telefon rămân decorative până la etapa lor din TODO-ul de lansare.
 
