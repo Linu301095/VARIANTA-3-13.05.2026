@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useMemo, useContext, createContext } from "react";
+import { useState, useEffect, useMemo, useRef, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
@@ -21,7 +21,11 @@ const SALOANE = [
 ];
 
 type ServiciuOferitC = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type SalonItem = { id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type Domeniu = "infrumusetare" | "grooming";
+/** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
+type Lume = "tine" | "animal";
+const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
+type SalonItem = { domeniu?: Domeniu; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -46,6 +50,7 @@ function mapSalonDB(s: any, i: number): SalonItem {
   const pretDe = preturi.length > 0 ? Math.min(...preturi) : 0;
   const numeServicii = serviciiComplete.map(sv => sv.nume).slice(0, 3);
   return {
+    domeniu: s.domeniu === "infrumusetare" ? "infrumusetare" : "grooming",
     id: s.id,
     nume: s.nume || "Salon",
     oras: s.oras || "România",
@@ -250,6 +255,9 @@ export default function DashboardClient() {
   const [editingAnimalId, setEditingAnimalId] = useState<string | null>(null);
   const [showAddAnimal, setShowAddAnimal] = useState(false);
   const [tab, setTab] = useState<Tab>("saloane");
+  // Lumea activa. Implicit "tine" (infrumusetare) — animalul e optional.
+  const [lume, setLume] = useState<Lume>("tine");
+  const lumeAleasa = useRef(false);
   const [salonSelectat, setSalonSelectat] = useState<string | number | null>(null);
   const [saloaneList, setSaloaneList] = useState<SalonItem[]>(SALOANE);
   const [rezervare, setRezervare] = useState<{ salonId: string | number; servicii: string[]; ora: string } | null>(null);
@@ -293,6 +301,38 @@ export default function DashboardClient() {
   const [ratinguriSaloane, setRatinguriSaloane] = useState<Record<string, { medie: number; nr: number }>>({});
   const [recenziiProgramari, setRecenziiProgramari] = useState<Record<string, { id: string; rating: number; text: string }>>({});
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
+  const areAnimal = animale.length > 0;
+  const domeniuLume = LUME_DOMENIU[lume];
+
+  // Fara animal in cont, exista o singura lume: infrumusetarea.
+  useEffect(() => {
+    if (!areAnimal && lume !== "tine") setLume("tine");
+  }, [areAnimal, lume]);
+
+  // Tinem minte ultima lume aleasa, ca sa nu o reseteze la fiecare intrare.
+  useEffect(() => {
+    try {
+      const salvat = localStorage.getItem("calyhub_lume");
+      if (salvat === "animal" || salvat === "tine") { setLume(salvat); lumeAleasa.current = true; }
+    } catch {}
+  }, []);
+
+  // Prima intrare, fara preferinta salvata: cine are animal porneste in lumea lui.
+  useEffect(() => {
+    if (!lumeAleasa.current && areAnimal) { setLume("animal"); lumeAleasa.current = true; }
+  }, [areAnimal]);
+
+  function schimbaLume(l: Lume) {
+    setLume(l);
+    lumeAleasa.current = true;
+    try { localStorage.setItem("calyhub_lume", l); } catch {}
+    setSalonSelectat(null);
+    setRezervare(null);
+    setRezervareActiva(false);
+    setGroomerSelectat(null);
+    setCautare("");
+    setFiltruServiciu("");
+  }
 
   useEffect(() => {
     const mobil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches);
@@ -362,7 +402,7 @@ export default function DashboardClient() {
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
-        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere").order("created_at", { ascending: false }),
+        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu").order("created_at", { ascending: false }),
       ]);
 
       if (profile) {
@@ -650,6 +690,9 @@ export default function DashboardClient() {
   const prenume = user?.nume?.split(" ")[0] || "Utilizator";
   const necitite = notificari.filter(n => !n.citit).length;
   const salon = saloaneList.find(s => s.id === salonSelectat);
+  // Doar saloanele de grooming au nevoie de un animal si de talie pentru pret.
+  const salonCereAnimal = (salon?.domeniu || "grooming") === "grooming";
+  const talieBooking = salonCereAnimal ? animal?.talie : undefined;
   const inp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", background: c.input, color: c.text };
 
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
@@ -717,7 +760,7 @@ export default function DashboardClient() {
     for (const nume of rezervare.servicii) {
       const svBaza = salon.serviciiComplete.find(s => s.nume === nume);
       const sv = groomerObj && svBaza ? serviciuPentruGroomer(svBaza, groomerObj) : svBaza;
-      const { pret: pStr, durata: dStr } = getPretDurata(sv, animal?.talie);
+      const { pret: pStr, durata: dStr } = getPretDurata(sv, talieBooking);
       pretNumeric += Number(pStr) || 0;
       durataNumeric += Number(dStr) || 0;
     }
@@ -731,11 +774,11 @@ export default function DashboardClient() {
       .insert({
         user_id: authUser.id,
         salon_id: salon.id,
-        animal_id: animal?.id || null,
+        animal_id: salonCereAnimal ? (animal?.id || null) : null,
         serviciu: serviciuJoined,
         pret: pretNumeric,
         durata: durataNumeric,
-        talie_animal: animal?.talie || null,
+        talie_animal: salonCereAnimal ? (animal?.talie || null) : null,
         data: dataIso,
         ora: rezervare.ora,
         status: "în așteptare",
@@ -770,7 +813,9 @@ export default function DashboardClient() {
       await supabase.from("notificari").insert({
         user_id: salonRow.user_id,
         tip: "programare_noua",
-        mesaj: `🐾 ${user?.nume || "Un client"} a solicitat o programare pentru ${animal?.nume || "animăluțul său"} — ${serviciuJoined}`,
+        mesaj: salonCereAnimal
+          ? `${user?.nume || "Un client"} a solicitat o programare pentru ${animal?.nume || "animalul său"} — ${serviciuJoined}`
+          : `${user?.nume || "Un client"} a solicitat o programare — ${serviciuJoined}`,
         programare_id: nou.id,
       });
     }
@@ -788,14 +833,14 @@ export default function DashboardClient() {
   if (confirmat && rezervare && salon) {
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl} lume={lume} onLume={schimbaLume} areAnimal={areAnimal}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
             <div style={{ textAlign: "center", maxWidth: 460, width: "100%" }}>
               <div style={{ width: 80, height: 80, borderRadius: "50%", background: c.orangeAccent, border: "3px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}><CheckCircle2 size={40} color="#FF6B00" strokeWidth={2} /></div>
               <h1 style={{ fontSize: 24, fontWeight: 900, color: c.text, marginBottom: 10 }}>Programare trimisă!</h1>
               <p style={{ fontSize: 14, color: c.muted, marginBottom: 24, lineHeight: 1.7 }}>Salonul va confirma în curând. Vei primi notificare când se aprobă.</p>
               <div style={{ background: c.surface, border: "2px solid #FF6B00", borderRadius: 20, padding: "20px 24px", marginBottom: 24, textAlign: "left" }}>
-                {[["Salon", salon.nume], ["Serviciu", rezervare.servicii.join(" + ")], ["Data", new Date(dataSelectata + "T00:00:00").toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" })], ["Ora", rezervare.ora], ["Animal", animal?.nume || "Animăluțul tău"]].map(([k, v]) => (
+                {([["Salon", salon.nume], ["Serviciu", rezervare.servicii.join(" + ")], ["Data", new Date(dataSelectata + "T00:00:00").toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" })], ["Ora", rezervare.ora], ...(salonCereAnimal ? [["Animal", animal?.nume || "Animalul tău"]] : [])] as [string, string][]).map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "8px 0", borderBottom: `1px solid ${c.border2}` }}>
                     <span style={{ color: c.muted }}>{k}</span><span style={{ fontWeight: 700, color: c.text }}>{v}</span>
                   </div>
@@ -861,7 +906,7 @@ export default function DashboardClient() {
       let durataSv = 0;
       const durateAll: number[] = [];
       for (const sv of serviciiObj) {
-        const { durata: dStr } = getPretDurata(sv, animal?.talie);
+        const { durata: dStr } = getPretDurata(sv, talieBooking);
         const dNum = Number(dStr) || 0;
         durataSv += dNum;
         if (dNum > 0) durateAll.push(dNum);
@@ -913,7 +958,7 @@ export default function DashboardClient() {
       const sloturiLibere = sloturiZiSel.filter(s => !s.ocupat && !s.trecut);
 
       let totalPretSlot = 0;
-      for (const sv of serviciiObj) { const { pret } = getPretDurata(sv, animal?.talie); totalPretSlot += Number(pret) || 0; }
+      for (const sv of serviciiObj) { const { pret } = getPretDurata(sv, talieBooking); totalPretSlot += Number(pret) || 0; }
       const etZi = etichetaZiC(dataSelectata);
       const ziLabel = etZi.prefix ? `${etZi.prefix.toLowerCase()}` : etZi.rest.split(",")[0].toLowerCase();
 
@@ -974,7 +1019,7 @@ export default function DashboardClient() {
       if (etapaBooking === "specialist") {
         return (
           <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-            <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl} onBack={() => { setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); }} backLabel="Profil salon">
+            <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl} lume={lume} onLume={schimbaLume} areAnimal={areAnimal} onBack={() => { setRezervareActiva(false); setRezervare(null); setGroomerSelectat(null); }} backLabel="Profil salon">
               <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14, background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, padding: "14px 18px", marginBottom: 22 }}>
                   {salon.poza_url
@@ -1018,7 +1063,7 @@ export default function DashboardClient() {
 
       return (
         <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-          <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}
+          <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl} lume={lume} onLume={schimbaLume} areAnimal={areAnimal}
             onBack={() => {
               if (salon.echipa && salon.echipa.length > 0 && groomerSelectat) {
                 setEtapaBooking("specialist");
@@ -1086,7 +1131,7 @@ export default function DashboardClient() {
                 );
                 let totalPret = 0, totalDurata = 0;
                 for (const sv of selServ) {
-                  const { pret, durata } = getPretDurata(sv.final, animal?.talie);
+                  const { pret, durata } = getPretDurata(sv.final, talieBooking);
                   totalPret += Number(pret) || 0;
                   totalDurata += Number(durata) || 0;
                 }
@@ -1099,7 +1144,7 @@ export default function DashboardClient() {
                       <div style={{ fontSize: 17, fontWeight: 900, color: salon.culoare }}>{totalPret} RON</div>
                     </div>
                     {selServ.map(({ final: sv }) => {
-                      const { pret, durata } = getPretDurata(sv, animal?.talie);
+                      const { pret, durata } = getPretDurata(sv, talieBooking);
                       return (
                         <div key={sv.nume} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: c.text2, paddingTop: 6, borderTop: `1px solid ${theme === "dark" ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.06)"}`, marginTop: 4 }}>
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Scissors size={11} color={salon.culoare} strokeWidth={2} /> {sv.nume}{durata ? ` · ${durata} min` : ""}</span>
@@ -1149,7 +1194,7 @@ export default function DashboardClient() {
 
     return (
       <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}
+        <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl} lume={lume} onLume={schimbaLume} areAnimal={areAnimal}
           onBack={() => { setSalonSelectat(null); setRezervare(null); setRezervareActiva(false); setGroomerSelectat(null); setEtapaBooking("calendar"); setProfilSalonTab("servicii"); }}
           backLabel={salon.nume}>
           <div style={{ maxWidth: 640, margin: "0 auto" }}>
@@ -1216,12 +1261,12 @@ export default function DashboardClient() {
                     </div>
                   ) : (
                     <>
-                      {animal?.talie && (
+                      {salonCereAnimal && animal?.talie && (
                         <div style={{ fontSize: 12, color: c.muted, marginBottom: 14, padding: "8px 12px", background: c.surface2, borderRadius: 10 }}>
                           Prețuri pentru talie <strong style={{ color: c.text }}>{talieIcon(animal.talie)} {talieLabel(animal.talie)}</strong> ({animal.nume})
                         </div>
                       )}
-                      {!animal?.talie && animale.length > 0 && (
+                      {salonCereAnimal && !animal?.talie && animale.length > 0 && (
                         <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 14, padding: "8px 12px", background: "rgba(239,68,68,.07)", borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 4 }}>
                           <AlertTriangle size={13} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} /> {animal?.nume || "Animalul"} nu are talie setată — mergi la „Animalele mele" pentru prețuri corecte.
                         </div>
@@ -1240,7 +1285,7 @@ export default function DashboardClient() {
                         for (const n of serviciiSelectate) {
                           const s = salon.serviciiComplete.find(x => x.nume === n);
                           if (!s) continue;
-                          const { pret, durata } = getPretDurata(s, animal?.talie);
+                          const { pret, durata } = getPretDurata(s, talieBooking);
                           totalPretEst += Number(pret) || 0;
                           totalDurataEst += Number(durata) || 0;
                         }
@@ -1252,14 +1297,14 @@ export default function DashboardClient() {
                                 const preturi: number[] = [];
                                 const durate: number[] = [];
                                 if (echipaS.length === 0) {
-                                  const { pret, durata } = getPretDurata(s, animal?.talie);
+                                  const { pret, durata } = getPretDurata(s, talieBooking);
                                   if (Number(pret) > 0) preturi.push(Number(pret));
                                   if (Number(durata) > 0) durate.push(Number(durata));
                                 } else {
                                   for (const m of echipaS) {
                                     const ofera = !m.servicii_oferite || m.servicii_oferite.length === 0 || !!getOverrideGroomer(m, s.nume);
                                     if (!ofera) continue;
-                                    const { pret, durata } = getPretDurata(serviciuPentruGroomer(s, m), animal?.talie);
+                                    const { pret, durata } = getPretDurata(serviciuPentruGroomer(s, m), talieBooking);
                                     if (Number(pret) > 0) preturi.push(Number(pret));
                                     if (Number(durata) > 0) durate.push(Number(durata));
                                   }
@@ -1296,6 +1341,20 @@ export default function DashboardClient() {
                                   </div>
                                   <div style={{ fontSize: 16, fontWeight: 900, color: salon.culoare }}>{totalPretEst} RON</div>
                                 </div>
+                                {salonCereAnimal && !animal ? (
+                                  <div style={{ background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 12, padding: "14px 16px" }}>
+                                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}>
+                                      <PawPrint size={15} color="#FF6B00" strokeWidth={2.2} /> Ai nevoie de un animal în cont
+                                    </div>
+                                    <div style={{ fontSize: 12.5, color: c.muted, lineHeight: 1.55, marginBottom: 12 }}>
+                                      Salonul lucrează cu animale, iar prețul depinde de talie. Adaugă animalul — durează un minut.
+                                    </div>
+                                    <button onClick={() => { setSalonSelectat(null); setTab("animal"); }}
+                                      style={{ width: "100%", background: "#FF6B00", color: "#fff", border: "none", borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                      Adaugă animalul →
+                                    </button>
+                                  </div>
+                                ) : (
                                 <button onClick={() => {
                                   setGroomerSelectat(null);
                                   setEtapaBooking(salon.echipa && salon.echipa.length > 0 ? "specialist" : "calendar");
@@ -1304,6 +1363,7 @@ export default function DashboardClient() {
                                   style={{ width: "100%", background: salon.culoare, color: "#fff", border: "none", borderRadius: 12, padding: "13px 0", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                                   Continuă rezervarea →
                                 </button>
+                                )}
                               </div>
                             )}
                           </>
@@ -1520,12 +1580,15 @@ export default function DashboardClient() {
   const viitoare = programari.filter(p => p.status === "confirmat" || p.status === "în așteptare");
   const trecute = programari.filter(p => p.status === "finalizat" || p.status === "anulat");
 
-  const oraseleDisponibile = Array.from(new Set(saloaneList.map(s => s.oras.split(",")[0].trim()))).sort();
+  // Saloanele din lumea activa — restul nici nu se vad.
+  const saloaneLume = saloaneList.filter(s => (s.domeniu || "grooming") === domeniuLume);
 
-  const serviciiDisponibile = Array.from(new Set(saloaneList.flatMap(s => s.servicii))).sort();
+  const oraseleDisponibile = Array.from(new Set(saloaneLume.map(s => s.oras.split(",")[0].trim()))).sort();
+
+  const serviciiDisponibile = Array.from(new Set(saloaneLume.flatMap(s => s.servicii))).sort();
 
   const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || sortareSalon !== "recomandat";
-  const saloneFiltrate = saloaneList.filter(s => {
+  const saloneFiltrate = saloaneLume.filter(s => {
     if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase()) && !s.servicii.some(sv => sv.toLowerCase().includes(cautare.toLowerCase()))) return false;
     if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
     if (filtruServiciu && !s.servicii.some(sv => sv.toLowerCase() === filtruServiciu.toLowerCase())) return false;
@@ -1547,7 +1610,7 @@ export default function DashboardClient() {
 
   return (
     <ThemeCtx.Provider value={{ theme, c, toggleTheme }}>
-      <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl}>
+      <Shell prenume={prenume} tab={tab} onLogout={handleLogout} onNav={setTab} necitite={necitite} avatarUrl={avatarUrl} lume={lume} onLume={schimbaLume} areAnimal={areAnimal}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
 
           {/* Toast */}
@@ -1555,8 +1618,8 @@ export default function DashboardClient() {
 
           {/* Bun venit */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>Bună, {prenume}! {animal ? specieInfo(animal.specie).icon : <PawPrint size={24} color="#FF6B00" strokeWidth={2} />}</h1>
-            {animal && (
+            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>Bună, {prenume}! {lume === "animal" && animal ? specieInfo(animal.specie).icon : <Sparkles size={22} color="#FF6B00" strokeWidth={2} />}</h1>
+            {lume === "animal" && animal && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13, flexWrap: "wrap" }}>
                 {animal.poza_url
                   ? <img src={animal.poza_url} alt={animal.nume} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
@@ -1721,14 +1784,31 @@ export default function DashboardClient() {
               </>
             ) : (
               <>
+                {saloaneLume.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "56px 20px", background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+                      {lume === "animal"
+                        ? <PawPrint size={40} color={c.muted} strokeWidth={1.6} />
+                        : <Scissors size={40} color={c.muted} strokeWidth={1.6} />}
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: c.text, marginBottom: 8 }}>
+                      {lume === "animal" ? "Încă niciun salon de grooming" : "Încă niciun salon de înfrumusețare"}
+                    </div>
+                    <div style={{ fontSize: 14, color: c.muted, lineHeight: 1.6, maxWidth: 380, margin: "0 auto" }}>
+                      Adăugăm saloane noi în fiecare săptămână. Revino în curând — sau spune-le celor la care mergi deja să se înscrie.
+                    </div>
+                  </div>
+                )}
+                {saloaneLume.length > 0 && (<>
                 <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><MapPin size={17} color="#FF6B00" strokeWidth={2} /> Recomandate</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
-                  {saloaneList.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
+                  {saloaneLume.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
                 <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><Scissors size={17} color="#FF6B00" strokeWidth={2} /> Toți partenerii CalyHub</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-                  {saloaneList.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
+                  {saloaneLume.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
+                </>)}
               </>
             )}
           </>)}
@@ -2095,7 +2175,7 @@ export default function DashboardClient() {
 }
 
 /* ── Shell ── */
-function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUrl, onBack, backLabel }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number; avatarUrl?: string | null; onBack?: () => void; backLabel?: string }) {
+function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUrl, onBack, backLabel, lume, onLume, areAnimal }: { children: React.ReactNode; prenume: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; necitite?: number; avatarUrl?: string | null; onBack?: () => void; backLabel?: string; lume: Lume; onLume: (l: Lume) => void; areAnimal: boolean }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<Tab | "logout" | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -2133,6 +2213,24 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
             {!(isMobile && (tab !== "saloane" || onBack)) && (
               <Image src={theme === "dark" ? "/logo-dark.png" : "/logo.png"} alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
             )}
+            {/* Comutatorul intre cele doua lumi — apare doar daca omul are un animal in cont */}
+            {areAnimal && !onBack && tab === "saloane" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: 50, padding: 3, flexShrink: 0 }}>
+                {([
+                  { val: "tine" as Lume, label: "Pentru tine", Icon: Scissors },
+                  { val: "animal" as Lume, label: "Pentru animal", Icon: PawPrint },
+                ]).map(({ val, label, Icon }) => {
+                  const activ = lume === val;
+                  return (
+                    <button key={val} onClick={() => onLume(val)} title={label}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: isMobile ? "7px 10px" : "7px 14px", borderRadius: 50, border: "none", background: activ ? "#FF6B00" : "transparent", color: activ ? "#fff" : c.muted, fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "background .18s, color .18s", whiteSpace: "nowrap" }}>
+                      <Icon size={14} strokeWidth={2.2} />
+                      {!isMobile && label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {(tab !== "saloane" || onBack) && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                 {!isMobile && <div style={{ width: 1, height: 22, background: c.border }} />}
@@ -2154,7 +2252,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
           <div style={{ position: "relative" }}>
             <button onClick={() => setOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, padding: isMobile ? "6px 10px 6px 6px" : "6px 14px 6px 8px", borderRadius: 50, border: open ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: open ? c.orangeAccent : c.surface, cursor: "pointer", fontFamily: "Nunito, sans-serif", transition: "all .15s" }}>
-              <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PawPrint size={14} color="#FF6B00" strokeWidth={2} /></span>
+              {areAnimal && <span aria-hidden style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PawPrint size={14} color="#FF6B00" strokeWidth={2} /></span>}
               <span style={{ width: 30, height: 30, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, overflow: "hidden" }}>
                 {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <User size={15} color="#FF6B00" strokeWidth={2.2} />}
               </span>
@@ -2165,7 +2263,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
               <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, width: 262, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, boxShadow: c.shadow, overflow: "hidden", zIndex: 200 }}>
                 <div style={{ padding: "14px 18px", background: c.orangeAccent, borderBottom: `1px solid ${c.orangeBorder}` }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{prenume}</div>
-                  <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2, display: "flex", alignItems: "center", gap: 5 }}>Cont client <PawPrint size={12} color="#FF6B00" strokeWidth={2} /></div>
+                  <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2, display: "flex", alignItems: "center", gap: 5 }}>Cont client {areAnimal ? <PawPrint size={12} color="#FF6B00" strokeWidth={2} /> : <Scissors size={12} color="#FF6B00" strokeWidth={2} />}</div>
                 </div>
                 <div style={{ padding: "6px 0" }}>
                   {items.map(item => {
