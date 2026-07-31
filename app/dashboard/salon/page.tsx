@@ -48,16 +48,28 @@ type DomeniuSalon = "infrumusetare" | "grooming";
 const DOM_SALON: Record<DomeniuSalon, {
   rol: string; rolPlural: string; rolPluralCap: string;
   echipaSub: string; areAnimale: boolean;
+  istoricTitlu: string; istoricSub: string; istoricMeniuSub: string;
+  istoricCauta: string; istoricGol: string;
 }> = {
   infrumusetare: {
     rol: "specialist", rolPlural: "specialiști", rolPluralCap: "Specialiști",
     echipaSub: "Gestionează specialiștii și orarul fiecăruia",
     areAnimale: false,
+    istoricTitlu: "Istoric clienți",
+    istoricSub: "Toate vizitele și încasările, client cu client",
+    istoricMeniuSub: "Vizite și încasări per client",
+    istoricCauta: "Caută după numele clientului…",
+    istoricGol: "Niciun client în istoric încă.",
   },
   grooming: {
     rol: "groomer", rolPlural: "groomeri", rolPluralCap: "Groomeri",
     echipaSub: "Gestionează groomerii și orarul fiecăruia",
     areAnimale: true,
+    istoricTitlu: "Istoric animale",
+    istoricSub: "Fișa completă a fiecărui animal care a fost la salonul tău",
+    istoricMeniuSub: "Fișa fiecărui animal programat",
+    istoricCauta: "Caută după nume animal, stăpân sau rasă…",
+    istoricGol: "Niciun animal în istoric încă.",
   },
 };
 
@@ -919,7 +931,7 @@ export default function DashboardSalon() {
         autoFinalizeaza(salonRow.id);
         loadProgramari(salonRow.id);
         loadAbateri(salonRow.id);
-        loadAnimaleIstoric(salonRow.id);
+        loadAnimaleIstoric(salonRow.id, salonRow.domeniu !== "infrumusetare");
         loadNotificari(authUser.id);
       }
     }
@@ -956,14 +968,15 @@ export default function DashboardSalon() {
       await supabase.from("programari").update({ status: "finalizat" }).in("id", expirate);
     }
 
-    async function loadAnimaleIstoric(salonId: string) {
-      const { data } = await supabase
+    // La grooming istoricul e grupat pe animal; la infrumusetare, pe client.
+    async function loadAnimaleIstoric(salonId: string, peAnimal: boolean) {
+      let q = supabase
         .from("programari")
         .select("id, serviciu, pret, data, ora, status, animal_id, user_id, sursa")
         .eq("salon_id", salonId)
-        .in("status", ["finalizat", "confirmat"])
-        .not("animal_id", "is", null)
-        .order("data", { ascending: false });
+        .in("status", ["finalizat", "confirmat"]);
+      if (peAnimal) q = q.not("animal_id", "is", null);
+      const { data } = await q.order("data", { ascending: false });
 
       if (!data || data.length === 0) { setAnimaleIstoric([]); return; }
 
@@ -990,6 +1003,23 @@ export default function DashboardSalon() {
 
       const grupat: Record<string, AnimalIstoric> = {};
       for (const p of istoric) {
+        // Istoric pe client (saloane de infrumusetare)
+        if (!peAnimal) {
+          const cheie = p.user_id;
+          if (!cheie) continue;
+          const prof = profileMap[cheie];
+          if (!grupat[cheie]) {
+            grupat[cheie] = {
+              id: cheie, nume: prof?.nume || "Client", specie: "", sex: "", rasa: "",
+              greutate: null, talie: null, varsta: null, alergii: "", vaccinat: false, poza_url: null,
+              stapanNume: prof?.nume || "Client", stapanTelefon: prof?.telefon || null, stapanUserId: cheie,
+              vizite: [], totalCheltuit: 0, ultimaVizita: null,
+            };
+          }
+          grupat[cheie].vizite.push({ id: p.id, serviciu: p.serviciu, pret: Number(p.pret) || 0, data: p.data, ora: p.ora, status: p.status as StatusProg });
+          grupat[cheie].totalCheltuit += Number(p.pret) || 0;
+          continue;
+        }
         const a = animalMap[p.animal_id];
         if (!a) continue;
         if (!grupat[p.animal_id]) {
@@ -1140,17 +1170,13 @@ export default function DashboardSalon() {
   const DS = DOM_SALON[domeniuSalon];
   const areAnimale = DS.areAnimale;
 
-  // Un salon de infrumusetare nu are tabul de animale — daca ajunge acolo, il aducem la agenda.
-  useEffect(() => {
-    if (!areAnimale && tab === "animale") setTab("agenda");
-  }, [areAnimale, tab]);
   const numeComplet = user?.nume?.split(" ")[0] || "Manager";
   const SUB_TABS: Tab[] = ["functii-ai", "profil-salon", "servicii", "echipa", "animale", "abonament", "setari", "ajutor"];
   const isSubTab = SUB_TABS.includes(tab);
   const TAB_LABELS: Record<Tab, string> = {
     agenda: "Agenda", statistici: "Statistici", program: "Program", notificari: "Notificări", "functii-ai": "Funcții AI",
     "profil-salon": "Profilul salonului", servicii: "Serviciile mele",
-    echipa: "Echipa mea", animale: "Istoric animale", abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
+    echipa: "Echipa mea", animale: DS.istoricTitlu, abonament: "Abonamentul meu", setari: "Setări cont", ajutor: "Ajutor",
   };
 
   // Acces agenți AI în funcție de plan (sursa: saloane.plan din Supabase — cross-device)
@@ -2017,14 +2043,14 @@ export default function DashboardSalon() {
                 : animaleIstoric;
               return (
                 <div>
-                  <PageHeader icon={PawPrint} title="Istoric animale" sub="Fișa completă a fiecărui animal care a fost la salonul tău" />
+                  <PageHeader icon={areAnimale ? PawPrint : Users} title={DS.istoricTitlu} sub={DS.istoricSub} />
                   <div style={{ marginBottom: 16 }}>
-                    <input value={cautareAnimal} onChange={e => setCautareAnimal(e.target.value)} placeholder="Caută după nume animal, stăpân sau rasă…" style={inp} />
+                    <input value={cautareAnimal} onChange={e => setCautareAnimal(e.target.value)} placeholder={DS.istoricCauta} style={inp} />
                   </div>
                   {animaleIstoric.length === 0 ? (
                     <div style={{ padding: "40px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
-                      <div style={{ marginBottom: 8, display: "flex", justifyContent: "center" }}><PawPrint size={28} color={c.muted} strokeWidth={1.5} /></div>
-                      Niciun animal în istoric încă.<br />Vizitele apar aici după ce programările din aplicație au fost confirmate și au trecut.
+                      <div style={{ marginBottom: 8, display: "flex", justifyContent: "center" }}>{areAnimale ? <PawPrint size={28} color={c.muted} strokeWidth={1.5} /> : <Users size={28} color={c.muted} strokeWidth={1.5} />}</div>
+                      {DS.istoricGol}<br />Vizitele apar aici după ce programările din aplicație au fost confirmate și au trecut.
                     </div>
                   ) : lista.length === 0 ? (
                     <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14 }}>Niciun rezultat pentru &bdquo;{cautareAnimal}&rdquo;.</div>
@@ -2037,12 +2063,14 @@ export default function DashboardSalon() {
                             <button onClick={() => setAnimalDeschis(deschis ? null : a.id)}
                               style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
                               <div style={{ width: 50, height: 50, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0, overflow: "hidden" }}>
-                                {a.poza_url ? <img src={a.poza_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : specieIcon(a.specie)}
+                                {a.poza_url ? <img src={a.poza_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (areAnimale ? specieIcon(a.specie) : <User size={22} color="#FF6B00" strokeWidth={2} />)}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{specieIcon(a.specie)} {a.nume}</div>
-                                <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>{[a.rasa, talieLabel(a.talie), a.greutate ? `${a.greutate}kg` : null].filter(Boolean).join(" · ")}</div>
-                                <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.xmuted} strokeWidth={2} /> {a.stapanNume}</div>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{areAnimale ? `${specieIcon(a.specie)} ` : ""}{a.nume}</div>
+                                {areAnimale && <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>{[a.rasa, talieLabel(a.talie), a.greutate ? `${a.greutate}kg` : null].filter(Boolean).join(" · ")}</div>}
+                                {areAnimale
+                                  ? <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.xmuted} strokeWidth={2} /> {a.stapanNume}</div>
+                                  : a.ultimaVizita && <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>Ultima vizită: {new Date(a.ultimaVizita).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</div>}
                               </div>
                               <div style={{ textAlign: "right", flexShrink: 0 }}>
                                 <div style={{ fontSize: 13, fontWeight: 900, color: "#FF6B00" }}>{a.vizite.length} {a.vizite.length === 1 ? "vizită" : "vizite"}</div>
@@ -2053,18 +2081,19 @@ export default function DashboardSalon() {
                             {deschis && (
                               <div style={{ borderTop: `1px solid ${c.border}`, padding: "14px 18px", background: c.surface2 }}>
                                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-                                  {talieLabel(a.talie) && <span style={{ background: c.orangeAccent, color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>{talieLabel(a.talie)}</span>}
-                                  {a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀ Femelă" : "♂ Mascul"}</span>}
-                                  {a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
-                                  {a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} color={c.text2} strokeWidth={2} /> {a.stapanNume} · {a.stapanTelefon}</span>}
-                                  {areAlergii(a.alergii)
+                                  {!areAnimale && a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} color={c.text2} strokeWidth={2} /> {a.stapanTelefon}</span>}
+                                  {areAnimale && talieLabel(a.talie) && <span style={{ background: c.orangeAccent, color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>{talieLabel(a.talie)}</span>}
+                                  {areAnimale && a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀ Femelă" : "♂ Mascul"}</span>}
+                                  {areAnimale && a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
+                                  {areAnimale && a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} color={c.text2} strokeWidth={2} /> {a.stapanNume} · {a.stapanTelefon}</span>}
+                                  {areAnimale && (areAlergii(a.alergii)
                                     ? <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={11} color="#DC2626" strokeWidth={2} /> Alergii: {a.alergii}</span>
                                     : <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckCircle2 size={11} color="#059669" strokeWidth={2} /> Fără alergii</span>
-                                  }
-                                  {a.vaccinat
+                                  )}
+                                  {areAnimale && (a.vaccinat
                                     ? <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>Vaccinat</span>
                                     : <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={11} color="#DC2626" strokeWidth={2} /> Nevaccinat</span>
-                                  }
+                                  )}
                                 </div>
                                 <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Istoric vizite</div>
                                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -3951,7 +3980,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
     { icon: Store, label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
     { icon: Scissors, label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
     { icon: Users, label: "Echipa mea", sub: `Gestionează ${DS.rolPlural}`, t: "echipa" },
-    ...(DS.areAnimale ? [{ icon: PawPrint, label: "Istoric animale", sub: "Fișa fiecărui animal programat", t: "animale" as Tab }] : []),
+    { icon: DS.areAnimale ? PawPrint : Users, label: DS.istoricTitlu, sub: DS.istoricMeniuSub, t: "animale" },
     { icon: CreditCard, label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
     { icon: Settings, label: "Setari cont", sub: "Schimba parola", t: "setari" },
     { icon: HelpCircle, label: "Ajutor", sub: "Support dedicat", t: "ajutor" },
