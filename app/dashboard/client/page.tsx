@@ -1969,19 +1969,26 @@ export default function DashboardClient() {
                 <div style={{ background: c.surface, borderRadius: 16, padding: "20px", border: "2px dashed #FF6B00" }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: "#FF6B00", marginBottom: 14 }}>Animal nou</div>
                   <AnimalEditForm form={animalForm} setForm={setAnimalForm} c={c} inp={inp} onCancel={() => { setShowAddAnimal(false); setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "", vaccinat: false }); }} onSave={async () => {
-                    if (!animalForm.numeAnimal.trim() || !animalForm.sex) { salveaza("Completează numele și sexul"); return; }
+                    // Aceleasi cerinte ca la inregistrare: nume + talie (de ea depinde pretul).
+                    if (!animalForm.numeAnimal.trim()) { salveaza("Completează numele animalului"); return; }
+                    if (!animalForm.talie) { salveaza("Alege talia — de ea depinde prețul la salon"); return; }
+                    const primulAnimal = animale.length === 0;
                     const { data: nou } = await supabase.from("animale").insert({
-                      user_id: userId, nume: animalForm.numeAnimal.trim(), specie: animalForm.specie, sex: animalForm.sex,
-                      rasa: animalForm.rasa.trim(), talie: animalForm.talie || null, greutate: Number(animalForm.greutate) || 0,
-                      varsta: Number(animalForm.varsta) || 0, alergii: animalForm.alergii.trim(), vaccinat: animalForm.vaccinat,
+                      user_id: userId, nume: animalForm.numeAnimal.trim(), specie: animalForm.specie, sex: animalForm.sex || null,
+                      rasa: animalForm.rasa.trim() || null, talie: animalForm.talie,
+                      greutate: animalForm.greutate.trim() ? Number(animalForm.greutate) : null,
+                      varsta: animalForm.varsta.trim() ? Number(animalForm.varsta) : null,
+                      alergii: animalForm.alergii.trim() || "Fără alergii", vaccinat: animalForm.vaccinat,
                     }).select("*").single();
                     if (nou) {
                       setAnimale(prev => [...prev, nou]);
                       if (!selectedAnimalId) setSelectedAnimalId(nou.id);
+                      // Primul animal deschide a doua lume — il ducem direct in ea.
+                      if (primulAnimal) { schimbaLume("animal"); setTab("saloane"); }
                     }
                     setShowAddAnimal(false);
                     setAnimalForm({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "", vaccinat: false });
-                    salveaza("Animal adăugat!");
+                    salveaza(animale.length === 0 ? "Animal adăugat — ai acum și lumea de grooming" : "Animal adăugat!");
                   }} />
                 </div>
               ) : (
