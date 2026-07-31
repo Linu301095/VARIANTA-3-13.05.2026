@@ -1,29 +1,34 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
+import Logo from "../../components/Logo";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../components/Footer";
-import ResetTheme from "../../components/ResetTheme";
 import { supabase } from "../../lib/supabase";
 import { AlertTriangle } from "lucide-react";
 
 const C = {
-  bg: "#FAFAFA", surface: "#fff", line: "#EBEBEB",
-  text: "#1A1A1A", text2: "#374151", muted: "#6B7280", dim: "#9CA3AF",
-  orange: "#FF6B00", orangeSoft: "#FFF3EA",
+  surface: "var(--pub-surface)",
+  bg: "var(--pub-bg)",
+  line: "var(--pub-line)",
+  text: "var(--pub-text)",
+  text2: "var(--pub-text2)",
+  muted: "var(--pub-muted)",
+  dim: "var(--pub-dim)",
+  orange: "var(--pub-orange)",
+  orangeSoft: "var(--pub-orange-soft)",
 };
 
 const inp: React.CSSProperties = {
   width: "100%", padding: "13px 16px", borderRadius: 14, border: `1.5px solid ${C.line}`,
   fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box",
-  background: "#fff", color: C.text, transition: "border-color .18s, box-shadow .18s",
+  background: "var(--pub-surface)", color: C.text, transition: "border-color .18s, box-shadow .18s",
 };
-const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid #EF4444" };
+const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid var(--pub-danger)" };
 
 const social: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-  padding: "12px 20px", borderRadius: 14, border: `1.5px solid ${C.line}`, background: "#fff",
+  padding: "12px 20px", borderRadius: 14, border: `1.5px solid ${C.line}`, background: "var(--pub-surface)",
   fontSize: 14, fontWeight: 700, color: C.text, cursor: "pointer", width: "100%",
   fontFamily: "Nunito, sans-serif", transition: "border-color .18s, transform .18s, box-shadow .18s",
 };
@@ -113,11 +118,10 @@ export default function LoginPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <ResetTheme />
 
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: `1px solid ${C.line}`, height: 66 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pub-surface)", borderBottom: `1px solid ${C.line}`, height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={44} style={{ height: 44, width: "auto", objectFit: "contain" }} priority /></Link>
+          <Logo h={44} priority />
           <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
         </div>
       </header>
@@ -145,7 +149,7 @@ export default function LoginPage() {
                   style={fieldStyle("email", !!errors.email)}
                   onFocus={() => setFocus("email")} onBlur={() => setFocus(null)}
                   onKeyDown={e => e.key === "Enter" && handleSubmit()} />
-                {errors.email && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 5, fontWeight: 600 }}>{errors.email}</div>}
+                {errors.email && <div style={{ fontSize: 12, color: "var(--pub-danger)", marginTop: 5, fontWeight: 600 }}>{errors.email}</div>}
               </div>
 
               <div>
@@ -168,11 +172,11 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
-                {errors.parola && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 5, fontWeight: 600 }}>{errors.parola}</div>}
+                {errors.parola && <div style={{ fontSize: 12, color: "var(--pub-danger)", marginTop: 5, fontWeight: 600 }}>{errors.parola}</div>}
               </div>
 
               {loginError && (
-                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 12, padding: "11px 14px", fontSize: 13, fontWeight: 700, color: "#EF4444", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+                <div style={{ background: "var(--pub-danger-bg)", border: "1px solid var(--pub-danger-line)", borderRadius: 12, padding: "11px 14px", fontSize: 13, fontWeight: 700, color: "var(--pub-danger)", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
                   <AlertTriangle size={15} strokeWidth={2} /> {loginError}
                 </div>
               )}

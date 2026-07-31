@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import Logo from "../../components/Logo";
 import Footer from "../../components/Footer";
-import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
 import { Star, Users, ClipboardList, Sparkles, Image as ImageIcon, Check } from "lucide-react";
 import { SparkleAnim } from "../../components/SectionIcons";
@@ -22,15 +21,22 @@ export const metadata: Metadata = {
 };
 
 const C = {
-  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
-  text: "#1A1A1A", muted: "#6B7280", dim: "#9CA3AF",
-  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+  surface: "var(--pub-surface)",
+  bg: "var(--pub-bg)",
+  surface2: "var(--pub-surface2)",
+  line: "var(--pub-line)",
+  text: "var(--pub-text)",
+  muted: "var(--pub-muted)",
+  dim: "var(--pub-dim)",
+  orange: "var(--pub-orange)",
+  orangeText: "var(--pub-orange-text)",
+  orangeSoft: "var(--pub-orange-soft)",
 };
 
 const eyebrow: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 7,
   fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
-  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+  background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 50, padding: "7px 15px",
 };
 // Steluță / sparkle — motivul vizual al instrumentelor AI
 function Sparkle({ size = 24, color = C.orange, style }: { size?: number; color?: string; style?: React.CSSProperties }) {
@@ -47,25 +53,25 @@ type Tool = { Icon: typeof Star; color: string; soft: string; plan: string; t: s
 
 const TOOLS: Tool[] = [
   {
-    Icon: Star, color: "#E08900", soft: "rgba(224,137,0,.12)", plan: "Plan Basic",
+    Icon: Star, color: "var(--ai-amber)", soft: "rgba(224,137,0,.12)", plan: "Plan Basic",
     t: "Răspunsuri la recenzii",
     d: "Fiecare recenzie merită un răspuns — dar nu ai mereu timp să îl formulezi. AI-ul citește recenzia, identifică serviciul și redactează un răspuns profesional, personalizat.",
     b: ["Ton profesional, adaptat fiecărei recenzii", "Îl editezi sau îl trimiți direct cu un click", "Reputația salonului, îngrijită automat"],
   },
   {
-    Icon: Users, color: "#EF4444", soft: "rgba(239,68,68,.10)", plan: "Plan Pro",
+    Icon: Users, color: "var(--ai-coral)", soft: "rgba(239,68,68,.10)", plan: "Plan Pro",
     t: "Alertă clienți inactivi",
     d: "Un client fidel care nu a mai revenit se întoarce mult mai ușor dacă îl contactezi la momentul potrivit. AI-ul îi identifică singur și îți pregătește mesajul de reactivare.",
     b: ["Detectează clienții care nu au mai revenit", "Mesaj de reactivare pregătit automat", "Cod de reducere opțional inclus"],
   },
   {
-    Icon: ClipboardList, color: "#0891B2", soft: "rgba(8,145,178,.10)", plan: "Plan Business",
+    Icon: ClipboardList, color: "var(--ai-cyan)", soft: "rgba(8,145,178,.10)", plan: "Plan Business",
     t: "Recomandări post-serviciu",
     d: "După fiecare vizită, clientul primește sfaturi de îngrijire personalizate — ce produse să folosească și cum să întrețină între vizite. Un plus de profesionalism care îl aduce înapoi.",
     b: ["Personalizate pe serviciu și pe rasă", "Trimise automat clientului după vizită", "Cresc retenția și încrederea în salon"],
   },
   {
-    Icon: Sparkles, color: "#6366F1", soft: "rgba(99,102,241,.10)", plan: "Plan Business",
+    Icon: Sparkles, color: "var(--ai-indigo)", soft: "rgba(99,102,241,.10)", plan: "Plan Business",
     t: "Consultant AI",
     d: "Analizează datele reale ale salonului și îți livrează rapoarte de business lunare: ce a mers, ce trebuie îmbunătățit, plan de creștere, analiză de prețuri și performanța echipei.",
     b: ["Rapoarte lunare din datele tale reale", "Recomandări concrete, nu sfaturi generice", "Analiză de prețuri, echipă și creștere"],
@@ -75,13 +81,12 @@ const TOOLS: Tool[] = [
 export default function InstrumenteAI() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
-      <ResetTheme />
 
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pub-header)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <Logo h={54} priority />
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "var(--pub-surface)", border: "1.5px solid var(--pub-line2)", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
             <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
@@ -120,7 +125,7 @@ export default function InstrumenteAI() {
                       <Icon size={24} color={color} strokeWidth={2} />
                     </div>
                     <div>
-                      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", color: "#0FA671", background: "rgba(15,166,113,.12)", padding: "3px 9px", borderRadius: 50 }}>{plan}</span>
+                      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", color: "var(--pub-ok)", background: "rgba(15,166,113,.12)", padding: "3px 9px", borderRadius: 50 }}>{plan}</span>
                       <h2 style={{ fontSize: 21, fontWeight: 900, letterSpacing: -0.4, color: C.text, marginTop: 6 }}>{t}</h2>
                     </div>
                   </div>
@@ -138,15 +143,15 @@ export default function InstrumenteAI() {
             </div>
 
             {/* in curand */}
-            <div data-reveal className="ch-card" style={{ marginTop: 16, background: C.surface2, border: `1.5px dashed #E0D6CB`, borderRadius: 24, padding: "22px 26px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <div data-reveal className="ch-card" style={{ marginTop: 16, background: C.surface2, border: `1.5px dashed var(--pub-line2)`, borderRadius: 24, padding: "22px 26px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <div style={{ width: 46, height: 46, borderRadius: 13, background: "rgba(236,72,153,.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <ImageIcon size={22} color="#EC4899" strokeWidth={2} />
+                <ImageIcon size={22} color="var(--ai-pink)" strokeWidth={2} />
               </div>
               <div style={{ flex: 1, minWidth: 220 }}>
                 <h3 style={{ fontSize: 17, fontWeight: 900, color: C.text }}>Postări sociale din poze</h3>
                 <p style={{ fontSize: 13, color: C.muted, fontWeight: 600, marginTop: 3, lineHeight: 1.5 }}>Încarci poza cu rezultatul final — AI recunoaște și generează un caption atractiv plus hashtag-uri pentru Instagram și Facebook.</p>
               </div>
-              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.8, textTransform: "uppercase", color: "#EC4899", background: "rgba(236,72,153,.10)", padding: "5px 12px", borderRadius: 50 }}>În curând</span>
+              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.8, textTransform: "uppercase", color: "var(--ai-pink)", background: "rgba(236,72,153,.10)", padding: "5px 12px", borderRadius: 50 }}>În curând</span>
             </div>
           </div>
         </section>
@@ -154,7 +159,7 @@ export default function InstrumenteAI() {
         {/* CONCLUZIE */}
         <section style={{ padding: "0 20px 76px" }}>
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
+            <div style={{ background: "linear-gradient(135deg, var(--pub-orange-soft) 0%, var(--pub-tint) 100%)", border: "1px solid var(--pub-orange-border)", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
               <div style={{ display: "inline-flex", marginBottom: 20 }}><SparkleAnim size={40} glow /></div>
               <h2 style={{ fontSize: "clamp(26px,3.8vw,42px)", fontWeight: 900, letterSpacing: -1.2, lineHeight: 1.12, color: C.text, maxWidth: "24ch", marginLeft: "auto", marginRight: "auto" }}>
                 Agenți AI care lucrează pe <span style={{ color: C.orange }}>datele salonului tău</span>, nu pe generalități.

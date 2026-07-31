@@ -64,7 +64,7 @@ export default function AdminDashboard() {
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#111", borderBottom: "1px solid #1F1F1F", padding: "12px 20px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <Link href="/admin"><div style={{ background: "#fff", padding: "6px 12px", borderRadius: 10 }}><Image src="/logo.png" alt="CalyHub" width={110} height={36} style={{ height: 36, width: "auto", objectFit: "contain" }} priority /></div></Link>
+            <Link href="/admin"><Image src="/logo-dark.png" alt="CalyHub" width={40} height={40} style={{ height: 40, width: "auto", objectFit: "contain" }} priority /></Link>
             <span style={{ background: "#FF6B00", color: "#fff", padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>🔒 Admin</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

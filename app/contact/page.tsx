@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import Logo from "../../components/Logo";
 import Footer from "../../components/Footer";
-import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
 import {
   Building2, MapPin, Mail, Scale, Clock, Phone, Users, Store, HelpCircle, type LucideIcon,
@@ -24,14 +23,21 @@ export const metadata: Metadata = {
 };
 
 const C = {
-  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
-  text: "#1A1A1A", muted: "#6B7280", dim: "#9CA3AF",
-  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+  surface: "var(--pub-surface)",
+  bg: "var(--pub-bg)",
+  surface2: "var(--pub-surface2)",
+  line: "var(--pub-line)",
+  text: "var(--pub-text)",
+  muted: "var(--pub-muted)",
+  dim: "var(--pub-dim)",
+  orange: "var(--pub-orange)",
+  orangeText: "var(--pub-orange-text)",
+  orangeSoft: "var(--pub-orange-soft)",
 };
 const eyebrow: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 7,
   fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
-  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+  background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 50, padding: "7px 15px",
 };
 const btnPrimary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -40,7 +46,7 @@ const btnPrimary: React.CSSProperties = {
 };
 const btnSecondary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
+  padding: "14px 26px", borderRadius: 50, background: "var(--pub-surface)", color: C.text,
   fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
 };
 const card: React.CSSProperties = {
@@ -67,13 +73,12 @@ const DATE_FIRMA: { Icon: LucideIcon; label: string; valoare: string }[] = [
 export default function ContactPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
-      <ResetTheme />
 
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pub-header)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <Logo h={54} priority />
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "var(--pub-surface)", border: "1.5px solid var(--pub-line2)", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
             <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
@@ -86,7 +91,7 @@ export default function ContactPage() {
           <div className="ch-orb b" style={{ width: 280, height: 280, background: "rgba(255,140,66,.14)", top: 0, right: "10%" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
             <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginBottom: 18, animationDelay: ".05s" }}>
-              <div style={{ width: 60, height: 60, borderRadius: 17, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 60, height: 60, borderRadius: 17, background: C.orangeSoft, border: "1.5px solid var(--pub-orange-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Phone size={27} color={C.orange} strokeWidth={2} />
               </div>
             </div>
@@ -148,7 +153,7 @@ export default function ContactPage() {
         {/* AJUTOR RAPID */}
         <section style={{ padding: "56px 20px 76px" }}>
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,48px)", textAlign: "center" }}>
+            <div style={{ background: "linear-gradient(135deg, var(--pub-orange-soft) 0%, var(--pub-tint) 100%)", border: "1px solid var(--pub-orange-border)", borderRadius: 28, padding: "clamp(32px,5vw,48px)", textAlign: "center" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
                 <HelpCircle size={32} color={C.orange} strokeWidth={2} />
               </div>

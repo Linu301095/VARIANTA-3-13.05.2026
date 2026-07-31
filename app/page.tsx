@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import Logo from "../components/Logo";
 import Footer from "../components/Footer";
-import ResetTheme from "../components/ResetTheme";
 import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
 import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim } from "../components/SectionIcons";
@@ -30,9 +29,18 @@ export const metadata: Metadata = {
 };
 
 const C = {
-  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
-  text: "#1A1A1A", text2: "#374151", muted: "#6B7280", dim: "#9CA3AF",
-  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA", dark: "#1A1512",
+  surface: "var(--pub-surface)",
+  bg: "var(--pub-bg)",
+  surface2: "var(--pub-surface2)",
+  line: "var(--pub-line)",
+  text: "var(--pub-text)",
+  text2: "var(--pub-text2)",
+  muted: "var(--pub-muted)",
+  dim: "var(--pub-dim)",
+  orange: "var(--pub-orange)",
+  orangeText: "var(--pub-orange-text)",
+  orangeSoft: "var(--pub-orange-soft)",
+  dark: "var(--pub-dark)",
 };
 
 const card: React.CSSProperties = {
@@ -46,7 +54,7 @@ const tile: React.CSSProperties = {
 const eyebrow: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 7,
   fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
-  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+  background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 50, padding: "7px 15px",
 };
 const btnPrimary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -55,7 +63,7 @@ const btnPrimary: React.CSSProperties = {
 };
 const btnSecondary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
+  padding: "14px 26px", borderRadius: 50, background: "var(--pub-surface)", color: C.text,
   fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
 };
 const chk = (t: React.ReactNode) => (
@@ -73,14 +81,13 @@ const iconBox = (Icon: typeof PawPrint, size = 23) => (
 export default function HomePage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
-      <ResetTheme />
 
       {/* HEADER */}
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pub-header)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <Logo h={54} priority />
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "var(--pub-surface)", border: "1.5px solid var(--pub-line2)", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
             <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
@@ -123,7 +130,7 @@ export default function HomePage() {
                   {chk(<>Alegi <b style={{ color: C.text, fontWeight: 800 }}>specialistul</b> și ora preferată</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Istoric și recomandări</b> după fiecare vizită</>)}
                 </div>
-                <div style={{ marginTop: "auto", background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 14, padding: "11px 14px", marginBottom: 14 }}>
+                <div style={{ marginTop: "auto", background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 14, padding: "11px 14px", marginBottom: 14 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Check size={15} strokeWidth={2.6} /> Gratuit pentru clienți</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără cost, fără card — plătești doar serviciul, la salon</div>
                 </div>
@@ -141,7 +148,7 @@ export default function HomePage() {
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>4 asistenți AI</b> care îți fidelizează clienții</>)}
                   {chk(<>Recenzii, istoric client și <b style={{ color: C.text, fontWeight: 800 }}>export Excel</b></>)}
                 </div>
-                <div style={{ marginTop: "auto", background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 14, padding: "11px 14px", marginBottom: 14 }}>
+                <div style={{ marginTop: "auto", background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 14, padding: "11px 14px", marginBottom: 14 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> Primele 3 luni gratuite</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără card · 0% comision · anulezi oricând</div>
                 </div>
@@ -278,7 +285,7 @@ export default function HomePage() {
               </p>
               <div data-reveal style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
                 {["Programări nelimitate", "0% comision", "Anulezi oricând", "Asistenți AI incluși"].map((t) => (
-                  <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff", border: `1px solid ${C.line}`, borderRadius: 50, padding: "9px 16px", fontSize: 13, fontWeight: 800, color: C.text }}>
+                  <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--pub-surface)", border: `1px solid ${C.line}`, borderRadius: 50, padding: "9px 16px", fontSize: 13, fontWeight: 800, color: C.text }}>
                     <Check size={15} color={C.orange} strokeWidth={2.8} /> {t}
                   </span>
                 ))}
@@ -293,7 +300,7 @@ export default function HomePage() {
         {/* AVANTAJ + CTA FINAL */}
         <section style={{ padding: "64px 20px 76px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div data-reveal style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
+            <div data-reveal style={{ background: "linear-gradient(135deg, var(--pub-orange-soft) 0%, var(--pub-tint) 100%)", border: "1px solid var(--pub-orange-border)", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconIntersectie size={60} /></div>
               <div style={eyebrow}>AVANTAJUL CALYHUB</div>
               <h2 style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 14 }}>Deținem intersecția</h2>
@@ -302,7 +309,7 @@ export default function HomePage() {
                 pentru oameni și pentru animale. Iar acolo este poziția noastră.
               </p>
 
-              <div style={{ height: 1, background: "#FFDCC6", maxWidth: 420, margin: "34px auto" }} />
+              <div style={{ height: 1, background: "var(--pub-orange-border)", maxWidth: 420, margin: "34px auto" }} />
 
               <h3 style={{ fontSize: "clamp(22px,2.8vw,30px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>Începe astăzi</h3>
               <p style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 10, maxWidth: "54ch", marginLeft: "auto", marginRight: "auto" }}>

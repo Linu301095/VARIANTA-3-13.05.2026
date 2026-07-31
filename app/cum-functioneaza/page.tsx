@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import Logo from "../../components/Logo";
 import Footer from "../../components/Footer";
-import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
 import { IconClienti, IconFoarfeca } from "../../components/SectionIcons";
 import {
@@ -26,15 +25,22 @@ export const metadata: Metadata = {
 };
 
 const C = {
-  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
-  text: "#1A1A1A", muted: "#6B7280", dim: "#9CA3AF",
-  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+  surface: "var(--pub-surface)",
+  bg: "var(--pub-bg)",
+  surface2: "var(--pub-surface2)",
+  line: "var(--pub-line)",
+  text: "var(--pub-text)",
+  muted: "var(--pub-muted)",
+  dim: "var(--pub-dim)",
+  orange: "var(--pub-orange)",
+  orangeText: "var(--pub-orange-text)",
+  orangeSoft: "var(--pub-orange-soft)",
 };
 
 const eyebrow: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 7,
   fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
-  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+  background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 50, padding: "7px 15px",
 };
 const btnPrimary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -43,7 +49,7 @@ const btnPrimary: React.CSSProperties = {
 };
 const btnSecondary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-  padding: "14px 26px", borderRadius: 50, background: "#fff", color: C.text,
+  padding: "14px 26px", borderRadius: 50, background: "var(--pub-surface)", color: C.text,
   fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
 };
 const card: React.CSSProperties = {
@@ -130,13 +136,12 @@ const FAQ: { q: string; a: string }[] = [
 export default function CumFunctioneaza() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
-      <ResetTheme />
 
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pub-header)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <Logo h={54} priority />
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "var(--pub-surface)", border: "1.5px solid var(--pub-line2)", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
             <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
@@ -213,7 +218,7 @@ export default function CumFunctioneaza() {
               ))}
             </div>
 
-            <div data-reveal style={{ marginTop: 26, background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 20, padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div data-reveal style={{ marginTop: 26, background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 20, padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <Gift size={18} color={C.orange} strokeWidth={2.4} style={{ flexShrink: 0 }} />
               <span style={{ fontSize: 13.5, color: C.text, fontWeight: 700 }}>Contul e <b>gratuit</b> pentru clienți — fără card, fără abonament. Plătești doar serviciul, direct la salon.</span>
             </div>
@@ -301,7 +306,7 @@ export default function CumFunctioneaza() {
         {/* CTA FINAL */}
         <section style={{ padding: "0 20px 72px" }}>
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
+            <div style={{ background: "linear-gradient(135deg, var(--pub-orange-soft) 0%, var(--pub-tint) 100%)", border: "1px solid var(--pub-orange-border)", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
               <h2 style={{ ...h2, fontSize: "clamp(24px,3.2vw,36px)" }}>Gata să începi?</h2>
               <p style={{ ...lead, marginTop: 12, maxWidth: "52ch", marginLeft: "auto", marginRight: "auto" }}>
                 Clienții rezervă în câteva minute, gratuit. Saloanele primesc primele 3 luni gratuite, fără card și fără comision.

@@ -78,6 +78,41 @@ input, select, textarea {
   --ch-text-2: #374151;
   --ch-text-muted: #6B7280;
   --ch-border: #EBEBEB;
+
+  /* ---- Pagini publice + ecrane de acces (paleta calda, light) ---- */
+  --pub-bg: #FAFAFA;
+  --pub-surface: #ffffff;
+  --pub-surface2: #F7F4F0;
+  --pub-line: #EBEBEB;
+  --pub-line2: #DDD6CE;
+  --pub-text: #1A1A1A;
+  --pub-text2: #374151;
+  --pub-muted: #6B7280;
+  --pub-dim: #9CA3AF;
+  --pub-orange: #FF6B00;
+  --pub-orange-text: #E05A00;
+  --pub-orange-soft: #FFF3EA;
+  --pub-orange-border: #FFDCC6;
+  --pub-tint: #FFFBF7;
+  --pub-dark: #1A1512;
+  --pub-badge: #1A1A1A;
+  --pub-badge-text: #ffffff;
+  --pub-header: rgba(250, 250, 250, .85);
+  --pub-shadow: rgba(26, 26, 26, .08);
+  --pub-shadow-warm: rgba(255, 107, 0, .10);
+  --pub-danger: #EF4444;
+  --pub-danger-bg: #FEF2F2;
+  --pub-danger-line: #FECACA;
+  --pub-ok: #10B981;
+  --pub-ok-bg: #ECFDF5;
+  --pub-ok-line: #A7F3D0;
+  /* accente per asistent AI */
+  --ai-amber: #E08900;
+  --ai-coral: #EF4444;
+  --ai-cyan: #0891B2;
+  --ai-indigo: #6366F1;
+  --ai-pink: #EC4899;
+
   color-scheme: light;
 }
 
@@ -90,6 +125,41 @@ html[data-theme="dark"] {
   --ch-text-2: #E5E7EB;
   --ch-text-muted: #9CA3AF;
   --ch-border: #2A2A2A;
+
+  /* ---- Pagini publice + ecrane de acces (paleta calda, dark) ---- */
+  --pub-bg: #0F0E0D;
+  --pub-surface: #1A1817;
+  --pub-surface2: #232020;
+  --pub-line: #302B28;
+  --pub-line2: #3C3632;
+  --pub-text: #F6F3F0;
+  --pub-text2: #DAD4CE;
+  --pub-muted: #ABA39C;
+  --pub-dim: #9B938B;
+  --pub-orange: #FF7A1F;
+  --pub-orange-text: #FFA35E;
+  --pub-orange-soft: #2B1D14;
+  --pub-orange-border: #4B3223;
+  --pub-tint: #1C1918;
+  --pub-dark: #080706;
+  --pub-badge: #F6F3F0;
+  --pub-badge-text: #14120F;
+  --pub-header: rgba(15, 14, 13, .88);
+  --pub-shadow: rgba(0, 0, 0, .55);
+  --pub-shadow-warm: rgba(255, 107, 0, .16);
+  --pub-danger: #FF7A70;
+  --pub-danger-bg: #2A1614;
+  --pub-danger-line: #5A2A25;
+  --pub-ok: #34D399;
+  --pub-ok-bg: #10241C;
+  --pub-ok-line: #1E4A3A;
+  /* accente per asistent AI — luminate pentru fundal intunecat */
+  --ai-amber: #FFB020;
+  --ai-coral: #FF7A70;
+  --ai-cyan: #22C7E8;
+  --ai-indigo: #9AA0FF;
+  --ai-pink: #FF7AC0;
+
   color-scheme: dark;
 }
 
@@ -391,3 +461,28 @@ html { scroll-behavior: smooth; }
 .ch-cta:not(:disabled):active { transform: translateY(0); }
 .ch-social:hover { border-color: #FFC9A0 !important; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,26,26,.07); }
 @media (hover: none) { .ch-cta:hover, .ch-social:hover { transform: none; box-shadow: none; } }
+
+/* logo: varianta corecta pentru tema activa (fara flash, comutare pur CSS) */
+.logo-dark { display: none; }
+html[data-theme="dark"] .logo-light { display: none; }
+html[data-theme="dark"] .logo-dark { display: inline-block; }
+
+/* inputurile din paginile publice / ecranele de acces isi pastreaza paleta calda si pe dark
+   (regula generica de mai sus le-ar face reci) */
+html[data-theme="dark"] input[style*="var(--pub-surface)"],
+html[data-theme="dark"] textarea[style*="var(--pub-surface)"] {
+  background-color: var(--pub-surface) !important;
+  color: var(--pub-text) !important;
+}
+html[data-theme="dark"] input[style*="var(--pub-surface)"]::placeholder,
+html[data-theme="dark"] textarea[style*="var(--pub-surface)"]::placeholder {
+  color: var(--pub-dim) !important;
+}
+
+/* bara de cautare din hero: pe telefon se aseaza pe verticala, ca sa incapa textul */
+@media (max-width: 620px) {
+  .ch-search { flex-direction: column; align-items: stretch !important; gap: 4px; padding: 10px !important; border-radius: 18px !important; }
+  .ch-search-sep { width: 100% !important; height: 1px !important; }
+  .ch-search-field { padding: 10px 12px !important; }
+  .ch-search-btn { width: 100%; margin-top: 4px; }
+}

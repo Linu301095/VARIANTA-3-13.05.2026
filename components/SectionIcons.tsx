@@ -1,6 +1,6 @@
-const ORANGE = "#FF6B00";
-const SOFT = "#FFF3EA";
-const BORDER = "#FFDCC6";
+const ORANGE = "var(--pub-orange)";
+const SOFT = "var(--pub-orange-soft)";
+const BORDER = "var(--pub-orange-border)";
 
 /** HUB — noduri care converg spre centru („De ce CalyHub": totul într-un loc) */
 export function IconHub({ size = 60 }: { size?: number }) {

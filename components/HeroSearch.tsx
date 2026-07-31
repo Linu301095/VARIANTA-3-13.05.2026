@@ -4,8 +4,12 @@ import { useRouter } from "next/navigation";
 import { PawPrint, Scissors, Search, MapPin } from "lucide-react";
 
 const C = {
-  surface: "#fff", line: "#EBEBEB", muted: "#6B7280", dim: "#9CA3AF",
-  text: "#1A1A1A", orange: "#FF6B00",
+  surface: "var(--pub-surface)",
+  line: "var(--pub-line)",
+  muted: "var(--pub-muted)",
+  dim: "var(--pub-dim)",
+  text: "var(--pub-text)",
+  orange: "var(--pub-orange)",
 };
 
 type Mod = "beauty" | "grooming";
@@ -46,8 +50,8 @@ export default function HeroSearch() {
       </div>
 
       {/* search */}
-      <div className="ch-hero-anim" style={{ display: "flex", alignItems: "center", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 20, boxShadow: "0 20px 50px rgba(120,90,60,.14)", maxWidth: 660, margin: "14px auto 0", padding: 6, textAlign: "left", animationDelay: ".52s" }}>
-        <div style={{ flex: 1.5, display: "flex", alignItems: "center", gap: 11, padding: "6px 16px", minWidth: 0 }}>
+      <div className="ch-hero-anim ch-search" style={{ display: "flex", alignItems: "center", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 20, boxShadow: "0 20px 50px rgba(120,90,60,.14)", maxWidth: 660, margin: "14px auto 0", padding: 6, textAlign: "left", animationDelay: ".52s" }}>
+        <div className="ch-search-field" style={{ flex: 1.5, display: "flex", alignItems: "center", gap: 11, padding: "6px 16px", minWidth: 0 }}>
           <Search size={19} color={C.muted} strokeWidth={2} style={{ flexShrink: 0 }} />
           <input
             value={q}
@@ -57,8 +61,8 @@ export default function HeroSearch() {
             style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: 15, fontWeight: 600, color: C.text }}
           />
         </div>
-        <div style={{ width: 1, height: 30, background: C.line, flexShrink: 0 }} />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 11, padding: "6px 16px", minWidth: 0 }}>
+        <div className="ch-search-sep" style={{ width: 1, height: 30, background: C.line, flexShrink: 0 }} />
+        <div className="ch-search-field" style={{ flex: 1, display: "flex", alignItems: "center", gap: 11, padding: "6px 16px", minWidth: 0 }}>
           <MapPin size={19} color={C.muted} strokeWidth={2} style={{ flexShrink: 0 }} />
           <input
             value={oras}
@@ -68,7 +72,7 @@ export default function HeroSearch() {
             style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: 15, fontWeight: 600, color: C.text }}
           />
         </div>
-        <button type="button" onClick={cauta}
+        <button type="button" onClick={cauta} className="ch-search-btn"
           style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 24px", borderRadius: 12, border: "none", background: C.orange, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 8px 22px rgba(255,107,0,.32)", flexShrink: 0 }}>
           <Search size={17} strokeWidth={2.4} /> Caută
         </button>

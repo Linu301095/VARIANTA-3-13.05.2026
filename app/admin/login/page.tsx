@@ -50,8 +50,8 @@ export default function AdminLogin() {
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Nunito', system-ui, sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 420, background: "#111", border: "1px solid #2A2A2A", borderRadius: 24, padding: "40px 32px", boxShadow: "0 30px 80px rgba(0,0,0,.5)" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
-          <div style={{ background: "#fff", padding: "10px 14px", borderRadius: 12, marginBottom: 14 }}>
-            <Image src="/logo.png" alt="CalyHub" width={120} height={40} style={{ height: 40, width: "auto", objectFit: "contain" }} priority />
+          <div style={{ marginBottom: 14 }}>
+            <Image src="/logo-dark.png" alt="CalyHub" width={56} height={56} style={{ height: 56, width: "auto", objectFit: "contain" }} priority />
           </div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#FF6B00", color: "#fff", padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>
             🔒 Zonă restricționată

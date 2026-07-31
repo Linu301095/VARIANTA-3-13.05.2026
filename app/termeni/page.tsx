@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import Logo from "../../components/Logo";
 import Footer from "../../components/Footer";
-import ResetTheme from "../../components/ResetTheme";
 import ScrollReveal from "../../components/ScrollReveal";
 import { FileText, Info } from "lucide-react";
 
@@ -89,26 +88,33 @@ Continuarea utilizării platformei după data intrării în vigoare a modificăr
 ];
 
 const C = {
-  bg: "#FAFAFA", surface: "#fff", surface2: "#F7F4F0", line: "#EBEBEB",
-  text: "#1A1A1A", text2: "#374151", muted: "#6B7280", dim: "#9CA3AF",
-  orange: "#FF6B00", orangeText: "#E05A00", orangeSoft: "#FFF3EA",
+  surface: "var(--pub-surface)",
+  bg: "var(--pub-bg)",
+  surface2: "var(--pub-surface2)",
+  line: "var(--pub-line)",
+  text: "var(--pub-text)",
+  text2: "var(--pub-text2)",
+  muted: "var(--pub-muted)",
+  dim: "var(--pub-dim)",
+  orange: "var(--pub-orange)",
+  orangeText: "var(--pub-orange-text)",
+  orangeSoft: "var(--pub-orange-soft)",
 };
 const eyebrow: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 7,
   fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: C.orangeText,
-  background: C.orangeSoft, border: "1px solid #FFDCC6", borderRadius: 50, padding: "7px 15px",
+  background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 50, padding: "7px 15px",
 };
 
 export default function Termeni() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
-      <ResetTheme />
 
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,250,250,.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pub-header)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${C.line}`, height: 70 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/"><Image src="/logo.png" alt="CalyHub" width={130} height={54} style={{ height: 54, width: "auto", objectFit: "contain" }} priority /></Link>
+          <Logo h={54} priority />
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
-            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "#fff", border: "1.5px solid #DDD6CE", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
+            <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "var(--pub-surface)", border: "1.5px solid var(--pub-line2)", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
             <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
           </nav>
         </div>
@@ -120,7 +126,7 @@ export default function Termeni() {
           <div className="ch-orb" style={{ width: 300, height: 300, background: "rgba(255,107,0,.16)", top: -130, left: "18%" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
             <div className="ch-hero-anim" style={{ display: "flex", justifyContent: "center", marginBottom: 18, animationDelay: ".05s" }}>
-              <div style={{ width: 58, height: 58, borderRadius: 16, background: C.orangeSoft, border: "1.5px solid #FFDCC6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 58, height: 58, borderRadius: 16, background: C.orangeSoft, border: "1.5px solid var(--pub-orange-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <FileText size={26} color={C.orange} strokeWidth={2} />
               </div>
             </div>
@@ -137,7 +143,7 @@ export default function Termeni() {
         {/* CONTINUT */}
         <section style={{ padding: "20px 20px 76px" }}>
           <div style={{ maxWidth: 800, margin: "0 auto" }}>
-            <div data-reveal style={{ background: "linear-gradient(135deg, #FFF3EA 0%, #FFFBF7 100%)", border: "1px solid #FFDCC6", borderRadius: 24, padding: "22px 26px", marginBottom: 32 }}>
+            <div data-reveal style={{ background: "linear-gradient(135deg, var(--pub-orange-soft) 0%, var(--pub-tint) 100%)", border: "1px solid var(--pub-orange-border)", borderRadius: 24, padding: "22px 26px", marginBottom: 32 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: C.orangeText, marginBottom: 6, display: "flex", alignItems: "center", gap: 7 }}>
                 <Info size={16} strokeWidth={2.4} /> Rezumat pe scurt
               </div>
