@@ -1090,7 +1090,7 @@ export default function DashboardClient() {
                 )}
               </div>
 
-              {animale.length > 1 && (
+              {salonCereAnimal && animale.length > 1 && (
                 <>
                   <SectionTitle>Pentru cine programezi?</SectionTitle>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, marginBottom: 24 }}>
@@ -1105,7 +1105,7 @@ export default function DashboardClient() {
                             : <span style={{ fontSize: 22 }}>{sp.icon}</span>}
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{a.nume}</div>
-                            <div style={{ fontSize: 11, color: c.xmuted }}>{a.rasa}, {a.greutate}kg</div>
+                            <div style={{ fontSize: 11, color: c.xmuted }}>{[a.rasa, a.greutate ? `${a.greutate} kg` : null].filter(Boolean).join(" · ") || specieInfo(a.specie).label}</div>
                           </div>
                         </button>
                       );
@@ -1625,7 +1625,7 @@ export default function DashboardClient() {
                 }
                 <span style={{ fontWeight: 800, color: c.text }}>{animal.nume}</span>
                 <span style={{ color: c.border }}>|</span>
-                <span style={{ color: c.muted, fontWeight: 600 }}>{animal.rasa}, {animal.greutate} kg</span>
+                <span style={{ color: c.muted, fontWeight: 600 }}>{[animal.rasa, animal.greutate ? `${animal.greutate} kg` : null].filter(Boolean).join(" · ") || specieInfo(animal.specie).label}</span>
                 {animale.length > 1 && (
                   <button onClick={() => setTab("animal")} style={{ marginLeft: 4, fontSize: 11, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, border: "none", padding: "4px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                     +{animale.length - 1} {animale.length === 2 ? "altul" : "alți"}
@@ -1899,12 +1899,12 @@ export default function DashboardClient() {
           {/* TAB ANIMALE */}
           {tab === "animal" && (
             <div style={{ maxWidth: 640 }}>
-              <PageHeader icon={PawPrint} title="Animalele mele" sub="Gestionează profilurile animăluților tăi" />
+              <PageHeader icon={PawPrint} title="Animalele mele" sub="Adaugă și editează profilurile animalelor tale" />
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                 {animale.length === 0 && !showAddAnimal && (
                   <div style={{ padding: "28px 20px", textAlign: "center", color: c.muted, fontSize: 14, background: c.surface, borderRadius: 16, border: `1.5px dashed ${c.border}` }}>
-                    Nu ai niciun animal înregistrat. Adaugă unul ca să poți rezerva.
+                    Nu ai niciun animal în cont. Adaugă unul dacă vrei să rezervi și la saloane de grooming — pentru tine poți rezerva și fără.
                   </div>
                 )}
 
@@ -1922,7 +1922,7 @@ export default function DashboardClient() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 17, fontWeight: 900, color: c.text }}>{a.nume}</div>
                               <div style={{ fontSize: 13, color: c.muted, marginTop: 4 }}>{sp.label} · {sexLabel(a.sex)} · {a.rasa}</div>
-                              <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>{a.greutate} kg · {a.varsta} ani · {a.alergii || "Fără alergii"} · {a.vaccinat ? <span style={{ color: "#10B981", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}><Shield size={11} color="#10B981" strokeWidth={2} /> Vaccinat</span> : <span style={{ color: "#EF4444", fontWeight: 700 }}>Nevaccinat</span>}</div>
+                              <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3 }}>{[a.greutate ? `${a.greutate} kg` : null, a.varsta ? `${a.varsta} ani` : null, a.alergii || "Fără alergii"].filter(Boolean).join(" · ")} · {a.vaccinat ? <span style={{ color: "#10B981", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}><Shield size={11} color="#10B981" strokeWidth={2} /> Vaccinat</span> : <span style={{ color: "#EF4444", fontWeight: 700 }}>Nevaccinat</span>}</div>
                             </div>
                             <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap" }}>
                               {animale.length > 1 && a.id !== selectedAnimalId && (
@@ -2095,7 +2095,7 @@ export default function DashboardClient() {
               <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 12 }}>Preferințe notificări</div>
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}`, display: "flex", flexDirection: "column", gap: 0 }}>
                 {[
-                  { key: "sms", label: "SMS programări", sub: "Reminder cu 24h înainte de programare" },
+                  { key: "sms", label: "Remindere programări", sub: "WhatsApp sau SMS, cu 24 de ore înainte" },
                   { key: "newsletter", label: "Newsletter CalyHub", sub: "Oferte și noutăți de la saloane" },
                 ].map((item, i) => (
                   <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: i < 1 ? `1px solid ${c.border2}` : "none" }}>
@@ -2144,13 +2144,14 @@ export default function DashboardClient() {
               <FAQ items={[
                 { q: "Cum anulez o programare?", r: "Mergi la Programările mele, găsești programarea confirmată și dai click pe Anulează. Poți anula cu cel puțin 12 ore înainte și trebuie să scrii un scurt motiv pentru salon." },
                 { q: "Pot schimba ora programării?", r: "Momentan poți anula și face o programare nouă. Funcția de reprogramare va fi disponibilă în curând." },
-                { q: "Primesc reminder înainte de programare?", r: "Da, primești SMS cu 24 de ore înainte dacă ai notificările SMS activate din meniul Notificări." },
-                { q: "Cum adaug un al doilea animăluț?", r: "Suportul pentru mai mulți animăluți va fi disponibil în versiunea următoare a aplicației." },
+                { q: "Primesc reminder înainte de programare?", r: "Da, cu 24 de ore înainte, pe WhatsApp sau SMS, dacă ai remindele active din meniul Notificări." },
+                { q: "Pot avea mai multe animale în cont?", r: "Da. Mergi la Animalele mele și apeși pe Adaugă animal nou. Comuți între ele oricând, iar la rezervare se folosește animalul selectat." },
+                { q: "Rezerv doar pentru animalul meu?", r: "Nu. Contul e al tău ca persoană: rezervi la saloane de înfrumusețare pentru tine, iar dacă ai un animal în cont ai și lumea de grooming. Comuți între ele din butonul de sus." },
                 { q: "Cum contactez salonul direct?", r: "Pe pagina salonului vei găsi numărul de telefon public al acestuia." },
               ]} />
               <div style={{ background: c.orangeAccent, border: `1px solid ${c.orangeBorder}`, borderRadius: 16, padding: "18px 22px", marginTop: 20 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "#FF6B00", marginBottom: 4 }}>Nu ai găsit răspunsul?</div>
-                <div style={{ fontSize: 13, color: c.muted }}>Contactează-ne la <strong>support@calyhub.ro</strong> sau prin chat live.</div>
+                <div style={{ fontSize: 13, color: c.muted }}>Scrie-ne la <strong>support@calyhub.ro</strong> — răspundem de regulă în aceeași zi lucrătoare.</div>
               </div>
             </div>
           )}
@@ -2594,7 +2595,7 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Rasa</label>
         {form.specie === "altele" || rasaLibera ? (
           <div style={{ display: "flex", gap: 8 }}>
-            <input value={form.rasa} onChange={e => set("rasa", e.target.value)} placeholder="Scrie rasa animăluțului" style={{ ...inp, flex: 1 } as React.CSSProperties} />
+            <input value={form.rasa} onChange={e => set("rasa", e.target.value)} placeholder="Scrie rasa animalului" style={{ ...inp, flex: 1 } as React.CSSProperties} />
             {form.specie !== "altele" && (
               <button type="button" onClick={() => { setRasaLibera(false); set("rasa", ""); }}
                 style={{ padding: "0 12px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 12, fontWeight: 700, color: c.text2, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "Nunito, sans-serif" }}>

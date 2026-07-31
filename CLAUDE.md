@@ -8,9 +8,9 @@ ele sunt partea care decide dacă un salon de înfrumusețare rămâne sau pleac
 
 | # | Etapa | Ce cuprinde | Stare |
 |---|---|---|---|
-| D1 | Clientul fără animal | Comutator „Pentru tine / Pentru animalul tău", căutare filtrată pe domeniu, rezervare fără animal la înfrumusețare | ⬜ urmează |
-| D2 | Limbajul dashboardului client | „groomer" → „specialist" unde e beauty, talia doar la grooming | ⬜ |
-| D3 | Dashboardul salonului pe verticală | Echipă, agendă, tabul „Animale" ascuns la beauty, prețuri fără talie | ⬜ |
+| D1 | Clientul fără animal | Comutator „Pentru tine / Pentru animalul tău", căutare filtrată pe domeniu, rezervare fără animal la înfrumusețare | ✅ gata (31.07.2026) |
+| D2 | Limbajul dashboardului client | „groomer" → „specialist" unde e beauty, talia doar la grooming | ✅ gata (31.07.2026) |
+| D3 | Dashboardul salonului pe verticală | Echipă, agendă, tabul „Animale" ascuns la beauty, prețuri fără talie | ⬜ urmează |
 | D4 | Statistici + agenți AI pe verticală | Rapoartele și prompturile AI vorbesc limba verticalei | ⬜ |
 
 **Context măsurat (31.07.2026):** `app/dashboard/salon/page.tsx` (~2150 linii) conține 95 apariții
