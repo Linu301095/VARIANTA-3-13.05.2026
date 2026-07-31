@@ -43,6 +43,24 @@ type AnimalIstoric = {
   vizite: VizitaIstoric[]; totalCheltuit: number; ultimaVizita: string | null;
 };
 
+type DomeniuSalon = "infrumusetare" | "grooming";
+/** Tot ce difera in dashboard intre cele doua verticale. */
+const DOM_SALON: Record<DomeniuSalon, {
+  rol: string; rolPlural: string; rolPluralCap: string;
+  echipaSub: string; areAnimale: boolean;
+}> = {
+  infrumusetare: {
+    rol: "specialist", rolPlural: "specialiști", rolPluralCap: "Specialiști",
+    echipaSub: "Gestionează specialiștii și orarul fiecăruia",
+    areAnimale: false,
+  },
+  grooming: {
+    rol: "groomer", rolPlural: "groomeri", rolPluralCap: "Groomeri",
+    echipaSub: "Gestionează groomerii și orarul fiecăruia",
+    areAnimale: true,
+  },
+};
+
 type Tab = "agenda" | "statistici" | "program" | "notificari" | "functii-ai" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
@@ -236,7 +254,7 @@ const btnPrimary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50
 
 /* ───────────────────────── Agenda — calendar pe zi ───────────────────────── */
 function AgendaCalendar({
-  programari, echipa, program, agendaZi, setAgendaZi, filtruTalie, setFiltruTalie,
+  programari, echipa, program, agendaZi, setAgendaZi, filtruTalie, setFiltruTalie, areAnimale,
   accepta, respinge, clientiBlocati, abateriMap, toggleBlocClient, highlightProgramare, onHighlightConsumat, c, theme,
 }: {
   programari: ProgramareSalon[];
@@ -246,6 +264,7 @@ function AgendaCalendar({
   setAgendaZi: (s: string) => void;
   filtruTalie: "toate" | "mica" | "medie" | "mare";
   setFiltruTalie: (v: "toate" | "mica" | "medie" | "mare") => void;
+  areAnimale: boolean;
   accepta: (id: string) => void;
   respinge: (id: string) => void;
   clientiBlocati: string[];
@@ -371,7 +390,8 @@ function AgendaCalendar({
         <button onClick={() => { const d = new Date(monday); d.setDate(monday.getDate() + 7); setAgendaZi(isoData(d)); }} style={navBtn} aria-label="Săptămâna următoare">›</button>
       </div>
 
-      {/* Filtru talie */}
+      {/* Filtru talie — are sens doar la saloanele care lucreaza cu animale */}
+      {areAnimale && (
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
         {[{ val: "toate", label: "Toate" }, { val: "mica", label: "Mică" }, { val: "medie", label: "Medie" }, { val: "mare", label: "Mare" }].map(t => (
           <button key={t.val} onClick={() => setFiltruTalie(t.val as any)}
@@ -380,6 +400,7 @@ function AgendaCalendar({
           </button>
         ))}
       </div>
+      )}
 
       {/* CERERI NOI — deasupra calendarului, prima chestie vizibilă */}
       {pending.length > 0 && (
@@ -419,10 +440,12 @@ function AgendaCalendar({
 
                   {/* Row 2 — animal + service */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-                    <div style={{ fontSize: 12.5, color: c.text2, display: "flex", alignItems: "center", gap: 6 }}>
-                      <PawPrint size={13} color={c.muted} strokeWidth={2} />
-                      <span style={{ fontWeight: 700, color: c.text }}>{p.animal}</span>
-                    </div>
+                    {areAnimale && p.animal && p.animal !== "—" && (
+                      <div style={{ fontSize: 12.5, color: c.text2, display: "flex", alignItems: "center", gap: 6 }}>
+                        <PawPrint size={13} color={c.muted} strokeWidth={2} />
+                        <span style={{ fontWeight: 700, color: c.text }}>{p.animal}</span>
+                      </div>
+                    )}
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <Scissors size={13} color="#FF6B00" strokeWidth={2} />
                       <span style={{ fontSize: 12.5, fontWeight: 700, color: c.text }}>{p.serviciu}</span>
@@ -1112,6 +1135,15 @@ export default function DashboardSalon() {
   const inp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, fontSize: 14, fontFamily: "Nunito, sans-serif", outline: "none", boxSizing: "border-box", background: c.input, color: c.text };
 
   const numeSalon = salonData?.nume || "Salonul tau";
+  // Verticala salonului — decide limbajul si ce sectiuni are rost sa existe.
+  const domeniuSalon: DomeniuSalon = salonData?.domeniu === "infrumusetare" ? "infrumusetare" : "grooming";
+  const DS = DOM_SALON[domeniuSalon];
+  const areAnimale = DS.areAnimale;
+
+  // Un salon de infrumusetare nu are tabul de animale — daca ajunge acolo, il aducem la agenda.
+  useEffect(() => {
+    if (!areAnimale && tab === "animale") setTab("agenda");
+  }, [areAnimale, tab]);
   const numeComplet = user?.nume?.split(" ")[0] || "Manager";
   const SUB_TABS: Tab[] = ["functii-ai", "profil-salon", "servicii", "echipa", "animale", "abonament", "setari", "ajutor"];
   const isSubTab = SUB_TABS.includes(tab);
@@ -1298,7 +1330,7 @@ export default function DashboardSalon() {
 
       if (raportSel.programari) {
         const rows = progRange.slice().sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : (a.ora < b.ora ? -1 : 1)).map(p => ({
-          Data: p.data, Ora: p.ora, Client: p.client, Animal: p.animal, Serviciu: p.serviciu,
+          Data: p.data, Ora: p.ora, Client: p.client, ...(areAnimale ? { Animal: p.animal } : {}), Serviciu: p.serviciu,
           "Preț (RON)": p.pret || 0, Status: p.status,
         }));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Programări");
@@ -1326,7 +1358,7 @@ export default function DashboardSalon() {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Servicii");
       }
 
-      if (raportSel.talie) {
+      if (raportSel.talie && areAnimale) {
         const t = { mica: 0, medie: 0, mare: 0, necunoscuta: 0 };
         venitRange.forEach(p => { if (p.talie === "mica") t.mica++; else if (p.talie === "medie") t.medie++; else if (p.talie === "mare") t.mare++; else t.necunoscuta++; });
         const tot = t.mica + t.medie + t.mare + t.necunoscuta;
@@ -1946,7 +1978,7 @@ export default function DashboardSalon() {
 
             {/* Right: user menu */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} avatarUrl={avatarUrl} pozaUrl={pozaUrl} planId={planIdCurent} />
+              <UserMenu numeComplet={numeComplet} numeSalon={numeSalon} tab={tab} onLogout={handleLogout} onNav={setTab} isMobile={isMobile} avatarUrl={avatarUrl} pozaUrl={pozaUrl} planId={planIdCurent} DS={DS} />
             </div>
           </div>
         </header>
@@ -1964,6 +1996,7 @@ export default function DashboardSalon() {
                 setAgendaZi={setAgendaZi}
                 filtruTalie={filtruTalie}
                 setFiltruTalie={setFiltruTalie}
+                areAnimale={areAnimale}
                 accepta={accepta}
                 respinge={respinge}
                 clientiBlocati={clientiBlocati}
@@ -2154,7 +2187,7 @@ export default function DashboardSalon() {
               const SECTIUNI: { key: keyof typeof raportSel; label: string }[] = [
                 { key: "venituri", label: "Venituri" }, { key: "programari", label: "Programări" },
                 { key: "clienti", label: "Clienți" }, { key: "servicii", label: "Servicii populare" },
-                { key: "talie", label: "Distribuție talie" },
+                ...(areAnimale ? [{ key: "talie" as const, label: "Distribuție talie" }] : []),
               ];
               const cards = [
                 { id: "venituri" as const, Icon: Wallet, label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`, sub: `${venitRange.length} programări`, color: "#10B981", clickable: true },
@@ -2364,9 +2397,9 @@ export default function DashboardSalon() {
                       <div onClick={() => setStatExtins(prev => prev === "servicii" ? null : "servicii")}
                         style={{ background: c.surface, borderRadius: 18, padding: "18px 20px", border: deschis ? "2px solid #10B981" : "2px solid #FF6B00", boxShadow: "0 2px 12px rgba(255,107,0,.07)", cursor: "pointer", position: "relative" }}>
                         <div style={{ marginBottom: 8 }}><Scissors size={22} color="#FF6B00" strokeWidth={2} /></div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Servicii & Groomeri — {perLabel.toLowerCase()}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Servicii & {DS.rolPluralCap} — {perLabel.toLowerCase()}</div>
                         <div style={{ fontSize: 22, fontWeight: 900, color: c.text, lineHeight: 1.1 }}>{serviciiPop.length > 0 ? serviciiPop[0].nume : "—"}</div>
-                        <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 700, marginTop: 6 }}>{totalServ} {totalServ === 1 ? "serviciu efectuat" : "servicii efectuate"} · {groomerProd.length} {groomerProd.length === 1 ? "groomer" : "groomeri"}</div>
+                        <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 700, marginTop: 6 }}>{totalServ} {totalServ === 1 ? "serviciu efectuat" : "servicii efectuate"} · {groomerProd.length} {groomerProd.length === 1 ? DS.rol : DS.rolPlural}</div>
                         <div style={{ position: "absolute", top: 16, right: 16, fontSize: 12, color: c.muted, fontWeight: 800 }}>{deschis ? "▲" : "▼"}</div>
                         {deschis && (
                           <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
@@ -2379,7 +2412,7 @@ export default function DashboardSalon() {
                                 <div style={{ height: 6, background: c.surface3, borderRadius: 3 }}><div style={{ height: "100%", width: `${s.pct}%`, background: s.col, borderRadius: 3 }} /></div>
                               </div>
                             ))}
-                            <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 0.5, margin: "20px 0 12px" }}>Productivitate groomeri</div>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 0.5, margin: "20px 0 12px" }}>Productivitate {DS.rolPlural}</div>
                             {groomerProd.length === 0 ? (
                               <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>Nicio programare atribuită încă.</div>
                             ) : groomerProd.map(g => (
@@ -2396,8 +2429,8 @@ export default function DashboardSalon() {
                       </div>
                     );
                   })()}
-                  {/* CARD DISTRIBUȚIE TALIE */}
-                  {(() => {
+                  {/* CARD DISTRIBUȚIE TALIE — doar la saloanele care lucreaza cu animale */}
+                  {areAnimale && (() => {
                     const deschis = statExtins === "talie";
                     return (
                       <div onClick={() => setStatExtins(prev => prev === "talie" ? null : "talie")}
@@ -2923,7 +2956,7 @@ export default function DashboardSalon() {
                       { tip: "lunar", Icon: BarChart3, iconColor: "#FF6B00", label: "Raportul lunii", desc: "Ce a mers, ce nu, 3 recomandări" },
                       { tip: "preturi", Icon: Wallet, iconColor: "#10B981", label: "Analiză prețuri & încasări", desc: "Unde câștigi și unde pierzi bani" },
                       { tip: "crestere", Icon: TrendingUp, iconColor: "#6366F1", label: "Plan de creștere", desc: "3 acțiuni concrete, prioritizate" },
-                      { tip: "echipa", Icon: Users, iconColor: "#F59E0B", label: "Performanța echipei", desc: "Productivitatea groomerilor" },
+                      { tip: "echipa", Icon: Users, iconColor: "#F59E0B", label: "Performanța echipei", desc: `Productivitatea ${DS.rolPlural}` },
                     ];
                     const p = isMobile ? "12px 14px" : "16px 18px";
                     const pInner = isMobile ? "12px 14px" : "16px 18px";
@@ -3498,6 +3531,20 @@ export default function DashboardSalon() {
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <input value={s.nume} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, nume: e.target.value } : x))} placeholder="Denumire serviciu" style={inp} />
+                        {!areAnimale ? (
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, marginBottom: 5 }}>Preț (RON)</div>
+                              <input value={s.pret} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, pret: e.target.value, preturi: undefined } : x))}
+                                type="number" placeholder="—" style={{ ...inp, padding: "10px 12px", fontSize: 13 }} />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: c.xmuted, marginBottom: 5 }}>Durată (min)</div>
+                              <input value={s.durata} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, durata: e.target.value, durate: undefined } : x))}
+                                type="number" placeholder="—" style={{ ...inp, padding: "10px 12px", fontSize: 13 }} />
+                            </div>
+                          </div>
+                        ) : (<>
                         <div style={{ fontSize: 12, color: c.muted, fontWeight: 700, marginTop: 4 }}>Preț și durată pe talie (lasă gol dacă nu oferi pentru o talie):</div>
                         <div style={{ display: "grid", gridTemplateColumns: "70px 1fr 1fr", gap: 8, alignItems: "center" }}>
                           <div></div>
@@ -3527,6 +3574,7 @@ export default function DashboardSalon() {
                             </React.Fragment>
                           ))}
                         </div>
+                        </>)}
                       </div>
                     </div>
                     );
@@ -3546,7 +3594,7 @@ export default function DashboardSalon() {
             {/* ECHIPA */}
             {tab === "echipa" && (
               <div style={{ maxWidth: 560 }}>
-                <PageHeader icon={Users} title="Echipa mea" sub="Gestionează groomerii și orarul fiecăruia" />
+                <PageHeader icon={Users} title="Echipa mea" sub={DS.echipaSub} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 16 }}>
                   {echipa.map(g => {
                     const orarDeschis = !!groomerOrarDeschis[g.id];
@@ -3888,7 +3936,7 @@ export default function DashboardSalon() {
   );
 }
 
-function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl, pozaUrl, planId }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null; pozaUrl?: string | null; planId?: string }) {
+function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avatarUrl, pozaUrl, planId, DS }: { numeComplet: string; numeSalon: string; tab: Tab; onLogout: () => void; onNav: (t: Tab) => void; isMobile?: boolean; avatarUrl?: string | null; pozaUrl?: string | null; planId?: string; DS: typeof DOM_SALON[DomeniuSalon] }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<Tab | "logout" | null>(null);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
@@ -3902,8 +3950,8 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
     { icon: Sparkles, label: "Funcții AI", sub: "Asistenții AI ai salonului", t: "functii-ai", locked: aiBlocat },
     { icon: Store, label: "Profilul salonului", sub: "Editeaza datele firmei", t: "profil-salon" },
     { icon: Scissors, label: "Serviciile mele", sub: "Adauga / modifica servicii", t: "servicii" },
-    { icon: Users, label: "Echipa mea", sub: "Gestioneaza groomerii", t: "echipa" },
-    { icon: PawPrint, label: "Istoric animale", sub: "Fișa fiecărui animal programat", t: "animale" },
+    { icon: Users, label: "Echipa mea", sub: `Gestionează ${DS.rolPlural}`, t: "echipa" },
+    ...(DS.areAnimale ? [{ icon: PawPrint, label: "Istoric animale", sub: "Fișa fiecărui animal programat", t: "animale" as Tab }] : []),
     { icon: CreditCard, label: "Abonamentul meu", sub: "Plan, facturare, istoric", t: "abonament" },
     { icon: Settings, label: "Setari cont", sub: "Schimba parola", t: "setari" },
     { icon: HelpCircle, label: "Ajutor", sub: "Support dedicat", t: "ajutor" },

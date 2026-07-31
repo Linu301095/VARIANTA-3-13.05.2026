@@ -10,8 +10,8 @@ ele sunt partea care decide dacă un salon de înfrumusețare rămâne sau pleac
 |---|---|---|---|
 | D1 | Clientul fără animal | Comutator „Pentru tine / Pentru animalul tău", căutare filtrată pe domeniu, rezervare fără animal la înfrumusețare | ✅ gata (31.07.2026) |
 | D2 | Limbajul dashboardului client | „groomer" → „specialist" unde e beauty, talia doar la grooming | ✅ gata (31.07.2026) |
-| D3 | Dashboardul salonului pe verticală | Echipă, agendă, tabul „Animale" ascuns la beauty, prețuri fără talie | ⬜ urmează |
-| D4 | Statistici + agenți AI pe verticală | Rapoartele și prompturile AI vorbesc limba verticalei | ⬜ |
+| D3 | Dashboardul salonului pe verticală | Echipă, agendă, tabul „Animale" ascuns la beauty, prețuri fără talie | ✅ gata (31.07.2026) |
+| D4 | Statistici + agenți AI pe verticală | Rapoartele și prompturile AI vorbesc limba verticalei | ⬜ urmează |
 
 **Context măsurat (31.07.2026):** `app/dashboard/salon/page.tsx` (~2150 linii) conține 95 apariții
 „groomer", 152 „animal", 98 „talie". `app/dashboard/client/page.tsx` (~2570 linii) conține
