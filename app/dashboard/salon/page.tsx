@@ -50,6 +50,7 @@ const DOM_SALON: Record<DomeniuSalon, {
   echipaSub: string; areAnimale: boolean;
   istoricTitlu: string; istoricSub: string; istoricMeniuSub: string;
   istoricCauta: string; istoricGol: string;
+  fisaTitlu: string; fisaTitluScurt: string; fisaDesc: string; fisaPitch: string;
 }> = {
   infrumusetare: {
     rol: "specialist", rolPlural: "specialiști", rolPluralCap: "Specialiști",
@@ -60,6 +61,10 @@ const DOM_SALON: Record<DomeniuSalon, {
     istoricMeniuSub: "Vizite și încasări per client",
     istoricCauta: "Caută după numele clientului…",
     istoricGol: "Niciun client în istoric încă.",
+    fisaTitlu: "Recomandări după vizită",
+    fisaTitluScurt: "Recomandări post-serviciu",
+    fisaDesc: "Sfaturi de întreținere, pe serviciul efectuat",
+    fisaPitch: "Oferă-le clienților sfaturi de întreținere potrivite serviciului făcut — cum păstrează culoarea, tunsoarea sau manichiura până la următoarea vizită.",
   },
   grooming: {
     rol: "groomer", rolPlural: "groomeri", rolPluralCap: "Groomeri",
@@ -70,6 +75,10 @@ const DOM_SALON: Record<DomeniuSalon, {
     istoricMeniuSub: "Fișa fiecărui animal programat",
     istoricCauta: "Caută după nume animal, stăpân sau rasă…",
     istoricGol: "Niciun animal în istoric încă.",
+    fisaTitlu: "Fișă îngrijire post-grooming",
+    fisaTitluScurt: "Fișă post-grooming",
+    fisaDesc: "Sfaturi de îngrijire personalizate pe rasă",
+    fisaPitch: "Oferă-le clienților sfaturi de îngrijire pe măsura rasei animalului — un plus de profesionalism care îi aduce înapoi.",
   },
 };
 
@@ -1580,7 +1589,7 @@ export default function DashboardSalon() {
       const res = await fetch("/api/ai/consultant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tip, snapshot, salonNume: numeSalon }),
+        body: JSON.stringify({ tip, snapshot, salonNume: numeSalon, domeniu: domeniuSalon }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Eroare server");
@@ -1613,7 +1622,7 @@ export default function DashboardSalon() {
       const res = await fetch("/api/ai/consultant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ intrebare, snapshot, salonNume: numeSalon }),
+        body: JSON.stringify({ intrebare, snapshot, salonNume: numeSalon, domeniu: domeniuSalon }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Eroare server");
@@ -1639,7 +1648,7 @@ export default function DashboardSalon() {
       const res = await fetch("/api/ai/fisa-ingrijire", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ animal: p.animalNume, rasa: p.rasa, specie: p.specie, serviciu: p.serviciu, salonNume: numeSalon }),
+        body: JSON.stringify({ animal: p.animalNume, rasa: p.rasa, specie: p.specie, serviciu: p.serviciu, salonNume: numeSalon, client: p.client, domeniu: domeniuSalon }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Eroare server");
@@ -2607,7 +2616,7 @@ export default function DashboardSalon() {
                   const AI_DEFS = [
                     { key: "recenzii" as const,        label: "Răspunsuri la recenzii", desc: "Generează răspunsuri profesionale la recenzii",  Icon: Star,          color: "#F59E0B", rgb: "245,158,11",  acces: aiAccess.recenzii,        comingSoon: false, plan: "Basic"    },
                     { key: "clientiInactivi" as const, label: "Clienți inactivi",        desc: "Reactivează clienții care nu au mai revenit",    Icon: Users,         color: "#EF4444", rgb: "239,68,68",   acces: aiAccess.clientiInactivi, comingSoon: false, plan: "Pro"      },
-                    { key: "fisaIngrijire" as const,   label: "Fișă post-grooming",      desc: "Sfaturi de îngrijire personalizate pe rasă",     Icon: ClipboardList, color: "#06B6D4", rgb: "6,182,212",   acces: aiAccess.fisaIngrijire,   comingSoon: false, plan: "Business" },
+                    { key: "fisaIngrijire" as const,   label: DS.fisaTitluScurt,      desc: DS.fisaDesc,     Icon: ClipboardList, color: "#06B6D4", rgb: "6,182,212",   acces: aiAccess.fisaIngrijire,   comingSoon: false, plan: "Business" },
                     { key: "consultant" as const,      label: "Consultant AI",            desc: "Rapoarte de business din datele tale reale",     Icon: Sparkles,      color: "#6366F1", rgb: "99,102,241",  acces: aiAccess.consultant,      comingSoon: false, plan: "Business" },
                     { key: "postari" as const,         label: "Postări sociale",          desc: "Generează conținut pentru social media",         Icon: ImageIcon,     color: "#EC4899", rgb: "236,72,153",  acces: false,                    comingSoon: true,  plan: null       },
                   ];
@@ -2896,7 +2905,7 @@ export default function DashboardSalon() {
                           <ClipboardList size={20} color="#3B82F6" strokeWidth={2} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>Fișă îngrijire post-grooming</div>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: c.text }}>{DS.fisaTitlu}</div>
                           <div style={{ fontSize: 12, color: c.muted, fontWeight: 600 }}>Trimite clientului sfaturi de îngrijire personalizate pe rasă, după fiecare vizită</div>
                         </div>
                         {aiAccess.fisaIngrijire
@@ -2906,7 +2915,7 @@ export default function DashboardSalon() {
 
                       {!aiAccess.fisaIngrijire ? (
                         <div style={{ padding: "22px 18px", textAlign: "center" }}>
-                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. Oferă-le clienților sfaturi de îngrijire pe măsura rasei animalului — un plus de profesionalism care îi aduce înapoi.</div>
+                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. {DS.fisaPitch}</div>
                           <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Business</button>
                         </div>
                       ) : finalizate.length === 0 ? (

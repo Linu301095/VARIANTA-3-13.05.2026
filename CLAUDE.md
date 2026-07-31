@@ -11,7 +11,7 @@ ele sunt partea care decide dacă un salon de înfrumusețare rămâne sau pleac
 | D1 | Clientul fără animal | Comutator „Pentru tine / Pentru animalul tău", căutare filtrată pe domeniu, rezervare fără animal la înfrumusețare | ✅ gata (31.07.2026) |
 | D2 | Limbajul dashboardului client | „groomer" → „specialist" unde e beauty, talia doar la grooming | ✅ gata (31.07.2026) |
 | D3 | Dashboardul salonului pe verticală | Echipă, agendă, tabul „Animale" ascuns la beauty, prețuri fără talie | ✅ gata (31.07.2026) |
-| D4 | Statistici + agenți AI pe verticală | Rapoartele și prompturile AI vorbesc limba verticalei | ⬜ urmează |
+| D4 | Statistici + agenți AI pe verticală | Rapoartele și prompturile AI vorbesc limba verticalei | ✅ gata (31.07.2026) |
 
 **Context măsurat (31.07.2026):** `app/dashboard/salon/page.tsx` (~2150 linii) conține 95 apariții
 „groomer", 152 „animal", 98 „talie". `app/dashboard/client/page.tsx` (~2570 linii) conține
@@ -108,7 +108,11 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 
 - **PLANURILE (`app/preturi/page.tsx`) — de revizuit pe parcurs.** Structura actuală (Basic 57/69 · Pro 99/119 · Business 182/219 lei) a fost rescrisă pentru direcția nouă (saloane de înfrumusețare ȘI grooming), dar **prețurile, limitele de useri și distribuția funcțiilor per plan rămân de recalibrat** după ce validăm piața beauty. De reevaluat: dacă un salon de frizerie are nevoie de aceleași limite ca un salon de grooming, dacă „useri" e unitatea corectă de facturare, și dacă 3 planuri sunt suficiente sau trebuie un plan de intrare mai ieftin.
 
-- **AGENȚII AI — de revizuit pe parcurs.** Momentan: răspunsuri la recenzii (Basic), clienți inactivi (Pro), recomandări post-serviciu + Consultant AI (Business), postări sociale (în curând). **De reevaluat**: distribuția pe planuri, dacă „fișă post-grooming" trebuie separată de „recomandări post-serviciu beauty" (prompt-uri diferite), și dacă adăugăm agentul de **predicție rebooking** (relevant mai ales pe beauty, unde frecvența e mare — vezi `docs/BLUEPRINT-MULTI-VERTICALA.md` §9).
+- **AGENȚII AI — decizie luată (31.07.2026, D4):** rămân **4 agenți**, în aceeași distribuție pe planuri. Doi sunt neutri (răspunsuri la recenzii, clienți inactivi), doi își schimbă conținutul după verticala salonului: „Fișă îngrijire post-grooming" ↔ „Recomandări după vizită" (șabloane diferite în `app/api/ai/fisa-ingrijire/route.ts`) și Consultant AI (prompturi diferite în `app/api/ai/consultant/route.ts`). **Rămâne de reevaluat**: agentul de **predicție rebooking** (relevant mai ales pe beauty — vezi `docs/BLUEPRINT-MULTI-VERTICALA.md` §9).
+
+- **PLANURILE pe verticală — decizie luată (31.07.2026, D4):** aceleași 3 planuri și aceleași prețuri pentru ambele verticale; diferă doar cum sunt formulate caracteristicile. Pe `/preturi` și `/instrumente-ai` există un comutator „Salon de înfrumusețare / Salon de grooming".
+
+- **Salonul care face și oameni, și animale:** rămâne regula un salon = o verticală. Cazul e practic imposibil în același spațiu (autorizare sanitară diferită). Cine are ambele afaceri își face două conturi; soluția curată vine mai târziu prin **multi-locație** (deja promisă ca „în curând" în planul Business), unde fiecare locație are verticala ei.
 
 ## TODO post-lansare
 

@@ -18,9 +18,7 @@ function pick<T>(arr: T[]): T {
 
 function genereazaMesaj(c: ClientRisc, reducereVal: number, codVal: string): string {
   const animal = c.numeAnimal || null;
-  const rasa = c.rasaAnimal || null;
-  const animalText = animal ? animal : rasa ? `micuțul tău ${rasa}` : "micuțul tău";
-  const serviciu = c.ultimulServiciu || "grooming";
+  const serviciu = c.ultimulServiciu || "vizită";
   const client = c.numeClient || "drag client";
   const depasit = c.zileAbsenta > c.intervalMediu * 1.5;
 

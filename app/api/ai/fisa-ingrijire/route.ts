@@ -119,6 +119,111 @@ const CONTINUT: Record<TipBlana, { intro: string; randuri: string[] }> = {
   },
 };
 
+
+/* ─────────── ÎNFRUMUSEȚARE ───────────
+   Aici nu există „tip de blană": conținutul se alege după serviciul efectuat. */
+
+type TipServiciuBeauty = "vopsit" | "tuns" | "coafat" | "manichiura" | "pedichiura" | "facial" | "gene" | "generic";
+
+const SERVICII_BEAUTY: { tip: TipServiciuBeauty; chei: string[] }[] = [
+  { tip: "vopsit", chei: ["vopsit", "vopsea", "culoare", "suvite", "balayage", "ombre", "blond", "nuantare", "decolorare", "rada"] },
+  { tip: "manichiura", chei: ["manichiura", "unghii", "gel", "semipermanent", "constructie"] },
+  { tip: "pedichiura", chei: ["pedichiura", "picioare"] },
+  { tip: "facial", chei: ["facial", "cosmetica", "curatare", "hidratare", "peeling", "masca", "ten"] },
+  { tip: "gene", chei: ["gene", "extensii", "lifting gene", "sprancene", "laminare"] },
+  { tip: "coafat", chei: ["coafat", "coafura", "styling", "ondulat", "indreptat", "placa", "bucle"] },
+  { tip: "tuns", chei: ["tuns", "tunsoare", "tundere", "breton", "barba", "frizerie"] },
+];
+
+function detecteazaServiciuBeauty(serviciu: string): TipServiciuBeauty {
+  const s = faraDiacritice(serviciu || "");
+  if (!s) return "generic";
+  for (const g of SERVICII_BEAUTY) {
+    if (g.chei.some(k => s.includes(k))) return g.tip;
+  }
+  return "generic";
+}
+
+const CONTINUT_BEAUTY: Record<TipServiciuBeauty, { intro: string; randuri: string[]; revenire: string }> = {
+  vopsit: {
+    intro: "Culoarea proaspătă are nevoie de puțină grijă în primele zile ca să rămână intensă",
+    randuri: [
+      "Așteaptă 48 de ore înainte de primul spălat — culoarea are nevoie de timp să se fixeze.",
+      "Folosește șampon fără sulfați, special pentru păr vopsit; sulfații scot culoarea mai repede.",
+      "Spală cu apă călduță, nu fierbinte — căldura deschide cuticula și lasă pigmentul să iasă.",
+      "Protejează părul de soare și de clorul din piscină; ambele decolorează vizibil.",
+      "O mască de culoare o dată pe săptămână păstrează nuanța vie între vizite.",
+    ],
+    revenire: "Rădăcinile se văd de obicei după 4-6 săptămâni.",
+  },
+  tuns: {
+    intro: "O tunsoare își păstrează forma dacă e întreținută corect",
+    randuri: [
+      "Usucă părul cu aer călduț, nu fierbinte, și îndreaptă-l cu peria în direcția tunsorii.",
+      "Folosește un produs termoprotector înainte de placă sau ondulator.",
+      "Vârfurile se degradează primele — o ajustare mică le păstrează sănătoase mai mult.",
+    ],
+    revenire: "Pentru a păstra forma, revino la 4-8 săptămâni, în funcție de lungime.",
+  },
+  coafat: {
+    intro: "Coafura ține mai mult cu câteva obiceiuri simple",
+    randuri: [
+      "Dormi pe o față de pernă din satin — reduce frizz-ul și păstrează forma.",
+      "Evită să atingi părul des; grăsimea de pe mâini îl face să cadă mai repede.",
+      "Un șampon uscat a doua zi prelungește coafura fără spălat.",
+    ],
+    revenire: "Te așteptăm oricând ai nevoie de o coafură nouă.",
+  },
+  manichiura: {
+    intro: "Manichiura rezistă mai mult dacă unghiile sunt hidratate",
+    randuri: [
+      "Aplică ulei de cuticule zilnic — previne crăpăturile și desprinderea.",
+      "Poartă mănuși la curățenie; detergenții slăbesc stratul aplicat.",
+      "Nu folosi unghiile ca instrument (deschis cutii, desprins etichete).",
+      "Nu îndepărta singură produsul — ridică stratul natural al unghiei.",
+    ],
+    revenire: "Programează completarea la 3-4 săptămâni, înainte să crească prea mult.",
+  },
+  pedichiura: {
+    intro: "Picioarele au nevoie de hidratare constantă după tratament",
+    randuri: [
+      "Aplică o cremă pentru picioare seara, mai ales pe călcâie.",
+      "Poartă încălțăminte lejeră în primele ore după tratament.",
+      "Evită piscina și saună 24 de ore.",
+    ],
+    revenire: "Recomandăm o vizită la 4-6 săptămâni.",
+  },
+  facial: {
+    intro: "După tratament, pielea e mai receptivă — dar și mai sensibilă",
+    randuri: [
+      "Evită machiajul în primele 12 ore, ca pielea să respire.",
+      "Folosește protecție solară zilnic; pielea tratată se pigmentează mai ușor.",
+      "Fără saună, piscină sau exerciții intense 24 de ore.",
+      "Hidratează dimineața și seara, cu produse fără alcool.",
+    ],
+    revenire: "Rezultatele se mențin cel mai bine cu un tratament la 4 săptămâni.",
+  },
+  gene: {
+    intro: "Extensiile țin mai mult dacă eviți umezeala în primele ore",
+    randuri: [
+      "Fără apă, aburi sau saună în primele 24-48 de ore.",
+      "Nu freca ochii și evită demachiantele pe bază de ulei.",
+      "Piaptănă genele dimineața, cu peria primită, ca să rămână aliniate.",
+      "Dormi pe spate dacă poți — pe o parte se turtesc mai repede.",
+    ],
+    revenire: "Completarea se face de obicei la 2-3 săptămâni.",
+  },
+  generic: {
+    intro: "Câteva recomandări ca rezultatul să se păstreze cât mai mult",
+    randuri: [
+      "Respectă indicațiile primite de la specialistul tău în primele 24 de ore.",
+      "Folosește produse potrivite tipului tău de păr sau piele.",
+      "Programează-te din timp — locurile bune se ocupă repede.",
+    ],
+    revenire: "Te așteptăm cu drag la următoarea vizită.",
+  },
+};
+
 function sfatServiciu(serviciu: string): string {
   const s = faraDiacritice(serviciu || "");
   if (s.includes("tuns") || s.includes("tundere") || s.includes("tunsoare"))
@@ -133,7 +238,33 @@ function sfatServiciu(serviciu: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const { animal, rasa, serviciu, specie, salonNume } = await req.json();
+  const { animal, rasa, serviciu, specie, salonNume, domeniu, client } = await req.json();
+
+  // Saloanele de înfrumusețare primesc recomandări pentru client, nu pentru animal.
+  if (domeniu === "infrumusetare") {
+    const tipB = detecteazaServiciuBeauty(serviciu || "");
+    const cb = CONTINUT_BEAUTY[tipB];
+    const numeClient = (client && String(client).trim().split(" ")[0]) || null;
+    const salut = numeClient ? `${numeClient}, ` : "";
+    const serviciuTxt = serviciu ? String(serviciu).toLowerCase() : "vizită";
+    const semnaturaB = salonNume
+      ? `Pentru orice nelămurire, ne poți scrie oricând. — Echipa ${salonNume}`
+      : "Pentru orice nelămurire, ne poți scrie oricând.";
+
+    const fisaB = [
+      `Recomandări după ${serviciuTxt}`,
+      "",
+      `${salut}${salut ? "c" : "C"}${cb.intro.slice(1)}:`,
+      "",
+      ...cb.randuri.map(r => `• ${r}`),
+      "",
+      cb.revenire,
+      "",
+      semnaturaB,
+    ].join("\n");
+
+    return NextResponse.json({ fisa: fisaB });
+  }
 
   const numeAnimal = (animal && String(animal).trim()) || "Animalul tău";
   const tip = detecteazaTipBlana(rasa || null, specie || null);

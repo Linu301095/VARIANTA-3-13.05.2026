@@ -50,20 +50,37 @@ const tile: React.CSSProperties = {
 const h2s: React.CSSProperties = { fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text };
 const lead: React.CSSProperties = { fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7 };
 
-const PLANURI = [
+type Vert = "infrumusetare" | "grooming";
+const VERT: Record<Vert, { eticheta: string; rol: string; rolPl: string; pret: string; fisa: string }> = {
+  infrumusetare: {
+    eticheta: "Salon de înfrumusețare",
+    rol: "specialist", rolPl: "specialiști",
+    pret: "Preț și durată pe serviciu",
+    fisa: "recomandări după vizită",
+  },
+  grooming: {
+    eticheta: "Salon de grooming",
+    rol: "groomer", rolPl: "groomeri",
+    pret: "Preț și durată pe talie (mică / medie / mare)",
+    fisa: "fișă de îngrijire post-grooming",
+  },
+};
+
+const planuriPentru = (v: Vert) => [
   {
     id: "basic",
     nume: "Basic",
     Icon: Store,
     tagline: "Salonul solo",
-    descriere: "Pentru un specialist singur sau cu un asistent",
+    descriere: `Pentru un ${VERT[v].rol} singur sau cu un asistent`,
     pretLunar: 69,
     pretAnual: 57,
     badge: null as string | null,
     recomandat: false,
     prefix: null as string | null,
     features: [
-      "Până la 2 useri (specialist + asistent)",
+      `Până la 2 useri (${VERT[v].rol} + asistent)`,
+      VERT[v].pret,
       "Programări nelimitate, agendă digitală",
       "Profil public + galerie 5 poze",
       "Statistici esențiale — Azi / Lună, rating, recenzii",
@@ -86,10 +103,10 @@ const PLANURI = [
     prefix: "Tot ce e în Basic, plus:",
     features: [
       "3-6 useri, fiecare cu orar individual",
-      "Clientul alege specialistul + blocaj per specialist",
+      `Clientul alege ${VERT[v].rol}ul + blocaj per ${VERT[v].rol}`,
       "Galerie 10 poze",
       "Statistici complete — filtre Azi / Săptămână / Lună / An / Interval",
-      "Evoluție lunară și productivitate per specialist",
+      `Evoluție lunară și productivitate per ${VERT[v].rol}`,
       "Raport Excel complet (secțiuni selectabile)",
       "Remindere WhatsApp nelimitate + 100 SMS / lună",
       'Badge "Profil verificat"',
@@ -108,12 +125,12 @@ const PLANURI = [
     recomandat: false,
     prefix: "Tot ce e în Pro, plus:",
     features: [
-      "Useri nelimitați + login individual per specialist (în curând)",
+      `Useri nelimitați + login individual per ${VERT[v].rol} (în curând)`,
       'Listare promovată în oraș — badge "Recomandat"',
       "Remindere WhatsApp + SMS nelimitate",
       "Suport prioritar 24/7 + manager dedicat",
       "Multi-locație (în curând)",
-      "✨ Agent AI: recomandări post-serviciu",
+      `✨ Agent AI: ${VERT[v].fisa}`,
       "✨ Agent AI: Consultant de business",
     ],
   },
@@ -141,6 +158,7 @@ const FAQ = [
 
 export default function Preturi() {
   const [ciclu, setCiclu] = useState<Ciclu>("anual");
+  const [vert, setVert] = useState<Vert>("infrumusetare");
   const [locuriRamase, setLocuriRamase] = useState<number | null>(null);
 
   useEffect(() => {
@@ -151,6 +169,7 @@ export default function Preturi() {
   }, []);
 
   const promoActiva = locuriRamase === null || locuriRamase > 0;
+  const PLANURI = planuriPentru(vert);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
@@ -195,8 +214,24 @@ export default function Preturi() {
               </div>
             )}
 
+            {/* toggle verticala — aceleasi planuri, caracteristici pe tipul salonului */}
+            <div className="ch-hero-anim" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 24, animationDelay: ".4s" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: C.muted }}>Vezi caracteristicile pentru:</div>
+              <div style={{ display: "inline-flex", gap: 4, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 50, padding: 4, boxShadow: "0 2px 16px rgba(120,90,60,.08)" }}>
+                {(["infrumusetare", "grooming"] as Vert[]).map((v) => {
+                  const activ = vert === v;
+                  return (
+                    <button key={v} type="button" onClick={() => setVert(v)}
+                      style={{ border: "none", borderRadius: 50, padding: "9px 18px", fontFamily: "inherit", fontSize: 13.5, fontWeight: 800, cursor: "pointer", background: activ ? C.orange : "transparent", color: activ ? "#fff" : C.muted, whiteSpace: "nowrap" }}>
+                      {VERT[v].eticheta}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* toggle ciclu */}
-            <div className="ch-hero-anim" style={{ display: "inline-flex", gap: 4, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 50, padding: 4, marginTop: 26, boxShadow: "0 2px 16px rgba(120,90,60,.08)", animationDelay: ".46s" }}>
+            <div className="ch-hero-anim" style={{ display: "inline-flex", gap: 4, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 50, padding: 4, marginTop: 18, boxShadow: "0 2px 16px rgba(120,90,60,.08)", animationDelay: ".46s" }}>
               {(["lunar", "anual"] as Ciclu[]).map((c) => {
                 const activ = ciclu === c;
                 return (

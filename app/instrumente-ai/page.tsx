@@ -1,24 +1,12 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Logo from "../../components/Logo";
 import Footer from "../../components/Footer";
 import ScrollReveal from "../../components/ScrollReveal";
 import { Star, Users, ClipboardList, Sparkles, Image as ImageIcon, Check } from "lucide-react";
 import { SparkleAnim } from "../../components/SectionIcons";
-
-export const metadata: Metadata = {
-  title: "Instrumente AI pentru saloane — CalyHub",
-  description:
-    "Patru asistenți AI incluși în CalyHub: răspunsuri automate la recenzii, reactivarea clienților inactivi, recomandări de îngrijire post-serviciu și consultant AI de business. Pentru saloane de înfrumusețare și grooming.",
-  keywords: ["asistenți AI saloane", "AI grooming", "AI înfrumusețare", "consultant AI salon", "răspunsuri recenzii AI", "CalyHub AI"],
-  alternates: { canonical: "/instrumente-ai" },
-  openGraph: {
-    title: "Instrumente AI pentru saloane — CalyHub",
-    description: "Patru asistenți AI care lucrează pentru salonul tău: recenzii, clienți inactivi, recomandări post-serviciu și consultant de business.",
-    url: "/instrumente-ai",
-    type: "website",
-  },
-};
 
 const C = {
   surface: "var(--pub-surface)",
@@ -51,7 +39,13 @@ function Sparkle({ size = 24, color = C.orange, style }: { size?: number; color?
 
 type Tool = { Icon: typeof Star; color: string; soft: string; plan: string; t: string; d: string; b: string[] };
 
-const TOOLS: Tool[] = [
+type Vert = "infrumusetare" | "grooming";
+const VERT: Record<Vert, { eticheta: string; rol: string }> = {
+  infrumusetare: { eticheta: "Salon de înfrumusețare", rol: "specialist" },
+  grooming: { eticheta: "Salon de grooming", rol: "groomer" },
+};
+
+const toolsPentru = (v: Vert): Tool[] => [
   {
     Icon: Star, color: "var(--ai-amber)", soft: "rgba(224,137,0,.12)", plan: "Plan Basic",
     t: "Răspunsuri la recenzii",
@@ -66,19 +60,31 @@ const TOOLS: Tool[] = [
   },
   {
     Icon: ClipboardList, color: "var(--ai-cyan)", soft: "rgba(8,145,178,.10)", plan: "Plan Business",
-    t: "Recomandări post-serviciu",
-    d: "După fiecare vizită, clientul primește sfaturi de îngrijire personalizate — ce produse să folosească și cum să întrețină între vizite. Un plus de profesionalism care îl aduce înapoi.",
-    b: ["Personalizate pe serviciu și pe rasă", "Trimise automat clientului după vizită", "Cresc retenția și încrederea în salon"],
+    t: v === "grooming" ? "Fișă îngrijire post-grooming" : "Recomandări după vizită",
+    d: v === "grooming"
+      ? "După fiecare vizită, clientul primește sfaturi de îngrijire potrivite rasei și blănii animalului — cât de des să perie, ce zone au nevoie de atenție, când e momentul pentru baie. Un plus de profesionalism care îl aduce înapoi."
+      : "După fiecare vizită, clientul primește sfaturi potrivite serviciului făcut — cum păstrează culoarea, tunsoarea sau manichiura până data viitoare. Un plus de profesionalism care îl aduce înapoi.",
+    b: v === "grooming"
+      ? ["Personalizate pe rasă și pe tipul de blană", "Trimise clientului după vizită", "Cresc retenția și încrederea în salon"]
+      : ["Personalizate pe serviciul efectuat", "Trimise clientului după vizită", "Cresc retenția și încrederea în salon"],
   },
   {
     Icon: Sparkles, color: "var(--ai-indigo)", soft: "rgba(99,102,241,.10)", plan: "Plan Business",
     t: "Consultant AI",
     d: "Analizează datele reale ale salonului și îți livrează rapoarte de business lunare: ce a mers, ce trebuie îmbunătățit, plan de creștere, analiză de prețuri și performanța echipei.",
-    b: ["Rapoarte lunare din datele tale reale", "Recomandări concrete, nu sfaturi generice", "Analiză de prețuri, echipă și creștere"],
+    b: [
+      "Rapoarte lunare din datele tale reale",
+      v === "grooming"
+        ? "Analizează servicii, talii, frecvența vizitelor"
+        : "Analizează servicii, frecvența revenirii, sezonalitatea",
+      "Recomandări concrete, nu sfaturi generice",
+    ],
   },
 ];
 
 export default function InstrumenteAI() {
+  const [vert, setVert] = useState<Vert>("infrumusetare");
+  const TOOLS = toolsPentru(vert);
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg, fontFamily: "'Nunito', system-ui, sans-serif" }}>
 
@@ -109,6 +115,22 @@ export default function InstrumenteAI() {
               Patru asistenți AI incluși în CalyHub — pornind de la datele reale ale salonului, îți economisesc timp,
               îți țin clienții aproape și îți dau un plus de profesionalism pe care clienții îl simt după fiecare vizită.
             </p>
+
+            {/* comutator verticala — aceiasi agenti, adaptati tipului de salon */}
+            <div className="ch-hero-anim" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 26, animationDelay: ".4s" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: C.muted }}>Vezi cum lucrează pentru:</div>
+              <div style={{ display: "inline-flex", gap: 4, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 50, padding: 4, boxShadow: "0 2px 16px rgba(120,90,60,.08)" }}>
+                {(["infrumusetare", "grooming"] as Vert[]).map((v) => {
+                  const activ = vert === v;
+                  return (
+                    <button key={v} type="button" onClick={() => setVert(v)}
+                      style={{ border: "none", borderRadius: 50, padding: "9px 18px", fontFamily: "inherit", fontSize: 13.5, fontWeight: 800, cursor: "pointer", background: activ ? C.orange : "transparent", color: activ ? "#fff" : C.muted, whiteSpace: "nowrap" }}>
+                      {VERT[v].eticheta}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </section>
 

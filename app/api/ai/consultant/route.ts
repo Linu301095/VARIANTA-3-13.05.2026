@@ -3,7 +3,7 @@ import { claude } from "../../../../lib/claude";
 
 const HAIKU = "claude-haiku-4-5-20251001";
 
-function formateazaSnapshot(s: any): string {
+function formateazaSnapshot(s: any, rolPlural: string): string {
   const semn = (n: number) => (n >= 0 ? `+${n}%` : `${n}%`);
   const linii: string[] = [
     `=== Date salon "${s.salonNume}" — ${s.luna} ===`,
@@ -17,7 +17,7 @@ function formateazaSnapshot(s: any): string {
     linii.push(`Medie programari/zi saptamana: ${s.ziSaptamana.map((z: any) => `${z.zi} ${z.medie}`).join(" | ")}`);
   }
   if (s.groomeri?.length > 0) {
-    linii.push(`Groomeri luna curenta: ${s.groomeri.map((g: any) => `${g.nume} — ${g.count}x, ${g.venit} RON`).join("; ")}`);
+    linii.push(`${rolPlural} luna curenta: ${s.groomeri.map((g: any) => `${g.nume} — ${g.count}x, ${g.venit} RON`).join("; ")}`);
   }
   linii.push(`Clienti inactivi (>45 zile): ${s.clientiInactivi}`);
   if (s.ratingMediu !== null && s.ratingMediu !== undefined) {
@@ -27,6 +27,28 @@ function formateazaSnapshot(s: any): string {
   }
   return linii.join("\n");
 }
+
+// Ce anume analizeaza consultantul difera de la o verticala la alta.
+const PROFIL: Record<string, {
+  tipSalon: string; expertiza: string; rolPlural: string; rolPluralCap: string; dimensiuni: string;
+}> = {
+  infrumusetare: {
+    tipSalon: "de infrumusetare (frizerie, coafor, manichiura, cosmetica)",
+    expertiza: "consultant cu experienta in saloane de infrumusetare din Romania",
+    rolPlural: "specialisti",
+    rolPluralCap: "Specialisti",
+    dimensiuni: "tipurile de servicii (tuns, vopsit, manichiura, tratamente), frecventa de revenire a clientilor, " +
+      "valoarea medie a unei vizite, sezonalitatea (sarbatori, nunti, inceput de scoala) si pachetele de servicii",
+  },
+  grooming: {
+    tipSalon: "de grooming pentru animale",
+    expertiza: "consultant cu experienta in pet grooming din Romania",
+    rolPlural: "groomeri",
+    rolPluralCap: "Groomeri",
+    dimensiuni: "tipurile de servicii, talia si rasa animalelor, frecventa de revenire, " +
+      "valoarea medie a unei vizite si sezonalitatea (naparlire primavara/toamna)",
+  },
+};
 
 // Instructiunile pentru fiecare tip de raport premium.
 const INSTRUCTIUNI_RAPORT: Record<string, string> = {
@@ -48,32 +70,37 @@ const INSTRUCTIUNI_RAPORT: Record<string, string> = {
     "Pentru fiecare actiune: ce sa faca, de ce (legat de date), si rezultatul asteptat. " +
     "Maxim 250 de cuvinte.",
   echipa:
-    "Genereaza o ANALIZA A PERFORMANTEI ECHIPEI (groomeri) pentru acest salon. Acopera:\n" +
+    "Genereaza o ANALIZA A PERFORMANTEI ECHIPEI pentru acest salon. Acopera:\n" +
     "- Cine performeaza si cine are nevoie de sprijin (pe baza programarilor/incasarilor).\n" +
     "- Echilibrarea programului.\n" +
     "- 2 recomandari concrete.\n" +
-    "Daca nu exista date pe groomeri, spune asta si da sfaturi generale de organizare. Maxim 250 de cuvinte.",
+    "Daca nu exista date pe membrii echipei, spune asta si da sfaturi generale de organizare. Maxim 250 de cuvinte.",
 };
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { tip, intrebare, snapshot, salonNume } = body as {
+  const { tip, intrebare, snapshot, salonNume, domeniu } = body as {
     tip?: string;
     intrebare?: string;
     snapshot: any;
     salonNume: string;
+    domeniu?: string;
   };
 
-  const snapshotText = snapshot ? formateazaSnapshot(snapshot) : "";
+  const prof = PROFIL[domeniu === "infrumusetare" ? "infrumusetare" : "grooming"];
+  const snapshotText = snapshot ? formateazaSnapshot(snapshot, prof.rolPluralCap) : "";
 
-  const systemPrompt = `Esti consultantul AI de business al salonului de grooming "${salonNume || "salon"}" pe platforma CalyHub.
+  const systemPrompt = `Esti consultantul AI de business al salonului ${prof.tipSalon} "${salonNume || "salon"}" pe platforma CalyHub.
 Misiunea ta: analizezi datele reale ale salonului si oferi sfaturi concrete, actionabile, in limba romana.
 
 ${snapshotText ? `DATE REALE ALE SALONULUI (bazeaza-te STRICT pe acestea):\n${snapshotText}` : "Salonul este nou si nu are date suficiente inca — ofera sfaturi generale de pornire."}
 
+DIMENSIUNI RELEVANTE PENTRU ACEST TIP DE SALON: ${prof.dimensiuni}.
+
 REGULI:
-- Scrii in limba romana, ton de consultant cu experienta in pet grooming din Romania.
+- Scrii in limba romana, ton de ${prof.expertiza}.
 - Te bazezi pe cifrele reale de mai sus — NU inventa date care nu apar.
+- Membrii echipei se numesc ${prof.rolPlural}; foloseste acest cuvant, nu altul.
 - Daca datele sunt insuficiente, spui asta clar si oferi sfatul general relevant.
 - Practic si direct, fara introduceri pompoase. Formatare curata, cu titluri scurte si bullet-uri unde ajuta.`;
 
@@ -87,7 +114,7 @@ REGULI:
     userContent =
       `Intrebarea salonului: "${String(intrebare).trim()}"\n\n` +
       "Raspunde concret, in maxim 180 de cuvinte, doar pe baza datelor reale. " +
-      "Daca intrebarea NU are legatura cu salonul, grooming, business, echipa, marketing, preturi, servicii, clienti sau finante, " +
+      "Daca intrebarea NU are legatura cu salonul, business, echipa, marketing, preturi, servicii, clienti sau finante, " +
       'refuza scurt intr-o propozitie: "Pot ajuta doar cu intrebari legate de activitatea salonului."';
   } else {
     return NextResponse.json({ error: "Lipseste tipul raportului sau intrebarea" }, { status: 400 });
