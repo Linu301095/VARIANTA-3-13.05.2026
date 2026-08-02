@@ -49,8 +49,9 @@ const btnPrimary: React.CSSProperties = {
 };
 const btnSecondary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-  padding: "14px 26px", borderRadius: 50, background: "var(--pub-surface)", color: C.text,
-  fontSize: 15, fontWeight: 800, textDecoration: "none", border: `1.5px solid ${C.line}`,
+  padding: "14px 26px", borderRadius: 50, background: C.orangeSoft, color: C.orangeText,
+  fontSize: 15, fontWeight: 800, textDecoration: "none", border: "1.5px solid var(--pub-orange-border)",
+  boxShadow: "0 3px 12px rgba(255,107,0,.12)",
 };
 const card: React.CSSProperties = {
   background: C.surface, border: `1px solid ${C.line}`, borderRadius: 28, padding: 26,
@@ -260,7 +261,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* AI teaser */}
-            <div data-reveal className="ch-card" style={{ marginTop: 26, ...card, borderRadius: 24, padding: "24px 26px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+            <div data-reveal className="ch-card ch-teaser" style={{ marginTop: 26, ...card, borderRadius: 24, padding: "24px 26px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Sparkles size={24} color={C.orange} strokeWidth={2} /></div>
               <div style={{ flex: 1, minWidth: 220 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text }}>Patru asistenți AI, incluși</h3>
@@ -270,7 +271,7 @@ export default function CumFunctioneaza() {
             </div>
 
             {/* ce te costa */}
-            <div data-reveal className="ch-card" style={{ marginTop: 16, ...card, borderRadius: 24, padding: "24px 26px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+            <div data-reveal className="ch-card ch-teaser" style={{ marginTop: 16, ...card, borderRadius: 24, padding: "24px 26px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CreditCard size={24} color={C.orange} strokeWidth={2} /></div>
               <div style={{ flex: 1, minWidth: 220 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text }}>Primele 3 luni, gratuite</h3>
