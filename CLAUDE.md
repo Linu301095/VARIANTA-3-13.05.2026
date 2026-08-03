@@ -109,6 +109,36 @@ Scris în Termeni, secțiunea 5 (versiunea 1.1).
 
 **Ce NU se atinge în categoria C:** logica Supabase existentă (`signInWithPassword`, `signUp`, upsert profil, temă, redirect pe rol) și OAuth-ul social — butoanele Google/Facebook/telefon rămân decorative până la etapa lor din TODO-ul de lansare.
 
+## ⚠️ ETAPĂ ÎNAINTE DE LANSARE — Agenții AI: șabloane vs. model real
+
+**DE AMINTIT LA FIECARE REZUMAT DE STARE, până e rezolvată.**
+
+Stare măsurată (03.08.2026) — din cei 4 agenți promovați ca „asistenți AI",
+**doar unul folosește efectiv un model**:
+
+| Agent | Implementare | Cost tokeni |
+|---|---|---|
+| Răspunsuri la recenzii | șabloane (`app/api/ai/raspuns-recenzie/route.ts`) | 0 |
+| Alertă clienți inactivi | șabloane (`app/api/ai/clienti-risc/route.ts`) | 0 |
+| Recomandări după vizită / Fișă post-grooming | șabloane (`app/api/ai/fisa-ingrijire/route.ts`) | 0 |
+| **Consultant AI** | **Haiku 4.5** (`app/api/ai/consultant/route.ts`) | plătit |
+
+Frâne deja puse pe Consultant: rapoartele se salvează în `consultant_rapoarte`
+(cache, nu se regenerează), întrebările libere sunt limitate la 5/lună prin
+`consultant_utilizare`. Limite: 700 tokeni la rapoarte, 400 la întrebări.
+
+**Problema:** pe `/instrumente-ai` toți patru sunt prezentați ca „asistenți AI".
+Pentru trei dintre ei e automatizare pe reguli, nu AI. Nu e o minciună gravă și e
+practică obișnuită, dar la o întrebare tehnică directă răspunsul onest e altul.
+
+**De făcut înainte de lansare — prioritatea 1:** convertirea agentului de
+**răspunsuri la recenzii** la model real. Acolo personalizarea chiar se vede —
+AI-ul ar răspunde la *ce a scris* clientul, nu doar la câte stele a dat. Cu Haiku,
+costul e neglijabil. Ceilalți doi pot rămâne pe șabloane.
+
+**De reevaluat separat:** agentul de predicție rebooking (vezi
+`docs/BLUEPRINT-MULTI-VERTICALA.md` §9).
+
 ## SEO (OBLIGATORIU pentru orice pagină nouă)
 
 Orice pagină publică nouă adăugată în aplicație trebuie să respecte standardul SEO deja stabilit:
