@@ -933,7 +933,7 @@ export default function DashboardSalon() {
         }
         if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
         if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
-        setAbonament({ plan: salonRow.plan || "starter" });
+        setAbonament({ plan: salonRow.plan || "basic" });
         if (Array.isArray(salonRow.clienti_blocati)) setClientiBlocati(salonRow.clienti_blocati);
 
         // Toate sub-cererile în paralel — autoFinalizeaza nu blochează UI

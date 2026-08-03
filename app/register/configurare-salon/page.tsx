@@ -96,6 +96,9 @@ const PROGRAM_DEFAULT: Record<string, ZiProgram> = {
 
 const ENTITATI = ["SRL", "SRL-D", "PFA", "Persoană fizică", "Altele"];
 
+/** Durata trialului. NU se comunica public — pe site scriem doar "trial gratuit". */
+const ZILE_TRIAL = 14;
+
 export default function ConfigurareSalon() {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -263,7 +266,9 @@ export default function ConfigurareSalon() {
           descriere: dateFirma.descriere.trim(),
           servicii: servicii.filter(s => s.nume.trim()),
           echipa: echipa.filter(g => g.nume.trim()),
-          plan: "starter",
+          // Salonul porneste pe planul de intrare, in trial. Planul se schimba la pasul urmator.
+          plan: "basic",
+          trial_expira_la: new Date(Date.now() + ZILE_TRIAL * 24 * 60 * 60 * 1000).toISOString(),
           domeniu,
           specii: d?.areSpecii ? speciiSelectate : [],
           tip_entitate: dateFirma.tipEntitate,
@@ -669,7 +674,7 @@ export default function ConfigurareSalon() {
 
                 <div style={{ background: C.orangeSoft, border: `1px solid var(--pub-orange-border)`, borderRadius: 18, padding: "18px 20px", marginBottom: 28, textAlign: "left" }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: "var(--pub-orange-text)", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                    <CheckCircle size={14} strokeWidth={2.5} /> 3 luni gratuite activate
+                    <CheckCircle size={14} strokeWidth={2.5} /> Trial gratuit activat
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {d && (

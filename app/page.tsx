@@ -13,7 +13,7 @@ import {
 export const metadata: Metadata = {
   title: "CalyHub — Programări online pentru saloane de înfrumusețare și grooming",
   description:
-    "Găsește și rezervă la frizerii și saloane de coafură pentru tine sau la saloane de grooming pentru animalul tău. Programări online 24/7, gratuit pentru clienți. Pentru saloane: agendă digitală, statistici și asistenți AI — primele 3 luni gratuite.",
+    "Găsește și rezervă la frizerii și saloane de coafură pentru tine sau la saloane de grooming pentru animalul tău. Programări online 24/7, gratuit pentru clienți. Pentru saloane: agendă digitală, statistici și asistenți AI — cu trial gratuit la început.",
   keywords: [
     "programări online", "frizerie", "coafor", "înfrumusețare", "salon beauty",
     "saloane grooming", "grooming câini", "grooming pisici", "programare salon", "CalyHub", "rezervare salon",
@@ -149,7 +149,7 @@ export default function HomePage() {
                   {chk(<>Recenzii, istoric client și <b style={{ color: C.text, fontWeight: 800 }}>export Excel</b></>)}
                 </div>
                 <div style={{ marginTop: "auto", background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 14, padding: "11px 14px", marginBottom: 14 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> Primele 3 luni gratuite</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> Trial gratuit</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără card · 0% comision · anulezi oricând</div>
                 </div>
                 <Link href="/register" style={btnPrimary}>Înscrie-te gratuit →</Link>
@@ -234,7 +234,7 @@ export default function HomePage() {
               <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconCrestere size={60} /></div>
               <div data-reveal style={eyebrow}>PENTRU SALOANE · PARTENERI</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Transformă-ți salonul într-o afacere digitală</h2>
-              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Mai multe programări onorate, mai puțin timp pierdut la telefon. Agendă digitală, statistici reale și 4 asistenți AI care îți aduc clienții înapoi — primele 3 luni gratuite, fără comision.</p>
+              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Mai multe programări onorate, mai puțin timp pierdut la telefon. Agendă digitală, statistici reale și 4 asistenți AI care îți aduc clienții înapoi — trial gratuit, fără comision.</p>
             </div>
             <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
               {[
@@ -313,7 +313,7 @@ export default function HomePage() {
 
               <h3 style={{ fontSize: "clamp(22px,2.8vw,30px)", fontWeight: 900, letterSpacing: -0.6, color: C.text }}>Începe astăzi</h3>
               <p style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 10, maxWidth: "54ch", marginLeft: "auto", marginRight: "auto" }}>
-                Rezervă primul serviciu în câteva minute, sau înscrie-ți salonul și primești primele 3 luni gratuite.
+                Rezervă primul serviciu în câteva minute, sau înscrie-ți salonul și începe cu trial gratuit.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 22, flexWrap: "wrap" }}>
                 <Link href="/register" style={btnPrimary}>Caută un salon</Link>

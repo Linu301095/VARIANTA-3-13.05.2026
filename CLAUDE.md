@@ -48,7 +48,15 @@ Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 
 **SQL de rulat în Supabase:**
 - `sql/etapa2_domeniu_si_termeni.sql` — ✅ rulat (adaugă `saloane.domeniu`, coloanele de termeni, index domeniu+oraș)
-- `sql/etapa3_animal_optional.sql` — face opționale coloanele `sex`, `rasa`, `greutate`, `varsta`, `alergii` din `animale`
+- `sql/etapa3_animal_optional.sql` — ✅ rulat (face opționale `sex`, `rasa`, `greutate`, `varsta`, `alergii` din `animale`)
+- `sql/trial_si_planuri.sql` — adaugă `saloane.trial_expira_la`, scoate planul `starter`, restricționează `plan` la basic/pro/business
+
+**TRIAL (decizie 31.07.2026):** trialul e de **14 zile**, dar durata **NU se comunică public** —
+peste tot scriem doar „trial gratuit". Constanta `ZILE_TRIAL` stă în
+`app/register/configurare-salon/page.tsx`. Nu mai există plan `starter`: salonul pornește pe
+**Basic în trial** la finalul wizardului, iar la pasul de abonament poate urca la Pro/Business.
+Promisiunea „primele 3 luni gratuite" a fost scoasă de peste tot, la fel și „Garanție 30 zile"
+(nu putem returna bani cât timp nu încasăm nimic).
 
 **Atenție:** `TERMENI_VERSIUNE` din `app/register/page.tsx` trebuie schimbat ori de câte ori se modifică textul din Termeni sau Confidențialitate.
 

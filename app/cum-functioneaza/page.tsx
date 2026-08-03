@@ -130,7 +130,7 @@ const FAQ: { q: string; a: string }[] = [
   { q: "Am nevoie de cont ca să rezerv?", a: "Poți căuta și vedea saloane fără cont. Pentru a finaliza o rezervare ai nevoie de un cont gratuit, ca salonul să te poată contacta și confirma." },
   { q: "Pot rezerva și pentru mine, și pentru animalul meu?", a: "Da. Un singur cont acoperă ambele lumi: comuți între înfrumusețare pentru tine și grooming pentru animalul tău, oricând." },
   { q: "Cum îmi anulez o programare?", a: "Din contul tău, la secțiunea Programări. Salonul e notificat automat — fără telefoane și fără discuții." },
-  { q: "Cât costă pentru saloane?", a: "Primele 3 luni sunt gratuite, fără card și fără comision. Apoi alegi planul potrivit dimensiunii salonului." },
+  { q: "Cât costă pentru saloane?", a: "Începi cu trial gratuit, fără card și fără comision. Apoi alegi planul potrivit dimensiunii salonului." },
   { q: "Pot folosi platforma de pe telefon?", a: "Da. Aceleași funcții pe web și pe telefon, cu datele sincronizate în timp real." },
 ];
 
@@ -274,7 +274,7 @@ export default function CumFunctioneaza() {
             <div data-reveal className="ch-card ch-teaser" style={{ marginTop: 16, ...card, borderRadius: 24, padding: "24px 26px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CreditCard size={24} color={C.orange} strokeWidth={2} /></div>
               <div style={{ flex: 1, minWidth: 220 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text }}>Primele 3 luni, gratuite</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text }}>Începi cu trial gratuit</h3>
                 <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, marginTop: 3, lineHeight: 1.5 }}>Fără card la înscriere, 0% comision pe programări, anulezi oricând. Apoi alegi planul potrivit salonului tău.</p>
               </div>
               <Link href="/preturi" style={btnSecondary}>Vezi planurile →</Link>
@@ -310,7 +310,7 @@ export default function CumFunctioneaza() {
             <div style={{ background: "linear-gradient(135deg, var(--pub-orange-soft) 0%, var(--pub-tint) 100%)", border: "1px solid var(--pub-orange-border)", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
               <h2 style={{ ...h2, fontSize: "clamp(24px,3.2vw,36px)" }}>Gata să începi?</h2>
               <p style={{ ...lead, marginTop: 12, maxWidth: "52ch", marginLeft: "auto", marginRight: "auto" }}>
-                Clienții rezervă în câteva minute, gratuit. Saloanele primesc primele 3 luni gratuite, fără card și fără comision.
+                Clienții rezervă în câteva minute, gratuit. Saloanele încep cu trial gratuit, fără card și fără comision.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
                 <Link href="/register" style={btnPrimary}>Caută un salon</Link>

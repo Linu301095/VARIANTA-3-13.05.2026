@@ -115,6 +115,7 @@ export default function AbonamentSalon() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from("saloane").update({ plan: plan.id }).eq("user_id", user.id);
+      // trial_expira_la e setat la finalul wizardului; aici doar schimbam planul.
     }
 
     // Pastram si localStorage ca fallback imediat (evita flash la redirect)
@@ -144,7 +145,7 @@ export default function AbonamentSalon() {
 
           {promoActiva && (
             <div style={{ maxWidth: 640, margin: "0 auto 32px", background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 18, padding: "18px 24px", color: "#fff", textAlign: "center", boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
-              <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 2 }}>🎁 Primele 3 luni GRATUITE</div>
+              <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 2 }}>🎁 TRIAL GRATUIT</div>
               <div style={{ fontSize: 13.5, opacity: .95 }}>
                 Ești printre primele {LOCURI_PROMO} saloane înscrise.
                 {locuriRamase !== null && <strong> Au mai rămas {locuriRamase} {locuriRamase === 1 ? "loc" : "locuri"}.</strong>}
@@ -203,8 +204,8 @@ export default function AbonamentSalon() {
           <div style={{ background: "#fff", borderRadius: 20, padding: "22px 28px", border: "1.5px solid #EBEBEB", marginBottom: 24, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ fontSize: 24 }}>🛡️</div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 2 }}>Garantie 30 zile</div>
-              <div style={{ fontSize: 13, color: "#6B7280" }}>Daca nu esti multumit, iti returnam banii integral in primele 30 de zile.</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1A1A", marginBottom: 2 }}>Fără card la înscriere</div>
+              <div style={{ fontSize: 13, color: "#6B7280" }}>Începi cu trial gratuit. Nu se activează nicio plată automat, iar planul se poate schimba oricând.</div>
             </div>
           </div>
 
@@ -215,7 +216,7 @@ export default function AbonamentSalon() {
             </button>
             <div style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", maxWidth: 480, lineHeight: 1.6 }}>
               {promoActiva
-                ? `Primele 3 luni gratuite. Fara card necesar acum. Apoi ${PLANURI.find(p => p.id === ales)?.pretLabel}/luna — anulezi oricand.`
+                ? `Începi cu trial gratuit. Fara card necesar acum. Apoi ${PLANURI.find(p => p.id === ales)?.pretLabel}/luna — anulezi oricand.`
                 : `Vei fi taxat ${PLANURI.find(p => p.id === ales)?.pretLabel}/luna. Anuleaza oricand din setari.`}
             </div>
           </div>

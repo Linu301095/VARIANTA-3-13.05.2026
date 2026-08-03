@@ -16,7 +16,7 @@ export type MockSalon = {
   oras: string;
   email: string;
   telefon: string;
-  plan: "starter" | "pro" | "business";
+  plan: "basic" | "pro" | "business";
   nrAngajati: number;
   nrProgramariLuna: number;
   rating: number;
@@ -84,8 +84,8 @@ export function generateMockData() {
     status: Math.random() > 0.95 ? "blocat" : "activ",
   }));
 
-  const PLAN_DIST: ("starter" | "pro" | "business")[] = [
-    ...Array(12).fill("starter"),
+  const PLAN_DIST: ("basic" | "pro" | "business")[] = [
+    ...Array(12).fill("basic"),
     ...Array(13).fill("pro"),
     ...Array(5).fill("business"),
   ];
@@ -97,7 +97,7 @@ export function generateMockData() {
     email: `contact@${slug(nume)}.ro`,
     telefon: `02${rand(10, 99)} ${rand(100, 999)} ${rand(100, 999)}`,
     plan: PLAN_DIST[i],
-    nrAngajati: PLAN_DIST[i] === "starter" ? 1 : PLAN_DIST[i] === "pro" ? rand(2, 5) : rand(5, 12),
+    nrAngajati: PLAN_DIST[i] === "basic" ? 1 : PLAN_DIST[i] === "pro" ? rand(2, 5) : rand(5, 12),
     nrProgramariLuna: rand(8, 180),
     rating: Math.round((3.5 + Math.random() * 1.5) * 10) / 10,
     dataInregistrare: randomDate(200).toISOString(),

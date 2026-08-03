@@ -97,7 +97,7 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
           {LOGO}
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
             <span className="footer-link" style={{ ...linkStyleSm, color: "#10B981", display: "inline-flex", alignItems: "center", gap: 5 }}><Lock size={13} strokeWidth={2} /> Plată securizată</span>
-            <span className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42", display: "inline-flex", alignItems: "center", gap: 5 }}><Shield size={13} strokeWidth={2} /> Garanție 30 zile</span>
+            <span className="footer-link" style={{ ...linkStyleSm, color: "#FF8C42", display: "inline-flex", alignItems: "center", gap: 5 }}><Shield size={13} strokeWidth={2} /> Fără card la înscriere</span>
             <a href="mailto:parteneri@calyhub.ro" className="footer-link" style={linkStyleSm}>parteneri@calyhub.ro</a>
             <Link href="/" className="footer-link" style={linkStyleSm}>Politică plăți</Link>
           </div>

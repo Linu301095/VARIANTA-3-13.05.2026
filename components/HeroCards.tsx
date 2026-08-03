@@ -285,7 +285,7 @@ function SalonCard() {
         }}
       >
         <div style={{ fontSize: "13px", fontWeight: 700, color: "#FF6B00" }}>
-          🎁 Primele 3 luni gratuite
+          🎁 Trial gratuit
         </div>
         <div
           style={{

@@ -150,7 +150,7 @@ const INCLUS_TOATE = [
 const FAQ = [
   { q: "Se aplică și pentru saloane de înfrumusețare?", a: "Da. Aceleași planuri acoperă și frizeriile, coaforurile, cosmetica și manichiura, și saloanele de grooming. Diferența e doar în felul cum configurezi serviciile." },
   { q: "Ce înseamnă 0% comision?", a: "Nu luăm nimic din prețul serviciilor. Clientul plătește la salon, integral. Tu plătești doar abonamentul lunar." },
-  { q: "Ce se întâmplă după cele 3 luni gratuite?", a: "Alegi planul potrivit și continui. Nu se activează nimic automat și nu cerem card la înscriere." },
+  { q: "Ce se întâmplă după trialul gratuit?", a: "Alegi planul potrivit și continui. Nu se activează nimic automat și nu cerem card la înscriere." },
   { q: "Pot schimba planul mai târziu?", a: "Da, oricând — treci pe un plan superior sau inferior în funcție de cum crește echipa." },
   { q: "Plata anuală e obligatorie?", a: "Nu. Poți plăti lunar; facturarea anuală vine doar cu un preț mai bun." },
   { q: "Agenții AI costă separat?", a: "Nu. Sunt incluși în plan, activați din prima zi, fără setări tehnice." },
@@ -199,7 +199,7 @@ export default function Preturi() {
             </h1>
             <p className="ch-hero-anim" style={{ margin: "18px auto 0", maxWidth: "56ch", fontSize: 17.5, lineHeight: 1.7, fontWeight: 500, color: C.muted, animationDelay: ".3s" }}>
               Aceleași planuri pentru saloane de înfrumusețare și de grooming. Programări nelimitate,
-              0% comision pe rezervări și agenți AI incluși. Primele 3 luni sunt gratuite, fără card la înscriere.
+              0% comision pe rezervări și agenți AI incluși. Începi cu trial gratuit, fără card la înscriere.
             </p>
 
             {/* promo */}
@@ -208,7 +208,7 @@ export default function Preturi() {
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 9, background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 50, padding: "9px 18px" }}>
                   <Flame size={16} color={C.orange} strokeWidth={2.2} />
                   <span style={{ fontSize: 13.5, fontWeight: 800, color: C.orangeText }}>
-                    {locuriRamase === null ? "Primele 3 luni gratuite pentru partenerii fondatori" : `Doar ${locuriRamase} din ${LOCURI_PROMO} locuri de partener fondator rămase`}
+                    {locuriRamase === null ? "Trial gratuit pentru partenerii fondatori" : `Doar ${locuriRamase} din ${LOCURI_PROMO} locuri de partener fondator rămase`}
                   </span>
                 </span>
               </div>
@@ -356,7 +356,7 @@ export default function Preturi() {
         <section style={{ padding: "64px 20px 76px" }}>
           <div data-reveal style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ background: "linear-gradient(135deg, var(--pub-orange-soft) 0%, var(--pub-tint) 100%)", border: "1px solid var(--pub-orange-border)", borderRadius: 28, padding: "clamp(32px,5vw,52px)", textAlign: "center" }}>
-              <h2 style={{ ...h2s, fontSize: "clamp(24px,3.2vw,36px)" }}>Începe cu 3 luni gratuite</h2>
+              <h2 style={{ ...h2s, fontSize: "clamp(24px,3.2vw,36px)" }}>Începe cu trial gratuit</h2>
               <p style={{ ...lead, marginTop: 12, maxWidth: "52ch", marginLeft: "auto", marginRight: "auto" }}>
                 Îți configurezi salonul în câteva minute și primești programări online din prima zi. Fără card, fără comision.
               </p>

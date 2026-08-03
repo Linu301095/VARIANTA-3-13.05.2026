@@ -146,7 +146,7 @@ async function fetchAdminData(): Promise<MockData> {
       oras: s.oras || "—",
       email: emailMap.get(s.user_id) || "—",
       telefon: s.telefon || owner?.telefon || "—",
-      plan: "starter" as const,
+      plan: "basic" as const,
       nrAngajati: 1,
       nrProgramariLuna: programariCountBySalon.get(s.id) || 0,
       rating: 0,
@@ -202,7 +202,7 @@ const badge = (bg: string, color: string): React.CSSProperties => ({ background:
 function OverviewTab({ data }: { data: MockData }) {
   const programariAzi = data.programari.filter(p => new Date(p.data).toDateString() === new Date().toDateString()).length;
   const programariLuna = data.programari.filter(p => { const d = new Date(p.data); const n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); }).length;
-  const venituriPlan: Record<string, number> = { starter: 0, pro: 99, business: 199 };
+  const venituriPlan: Record<string, number> = { basic: 69, pro: 119, business: 219 };
   const mrr = data.saloane.filter(s => s.status === "activ").reduce((sum, s) => sum + venituriPlan[s.plan], 0);
   const tichetelNoi = data.tichete.filter(t => t.status === "nou").length;
   const reviewsRaportate = data.reviews.filter(r => r.raportat).length;
@@ -212,7 +212,7 @@ function OverviewTab({ data }: { data: MockData }) {
     { label: "Clienți înregistrați", val: data.clienti.length, sub: `${data.clienti.filter(c => c.status === "activ").length} activi`, color: "#10B981" },
     { label: "Saloane partenere", val: data.saloane.length, sub: `${data.saloane.filter(s => s.status === "activ").length} active`, color: "#3B82F6" },
     { label: "Programări azi", val: programariAzi, sub: `${programariLuna} luna aceasta`, color: "#FF6B00" },
-    { label: "MRR (venit lunar)", val: `${mrr} RON`, sub: `${data.saloane.filter(s => s.plan !== "starter").length} saloane plătitoare`, color: "#A855F7" },
+    { label: "MRR (venit lunar)", val: `${mrr} RON`, sub: `${data.saloane.length} saloane cu plan activ`, color: "#A855F7" },
     { label: "Rating mediu", val: `${ratingMediu} ★`, sub: `${data.reviews.length} review-uri`, color: "#FBBF24" },
     { label: "Tichete noi", val: tichetelNoi, sub: `${data.tichete.filter(t => t.urgenta === "urgenta").length} urgente`, color: "#F87171" },
     { label: "Review-uri raportate", val: reviewsRaportate, sub: "necesită moderare", color: "#EF4444" },
@@ -249,7 +249,7 @@ function OverviewTab({ data }: { data: MockData }) {
         </div>
         <div style={card}>
           <div style={subTitle}>Distribuție planuri</div>
-          {(["starter", "pro", "business"] as const).map((plan) => {
+          {(["basic", "pro", "business"] as const).map((plan) => {
             const count = data.saloane.filter(s => s.plan === plan).length;
             const pct = data.saloane.length ? Math.round((count / data.saloane.length) * 100) : 0;
             const color = plan === "business" ? "#A855F7" : plan === "pro" ? "#FF6B00" : "#6B7280";
@@ -343,7 +343,7 @@ function SaloaneTab({ data, setData }: { data: MockData; setData: (d: MockData) 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <input style={{ ...inputDark, flex: 1, minWidth: 200 }} placeholder="🔍 Caută salon..." value={search} onChange={e => setSearch(e.target.value)} />
         <select style={inputDark} value={filterPlan} onChange={e => setFilterPlan(e.target.value)}>
-          <option value="">Toate planurile</option><option value="starter">Starter</option><option value="pro">Pro</option><option value="business">Business</option>
+          <option value="">Toate planurile</option><option value="basic">Basic</option><option value="pro">Pro</option><option value="business">Business</option>
         </select>
         <select style={inputDark} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="">Toate statusurile</option><option value="activ">Activ</option><option value="suspendat">Suspendat</option><option value="in_asteptare">În așteptare</option>
@@ -434,8 +434,8 @@ function ProgramariTab({ data }: { data: MockData }) {
 
 /* ------------------- ABONAMENTE ------------------- */
 function AbonamenteTab({ data }: { data: MockData }) {
-  const venituriPlan: Record<string, number> = { starter: 0, pro: 99, business: 199 };
-  const stats = (["starter", "pro", "business"] as const).map(p => {
+  const venituriPlan: Record<string, number> = { basic: 69, pro: 119, business: 219 };
+  const stats = (["basic", "pro", "business"] as const).map(p => {
     const saloane = data.saloane.filter(s => s.plan === p && s.status === "activ");
     return { plan: p, count: saloane.length, mrr: saloane.length * venituriPlan[p] };
   });
@@ -455,7 +455,7 @@ function AbonamenteTab({ data }: { data: MockData }) {
         </div>
         <div style={card}><div style={subTitle}>Înregistrări noi luna asta</div><div style={{ fontSize: 28, fontWeight: 900, color: "#10B981" }}>+{newSignups}</div></div>
         <div style={card}><div style={subTitle}>Churn (anulări)</div><div style={{ fontSize: 28, fontWeight: 900, color: "#F87171" }}>-{churn}</div></div>
-        <div style={card}><div style={subTitle}>Plătitori activi</div><div style={{ fontSize: 28, fontWeight: 900, color: "#A855F7" }}>{stats.filter(s => s.plan !== "starter").reduce((sum, s) => sum + s.count, 0)}</div></div>
+        <div style={card}><div style={subTitle}>Plătitori activi</div><div style={{ fontSize: 28, fontWeight: 900, color: "#A855F7" }}>{stats.reduce((sum, s) => sum + s.count, 0)}</div></div>
       </div>
 
       <div style={card}>
