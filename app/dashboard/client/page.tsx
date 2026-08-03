@@ -25,7 +25,7 @@ type Domeniu = "infrumusetare" | "grooming";
 /** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
 type Lume = "tine" | "animal";
 const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
-type SalonItem = { domeniu?: Domeniu; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { domeniu?: Domeniu; specii?: string[]; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -51,6 +51,7 @@ function mapSalonDB(s: any, i: number): SalonItem {
   const numeServicii = serviciiComplete.map(sv => sv.nume).slice(0, 3);
   return {
     domeniu: s.domeniu === "infrumusetare" ? "infrumusetare" : "grooming",
+    specii: Array.isArray(s.specii) ? s.specii : [],
     id: s.id,
     nume: s.nume || "Salon",
     oras: s.oras || "România",
@@ -402,7 +403,7 @@ export default function DashboardClient() {
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
-        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu").order("created_at", { ascending: false }),
+        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii").order("created_at", { ascending: false }),
       ]);
 
       if (profile) {
@@ -1253,6 +1254,34 @@ export default function DashboardClient() {
               {/* ── SERVICII ── */}
               {profilSalonTab === "servicii" && (
                 <>
+                  {/* Cu ce animale lucreaza salonul — clientul trebuie sa stie inainte sa rezerve */}
+                  {salonCereAnimal && (salon.specii?.length || 0) > 0 && (() => {
+                    const speciiSalon = salon.specii || [];
+                    const acceptaAnimalul = !animal?.specie || speciiSalon.includes(animal.specie) || speciiSalon.includes("altele");
+                    return (
+                      <div style={{ marginBottom: 16, padding: "12px 14px", background: acceptaAnimalul ? c.surface2 : "rgba(239,68,68,.07)", border: `1px solid ${acceptaAnimalul ? c.border : "rgba(239,68,68,.3)"}`, borderRadius: 12 }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Lucrează cu</div>
+                        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                          {speciiSalon.map(v => {
+                            const sp = SPECII.find(x => x.val === v);
+                            if (!sp) return null;
+                            const alTau = animal?.specie === v;
+                            return (
+                              <span key={v} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: alTau ? c.orangeAccent : c.surface, border: `1px solid ${alTau ? "#FF6B00" : c.border}`, borderRadius: 50, padding: "5px 11px", fontSize: 12, fontWeight: 700, color: alTau ? "#FF6B00" : c.text2 }}>
+                                <span style={{ fontSize: 14 }}>{sp.icon}</span> {sp.label}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        {!acceptaAnimalul && animal && (
+                          <div style={{ fontSize: 12.5, color: "#EF4444", fontWeight: 700, marginTop: 10, display: "flex", alignItems: "flex-start", gap: 6, lineHeight: 1.5 }}>
+                            <AlertTriangle size={14} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
+                            Salonul nu lucrează cu {specieInfo(animal.specie).label.toLowerCase()}. Verifică întâi cu salonul înainte să rezervi.
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {salon.serviciiComplete.length === 0 ? (
                     <div style={{ padding: "32px 20px", textAlign: "center", color: c.muted, fontSize: 14 }}>
                       Salonul nu a configurat încă servicii.
@@ -2387,6 +2416,15 @@ function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect
           {salon.poza_url && <RatingBadge ratingReal={ratingReal} />}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>
+        {(salon.domeniu || "grooming") === "grooming" && (salon.specii?.length || 0) > 0 && (
+          <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 8 }} title={`Lucrează cu: ${(salon.specii || []).map(v => SPECII.find(x => x.val === v)?.label).filter(Boolean).join(", ")}`}>
+            {(salon.specii || []).slice(0, 5).map(v => {
+              const sp = SPECII.find(x => x.val === v);
+              return sp ? <span key={v} style={{ fontSize: 15, lineHeight: 1 }}>{sp.icon}</span> : null;
+            })}
+            {(salon.specii?.length || 0) > 5 && <span style={{ fontSize: 11, color: c.xmuted, fontWeight: 700 }}>+{(salon.specii!.length) - 5}</span>}
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${c.border2}` }}>
           <div><div style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>de la</div><div style={{ fontSize: 18, fontWeight: 900, color: c.text }}>{salon.pretDe > 0 ? `${salon.pretDe} RON` : "—"}</div></div>
           <button onClick={onSelect} style={{ padding: "10px 20px", borderRadius: 50, border: "none", background: salon.culoare, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", boxShadow: `0 4px 14px ${salon.culoare}55` }}>Programează →</button>
