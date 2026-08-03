@@ -25,9 +25,9 @@ oricând. Ca să rezervi la grooming trebuie să ai un animal în cont; la înfr
 
 ---
 
-## Categoria C: ecrane de acces (7 pagini, etapizat) — ÎN PAUZĂ după D
+## Categoria C: ecrane de acces — ✅ TERMINATĂ (toate 7)
 
-Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
+Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și responsive verificat.
 
 | # | Etapa | Fișier | Stare |
 |---|---|---|---|
@@ -36,8 +36,8 @@ Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 | 3 | Configurare animal | `app/register/configurare-animal/page.tsx` | ✅ gata (31.07.2026) — animalul e opțional |
 | 4 | Configurare salon | `app/register/configurare-salon/page.tsx` | ✅ gata (31.07.2026) — făcut odată cu Etapa 2, fiind dependent de verticală |
 | 5 | Abonament salon | `app/register/abonament-salon/page.tsx` | ✅ gata (03.08.2026) — se poate sări; fără „partener fondator" |
-| 6 | Ai uitat parola | `app/forgot-password/page.tsx` | ⬜ urmează |
-| 7 | Resetare parolă | `app/reset-password/page.tsx` | ⬜ |
+| 6 | Ai uitat parola | `app/forgot-password/page.tsx` | ✅ gata (03.08.2026) |
+| 7 | Resetare parolă | `app/reset-password/page.tsx` | ✅ gata (03.08.2026) |
 
 **Decizii luate (31.07.2026):**
 
