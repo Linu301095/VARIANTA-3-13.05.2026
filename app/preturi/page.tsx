@@ -6,14 +6,16 @@ import Logo from "../../components/Logo";
 import Footer from "../../components/Footer";
 import ScrollReveal from "../../components/ScrollReveal";
 import { supabase } from "../../lib/supabase";
+import { planuriPentru, VERTICAL as VERT, type Vertical as Vert, type Ciclu } from "../../lib/planuri";
 import {
   Check, Gift, Flame, Users, Store, Building2, HelpCircle,
 } from "lucide-react";
 import { IconPlanuri, SparkleAnim } from "../../components/SectionIcons";
 
-type Ciclu = "lunar" | "anual";
-
 const LOCURI_PROMO = 10;
+
+/** Iconita fiecarui plan — vizualul sta in pagina, datele in lib/planuri.ts */
+const ICON_PLAN = { basic: Store, pro: Users, business: Building2 } as const;
 
 const C = {
   surface: "var(--pub-surface)",
@@ -49,92 +51,6 @@ const tile: React.CSSProperties = {
 };
 const h2s: React.CSSProperties = { fontSize: "clamp(24px,3.2vw,34px)", fontWeight: 900, letterSpacing: -0.6, color: C.text };
 const lead: React.CSSProperties = { fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7 };
-
-type Vert = "infrumusetare" | "grooming";
-const VERT: Record<Vert, { eticheta: string; rol: string; rolPl: string; pret: string; fisa: string }> = {
-  infrumusetare: {
-    eticheta: "Salon de înfrumusețare",
-    rol: "specialist", rolPl: "specialiști",
-    pret: "Preț și durată pe serviciu",
-    fisa: "recomandări după vizită",
-  },
-  grooming: {
-    eticheta: "Salon de grooming",
-    rol: "groomer", rolPl: "groomeri",
-    pret: "Preț și durată pe talie (mică / medie / mare)",
-    fisa: "fișă de îngrijire post-grooming",
-  },
-};
-
-const planuriPentru = (v: Vert) => [
-  {
-    id: "basic",
-    nume: "Basic",
-    Icon: Store,
-    tagline: "Salonul solo",
-    descriere: `Pentru un ${VERT[v].rol} singur sau cu un asistent`,
-    pretLunar: 69,
-    pretAnual: 57,
-    badge: null as string | null,
-    recomandat: false,
-    prefix: null as string | null,
-    features: [
-      `Până la 2 useri (${VERT[v].rol} + asistent)`,
-      VERT[v].pret,
-      "Programări nelimitate, agendă digitală",
-      "Profil public + galerie 5 poze",
-      "Statistici esențiale — Azi / Lună, rating, recenzii",
-      "Raport Excel (perioada curentă)",
-      "Remindere WhatsApp nelimitate + 30 SMS / lună",
-      "Suport pe email",
-      "✨ Agent AI: răspunsuri la recenzii",
-    ],
-  },
-  {
-    id: "pro",
-    nume: "Pro",
-    Icon: Users,
-    tagline: "Salon cu echipă",
-    descriere: "Pentru saloane în creștere, 3-6 persoane",
-    pretLunar: 119,
-    pretAnual: 99,
-    badge: "Cel mai popular",
-    recomandat: true,
-    prefix: "Tot ce e în Basic, plus:",
-    features: [
-      "3-6 useri, fiecare cu orar individual",
-      `Clientul alege ${VERT[v].rol}ul + blocaj per ${VERT[v].rol}`,
-      "Galerie 10 poze",
-      "Statistici complete — filtre Azi / Săptămână / Lună / An / Interval",
-      `Evoluție lunară și productivitate per ${VERT[v].rol}`,
-      "Raport Excel complet (secțiuni selectabile)",
-      "Remindere WhatsApp nelimitate + 100 SMS / lună",
-      'Badge "Profil verificat"',
-      "✨ Agent AI: alertă clienți inactivi",
-    ],
-  },
-  {
-    id: "business",
-    nume: "Business",
-    Icon: Building2,
-    tagline: "Salon mare / lanț",
-    descriere: "Pentru saloane mari sau cu mai multe locații",
-    pretLunar: 219,
-    pretAnual: 182,
-    badge: "All-in",
-    recomandat: false,
-    prefix: "Tot ce e în Pro, plus:",
-    features: [
-      `Useri nelimitați + login individual per ${VERT[v].rol} (în curând)`,
-      'Listare promovată în oraș — badge "Recomandat"',
-      "Remindere WhatsApp + SMS nelimitate",
-      "Suport prioritar 24/7 + manager dedicat",
-      "Multi-locație (în curând)",
-      `✨ Agent AI: ${VERT[v].fisa}`,
-      "✨ Agent AI: Consultant de business",
-    ],
-  },
-];
 
 const INCLUS_TOATE = [
   "O singură subscripție pe tot salonul — nu plătești per angajat",
@@ -262,7 +178,7 @@ export default function Preturi() {
                       <span style={{ position: "absolute", top: -12, left: 24, background: p.recomandat ? C.orange : "var(--pub-badge)", color: "var(--pub-badge-text)", fontSize: 10.5, fontWeight: 900, letterSpacing: 0.5, textTransform: "uppercase", padding: "4px 12px", borderRadius: 50 }}>{p.badge}</span>
                     )}
                     <div style={{ width: 46, height: 46, borderRadius: 13, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                      <p.Icon size={23} color={C.orange} strokeWidth={2} />
+                      {(() => { const I = ICON_PLAN[p.id]; return <I size={23} color={C.orange} strokeWidth={2} />; })()}
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{p.nume}</div>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: C.orangeText, marginTop: 2 }}>{p.tagline}</div>

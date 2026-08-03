@@ -35,8 +35,8 @@ Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 | 2 | Înregistrare | `app/register/page.tsx` | ✅ gata (31.07.2026) |
 | 3 | Configurare animal | `app/register/configurare-animal/page.tsx` | ✅ gata (31.07.2026) — animalul e opțional |
 | 4 | Configurare salon | `app/register/configurare-salon/page.tsx` | ✅ gata (31.07.2026) — făcut odată cu Etapa 2, fiind dependent de verticală |
-| 5 | Abonament salon | `app/register/abonament-salon/page.tsx` | ⬜ urmează |
-| 6 | Ai uitat parola | `app/forgot-password/page.tsx` | ⬜ |
+| 5 | Abonament salon | `app/register/abonament-salon/page.tsx` | ✅ gata (03.08.2026) — se poate sări; fără „partener fondator" |
+| 6 | Ai uitat parola | `app/forgot-password/page.tsx` | ⬜ urmează |
 | 7 | Resetare parolă | `app/reset-password/page.tsx` | ⬜ |
 
 **Decizii luate (31.07.2026):**
@@ -102,6 +102,8 @@ Scris în Termeni, secțiunea 5 (versiunea 1.1).
    `trial_expira_la` și trimite.
 
 **SQL:** `sql/trial_si_planuri.sql` adaugă `trial_expira_la` și `abonament_activ`.
+
+**PLANURILE stau într-un singur fișier:** `lib/planuri.ts`. Prețuri, caracteristici, verticală și ciclul lunar/anual sunt folosite deopotrivă de `/preturi`, `/register/abonament-salon` și tabul „Abonamentul meu" din dashboard. Orice modificare se face doar acolo.
 
 **Atenție:** `TERMENI_VERSIUNE` din `app/register/page.tsx` trebuie schimbat ori de câte ori se modifică textul din Termeni sau Confidențialitate.
 

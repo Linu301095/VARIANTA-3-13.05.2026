@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import { stareTrial, zileText, ZILE_AVERTISMENT } from "../../../lib/trial";
+import { numePlan } from "../../../lib/planuri";
 import Cropper from "react-easy-crop";
 import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
 
@@ -797,7 +798,6 @@ export default function DashboardSalon() {
   const [raportDeschis, setRaportDeschis] = useState(false);
   const [raportSel, setRaportSel] = useState({ venituri: true, programari: true, clienti: true, servicii: true, talie: true });
   const [exportLoading, setExportLoading] = useState(false);
-  const [abonament, setAbonament] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("statistici");
   const [isMobile, setIsMobile] = useState(false);
@@ -934,7 +934,6 @@ export default function DashboardSalon() {
         }
         if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
         if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
-        setAbonament({ plan: salonRow.plan || "basic" });
         if (Array.isArray(salonRow.clienti_blocati)) setClientiBlocati(salonRow.clienti_blocati);
 
         // Toate sub-cererile în paralel — autoFinalizeaza nu blochează UI
@@ -1219,7 +1218,7 @@ export default function DashboardSalon() {
   // Fallback pe localStorage pentru cazul în care salonData nu s-a incarcat inca
   const planIdCurent = (() => {
     if (salonData?.plan) return String(salonData.plan).toLowerCase();
-    try { return String(JSON.parse(localStorage.getItem("calyhub_abonament") || "{}").planId || "").toLowerCase(); } catch { return ""; }
+    return "basic"; // planul se citeste din baza; "basic" e planul de intrare
   })();
   const aiAccess = {
     recenzii: ["basic", "pro", "business"].includes(planIdCurent),
@@ -3859,60 +3858,61 @@ export default function DashboardSalon() {
             {/* ABONAMENT */}
             {tab === "abonament" && (
               <div style={{ maxWidth: 720 }}>
-                <PageHeader icon={CreditCard} title="Abonamentul meu" sub="Detalii despre planul tau si facturare" />
-                {abonament ? (
-                  <>
-                    <div style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 20, padding: "26px 28px", color: "#fff", marginBottom: 18, boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, opacity: .85, marginBottom: 6 }}>Plan curent</div>
-                          <div style={{ fontSize: 32, fontWeight: 900, lineHeight: 1 }}>{abonament.planNume}</div>
-                          <div style={{ fontSize: 14, opacity: .9, marginTop: 8 }}>
-                            {abonament.pret === 0 ? "Trial gratuit" : `${abonament.pret} RON / luna`}
-                          </div>
-                        </div>
-                        <div style={{ background: "rgba(255,255,255,.18)", padding: "8px 14px", borderRadius: 50, fontSize: 12, fontWeight: 800 }}>✓ Activ</div>
-                      </div>
-                      <div style={{ borderTop: "1px solid rgba(255,255,255,.2)", marginTop: 18, paddingTop: 14, fontSize: 13, opacity: .9 }}>
-                        Urmatoarea facturare: <strong>{new Date(abonament.dataExpirare).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</strong>
+                <PageHeader icon={CreditCard} title="Abonamentul meu" sub="Planul salonului și starea trialului" />
+
+                {/* Card plan curent — datele vin din baza, nu din memoria browserului */}
+                <div style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)", borderRadius: 20, padding: "26px 28px", color: "#fff", marginBottom: 18, boxShadow: "0 8px 28px rgba(255,107,0,.25)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, opacity: .85, marginBottom: 6 }}>Plan ales</div>
+                      <div style={{ fontSize: 32, fontWeight: 900, lineHeight: 1 }}>{numePlan(salonData?.plan)}</div>
+                      <div style={{ fontSize: 14, opacity: .92, marginTop: 8 }}>
+                        {trial.stare === "trial" ? "Trial gratuit — nu se percepe nimic" : trial.stare === "abonat" ? "Abonament activ" : "Trialul s-a încheiat"}
                       </div>
                     </div>
-
-                    <div style={{ background: c.surface, borderRadius: 18, padding: "22px 26px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 14 }}>Detalii facturare</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {[
-                          ["Plan", abonament.planNume],
-                          ["Pret lunar", abonament.pret === 0 ? "Gratuit" : `${abonament.pret} RON`],
-                          ["Activat la", new Date(abonament.dataStart).toLocaleDateString("ro-RO")],
-                          ["Reinnoire automata", abonament.autoRenew ? "Da" : "Nu"],
-                        ].map(([k, v]) => (
-                          <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: `1px solid ${c.border2}` }}>
-                            <span style={{ color: c.muted }}>{k}</span>
-                            <span style={{ fontWeight: 700, color: c.text }}>{v}</span>
-                          </div>
-                        ))}
-                      </div>
+                    <div style={{ background: "rgba(255,255,255,.18)", padding: "8px 14px", borderRadius: 50, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>
+                      {trial.stare === "trial" ? "În trial" : trial.stare === "abonat" ? "✓ Activ" : "Necesită plan"}
                     </div>
-
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
-                      <button onClick={() => router.push("/register/abonament-salon")} style={btnPrimary}>Schimba planul</button>
-                      <button onClick={() => salveaza("Cererea de anulare a fost trimisa")} style={{ padding: "12px 24px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.muted, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Anuleaza abonament</button>
-                    </div>
-
-                    <div style={{ background: c.surface, borderRadius: 18, padding: "22px 26px", border: `1.5px solid ${c.border}` }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 14 }}>Istoric facturi</div>
-                      <div style={{ fontSize: 13, color: c.xmuted, textAlign: "center", padding: "20px 0" }}>Nicio factura emisa inca. Prima va aparea aici dupa primul ciclu de facturare.</div>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ background: c.surface, borderRadius: 20, padding: "32px", border: `1.5px solid ${c.border}`, textAlign: "center" }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}><CreditCard size={40} color={c.muted} strokeWidth={1.5} /></div>
-                    <div style={{ fontSize: 17, fontWeight: 800, color: c.text, marginBottom: 8 }}>Niciun abonament activ</div>
-                    <div style={{ fontSize: 14, color: c.muted, marginBottom: 20 }}>Alege un plan pentru a debloca toate functionalitatile salonului.</div>
-                    <button onClick={() => router.push("/register/abonament-salon")} style={btnPrimary}>Alege un plan</button>
                   </div>
-                )}
+                  {trial.stare === "trial" && (
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,.2)", marginTop: 18, paddingTop: 14, fontSize: 13, opacity: .92 }}>
+                      Trialul se încheie în <strong>{zileText(trial.zileRamase)}</strong>
+                    </div>
+                  )}
+                  {trial.stare === "expirat" && (
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,.2)", marginTop: 18, paddingTop: 14, fontSize: 13, opacity: .92 }}>
+                      Datele salonului rămân salvate încă <strong>{zileText(trial.zilePanaLaStergere)}</strong>. Programările confirmate se desfășoară normal.
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ background: c.surface, borderRadius: 18, padding: "22px 26px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 14 }}>Detalii</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {[
+                      ["Plan", numePlan(salonData?.plan)],
+                      ["Tip salon", DS.areAnimale ? "Grooming" : "Înfrumusețare"],
+                      ["Comision pe programări", "0%"],
+                      ["Stare", trial.stare === "trial" ? "Trial gratuit" : trial.stare === "abonat" ? "Abonament activ" : "Trial încheiat"],
+                    ].map(([k, v]) => (
+                      <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13, padding: "6px 0", borderBottom: `1px solid ${c.border2}` }}>
+                        <span style={{ color: c.muted }}>{k}</span>
+                        <span style={{ fontWeight: 700, color: c.text, textAlign: "right" }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
+                  <button onClick={() => router.push("/register/abonament-salon")} style={btnPrimary}>
+                    {trial.stare === "expirat" ? "Alege un plan" : "Schimbă planul"}
+                  </button>
+                </div>
+
+                <div style={{ background: c.surface2, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, fontSize: 13, color: c.muted, lineHeight: 1.6 }}>
+                  Plata online nu este încă activă. Nu îți cerem cardul și nu se emite nicio factură
+                  deocamdată — te anunțăm din timp înainte să se schimbe ceva.
+                </div>
               </div>
             )}
 
@@ -4042,7 +4042,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
   const [hovered, setHovered] = useState<Tab | "logout" | null>(null);
   const { theme, c, toggleTheme } = useContext(ThemeCtx);
   const planIdUM = planId || (() => {
-    try { return String(JSON.parse(localStorage.getItem("calyhub_abonament") || "{}").planId || "").toLowerCase(); } catch { return ""; }
+    return "basic"; // planul se citeste din baza; "basic" e planul de intrare
   })();
   const planNume = planIdUM ? planIdUM.charAt(0).toUpperCase() + planIdUM.slice(1) : null;
   const aiBlocat = !["basic", "pro", "business"].includes(planIdUM);
