@@ -138,8 +138,8 @@ export default function InstrumenteAI() {
         <section style={{ padding: "20px 20px 64px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              {TOOLS.map(({ Icon, color, soft, plan, t, d, b }) => (
-                <div key={t} data-reveal className="ch-card" style={{ position: "relative", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 28, padding: 28, boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)", overflow: "hidden" }}>
+              {TOOLS.map(({ Icon, color, soft, plan, t, d, b }, i) => (
+                <div key={i} data-reveal className="ch-card" style={{ position: "relative", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 28, padding: 28, boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: color }} />
                   <Sparkle size={20} color={color} style={{ position: "absolute", top: 18, right: 18, opacity: 0.9 }} />
                   <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 14 }}>
