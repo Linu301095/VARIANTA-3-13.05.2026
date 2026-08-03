@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo, useContext, createContext, useCall
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
+import { stareTrial, zileText, ZILE_AVERTISMENT } from "../../../lib/trial";
 import Cropper from "react-easy-crop";
 import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
 
@@ -1179,6 +1180,32 @@ export default function DashboardSalon() {
   const DS = DOM_SALON[domeniuSalon];
   const areAnimale = DS.areAnimale;
 
+  // Starea trialului. Deocamdata doar informam — blocarea vine odata cu platile.
+  const trial = stareTrial(salonData?.trial_expira_la, salonData?.abonament_activ);
+
+  // O singura notificare in aplicatie cand trialul expira. Emailul vine cu Resend.
+  useEffect(() => {
+    if (!userId || trial.stare !== "expirat") return;
+    let anulat = false;
+    (async () => {
+      const { data: existenta } = await supabase
+        .from("notificari")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("tip", "trial_expirat")
+        .limit(1);
+      if (anulat || (existenta && existenta.length > 0)) return;
+      const mesaj = "Trialul gratuit s-a încheiat. Alege un plan ca salonul să rămână vizibil și să primească programări. Datele rămân salvate încă o perioadă.";
+      const { data: nou } = await supabase
+        .from("notificari")
+        .insert({ user_id: userId, tip: "trial_expirat", mesaj })
+        .select("*")
+        .single();
+      if (!anulat && nou) setNotificari(n => [nou as Notificare, ...n]);
+    })();
+    return () => { anulat = true; };
+  }, [userId, trial.stare]);
+
   const numeComplet = user?.nume?.split(" ")[0] || "Manager";
   const SUB_TABS: Tab[] = ["functii-ai", "profil-salon", "servicii", "echipa", "animale", "abonament", "setari", "ajutor"];
   const isSubTab = SUB_TABS.includes(tab);
@@ -2020,6 +2047,42 @@ export default function DashboardSalon() {
 
         <main style={{ flex: 1, padding: "28px 20px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+            {/* ── Starea trialului ── */}
+            {trial.stare === "trial" && trial.zileRamase <= ZILE_AVERTISMENT && (
+              <div style={{ marginBottom: 20, background: c.orangeAccent, border: `1.5px solid ${c.orangeBorder}`, borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <Clock size={20} color="#FF6B00" strokeWidth={2} style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>
+                    {trial.zileRamase === 0 ? "Trialul se încheie astăzi" : `Trialul se încheie în ${zileText(trial.zileRamase)}`}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: c.muted, marginTop: 2 }}>
+                    Alege un plan ca salonul să rămână vizibil și să primească programări în continuare.
+                  </div>
+                </div>
+                <button onClick={() => setTab("abonament")}
+                  style={{ padding: "10px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                  Vezi planurile →
+                </button>
+              </div>
+            )}
+
+            {trial.stare === "expirat" && (
+              <div style={{ marginBottom: 20, background: theme === "dark" ? "rgba(239,68,68,.10)" : "#FEF2F2", border: "1.5px solid rgba(239,68,68,.35)", borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <AlertTriangle size={20} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Trialul s-a încheiat</div>
+                  <div style={{ fontSize: 12.5, color: c.muted, marginTop: 2, lineHeight: 1.5 }}>
+                    Alege un plan ca să continui. Datele salonului rămân salvate încă {zileText(trial.zilePanaLaStergere)};
+                    programările deja confirmate se desfășoară normal.
+                  </div>
+                </div>
+                <button onClick={() => setTab("abonament")}
+                  style={{ padding: "10px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                  Alege un plan →
+                </button>
+              </div>
+            )}
 
             {/* AGENDA — calendar pe zi, coloane per specialist */}
             {tab === "agenda" && (

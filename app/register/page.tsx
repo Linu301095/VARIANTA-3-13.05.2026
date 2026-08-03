@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase";
 import { User, Store, Scissors, PawPrint, AlertTriangle, Check } from "lucide-react";
 
 /** Versiunea documentelor legale acceptate la inregistrare (vezi /termeni si /confidentialitate). */
-const TERMENI_VERSIUNE = "14.05.2026";
+const TERMENI_VERSIUNE = "1.1 (03.08.2026)";
 
 type Domeniu = "infrumusetare" | "grooming";
 

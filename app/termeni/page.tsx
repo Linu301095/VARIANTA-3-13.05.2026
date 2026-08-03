@@ -50,23 +50,39 @@ Prin crearea unui cont și utilizarea serviciilor platformei, utilizatorul accep
 4.4. CalyHub percepe un abonament lunar conform planului ales și nu percepe comision pe programările efectuate. Plata serviciilor prestate se face direct între Client și Salon, CalyHub neintervenind în această tranzacție.`,
   },
   {
-    titlu: "5. Rezervări și anulări",
-    continut: `5.1. O programare devine confirmată în momentul acceptării ei de către salon în sistem. Clientul primește confirmarea direct în aplicație, printr-o notificare. Cu aproximativ 24 de ore înainte de programare, clientul primește un reminder prin SMS la numărul de telefon din profil.
+    titlu: "5. Perioada de probă, suspendarea și ștergerea datelor",
+    continut: `5.1. La finalizarea configurării, fiecare salon partener beneficiază de o perioadă de probă gratuită, fără card bancar și fără obligații. Durata exactă a perioadei de probă este comunicată în contul salonului.
 
-5.2. Anularea de către client trebuie efectuată cu cel puțin 24 de ore înainte de ora programată. Anulările de ultim moment repetate pot duce la restricționarea accesului la platformă.
+5.2. La încheierea perioadei de probă, salonul poate alege un plan de abonament pentru a continua. Dacă nu alege un plan, contul intră în stare suspendată.
 
-5.3. Salonul poate anula o programare doar în situații excepționale (forță majoră, urgențe) și are obligația de a notifica clientul în cel mai scurt timp posibil prin intermediul platformei.
+5.3. Pe durata suspendării, salonul păstrează accesul la contul său și la toate datele proprii — agendă, clienți, istoric, statistici — și le poate exporta oricând. Profilul public nu mai apare însă în căutare, iar salonul nu mai poate primi programări noi.
 
-5.4. CalyHub nu este parte în contractul de prestări servicii dintre client și salon și nu poate fi responsabil pentru calitatea serviciilor prestate.`,
+5.4. Programările deja confirmate înainte de suspendare rămân valabile și se desfășoară normal. Salonul are în continuare obligația de a le onora, conform art. 4.2.
+
+5.5. Dacă salonul nu alege un plan în termen de 30 de zile de la suspendare, datele salonului (profil public, servicii, echipă, fotografii) se șterg definitiv. Contul de utilizator rămâne activ și poate fi refolosit oricând pentru a configura un salon nou.
+
+5.6. Înainte de ștergere, CalyHub notifică salonul prin intermediul platformei și pe adresa de email asociată contului. Salonul poate solicita oricând, înainte de termen, exportul datelor proprii.
+
+5.7. Din istoricul programărilor clienților se păstrează denumirea salonului, pentru ca aceștia să își poată consulta propriul istoric de servicii.`,
   },
   {
-    titlu: "6. Proprietate intelectuală",
+    titlu: "6. Rezervări și anulări",
+    continut: `6.1. O programare devine confirmată în momentul acceptării ei de către salon în sistem. Clientul primește confirmarea direct în aplicație, printr-o notificare. Cu aproximativ 24 de ore înainte de programare, clientul primește un reminder pe WhatsApp sau prin SMS, la numărul de telefon din profil.
+
+6.2. Anularea de către client trebuie efectuată cu cel puțin 24 de ore înainte de ora programată. Anulările de ultim moment repetate pot duce la restricționarea accesului la platformă.
+
+6.3. Salonul poate anula o programare doar în situații excepționale (forță majoră, urgențe) și are obligația de a notifica clientul în cel mai scurt timp posibil prin intermediul platformei.
+
+6.4. CalyHub nu este parte în contractul de prestări servicii dintre client și salon și nu poate fi responsabil pentru calitatea serviciilor prestate.`,
+  },
+  {
+    titlu: "7. Proprietate intelectuală",
     continut: `Toate elementele platformei CalyHub — inclusiv logo-ul, interfața, textele, fotografiile, codul sursă și structura bazei de date — sunt proprietatea exclusivă a CalyHub SRL și sunt protejate de legislația română și europeană privind drepturile de autor.
 
 Este interzisă reproducerea, distribuirea, modificarea sau utilizarea comercială a oricărui element al platformei fără acordul scris prealabil al CalyHub SRL.`,
   },
   {
-    titlu: "7. Limitarea răspunderii",
+    titlu: "8. Limitarea răspunderii",
     continut: `7.1. CalyHub pune la dispoziție platforma ca intermediar tehnic și nu garantează calitatea serviciilor prestate de saloanele partenere.
 
 7.2. CalyHub nu răspunde pentru prejudiciile directe sau indirecte cauzate de: indisponibilitatea temporară a platformei, erori tehnice, forță majoră sau acțiuni ale terților.
@@ -74,13 +90,13 @@ Este interzisă reproducerea, distribuirea, modificarea sau utilizarea comercial
 7.3. Recenziile afișate pe platformă reprezintă opinii ale utilizatorilor și nu ale CalyHub. Ne rezervăm dreptul de a modera sau elimina recenziile care încalcă politicile noastre.`,
   },
   {
-    titlu: "8. Modificarea termenilor",
+    titlu: "9. Modificarea termenilor",
     continut: `CalyHub își rezervă dreptul de a modifica prezentul document oricând, cu notificarea utilizatorilor prin email și/sau prin mesaj în platformă cu cel puțin 15 zile înainte de intrarea în vigoare a modificărilor.
 
 Continuarea utilizării platformei după data intrării în vigoare a modificărilor constituie acceptul implicit al noilor termeni.`,
   },
   {
-    titlu: "9. Legea aplicabilă și litigii",
+    titlu: "10. Legea aplicabilă și litigii",
     continut: `Prezentul document este guvernat de legislația română. Orice litigiu născut din sau în legătură cu acești termeni va fi supus competenței instanțelor judecătorești din București, România.
 
 Înainte de orice acțiune judiciară, părțile se obligă să încerce soluționarea amiabilă a disputei. Utilizatorul poate sesiza CalyHub la adresa legal@calyhub.ro.`,
@@ -135,7 +151,7 @@ export default function Termeni() {
               Termeni și condiții
             </h1>
             <p className="ch-hero-anim" style={{ fontSize: 14.5, color: C.dim, fontWeight: 700, marginTop: 14, animationDelay: ".28s" }}>
-              Ultima actualizare: 14 mai 2026 · Versiunea 1.0
+              Ultima actualizare: 3 august 2026 · Versiunea 1.1
             </p>
           </div>
         </section>

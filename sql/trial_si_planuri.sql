@@ -1,5 +1,5 @@
 -- ============================================================
---  CalyHub — Trial gratuit + curățarea planului "starter"
+--  CalyHub — Trial gratuit, planuri reale, ciclul de viață al salonului
 --  Rulează în Supabase → SQL Editor. Se poate rula de mai multe ori.
 -- ============================================================
 
@@ -11,10 +11,17 @@
 alter table public.saloane
   add column if not exists trial_expira_la timestamptz;
 
+-- ------------------------------------------------------------
+-- 2. Abonament plătit — devine true abia când integrăm Stripe.
+--    Cât timp e false, salonul e considerat în trial (sau expirat).
+-- ------------------------------------------------------------
+alter table public.saloane
+  add column if not exists abonament_activ boolean not null default false;
+
 
 -- ------------------------------------------------------------
--- 2. Nu mai există plan "starter"
---    Saloanele încep direct pe Basic, în trial, și pot urca la Pro/Business.
+-- 3. Nu mai există plan "starter"
+--    Saloanele încep pe Basic, în trial, și pot urca la Pro/Business.
 -- ------------------------------------------------------------
 update public.saloane
 set plan = 'basic'
@@ -39,12 +46,18 @@ end $$;
 
 
 -- ------------------------------------------------------------
--- 3. Verificare
+-- 4. Verificare — starea fiecărui salon
 -- ------------------------------------------------------------
 select
   nume,
   plan,
+  abonament_activ,
   trial_expira_la::date as trial_pana_la,
-  case when trial_expira_la > now() then 'în trial' else 'trial expirat' end as stare
+  case
+    when abonament_activ then 'abonat'
+    when trial_expira_la > now() then 'în trial'
+    when trial_expira_la > now() - interval '30 days' then 'suspendat'
+    else 'de șters'
+  end as stare
 from public.saloane
 order by nume;

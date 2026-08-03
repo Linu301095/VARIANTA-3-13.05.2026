@@ -51,12 +51,57 @@ Le luăm **una câte una**, în ordinea de mai jos. Nu se sar etape.
 - `sql/etapa3_animal_optional.sql` — ✅ rulat (face opționale `sex`, `rasa`, `greutate`, `varsta`, `alergii` din `animale`)
 - `sql/trial_si_planuri.sql` — adaugă `saloane.trial_expira_la`, scoate planul `starter`, restricționează `plan` la basic/pro/business
 
-**TRIAL (decizie 31.07.2026):** trialul e de **14 zile**, dar durata **NU se comunică public** —
-peste tot scriem doar „trial gratuit". Constanta `ZILE_TRIAL` stă în
-`app/register/configurare-salon/page.tsx`. Nu mai există plan `starter`: salonul pornește pe
-**Basic în trial** la finalul wizardului, iar la pasul de abonament poate urca la Pro/Business.
-Promisiunea „primele 3 luni gratuite" a fost scoasă de peste tot, la fel și „Garanție 30 zile"
+**TRIAL — ciclul de viață al salonului (decizie 03.08.2026)**
+
+Regulile stau într-un singur loc: `lib/trial.ts` (`ZILE_TRIAL = 14`,
+`ZILE_PANA_LA_STERGERE = 30`, `ZILE_AVERTISMENT = 3`).
+
+| Perioadă | Ce se întâmplă |
+|---|---|
+| Zilele 1–14 | Trial. Acces complet, fără card. |
+| Ultimele 3 zile | Banner portocaliu în dashboard: „Trialul se încheie în X zile". |
+| Ziua 15 | Trial expirat → banner roșu + o notificare în aplicație (o singură dată). |
+| Zilele 15–44 | **Suspendare** (deocamdată doar anunțată, nu aplicată). |
+| Ziua 45 | Ștergerea datelor salonului. Contul de utilizator rămâne. |
+
+**Durata NU se comunică public** — peste tot scriem doar „trial gratuit". Promisiunea
+„primele 3 luni gratuite" a fost scoasă de peste tot, la fel și „Garanție 30 zile"
 (nu putem returna bani cât timp nu încasăm nimic).
+
+Nu mai există plan `starter`: salonul pornește pe **Basic în trial** la finalul wizardului,
+iar la pasul de abonament poate urca la Pro/Business.
+
+**Ce înseamnă „suspendat" (când se va aplica):** salonul păstrează accesul la cont și la datele
+lui și le poate exporta; profilul public dispare din căutare; nu mai primește programări noi;
+agenții AI se opresc. **Programările deja confirmate se desfășoară normal.** La ștergere se
+păstrează denumirea salonului în istoricul clienților, ca istoricul lor să rămână coerent.
+Scris în Termeni, secțiunea 5 (versiunea 1.1).
+
+---
+
+### ⚠️ DE REVENIT CÂND FACEM STRIPE
+
+1. **`saloane.abonament_activ`** — coloana există deja, e mereu `false`. Webhook-ul Stripe o
+   pune pe `true` la plată reușită și pe `false` la eșec/anulare. `lib/trial.ts` o citește deja:
+   dacă e `true`, nu se mai afișează niciun banner.
+2. **Blocarea efectivă** — azi doar anunțăm. De activat: ascunderea profilului din căutarea
+   publică (`app/dashboard/client/page.tsx`, lista de saloane), oprirea rezervărilor noi și
+   oprirea agenților AI pentru saloanele suspendate.
+3. **Butonul „Alege un plan"** din bannere duce la tabul Abonament — acolo trebuie legat
+   checkout-ul real, nu doar salvarea planului în `saloane.plan`.
+
+### ⚠️ DE REVENIT CÂND FACEM EMAIL (Resend)
+
+1. **Emailurile de trial** — azi există doar notificarea în aplicație, deci un salon care nu
+   intră în cont **nu află** că i-a expirat trialul. De trimis: cu 3 zile înainte de expirare,
+   la expirare, și cu 7 zile înainte de ștergere.
+2. **Ștergerea efectivă NU se activează până nu există emailul** — altfel am șterge datele
+   cuiva care n-a fost anunțat. E și risc juridic, nu doar comercial.
+3. **Sarcina programată** — azi starea se calculează la intrarea în cont. Pentru emailuri e
+   nevoie de un cron zilnic (Vercel Cron sau pg_cron în Supabase) care scanează
+   `trial_expira_la` și trimite.
+
+**SQL:** `sql/trial_si_planuri.sql` adaugă `trial_expira_la` și `abonament_activ`.
 
 **Atenție:** `TERMENI_VERSIUNE` din `app/register/page.tsx` trebuie schimbat ori de câte ori se modifică textul din Termeni sau Confidențialitate.
 
