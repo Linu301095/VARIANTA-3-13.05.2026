@@ -210,6 +210,44 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 
 - **Salonul care face și oameni, și animale:** rămâne regula un salon = o verticală. Cazul e practic imposibil în același spațiu (autorizare sanitară diferită). Cine are ambele afaceri își face două conturi; soluția curată vine mai târziu prin **multi-locație** (deja promisă ca „în curând" în planul Business), unde fiecare locație are verticala ei.
 
+## ⚠️ ETAPĂ ÎNAINTE DE LANSARE — Partea publică: pagina de salon + paginile de oraș
+
+**Decis 04.08.2026: se face aproape de lansare, nu acum.** Motivul: cât timp baza e goală,
+codul ar fi scris și testat pe gol. Se face când există saloane reale de arătat.
+
+**Problema (măsurată 04.08.2026), în trei straturi:**
+
+1. **Paginile de oraș sunt marketing, nu căutare.** `app/saloane/[domeniu]/[oras]/page.tsx`
+   are `ORASE` (5 orașe scrise de mână) și `DOMENII` scrise în cod, se generează la build (SSG)
+   și nu atinge Supabase niciodată. Un salon real înscris nu apare acolo.
+2. **Nu există pagină publică de salon.** Nu există nicio rută `/salon/[…]`. Singurul loc unde
+   se vede un salon e dashboardul clientului, adică **după login** — deci Google nu vede nimic.
+   Ăsta e stratul care lipsește cu adevărat.
+3. **Sunt zero saloane reale.** O listă live azi ar afișa gol — mai rău decât textul actual.
+
+**Unde e valoarea:** pagina de oraș aduce trafic pe „coafor București", dar **pagina de salon**
+scalează: 200 de saloane = 200 de pagini indexabile. Oamenii caută „Salon Bella Cluj" mai des
+decât „coafor Cluj". Și e argumentul de vânzare: *„te înscrii și primești o pagină proprie în Google"*.
+**Azi salonul plătește abonament și nu are nicio prezență publică.**
+
+**Planul, în ordinea de execuție (~2 zile dev + un SQL):**
+
+| Pas | Ce | Când |
+|---|---|---|
+| 1 | **RLS public** — politică `anon SELECT` pe `saloane`, doar coloanele publice și doar saloanele care au terminat wizardul. Plus coloană `slug` unică (`bella-hair-cluj`), ca să nu avem URL cu uuid. | înainte de lansare |
+| 2 | **`/salon/[slug]`** — SSR + ISR (revalidate 1h): poză, galerie, descriere, servicii cu prețuri (pe talie la grooming, simplu la înfrumusețare), echipă, program, specii acceptate, recenzii reale, JSON-LD `LocalBusiness` + `aggregateRating`. „Rezervă" → `/register?redirect=/salon/slug` sau direct în dashboard dacă e logat. Intră în sitemap. | **înainte de lansare** (e ce promitem saloanelor) |
+| 3 | **Pagina de oraș devine hibridă** — sus lista reală citită server-side, jos rămâne tot conținutul SEO de acum. Dacă orașul are 0 saloane, lista dispare și apare „Încă nu avem saloane în X — fii primul" → `/register`. Pagina nu arată niciodată goală și se populează singură, fără deploy. | după primele 5–10 saloane |
+| 4 | **Orașele nu mai sunt hardcodate** — `select distinct oras from saloane` unit cu cele 5 de acum ca minim. Un salon din Sibiu → apare automat `/saloane-infrumusetare-sibiu`. Sitemap generat la fel. | după pasul 3 |
+
+**Decizii de luat înainte de a scrie cod (rămân deschise):**
+- **Ce se vede fără cont:** propunerea — nume, oraș, adresă, telefon, descriere, poze, servicii cu
+  prețuri, recenzii, program. **Fără** sloturile libere (acolo trebuie cont). Prețurile publice sunt
+  exact motivul pentru care se dă clic din Google; ascunse, pagina nu are rost.
+- **Telefonul public** — dacă îl afișăm, unii clienți vor suna direct și vor sări peste platformă.
+  Nu costă acum (0% comision), dar salonul va vedea mai puține programări în CalyHub.
+  Recomandarea: îl afișăm — încrederea contează mai mult decât atribuirea la început.
+- **Termeni** — de scris explicit că datele de profil ale salonului (inclusiv telefonul) apar public.
+
 ## TODO post-lansare
 
 - **Code splitting pe tab-uri (punctul E din optimizarea de performanță)** — `app/dashboard/client/page.tsx` (~2300 linii) și `app/dashboard/salon/page.tsx` (~2150 linii) sunt fișiere uriașe cu toate tab-urile la un loc. De spart fiecare tab într-un fișier separat (`tabs/saloane.tsx`, `tabs/programari.tsx`, etc.), de creat un Context provider pentru state-ul comun (user, salon, theme, notificari) și de folosit `dynamic(() => import(...))` pentru lazy loading. Estimare: 4-6 ore. Câștig: -40% bundle inițial. De făcut DUPĂ ce restul aplicației e stabilă post-lansare.
