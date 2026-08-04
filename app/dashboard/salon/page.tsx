@@ -156,6 +156,16 @@ function etichetaZi(dataIso: string) {
 function specieIcon(specie?: string) {
   return specie === "pisica" ? "🐈" : specie === "iepure" ? "🐇" : specie === "pasare" ? "🐦" : specie === "rozator" ? "🐹" : specie === "reptila" ? "🦎" : specie === "altele" ? "🐾" : "🐕";
 }
+/** Speciile cu care poate lucra un salon de grooming (aceeași listă ca în wizard). */
+const SPECII = [
+  { val: "caine",   label: "Câine",     icon: "🐕" },
+  { val: "pisica",  label: "Pisică",    icon: "🐈" },
+  { val: "iepure",  label: "Iepure",    icon: "🐇" },
+  { val: "pasare",  label: "Pasăre",    icon: "🐦" },
+  { val: "rozator", label: "Rozătoare", icon: "🐹" },
+  { val: "reptila", label: "Reptilă",   icon: "🦎" },
+  { val: "altele",  label: "Altele",    icon: "🐾" },
+];
 type PerioadaStat = "azi" | "ieri" | "saptamana" | "luna" | "an" | "custom";
 function intervalPerioada(per: PerioadaStat, cStart: string, cEnd: string): { start: string; end: string; label: string } {
   const now = new Date();
@@ -828,6 +838,7 @@ export default function DashboardSalon() {
   const [userId, setUserId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
+  const [speciiSalon, setSpeciiSalon] = useState<string[]>([]);
   const [pozaUrl, setPozaUrl] = useState<string | null>(null);
   const [galerie, setGalerie] = useState<string[]>([]);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -927,6 +938,7 @@ export default function DashboardSalon() {
           telefon: salonRow.telefon || "",
           descriere: salonRow.descriere || "",
         });
+        if (Array.isArray(salonRow.specii)) setSpeciiSalon(salonRow.specii);
         if (salonRow.poza_url) setPozaUrl(salonRow.poza_url);
         if (salonRow.galerie && Array.isArray(salonRow.galerie)) setGalerie(salonRow.galerie);
         if (salonRow.program && typeof salonRow.program === "object" && Object.keys(salonRow.program).length > 0) {
@@ -3591,17 +3603,46 @@ export default function DashboardSalon() {
                       <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Descriere scurtă</label>
                       <textarea value={profilSalon.descriere} onChange={e => setProfilSalon(p => ({ ...p, descriere: e.target.value }))} rows={3} placeholder="Salon specializat în..." style={{ ...inp, resize: "vertical" } as React.CSSProperties} />
                     </div>
+
+                    {/* Specii acceptate — doar la saloanele de grooming */}
+                    {areAnimale && (
+                      <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Cu ce animale lucrezi</label>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))", gap: 8 }}>
+                          {SPECII.map(s => {
+                            const sel = speciiSalon.includes(s.val);
+                            return (
+                              <button key={s.val} type="button"
+                                onClick={() => setSpeciiSalon(prev => prev.includes(s.val) ? prev.filter(x => x !== s.val) : [...prev, s.val])}
+                                style={{ padding: "10px 4px", borderRadius: 12, border: sel ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: sel ? c.orangeAccent : c.surface2, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all .18s" }}>
+                                <span style={{ fontSize: 22 }}>{s.icon}</span>
+                                <span style={{ fontSize: 10, fontWeight: 800, color: sel ? "#FF6B00" : c.muted }}>{s.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div style={{ fontSize: 11, color: speciiSalon.length === 0 ? "#EF4444" : c.muted, marginTop: 8, fontWeight: speciiSalon.length === 0 ? 700 : 400 }}>
+                          {speciiSalon.length === 0
+                            ? "Selectează cel puțin o specie — altfel clienții nu știu dacă le primești animalul."
+                            : "Clienții văd asta pe cardul salonului și în profil, înainte să rezerve."}
+                        </div>
+                      </div>
+                    )}
+
                     <button onClick={async () => {
+                      if (areAnimale && speciiSalon.length === 0) { salveaza("Selectează cel puțin o specie."); return; }
                       const { data: { user: authUser } } = await supabase.auth.getUser();
                       if (authUser) {
-                        await supabase.from("saloane").update({
+                        const patch: any = {
                           nume: profilSalon.numeSalon,
                           adresa: profilSalon.adresa,
                           oras: profilSalon.oras,
                           telefon: profilSalon.telefon,
                           descriere: profilSalon.descriere,
-                        }).eq("user_id", authUser.id);
-                        setSalonData((s: any) => ({ ...s, nume: profilSalon.numeSalon, adresa: profilSalon.adresa, oras: profilSalon.oras, telefon: profilSalon.telefon, descriere: profilSalon.descriere }));
+                        };
+                        if (areAnimale) patch.specii = speciiSalon;
+                        await supabase.from("saloane").update(patch).eq("user_id", authUser.id);
+                        setSalonData((s: any) => ({ ...s, ...patch }));
                       }
                       salveaza("Profil salon actualizat!");
                     }} style={btnPrimary}>Salvează modificările</button>

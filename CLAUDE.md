@@ -109,10 +109,16 @@ Scris în Termeni, secțiunea 5 (versiunea 1.1).
 
 **Ce NU se atinge în categoria C:** logica Supabase existentă (`signInWithPassword`, `signUp`, upsert profil, temă, redirect pe rol) și OAuth-ul social — butoanele Google/Facebook/telefon rămân decorative până la etapa lor din TODO-ul de lansare.
 
-### Speciile acceptate (rezolvat 03.08.2026)
+### Speciile acceptate (rezolvat 03–04.08.2026)
 Clientul vede acum cu ce animale lucrează salonul: iconițe pe cardul din listă și
 un rând „Lucrează cu" în profil. Dacă animalul selectat nu e pe listă, apare un
 avertisment roșu înainte de rezervare. Datele existau deja în `saloane.specii`.
+
+**Editare din dashboard (04.08.2026):** speciile se puteau alege doar o dată, în
+wizardul de înregistrare. Acum există aceeași grilă și în dashboardul salonului,
+tabul „Profilul salonului" → sub Descriere → „Cu ce animale lucrezi". Apare doar
+la saloanele de grooming (`areAnimale`), se salvează în `saloane.specii` odată cu
+restul datelor de profil și nu se poate salva cu lista goală.
 
 ## ⚠️ ETAPĂ ÎNAINTE DE LANSARE — Agenții AI: șabloane vs. model real
 
