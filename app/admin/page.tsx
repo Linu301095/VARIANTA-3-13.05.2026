@@ -47,6 +47,7 @@ type AdminClient = {
 type AdminProgramare = {
   id: string;
   client: string;
+  salonId: string;
   salon: string;
   oras: string;
   domeniu: Vertical | null;
@@ -318,6 +319,7 @@ async function fetchAdminData(): Promise<AdminData> {
     return {
       id: p.id,
       client: owner?.nume || "Client",
+      salonId: String(p.salon_id),
       salon: salon?.nume || "Salon",
       oras: salon?.oras || "—",
       domeniu: salon?.domeniu ?? null,
@@ -662,62 +664,213 @@ function SaloaneTab({ data }: { data: AdminData }) {
 
 /* ══════════════ PROGRAMĂRI ══════════════ */
 
+const STATUS_COLOR: Record<AdminProgramare["status"], string> = { confirmata: "#3B82F6", finalizata: "#10B981", anulata: "#F87171", in_asteptare: "#FBBF24" };
+const STATUS_LABEL: Record<AdminProgramare["status"], string> = { confirmata: "Confirmată", finalizata: "Finalizată", anulata: "Anulată", in_asteptare: "În așteptare" };
+
+type RandSalon = {
+  id: string; nume: string; oras: string; domeniu: Vertical | null;
+  total: number; finalizate: number; confirmate: number; inAsteptare: number; anulate: number;
+  lunaAsta: number; volum: number; ultima: string | null;
+};
+
 function ProgramariTab({ data }: { data: AdminData }) {
-  const [filterStatus, setFilterStatus] = useState("");
+  const [detalii, setDetalii] = useState(false);
   const [filterOras, setFilterOras] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [sortare, setSortare] = useState<"finalizate" | "total" | "volum" | "nume">("finalizate");
 
-  const statusColor: Record<string, string> = { confirmata: "#3B82F6", finalizata: "#10B981", anulata: "#F87171", in_asteptare: "#FBBF24" };
-  const statusLabel: Record<string, string> = { confirmata: "Confirmată", finalizata: "Finalizată", anulata: "Anulată", in_asteptare: "În așteptare" };
+  const acum = new Date();
 
-  const filtered = useMemo(() => data.programari.filter(p =>
-    (filterStatus === "" || p.status === filterStatus) &&
-    (filterOras === "" || p.oras === filterOras)
-  ).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()), [data.programari, filterStatus, filterOras]);
+  // ── Rezumat pe salon ──
+  const perSalon: RandSalon[] = useMemo(() => {
+    const harta = new Map<string, RandSalon>();
+    // Pornim de la saloane, ca să apară și cele cu 0 programări.
+    data.saloane.forEach(s => harta.set(s.id, {
+      id: s.id, nume: s.nume, oras: s.oras, domeniu: s.domeniu,
+      total: 0, finalizate: 0, confirmate: 0, inAsteptare: 0, anulate: 0, lunaAsta: 0, volum: 0, ultima: null,
+    }));
 
-  const incasari = filtered.filter(p => p.status === "finalizata").reduce((s, p) => s + p.pret, 0);
+    data.programari.forEach(p => {
+      let r = harta.get(p.salonId);
+      if (!r) {
+        // Programare al cărei salon a fost șters — o păstrăm, ca să nu dispară din totaluri.
+        r = { id: p.salonId, nume: `${p.salon} (șters)`, oras: p.oras, domeniu: p.domeniu, total: 0, finalizate: 0, confirmate: 0, inAsteptare: 0, anulate: 0, lunaAsta: 0, volum: 0, ultima: null };
+        harta.set(p.salonId, r);
+      }
+      r.total++;
+      if (p.status === "finalizata") { r.finalizate++; r.volum += p.pret; }
+      else if (p.status === "confirmata") r.confirmate++;
+      else if (p.status === "in_asteptare") r.inAsteptare++;
+      else if (p.status === "anulata") r.anulate++;
+
+      const d = new Date(p.data);
+      if (d.getMonth() === acum.getMonth() && d.getFullYear() === acum.getFullYear()) r.lunaAsta++;
+      if (!r.ultima || p.data > r.ultima) r.ultima = p.data;
+    });
+
+    return [...harta.values()];
+  }, [data.saloane, data.programari]);
+
+  const randuri = useMemo(() => {
+    const f = perSalon.filter(r => filterOras === "" || r.oras === filterOras);
+    return f.sort((a, b) =>
+      sortare === "nume" ? a.nume.localeCompare(b.nume, "ro")
+        : sortare === "volum" ? b.volum - a.volum
+        : sortare === "total" ? b.total - a.total
+        : b.finalizate - a.finalizate
+    );
+  }, [perSalon, filterOras, sortare]);
+
+  // ── Totaluri ──
+  const T = {
+    total: data.programari.length,
+    finalizate: data.programari.filter(p => p.status === "finalizata").length,
+    confirmate: data.programari.filter(p => p.status === "confirmata").length,
+    inAsteptare: data.programari.filter(p => p.status === "in_asteptare").length,
+    anulate: data.programari.filter(p => p.status === "anulata").length,
+  };
+  const volumTotal = data.programari.filter(p => p.status === "finalizata").reduce((s, p) => s + p.pret, 0);
+  const saloaneActive = perSalon.filter(r => r.total > 0).length;
+  const rataFinalizare = T.total ? Math.round((T.finalizate / T.total) * 100) : 0;
+
+  // ── Lista detaliată (opțională) ──
+  const detaliate = useMemo(() => data.programari
+    .filter(p => (filterStatus === "" || p.status === filterStatus) && (filterOras === "" || p.oras === filterOras))
+    .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()), [data.programari, filterStatus, filterOras]);
+
+  const KPI = [
+    { label: "Programări finalizate", val: T.finalizate, sub: `${rataFinalizare}% din toate`, color: "#10B981" },
+    { label: "Total programări", val: T.total, sub: `în ${saloaneActive} saloane`, color: "#06B6D4" },
+    { label: "În așteptare", val: T.inAsteptare, sub: `${T.confirmate} confirmate`, color: "#FBBF24" },
+    { label: "Anulate", val: T.anulate, sub: T.total ? `${Math.round((T.anulate / T.total) * 100)}% din toate` : "—", color: T.anulate ? "#F87171" : "#6B7280" },
+  ];
 
   return (
     <div>
-      <h2 style={sectionTitle}>📅 Programări ({data.programari.length})</h2>
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <select style={inputDark} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-          <option value="">Toate statusurile</option>
-          {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+      <h2 style={sectionTitle}>📅 Programări — rezumat pe salon</h2>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 22 }}>
+        {KPI.map(k => (
+          <div key={k.label} style={card}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{k.label}</div>
+            <div style={{ fontSize: 30, fontWeight: 900, color: k.color, marginBottom: 4, lineHeight: 1.1 }}>{k.val}</div>
+            <div style={{ fontSize: 12, color: "#6B7280" }}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <select style={inputDark} value={filterOras} onChange={e => setFilterOras(e.target.value)}>
           <option value="">Toate orașele</option>
-          {[...new Set(data.programari.map(p => p.oras))].sort().map(o => <option key={o} value={o}>{o}</option>)}
+          {[...new Set(perSalon.map(r => r.oras))].filter(o => o && o !== "—").sort().map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select style={inputDark} value={sortare} onChange={e => setSortare(e.target.value as any)}>
+          <option value="finalizate">Sortare: cele mai multe finalizate</option>
+          <option value="total">Sortare: cele mai multe programări</option>
+          <option value="volum">Sortare: volum încasat</option>
+          <option value="nume">Sortare: alfabetic</option>
         </select>
         <div style={{ ...inputDark, border: "1.5px solid #1F1F1F", color: "#10B981", fontWeight: 800 }}>
-          Volum finalizat: {incasari.toLocaleString("ro-RO")} RON
+          Volum finalizat: {volumTotal.toLocaleString("ro-RO")} RON
         </div>
       </div>
+
+      {/* ── Tabelul de rezumat ── */}
       <div style={{ ...card, padding: 0, overflow: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 980 }}>
           <thead><tr>
-            <th style={tableHeadCell}>Data</th><th style={tableHeadCell}>Client</th><th style={tableHeadCell}>Salon</th><th style={tableHeadCell}>Verticală</th><th style={tableHeadCell}>Oraș</th><th style={tableHeadCell}>Serviciu</th><th style={tableHeadCell}>Preț</th><th style={tableHeadCell}>Status</th>
+            <th style={tableHeadCell}>Salon</th>
+            <th style={tableHeadCell}>Verticală</th>
+            <th style={tableHeadCell}>Oraș</th>
+            <th style={tableHeadCell}>Finalizate</th>
+            <th style={tableHeadCell}>Confirmate</th>
+            <th style={tableHeadCell}>În așteptare</th>
+            <th style={tableHeadCell}>Anulate</th>
+            <th style={tableHeadCell}>Total</th>
+            <th style={tableHeadCell}>Luna asta</th>
+            <th style={tableHeadCell}>Volum</th>
+            <th style={tableHeadCell}>Ultima</th>
           </tr></thead>
           <tbody>
-            {filtered.slice(0, 100).map(p => (
-              <tr key={p.id}>
-                <td style={{ ...tableCell, color: "#9CA3AF", fontSize: 12 }}>{new Date(p.data).toLocaleString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
-                <td style={{ ...tableCell, fontWeight: 700 }}>{p.client}</td>
-                <td style={tableCell}>{p.salon}</td>
-                <td style={tableCell}><BadgeVerticala v={p.domeniu} /></td>
-                <td style={tableCell}>{p.oras}</td>
-                <td style={{ ...tableCell, color: "#9CA3AF" }}>{p.serviciu}</td>
-                <td style={{ ...tableCell, fontWeight: 700, color: "#10B981" }}>{p.pret} RON</td>
-                <td style={tableCell}><span style={badge(`${statusColor[p.status]}22`, statusColor[p.status])}>{statusLabel[p.status]}</span></td>
+            {randuri.map(r => (
+              <tr key={r.id} style={{ opacity: r.total === 0 ? .55 : 1 }}>
+                <td style={{ ...tableCell, fontWeight: 700 }}>{r.nume}</td>
+                <td style={tableCell}><BadgeVerticala v={r.domeniu} /></td>
+                <td style={tableCell}>{r.oras}</td>
+                <td style={{ ...tableCell, fontWeight: 900, color: r.finalizate ? "#10B981" : "#6B7280" }}>{r.finalizate}</td>
+                <td style={{ ...tableCell, color: r.confirmate ? "#60A5FA" : "#6B7280" }}>{r.confirmate}</td>
+                <td style={{ ...tableCell, color: r.inAsteptare ? "#FBBF24" : "#6B7280" }}>{r.inAsteptare}</td>
+                <td style={{ ...tableCell, color: r.anulate ? "#F87171" : "#6B7280" }}>{r.anulate}</td>
+                <td style={{ ...tableCell, fontWeight: 800 }}>{r.total}</td>
+                <td style={tableCell}>{r.lunaAsta}</td>
+                <td style={{ ...tableCell, fontWeight: 700, color: r.volum ? "#10B981" : "#6B7280" }}>{r.volum ? `${r.volum.toLocaleString("ro-RO")} RON` : "—"}</td>
+                <td style={{ ...tableCell, color: "#9CA3AF", fontSize: 12 }}>{r.ultima ? new Date(r.ultima).toLocaleDateString("ro-RO") : "—"}</td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={8} style={{ ...tableCell, textAlign: "center", color: "#6B7280", padding: 40 }}>Nicio programare</td></tr>}
+            {randuri.length === 0 && <tr><td colSpan={11} style={{ ...tableCell, textAlign: "center", color: "#6B7280", padding: 40 }}>Niciun salon pe filtrul curent</td></tr>}
           </tbody>
+          {randuri.length > 0 && (
+            <tfoot>
+              <tr style={{ background: "#0F0F0F" }}>
+                <td style={{ ...tableCell, fontWeight: 900, borderBottom: "none" }}>TOTAL ({randuri.length} saloane)</td>
+                <td style={{ ...tableCell, borderBottom: "none" }} colSpan={2} />
+                <td style={{ ...tableCell, fontWeight: 900, color: "#10B981", borderBottom: "none" }}>{randuri.reduce((s, r) => s + r.finalizate, 0)}</td>
+                <td style={{ ...tableCell, fontWeight: 800, color: "#60A5FA", borderBottom: "none" }}>{randuri.reduce((s, r) => s + r.confirmate, 0)}</td>
+                <td style={{ ...tableCell, fontWeight: 800, color: "#FBBF24", borderBottom: "none" }}>{randuri.reduce((s, r) => s + r.inAsteptare, 0)}</td>
+                <td style={{ ...tableCell, fontWeight: 800, color: "#F87171", borderBottom: "none" }}>{randuri.reduce((s, r) => s + r.anulate, 0)}</td>
+                <td style={{ ...tableCell, fontWeight: 900, borderBottom: "none" }}>{randuri.reduce((s, r) => s + r.total, 0)}</td>
+                <td style={{ ...tableCell, fontWeight: 800, borderBottom: "none" }}>{randuri.reduce((s, r) => s + r.lunaAsta, 0)}</td>
+                <td style={{ ...tableCell, fontWeight: 900, color: "#10B981", borderBottom: "none" }}>{randuri.reduce((s, r) => s + r.volum, 0).toLocaleString("ro-RO")} RON</td>
+                <td style={{ ...tableCell, borderBottom: "none" }} />
+              </tr>
+            </tfoot>
+          )}
         </table>
-        {filtered.length > 100 && <div style={{ padding: "14px 16px", fontSize: 12, color: "#6B7280", textAlign: "center" }}>Afișate 100 din {filtered.length} programări</div>}
       </div>
+
       <div style={{ ...card, marginTop: 16, padding: "14px 18px", fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6 }}>
-        „Volum finalizat" e banii încasați de saloane de la clienții lor, nu venitul CalyHub. Noi luăm 0% comision — venitul nostru e doar abonamentul (tabul Abonamente).
+        Saloanele fără nicio programare apar estompate, ca să vezi imediat cine s-a înscris și nu folosește platforma.
+        „Volum" e banii încasați de salon de la clienții lui, nu venitul CalyHub — noi luăm 0% comision, venitul nostru e doar abonamentul.
       </div>
+
+      {/* ── Lista detaliată, la cerere ── */}
+      <button onClick={() => setDetalii(d => !d)} style={{ ...btnGhost, marginTop: 16, padding: "10px 18px", fontSize: 13 }}>
+        {detalii ? "▲ Ascunde lista detaliată" : `▼ Vezi lista detaliată (${data.programari.length} programări)`}
+      </button>
+
+      {detalii && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+            <select style={inputDark} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="">Toate statusurile</option>
+              {(Object.keys(STATUS_LABEL) as AdminProgramare["status"][]).map(k => <option key={k} value={k}>{STATUS_LABEL[k]}</option>)}
+            </select>
+          </div>
+          <div style={{ ...card, padding: 0, overflow: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+              <thead><tr>
+                <th style={tableHeadCell}>Data</th><th style={tableHeadCell}>Client</th><th style={tableHeadCell}>Salon</th><th style={tableHeadCell}>Verticală</th><th style={tableHeadCell}>Oraș</th><th style={tableHeadCell}>Serviciu</th><th style={tableHeadCell}>Preț</th><th style={tableHeadCell}>Status</th>
+              </tr></thead>
+              <tbody>
+                {detaliate.slice(0, 100).map(p => (
+                  <tr key={p.id}>
+                    <td style={{ ...tableCell, color: "#9CA3AF", fontSize: 12 }}>{new Date(p.data).toLocaleString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+                    <td style={{ ...tableCell, fontWeight: 700 }}>{p.client}</td>
+                    <td style={tableCell}>{p.salon}</td>
+                    <td style={tableCell}><BadgeVerticala v={p.domeniu} /></td>
+                    <td style={tableCell}>{p.oras}</td>
+                    <td style={{ ...tableCell, color: "#9CA3AF" }}>{p.serviciu}</td>
+                    <td style={{ ...tableCell, fontWeight: 700, color: "#10B981" }}>{p.pret} RON</td>
+                    <td style={tableCell}><span style={badge(`${STATUS_COLOR[p.status]}22`, STATUS_COLOR[p.status])}>{STATUS_LABEL[p.status]}</span></td>
+                  </tr>
+                ))}
+                {detaliate.length === 0 && <tr><td colSpan={8} style={{ ...tableCell, textAlign: "center", color: "#6B7280", padding: 40 }}>Nicio programare</td></tr>}
+              </tbody>
+            </table>
+            {detaliate.length > 100 && <div style={{ padding: "14px 16px", fontSize: 12, color: "#6B7280", textAlign: "center" }}>Afișate 100 din {detaliate.length} programări</div>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -777,7 +930,7 @@ function AbonamenteTab({ data }: { data: AdminData }) {
         )}
       </div>
 
-      <div style={card}>
+      <div style={{ ...card, marginBottom: 20 }}>
         <div style={subTitle}>Defalcare pe plan</div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 620 }}>
@@ -803,64 +956,253 @@ function AbonamenteTab({ data }: { data: AdminData }) {
           Prețurile sunt cele lunare din <code style={{ color: "#9CA3AF" }}>lib/planuri.ts</code>. Aceleași pentru ambele verticale — diferă doar formularea caracteristicilor.
         </div>
       </div>
+
+      {/* ── Ce salon are ce plan ── */}
+      <div style={{ ...card, padding: 0, overflow: "hidden" }}>
+        <div style={{ padding: "22px 22px 0" }}><div style={subTitle}>Saloanele pe fiecare plan</div></div>
+        {data.saloane.length === 0 ? <div style={{ padding: "0 22px 22px" }}><GolCard text="Niciun salon pe filtrul curent." /></div> : (
+          <div style={{ padding: "0 0 8px" }}>
+            {(["business", "pro", "basic"] as PlanId[]).map(plan => {
+              const lista = data.saloane.filter(s => s.plan === plan)
+                .sort((a, b) => (a.stare === b.stare ? a.nume.localeCompare(b.nume, "ro") : a.stare === "abonat" ? -1 : b.stare === "abonat" ? 1 : a.stare === "trial" ? -1 : 1));
+              const planColor = plan === "business" ? "#A855F7" : plan === "pro" ? "#FF6B00" : "#6B7280";
+              const deschisImplicit = lista.length > 0;
+              return (
+                <details key={plan} open={deschisImplicit} style={{ borderTop: "1px solid #1F1F1F" }}>
+                  <summary style={{ cursor: "pointer", padding: "14px 22px", display: "flex", alignItems: "center", gap: 10, listStyle: "none", flexWrap: "wrap" }}>
+                    <span style={{ ...badge("transparent", planColor), border: `1px solid ${planColor}`, textTransform: "capitalize", fontSize: 12.5 }}>{plan}</span>
+                    <span style={{ fontSize: 13, color: "#E5E7EB", fontWeight: 800 }}>{lista.length} {lista.length === 1 ? "salon" : "saloane"}</span>
+                    <span style={{ fontSize: 12, color: "#6B7280" }}>· {pretLunar[plan]} RON/lună</span>
+                  </summary>
+                  {lista.length === 0 ? (
+                    <div style={{ padding: "0 22px 16px", fontSize: 12.5, color: "#6B7280" }}>Niciun salon pe acest plan.</div>
+                  ) : (
+                    <div style={{ overflowX: "auto", padding: "0 0 10px" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+                        <thead><tr>
+                          <th style={tableHeadCell}>Salon</th><th style={tableHeadCell}>Verticală</th><th style={tableHeadCell}>Oraș</th><th style={tableHeadCell}>Stare</th><th style={tableHeadCell}>Echipă</th><th style={tableHeadCell}>Progr./lună</th><th style={tableHeadCell}>Înregistrat</th>
+                        </tr></thead>
+                        <tbody>
+                          {lista.map(s => (
+                            <tr key={s.id}>
+                              <td style={{ ...tableCell, fontWeight: 700 }}>{s.nume}<div style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>{s.telefon}</div></td>
+                              <td style={tableCell}><BadgeVerticala v={s.domeniu} /></td>
+                              <td style={tableCell}>{s.oras}</td>
+                              <td style={tableCell}><BadgeStare s={s} /></td>
+                              <td style={tableCell}>{s.nrEchipa || "—"}</td>
+                              <td style={tableCell}>{s.nrProgramariLuna}</td>
+                              <td style={{ ...tableCell, color: "#9CA3AF", fontSize: 12 }}>{new Date(s.dataInregistrare).toLocaleDateString("ro-RO")}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </details>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <div style={{ ...card, marginTop: 16, padding: "14px 18px", fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6 }}>
+        Planul e cel salvat în <code style={{ color: "#E5E7EB" }}>saloane.plan</code> — ce a ales salonul la pasul de abonament sau din dashboard.
+        Cât timp Stripe nu e conectat, un plan ales nu înseamnă plată: uită-te la coloana „Stare".
+      </div>
     </div>
   );
 }
 
 /* ══════════════ RECENZII ══════════════ */
 
-function RecenziiTab({ data }: { data: AdminData }) {
-  const [filtru, setFiltru] = useState<"toate" | "negative" | "fara-raspuns">("toate");
+function Stele({ n }: { n: number }) {
+  return <span style={{ color: "#FBBF24", fontWeight: 800 }}>{"★".repeat(Math.max(0, Math.min(5, n)))}{"☆".repeat(Math.max(0, 5 - n))}</span>;
+}
 
-  const negative = data.recenzii.filter(r => r.rating <= 2);
-  const faraRaspuns = data.recenzii.filter(r => !r.raspuns);
-  const lista = filtru === "negative" ? negative : filtru === "fara-raspuns" ? faraRaspuns : data.recenzii;
+/** Card de recenzie, folosit în lista unui salon. */
+function CardRecenzie({ r }: { r: AdminRecenzie }) {
+  return (
+    <div style={{ background: "#0A0A0A", border: `1px solid ${r.rating <= 2 ? "rgba(239,68,68,.4)" : "#1F1F1F"}`, borderRadius: 12, padding: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
+        <div>
+          <div style={{ fontWeight: 800, color: "#fff", fontSize: 14 }}>{r.client}</div>
+          <div style={{ fontSize: 11.5, color: "#6B7280" }}>{new Date(r.data).toLocaleDateString("ro-RO")}</div>
+        </div>
+        <Stele n={r.rating} />
+      </div>
+      <p style={{ fontSize: 13.5, color: "#E5E7EB", lineHeight: 1.6, margin: 0 }}>{r.text || <em style={{ color: "#6B7280" }}>fără text</em>}</p>
+      {r.raspuns ? (
+        <div style={{ marginTop: 10, padding: 11, background: "#111", borderRadius: 8, border: "1px solid #1F1F1F" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: .6, marginBottom: 4 }}>Răspunsul salonului</div>
+          <p style={{ fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6, margin: 0 }}>{r.raspuns}</p>
+        </div>
+      ) : (
+        <div style={{ marginTop: 10, fontSize: 11.5, color: "#6B7280", fontStyle: "italic" }}>Salonul nu a răspuns încă.</div>
+      )}
+    </div>
+  );
+}
+
+function RecenziiTab({ data }: { data: AdminData }) {
+  const [sursa, setSursa] = useState<"saloane" | "aplicatie">("saloane");
+  const [salonSel, setSalonSel] = useState<string | null>(null);
+  const [cauta, setCauta] = useState("");
+  const [sortare, setSortare] = useState<"recente" | "multe" | "slabe">("recente");
+
+  // Grupare pe salon
+  const grupuri = useMemo(() => {
+    const h = new Map<string, { salon: string; domeniu: Vertical | null; recenzii: AdminRecenzie[] }>();
+    data.recenzii.forEach(r => {
+      const k = r.salon;
+      if (!h.has(k)) h.set(k, { salon: k, domeniu: r.domeniu, recenzii: [] });
+      h.get(k)!.recenzii.push(r);
+    });
+    return [...h.values()].map(g => {
+      const nr = g.recenzii.length;
+      const medie = nr ? g.recenzii.reduce((s, r) => s + r.rating, 0) / nr : 0;
+      const ultima = g.recenzii.reduce((max, r) => (r.data > max ? r.data : max), g.recenzii[0].data);
+      return {
+        ...g,
+        nr,
+        medie: Math.round(medie * 10) / 10,
+        negative: g.recenzii.filter(r => r.rating <= 2).length,
+        faraRaspuns: g.recenzii.filter(r => !r.raspuns).length,
+        ultima,
+      };
+    });
+  }, [data.recenzii]);
+
+  const listaSaloane = useMemo(() => {
+    const f = grupuri.filter(g => g.salon.toLowerCase().includes(cauta.toLowerCase()));
+    return f.sort((a, b) =>
+      sortare === "multe" ? b.nr - a.nr
+        : sortare === "slabe" ? a.medie - b.medie
+        : b.ultima.localeCompare(a.ultima)
+    );
+  }, [grupuri, cauta, sortare]);
+
+  const selectat = grupuri.find(g => g.salon === salonSel) || null;
+  const totalNegative = data.recenzii.filter(r => r.rating <= 2).length;
+  const totalFaraRaspuns = data.recenzii.filter(r => !r.raspuns).length;
+  const medieGenerala = data.recenzii.length
+    ? (data.recenzii.reduce((s, r) => s + r.rating, 0) / data.recenzii.length).toFixed(2) : "—";
 
   return (
     <div>
-      <h2 style={sectionTitle}>⭐ Recenzii ({data.recenzii.length})</h2>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <h2 style={sectionTitle}>⭐ Recenzii</h2>
+
+      {/* Comutator sursă */}
+      <div style={{ display: "inline-flex", gap: 3, background: "#0A0A0A", border: "1px solid #2A2A2A", borderRadius: 10, padding: 3, marginBottom: 20 }}>
         {([
-          { k: "toate" as const, label: `Toate (${data.recenzii.length})`, col: "#FF6B00" },
-          { k: "negative" as const, label: `≤ 2 stele (${negative.length})`, col: "#EF4444" },
-          { k: "fara-raspuns" as const, label: `Fără răspuns (${faraRaspuns.length})`, col: "#FBBF24" },
+          { k: "saloane" as const, label: `Recenzii primite de saloane (${data.recenzii.length})` },
+          { k: "aplicatie" as const, label: "Recenzii despre CalyHub" },
         ]).map(o => (
-          <button key={o.k} onClick={() => setFiltru(o.k)}
-            style={{ ...btnGhost, background: filtru === o.k ? o.col : "transparent", color: filtru === o.k ? "#fff" : "#9CA3AF", borderColor: filtru === o.k ? o.col : "#2A2A2A" }}>{o.label}</button>
+          <button key={o.k} onClick={() => setSursa(o.k)}
+            style={{ background: sursa === o.k ? "#FF6B00" : "transparent", color: sursa === o.k ? "#fff" : "#9CA3AF", border: "none", padding: "9px 16px", borderRadius: 8, fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>{o.label}</button>
         ))}
       </div>
 
-      {lista.length === 0 ? (
-        <div style={card}><GolCard text="Nicio recenzie pe filtrul curent." /></div>
-      ) : (
-        <div style={{ display: "grid", gap: 12 }}>
-          {lista.map(r => (
-            <div key={r.id} style={{ ...card, borderColor: r.rating <= 2 ? "rgba(239,68,68,.4)" : "#1F1F1F" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-                <div>
-                  <div style={{ fontWeight: 800, color: "#fff", marginBottom: 4 }}>{r.client} <span style={{ color: "#9CA3AF", fontWeight: 500, fontSize: 13 }}>→ {r.salon}</span></div>
-                  <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 8 }}>
-                    {new Date(r.data).toLocaleDateString("ro-RO")} <BadgeVerticala v={r.domeniu} />
-                  </div>
-                </div>
-                <div style={{ color: "#FBBF24", fontWeight: 800 }}>{"★".repeat(r.rating)}{"☆".repeat(Math.max(0, 5 - r.rating))}</div>
+      {sursa === "aplicatie" ? (
+        <div style={{ ...card, background: "rgba(251,191,36,.08)", borderColor: "rgba(251,191,36,.3)" }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24", marginBottom: 10 }}>Nu există încă</div>
+          <p style={{ fontSize: 13.5, color: "#E5E7EB", lineHeight: 1.7, marginTop: 0 }}>
+            Recenziile de azi sunt <strong>despre saloane</strong> — clientul notează vizita, iar salonul poate răspunde.
+            Nu există niciun loc în care cineva să evalueze <strong>platforma CalyHub</strong>, nici pentru clienți, nici pentru saloane.
+          </p>
+          <div style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.8 }}>
+            Ca să apară aici date reale, e nevoie de trei lucruri:
+            <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
+              <li>un tabel nou (<code style={{ color: "#E5E7EB" }}>recenzii_aplicatie</code>) cu rating, text, rolul autorului (client / salon) și data;</li>
+              <li>un formular în dashboard — la client și la salon — care să întrebe, după câteva utilizări, cât de mulțumit e de CalyHub;</li>
+              <li>ecranul acesta, care le adună și arată media, evoluția și ce spun cele slabe.</li>
+            </ol>
+          </div>
+          <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.7, marginBottom: 0, marginTop: 14 }}>
+            Notat în <code style={{ color: "#9CA3AF" }}>CLAUDE.md</code>. Are sens după lansare, când există utilizatori care chiar au folosit aplicația —
+            înainte de asta ar răspunde doar conturile de test.
+          </p>
+        </div>
+      ) : selectat ? (
+        /* ── Recenziile unui salon ── */
+        <div>
+          <button onClick={() => setSalonSel(null)} style={{ ...btnGhost, marginBottom: 16, padding: "9px 16px", fontSize: 13 }}>← Înapoi la toate saloanele</button>
+          <div style={{ ...card, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 19, fontWeight: 900, color: "#fff", marginBottom: 6 }}>{selectat.salon}</div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <BadgeVerticala v={selectat.domeniu} />
+                <span style={{ fontSize: 13, color: "#9CA3AF" }}>{selectat.nr} {selectat.nr === 1 ? "recenzie" : "recenzii"}</span>
               </div>
-              <p style={{ fontSize: 14, color: "#E5E7EB", lineHeight: 1.6, margin: 0 }}>{r.text || <em style={{ color: "#6B7280" }}>fără text</em>}</p>
-              {r.raspuns && (
-                <div style={{ marginTop: 12, padding: 12, background: "#0A0A0A", borderRadius: 8, border: "1px solid #1F1F1F" }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: .6, marginBottom: 5 }}>Răspunsul salonului</div>
-                  <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.6, margin: 0 }}>{r.raspuns}</p>
-                </div>
-              )}
             </div>
-          ))}
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 30, fontWeight: 900, color: "#FBBF24", lineHeight: 1 }}>{selectat.medie} ★</div>
+              <div style={{ fontSize: 12, color: "#6B7280", marginTop: 5 }}>{selectat.negative} sub 3 stele · {selectat.faraRaspuns} fără răspuns</div>
+            </div>
+          </div>
+          <div style={{ display: "grid", gap: 12 }}>
+            {[...selectat.recenzii].sort((a, b) => b.data.localeCompare(a.data)).map(r => <CardRecenzie key={r.id} r={r} />)}
+          </div>
+        </div>
+      ) : (
+        /* ── Lista de saloane ── */
+        <div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 20 }}>
+            {[
+              { label: "Saloane cu recenzii", val: grupuri.length, sub: `din ${data.saloane.length} înregistrate`, color: "#3B82F6" },
+              { label: "Total recenzii", val: data.recenzii.length, sub: `media ${medieGenerala} ★`, color: "#FBBF24" },
+              { label: "Sub 3 stele", val: totalNegative, sub: totalNegative ? "de urmărit" : "niciuna", color: totalNegative ? "#F87171" : "#6B7280" },
+              { label: "Fără răspuns", val: totalFaraRaspuns, sub: "salonul nu a reacționat", color: totalFaraRaspuns ? "#FBBF24" : "#6B7280" },
+            ].map(k => (
+              <div key={k.label} style={card}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{k.label}</div>
+                <div style={{ fontSize: 30, fontWeight: 900, color: k.color, marginBottom: 4, lineHeight: 1.1 }}>{k.val}</div>
+                <div style={{ fontSize: 12, color: "#6B7280" }}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+            <input style={{ ...inputDark, flex: 1, minWidth: 200 }} placeholder="🔍 Caută salon..." value={cauta} onChange={e => setCauta(e.target.value)} />
+            <select style={inputDark} value={sortare} onChange={e => setSortare(e.target.value as any)}>
+              <option value="recente">Sortare: cea mai recentă recenzie</option>
+              <option value="multe">Sortare: cele mai multe recenzii</option>
+              <option value="slabe">Sortare: cea mai mică medie</option>
+            </select>
+          </div>
+
+          {listaSaloane.length === 0 ? (
+            <div style={card}><GolCard text={data.recenzii.length === 0 ? "Nicio recenzie încă. Apar aici imediat ce un client evaluează o vizită." : "Niciun salon nu corespunde căutării."} /></div>
+          ) : (
+            <div style={{ ...card, padding: 0, overflow: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
+                <thead><tr>
+                  <th style={tableHeadCell}>Salon</th><th style={tableHeadCell}>Verticală</th><th style={tableHeadCell}>Recenzii</th><th style={tableHeadCell}>Medie</th><th style={tableHeadCell}>Sub 3 ★</th><th style={tableHeadCell}>Fără răspuns</th><th style={tableHeadCell}>Ultima</th><th style={tableHeadCell}></th>
+                </tr></thead>
+                <tbody>
+                  {listaSaloane.map(g => (
+                    <tr key={g.salon} style={{ cursor: "pointer" }} onClick={() => setSalonSel(g.salon)}>
+                      <td style={{ ...tableCell, fontWeight: 700 }}>{g.salon}</td>
+                      <td style={tableCell}><BadgeVerticala v={g.domeniu} /></td>
+                      <td style={{ ...tableCell, fontWeight: 800 }}>{g.nr}</td>
+                      <td style={tableCell}><span style={{ fontWeight: 800, color: g.medie >= 4 ? "#10B981" : g.medie >= 3 ? "#FBBF24" : "#F87171" }}>{g.medie} ★</span></td>
+                      <td style={{ ...tableCell, color: g.negative ? "#F87171" : "#6B7280", fontWeight: g.negative ? 800 : 400 }}>{g.negative || "—"}</td>
+                      <td style={{ ...tableCell, color: g.faraRaspuns ? "#FBBF24" : "#6B7280" }}>{g.faraRaspuns || "—"}</td>
+                      <td style={{ ...tableCell, color: "#9CA3AF", fontSize: 12 }}>{new Date(g.ultima).toLocaleDateString("ro-RO")}</td>
+                      <td style={tableCell}>
+                        <span style={{ border: "1px solid #2A2A2A", color: "#9CA3AF", padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>Vezi recenziile →</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div style={{ ...card, marginTop: 16, padding: "14px 18px", fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6 }}>
+            Datele sunt reale, din tabelul <code style={{ color: "#E5E7EB" }}>recenzii</code>. Apar doar saloanele care au primit cel puțin o recenzie.
+            Moderarea (raportare de către salon, ștergere de către admin) nu există încă — nu avem coloană de raportare în bază.
+          </div>
         </div>
       )}
-
-      <div style={{ ...card, marginTop: 16, padding: "14px 18px", fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6 }}>
-        Recenziile sunt reale, citite din tabelul <code style={{ color: "#E5E7EB" }}>recenzii</code>. Moderarea (raportare de către salon, ștergere de către admin) nu există încă —
-        nu avem coloană de raportare în bază. E de făcut împreună cu ecranul de raportare din dashboardul salonului.
-      </div>
     </div>
   );
 }

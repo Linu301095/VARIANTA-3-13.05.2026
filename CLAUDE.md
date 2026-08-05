@@ -242,6 +242,31 @@ de suport în dashboardul salonului.
 listă „ce nu e conectat încă" (Stripe, Resend, pagina publică de salon, Search Console, OAuth).
 „Marketing/SEO" arată inventarul real de rute și câte saloane există în fiecare oraș.
 
+**Structura taburilor (04.08.2026, a doua trecere):**
+- **Programări** — nu mai înșiră toate programările. Sus 4 KPI (finalizate, total, în așteptare, anulate),
+  apoi un **rezumat pe salon**: finalizate / confirmate / în așteptare / anulate / total / luna asta / volum /
+  ultima programare, cu rând de TOTAL jos și sortare (finalizate, total, volum, alfabetic). Saloanele cu 0
+  programări apar estompate — se vede imediat cine s-a înscris și nu folosește platforma. Lista detaliată a
+  rămas, dar ascunsă în spatele butonului „Vezi lista detaliată".
+- **Abonamente** — sub defalcarea pe plan există acum **lista saloanelor de pe fiecare plan** (secțiuni
+  pliabile Business / Pro / Basic), cu verticală, oraș, stare de trial, echipă, programări pe lună și data
+  înscrierii.
+- **Recenzii** — două surse. „Recenzii primite de saloane" e **grupat pe salon** (tabel cu nr. recenzii,
+  medie, câte sub 3★, câte fără răspuns, ultima) și abia la clic pe un salon se deschid recenziile lui.
+  „Recenzii despre CalyHub" nu există încă — vezi mai jos.
+
+**⚠️ DE REVENIT — recenzii despre platforma CalyHub (cerut 04.08.2026).**
+Azi recenziile sunt doar **despre saloane** (client → vizită, salonul poate răspunde). Nu există niciun loc
+în care cineva să evalueze **CalyHub** ca produs. Pentru asta e nevoie de: (1) tabel nou
+`recenzii_aplicatie` (rating, text, rol autor client/salon, data), (2) un formular în dashboardul clientului
+și în cel al salonului, care întreabă după câteva utilizări, (3) ecranul de admin care le adună.
+Are sens **după lansare**, când există utilizatori reali — înainte ar răspunde doar conturile de test.
+Tabul există deja în admin și explică exact ce lipsește.
+
+**⚠️ DE REVENIT — tabul „Configurație" (cerut 04.08.2026).** Deocamdată e ecran de citire peste
+`lib/planuri.ts` și `lib/trial.ts`. **De reluat aproape de lansare**, când se știe ce trebuie să fie editabil
+din interfață (prețuri, orașe, mod mentenanță, banner) și ce rămâne în cod.
+
 **De revenit:** blocare/suspendare reală (odată cu Stripe), moderarea recenziilor (odată cu raportarea
 din dashboardul salonului), tabel de tichete, date de trafic (odată cu Search Console — și numai după
 actualizarea politicii de cookie-uri).
