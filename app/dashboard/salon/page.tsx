@@ -4116,8 +4116,8 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
       </button>
 
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, width: 270, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, boxShadow: c.shadow, overflow: "hidden", zIndex: 200 }}>
-          <div style={{ padding: "14px 18px", background: c.orangeAccent, borderBottom: `1px solid ${c.orangeBorder}` }}>
+        <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, width: 270, background: c.surface, borderRadius: 18, border: `1.5px solid ${c.border}`, boxShadow: c.shadow, overflow: "hidden", zIndex: 200, display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 96px)", maxBlockSize: "calc(100dvh - 96px)" }}>
+          <div style={{ padding: "14px 18px", background: c.orangeAccent, borderBottom: `1px solid ${c.orangeBorder}`, flexShrink: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>{numeSalon}</div>
             <div style={{ fontSize: 12, color: "#FF6B00", fontWeight: 600, marginTop: 2, display: "flex", alignItems: "center", gap: 5 }}>Cont salon <Scissors size={12} color="#FF6B00" strokeWidth={2} /> · {numeComplet}</div>
             {planNume && (
@@ -4127,7 +4127,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
               </div>
             )}
           </div>
-          <div style={{ padding: "6px 0" }}>
+          <div style={{ padding: "6px 0", overflowY: "auto", flex: "1 1 auto", minHeight: 0 }}>
             {items.map(item => {
               const isActive = tab === item.t;
               const isHovered = hovered === item.t;
@@ -4148,7 +4148,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
               );
             })}
           </div>
-          <div style={{ borderTop: `1px solid ${c.border}`, padding: "12px 18px" }}>
+          <div style={{ borderTop: `1px solid ${c.border}`, padding: "12px 18px", flexShrink: 0 }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>Aspect</div>
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => toggleTheme("light")}
@@ -4161,7 +4161,7 @@ function UserMenu({ numeComplet, numeSalon, tab, onLogout, onNav, isMobile, avat
               </button>
             </div>
           </div>
-          <div style={{ borderTop: `1px solid ${c.border}`, padding: "6px 0" }}>
+          <div style={{ borderTop: `1px solid ${c.border}`, padding: "6px 0", flexShrink: 0 }}>
             <button onClick={() => { setOpen(false); onLogout(); }}
               onMouseEnter={() => setHovered("logout")}
               onMouseLeave={() => setHovered(null)}
