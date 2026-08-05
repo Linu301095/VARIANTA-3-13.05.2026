@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { Lock, Eye, EyeOff, AlertTriangle, ArrowRight } from "lucide-react";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function AdminLogin() {
             <Image src="/logo-dark.png" alt="CalyHub" width={56} height={56} style={{ height: 56, width: "auto", objectFit: "contain" }} priority />
           </div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#FF6B00", color: "#fff", padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>
-            🔒 Zonă restricționată
+            <Lock size={11} strokeWidth={2.6} /> Zonă restricționată
           </div>
         </div>
 
@@ -84,20 +85,23 @@ export default function AdminLogin() {
               required
             />
             <button type="button" onClick={() => setShowPass((s) => !s)}
-              style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", fontSize: 18, padding: 8, color: "#9CA3AF" }}>
-              {showPass ? "🙈" : "👁️"}
+              aria-label={showPass ? "Ascunde parola" : "Arată parola"}
+              style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", padding: 8, color: "#9CA3AF", display: "inline-flex", alignItems: "center" }}>
+              {showPass ? <EyeOff size={18} strokeWidth={2.2} /> : <Eye size={18} strokeWidth={2.2} />}
             </button>
           </div>
 
           {eroare && (
-            <div style={{ background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", color: "#FCA5A5", padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600 }}>
-              ⚠️ {eroare}
+            <div style={{ background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", color: "#FCA5A5", padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+              <AlertTriangle size={15} strokeWidth={2.4} style={{ flexShrink: 0 }} /> {eroare}
             </div>
           )}
 
           <button type="submit" disabled={loading || !email || !parola}
             style={{ padding: "14px", borderRadius: 12, border: "none", background: loading ? "#FFB07A" : "#FF6B00", color: "#fff", fontSize: 15, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "Nunito, sans-serif", marginTop: 4 }}>
-            {loading ? "Se verifică..." : "Conectare →"}
+            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {loading ? "Se verifică..." : <>Conectare <ArrowRight size={17} strokeWidth={2.6} /></>}
+            </span>
           </button>
         </form>
 

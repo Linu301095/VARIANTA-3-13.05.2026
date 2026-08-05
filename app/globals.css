@@ -429,6 +429,7 @@ label:hover {
 @keyframes ch-floatA { 0%,100% { transform: translate(0,0); } 50% { transform: translate(28px,-30px); } }
 @keyframes ch-floatB { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-34px,26px); } }
 @keyframes ch-floatC { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(18px,20px) scale(1.08); } }
+@keyframes ch-spin { to { transform: rotate(360deg); } }
 
 .ch-orb { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; z-index: 0; }
 

@@ -8,6 +8,11 @@ import { TICHETE_DEMO, type TichetDemo } from "../../lib/adminMockData";
 import { supabase } from "../../lib/supabase";
 import { stareTrial, ZILE_TRIAL, ZILE_PANA_LA_STERGERE, ZILE_AVERTISMENT } from "../../lib/trial";
 import { planuriPentru, VERTICAL, type PlanId, type Vertical } from "../../lib/planuri";
+import {
+  BarChart3, Users, Scissors, CalendarDays, CreditCard, Star, Ticket, TrendingUp, Settings,
+  Lock, RefreshCw, Search, AlertTriangle, ChevronDown, ChevronUp, ArrowLeft, ArrowRight,
+  Check, X, Siren, Send, Info, type LucideIcon,
+} from "lucide-react";
 
 /* ══════════════ Tipuri ══════════════ */
 
@@ -78,16 +83,16 @@ type AdminData = {
 
 type Tab = "overview" | "stapani" | "saloane" | "programari" | "abonamente" | "reviews" | "tichete" | "marketing" | "setari";
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "overview", label: "Overview", icon: "📊" },
-  { id: "stapani", label: "Clienți", icon: "👤" },
-  { id: "saloane", label: "Saloane", icon: "✂️" },
-  { id: "programari", label: "Programări", icon: "📅" },
-  { id: "abonamente", label: "Abonamente", icon: "💳" },
-  { id: "reviews", label: "Recenzii", icon: "⭐" },
-  { id: "tichete", label: "Tichete suport", icon: "🎫" },
-  { id: "marketing", label: "Marketing/SEO", icon: "📈" },
-  { id: "setari", label: "Configurație", icon: "⚙️" },
+const TABS: { id: Tab; label: string; Icon: LucideIcon }[] = [
+  { id: "overview", label: "Overview", Icon: BarChart3 },
+  { id: "stapani", label: "Clienți", Icon: Users },
+  { id: "saloane", label: "Saloane", Icon: Scissors },
+  { id: "programari", label: "Programări", Icon: CalendarDays },
+  { id: "abonamente", label: "Abonamente", Icon: CreditCard },
+  { id: "reviews", label: "Recenzii", Icon: Star },
+  { id: "tichete", label: "Tichete suport", Icon: Ticket },
+  { id: "marketing", label: "Marketing/SEO", Icon: TrendingUp },
+  { id: "setari", label: "Configurație", Icon: Settings },
 ];
 
 /** Orașele cu pagini SEO — oglindesc `app/sitemap.ts` și `next.config.js`. */
@@ -158,7 +163,7 @@ export default function AdminDashboard() {
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <Link href="/admin"><Image src="/logo-dark.png" alt="CalyHub" width={40} height={40} style={{ height: 40, width: "auto", objectFit: "contain" }} priority /></Link>
-            <span style={{ background: "#FF6B00", color: "#fff", padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>🔒 Admin</span>
+            <span style={{ background: "#FF6B00", color: "#fff", padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, display: "inline-flex", alignItems: "center", gap: 5 }}><Lock size={11} strokeWidth={2.6} /> Admin</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             {/* Comutator verticală — se aplică pe tot panoul */}
@@ -178,7 +183,10 @@ export default function AdminDashboard() {
                 );
               })}
             </div>
-            <button onClick={regenerateData} disabled={reincarca} style={btnGhost}>{reincarca ? "Se încarcă..." : "🔄 Reîncarcă date"}</button>
+            <button onClick={regenerateData} disabled={reincarca} style={{ ...btnGhost, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <RefreshCw size={13} strokeWidth={2.4} style={reincarca ? { animation: "ch-spin 1s linear infinite" } : undefined} />
+              {reincarca ? "Se încarcă..." : "Reîncarcă date"}
+            </button>
             <button onClick={logout} style={btnLogout}>Deconectare</button>
           </div>
         </div>
@@ -188,8 +196,8 @@ export default function AdminDashboard() {
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 4, padding: "8px 12px", minWidth: "max-content" }}>
           {TABS.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              style={{ background: tab === t.id ? "#FF6B00" : "transparent", color: tab === t.id ? "#fff" : "#9CA3AF", border: "none", padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
-              <span>{t.icon}</span>{t.label}
+              style={{ background: tab === t.id ? "#FF6B00" : "transparent", color: tab === t.id ? "#fff" : "#9CA3AF", border: "none", padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 7 }}>
+              <t.Icon size={15} strokeWidth={2.2} />{t.label}
             </button>
           ))}
         </div>
@@ -359,6 +367,26 @@ const tableCell: React.CSSProperties = { padding: "14px 16px", fontSize: 13, col
 const tableHeadCell: React.CSSProperties = { padding: "12px 16px", fontSize: 11, fontWeight: 800, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: 1, background: "#0F0F0F", borderBottom: "1px solid #1F1F1F", textAlign: "left" };
 const badge = (bg: string, color: string): React.CSSProperties => ({ background: bg, color, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800, display: "inline-block" });
 
+/** Titlul unui tab, cu iconiță SVG în loc de emoji. */
+function TitluTab({ Icon, children }: { Icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <h2 style={{ ...sectionTitle, display: "flex", alignItems: "center", gap: 10 }}>
+      <Icon size={21} strokeWidth={2.2} color="#FF6B00" />
+      {children}
+    </h2>
+  );
+}
+
+/** Câmp de căutare cu lupă SVG în interior. */
+function CautaInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+      <Search size={15} strokeWidth={2.2} color="#6B7280" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+      <input style={{ ...inputDark, width: "100%", paddingLeft: 36, boxSizing: "border-box" }} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} />
+    </div>
+  );
+}
+
 function BadgeVerticala({ v }: { v: Vertical | null }) {
   if (!v) return <span style={{ color: "#6B7280" }}>—</span>;
   const col = VERT_COLOR[v];
@@ -418,7 +446,7 @@ function OverviewTab({ data, tot, vert }: { data: AdminData; tot: AdminData; ver
     { label: "MRR real (încasat)", val: `${mrrReal} RON`, sub: abonati.length ? `${abonati.length} saloane abonate` : "Stripe neconectat — nimeni nu plătește încă", color: mrrReal > 0 ? "#A855F7" : "#6B7280" },
     { label: "MRR potențial", val: `${mrrPotential} RON`, sub: `dacă cele ${inTrial.length} trialuri convertesc`, color: "#FBBF24" },
     { label: "Trialuri expirate", val: expirate.length, sub: expirate.length ? "de contactat" : "niciunul", color: expirate.length ? "#EF4444" : "#6B7280" },
-    { label: "Rating mediu", val: ratingMediu === "—" ? "—" : `${ratingMediu} ★`, sub: `${nrRecenzii} recenzii reale`, color: "#FBBF24" },
+    { label: "Rating mediu", val: ratingMediu === "—" ? "—" : <Nota val={ratingMediu} size={22} />, sub: `${nrRecenzii} recenzii reale`, color: "#FBBF24" },
     { label: "Total programări", val: data.programari.length, sub: "din toată istoria", color: "#06B6D4" },
   ];
 
@@ -436,7 +464,7 @@ function OverviewTab({ data, tot, vert }: { data: AdminData; tot: AdminData; ver
 
   return (
     <div>
-      <h2 style={sectionTitle}>📊 Vedere de ansamblu</h2>
+      <TitluTab Icon={BarChart3}>Vedere de ansamblu</TitluTab>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 28 }}>
         {KPI.map((k, i) => (
           <div key={i} style={card}>
@@ -529,13 +557,13 @@ function ClientiTab({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <h2 style={sectionTitle}>👤 Clienți ({data.clienti.length})</h2>
+      <TitluTab Icon={Users}>Clienți ({data.clienti.length})</TitluTab>
       <div style={{ ...card, marginBottom: 16, padding: "14px 18px", fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6 }}>
         Un cont de client nu aparține unei verticale. <strong style={{ color: "#E5E7EB" }}>{cuAnimal}</strong> clienți au cel puțin un animal — ei pot rezerva și la grooming, și la înfrumusețare.
         Ceilalți <strong style={{ color: "#E5E7EB" }}>{data.clienti.length - cuAnimal}</strong> văd doar lumea de înfrumusețare, până își adaugă un animal.
       </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <input style={{ ...inputDark, flex: 1, minWidth: 200 }} placeholder="🔍 Caută după nume..." value={search} onChange={e => setSearch(e.target.value)} />
+        <CautaInput value={search} onChange={setSearch} placeholder="Caută după nume..." />
         <select style={inputDark} value={filtruCont} onChange={e => setFiltruCont(e.target.value as any)}>
           <option value="">Toate conturile</option>
           <option value="cu-animal">Cu animal (grooming + înfrumusețare)</option>
@@ -588,9 +616,9 @@ function SaloaneTab({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <h2 style={sectionTitle}>✂️ Saloane partenere ({data.saloane.length})</h2>
+      <TitluTab Icon={Scissors}>Saloane partenere ({data.saloane.length})</TitluTab>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <input style={{ ...inputDark, flex: 1, minWidth: 200 }} placeholder="🔍 Caută salon..." value={search} onChange={e => setSearch(e.target.value)} />
+        <CautaInput value={search} onChange={setSearch} placeholder="Caută salon..." />
         <select style={inputDark} value={filterOras} onChange={e => setFilterOras(e.target.value)}>
           <option value="">Toate orașele</option>
           {[...new Set(data.saloane.map(s => s.oras))].sort().map(o => <option key={o} value={o}>{o}</option>)}
@@ -621,7 +649,7 @@ function SaloaneTab({ data }: { data: AdminData }) {
                     <td style={tableCell}><BadgeStare s={s} /></td>
                     <td style={tableCell}>{s.nrEchipa || "—"}</td>
                     <td style={tableCell}>{s.nrProgramariLuna}</td>
-                    <td style={{ ...tableCell, color: s.nrRecenzii ? "#FBBF24" : "#6B7280", fontWeight: 700 }}>{s.nrRecenzii ? `${s.rating} ★ (${s.nrRecenzii})` : "—"}</td>
+                    <td style={{ ...tableCell, color: s.nrRecenzii ? "#FBBF24" : "#6B7280", fontWeight: 700 }}>{s.nrRecenzii ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Nota val={s.rating} size={13} /> ({s.nrRecenzii})</span> : "—"}</td>
                     <td style={tableCell}>
                       <button onClick={() => setDeschis(expandat ? null : s.id)} style={{ background: "transparent", border: "1px solid #2A2A2A", color: "#9CA3AF", padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito" }}>{expandat ? "Închide" : "Detalii"}</button>
                     </td>
@@ -637,7 +665,7 @@ function SaloaneTab({ data }: { data: AdminData }) {
                             ["Programări total", String(s.nrProgramariTotal)],
                             ["Înregistrat", new Date(s.dataInregistrare).toLocaleDateString("ro-RO")],
                             ["Trial expiră", s.trialExpiraLa ? new Date(s.trialExpiraLa).toLocaleDateString("ro-RO") : "— (salon vechi, fără trial)"],
-                            ...(s.domeniu === "grooming" ? [["Specii acceptate", s.specii.length ? s.specii.join(", ") : "⚠️ niciuna bifată"] as [string, string]] : []),
+                            ...(s.domeniu === "grooming" ? [["Specii acceptate", s.specii.length ? s.specii.join(", ") : "niciuna bifată"] as [string, string]] : []),
                           ].map(([k, v]) => (
                             <div key={k}>
                               <div style={{ color: "#6B7280", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: .6, marginBottom: 3 }}>{k}</div>
@@ -747,7 +775,7 @@ function ProgramariTab({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <h2 style={sectionTitle}>📅 Programări — rezumat pe salon</h2>
+      <TitluTab Icon={CalendarDays}>Programări — rezumat pe salon</TitluTab>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 22 }}>
         {KPI.map(k => (
@@ -835,7 +863,8 @@ function ProgramariTab({ data }: { data: AdminData }) {
 
       {/* ── Lista detaliată, la cerere ── */}
       <button onClick={() => setDetalii(d => !d)} style={{ ...btnGhost, marginTop: 16, padding: "10px 18px", fontSize: 13 }}>
-        {detalii ? "▲ Ascunde lista detaliată" : `▼ Vezi lista detaliată (${data.programari.length} programări)`}
+        {detalii ? <ChevronUp size={14} strokeWidth={2.4} /> : <ChevronDown size={14} strokeWidth={2.4} />}
+        {detalii ? "Ascunde lista detaliată" : `Vezi lista detaliată (${data.programari.length} programări)`}
       </button>
 
       {detalii && (
@@ -897,10 +926,10 @@ function AbonamenteTab({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <h2 style={sectionTitle}>💳 Abonamente & venituri</h2>
+      <TitluTab Icon={CreditCard}>Abonamente & venituri</TitluTab>
 
       <div style={{ ...card, marginBottom: 20, background: "rgba(239,68,68,.08)", borderColor: "rgba(239,68,68,.3)" }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#F87171", marginBottom: 6 }}>⚠️ Nu se încasează nimic încă</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#F87171", marginBottom: 6, display: "flex", alignItems: "center", gap: 7 }}><AlertTriangle size={15} strokeWidth={2.4} /> Nu se încasează nimic încă</div>
         <p style={{ fontSize: 13, color: "#E5E7EB", lineHeight: 1.6, margin: 0 }}>
           Stripe nu e conectat. Un salon devine „abonat" doar când <code style={{ color: "#9CA3AF" }}>saloane.abonament_activ</code> devine true,
           ceea ce va face webhook-ul Stripe la prima plată reușită. Până atunci MRR-ul real e 0 — cifrele de mai jos separă
@@ -1014,8 +1043,26 @@ function AbonamenteTab({ data }: { data: AdminData }) {
 
 /* ══════════════ RECENZII ══════════════ */
 
-function Stele({ n }: { n: number }) {
-  return <span style={{ color: "#FBBF24", fontWeight: 800 }}>{"★".repeat(Math.max(0, Math.min(5, n)))}{"☆".repeat(Math.max(0, 5 - n))}</span>;
+function Stele({ n, size = 15 }: { n: number; size?: number }) {
+  const plin = Math.max(0, Math.min(5, Math.round(n)));
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }} aria-label={`${n} din 5 stele`}>
+      {[0, 1, 2, 3, 4].map(i => (
+        <Star key={i} size={size} strokeWidth={2}
+          color={i < plin ? "#FBBF24" : "#3F3F46"}
+          fill={i < plin ? "#FBBF24" : "none"} />
+      ))}
+    </span>
+  );
+}
+
+/** Nota medie: cifra + o stea SVG. */
+function Nota({ val, color = "#FBBF24", size = 15 }: { val: number | string; color?: string; size?: number }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color, fontWeight: 800 }}>
+      {val}<Star size={size} strokeWidth={2} color={color} fill={color} />
+    </span>
+  );
 }
 
 /** Card de recenzie, folosit în lista unui salon. */
@@ -1027,7 +1074,7 @@ function CardRecenzie({ r }: { r: AdminRecenzie }) {
           <div style={{ fontWeight: 800, color: "#fff", fontSize: 14 }}>{r.client}</div>
           <div style={{ fontSize: 11.5, color: "#6B7280" }}>{new Date(r.data).toLocaleDateString("ro-RO")}</div>
         </div>
-        <Stele n={r.rating} />
+        <Stele n={r.rating} size={14} />
       </div>
       <p style={{ fontSize: 13.5, color: "#E5E7EB", lineHeight: 1.6, margin: 0 }}>{r.text || <em style={{ color: "#6B7280" }}>fără text</em>}</p>
       {r.raspuns ? (
@@ -1088,7 +1135,7 @@ function RecenziiTab({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <h2 style={sectionTitle}>⭐ Recenzii</h2>
+      <TitluTab Icon={Star}>Recenzii</TitluTab>
 
       {/* Comutator sursă */}
       <div style={{ display: "inline-flex", gap: 3, background: "#0A0A0A", border: "1px solid #2A2A2A", borderRadius: 10, padding: 3, marginBottom: 20 }}>
@@ -1103,7 +1150,7 @@ function RecenziiTab({ data }: { data: AdminData }) {
 
       {sursa === "aplicatie" ? (
         <div style={{ ...card, background: "rgba(251,191,36,.08)", borderColor: "rgba(251,191,36,.3)" }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24", marginBottom: 10 }}>Nu există încă</div>
+          <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}><Info size={17} strokeWidth={2.4} /> Nu există încă</div>
           <p style={{ fontSize: 13.5, color: "#E5E7EB", lineHeight: 1.7, marginTop: 0 }}>
             Recenziile de azi sunt <strong>despre saloane</strong> — clientul notează vizita, iar salonul poate răspunde.
             Nu există niciun loc în care cineva să evalueze <strong>platforma CalyHub</strong>, nici pentru clienți, nici pentru saloane.
@@ -1124,7 +1171,7 @@ function RecenziiTab({ data }: { data: AdminData }) {
       ) : selectat ? (
         /* ── Recenziile unui salon ── */
         <div>
-          <button onClick={() => setSalonSel(null)} style={{ ...btnGhost, marginBottom: 16, padding: "9px 16px", fontSize: 13 }}>← Înapoi la toate saloanele</button>
+          <button onClick={() => setSalonSel(null)} style={{ ...btnGhost, marginBottom: 16, padding: "9px 16px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><ArrowLeft size={14} strokeWidth={2.4} /> Înapoi la toate saloanele</button>
           <div style={{ ...card, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <div>
               <div style={{ fontSize: 19, fontWeight: 900, color: "#fff", marginBottom: 6 }}>{selectat.salon}</div>
@@ -1134,7 +1181,7 @@ function RecenziiTab({ data }: { data: AdminData }) {
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 30, fontWeight: 900, color: "#FBBF24", lineHeight: 1 }}>{selectat.medie} ★</div>
+              <div style={{ fontSize: 30, fontWeight: 900, lineHeight: 1 }}><Nota val={selectat.medie} size={24} /></div>
               <div style={{ fontSize: 12, color: "#6B7280", marginTop: 5 }}>{selectat.negative} sub 3 stele · {selectat.faraRaspuns} fără răspuns</div>
             </div>
           </div>
@@ -1148,7 +1195,7 @@ function RecenziiTab({ data }: { data: AdminData }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 20 }}>
             {[
               { label: "Saloane cu recenzii", val: grupuri.length, sub: `din ${data.saloane.length} înregistrate`, color: "#3B82F6" },
-              { label: "Total recenzii", val: data.recenzii.length, sub: `media ${medieGenerala} ★`, color: "#FBBF24" },
+              { label: "Total recenzii", val: data.recenzii.length, sub: medieGenerala === "—" ? "nicio notă încă" : `media ${medieGenerala} din 5`, color: "#FBBF24" },
               { label: "Sub 3 stele", val: totalNegative, sub: totalNegative ? "de urmărit" : "niciuna", color: totalNegative ? "#F87171" : "#6B7280" },
               { label: "Fără răspuns", val: totalFaraRaspuns, sub: "salonul nu a reacționat", color: totalFaraRaspuns ? "#FBBF24" : "#6B7280" },
             ].map(k => (
@@ -1161,7 +1208,7 @@ function RecenziiTab({ data }: { data: AdminData }) {
           </div>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-            <input style={{ ...inputDark, flex: 1, minWidth: 200 }} placeholder="🔍 Caută salon..." value={cauta} onChange={e => setCauta(e.target.value)} />
+            <CautaInput value={cauta} onChange={setCauta} placeholder="Caută salon..." />
             <select style={inputDark} value={sortare} onChange={e => setSortare(e.target.value as any)}>
               <option value="recente">Sortare: cea mai recentă recenzie</option>
               <option value="multe">Sortare: cele mai multe recenzii</option>
@@ -1175,7 +1222,7 @@ function RecenziiTab({ data }: { data: AdminData }) {
             <div style={{ ...card, padding: 0, overflow: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
                 <thead><tr>
-                  <th style={tableHeadCell}>Salon</th><th style={tableHeadCell}>Verticală</th><th style={tableHeadCell}>Recenzii</th><th style={tableHeadCell}>Medie</th><th style={tableHeadCell}>Sub 3 ★</th><th style={tableHeadCell}>Fără răspuns</th><th style={tableHeadCell}>Ultima</th><th style={tableHeadCell}></th>
+                  <th style={tableHeadCell}>Salon</th><th style={tableHeadCell}>Verticală</th><th style={tableHeadCell}>Recenzii</th><th style={tableHeadCell}>Medie</th><th style={tableHeadCell}>Sub 3 stele</th><th style={tableHeadCell}>Fără răspuns</th><th style={tableHeadCell}>Ultima</th><th style={tableHeadCell}></th>
                 </tr></thead>
                 <tbody>
                   {listaSaloane.map(g => (
@@ -1183,12 +1230,12 @@ function RecenziiTab({ data }: { data: AdminData }) {
                       <td style={{ ...tableCell, fontWeight: 700 }}>{g.salon}</td>
                       <td style={tableCell}><BadgeVerticala v={g.domeniu} /></td>
                       <td style={{ ...tableCell, fontWeight: 800 }}>{g.nr}</td>
-                      <td style={tableCell}><span style={{ fontWeight: 800, color: g.medie >= 4 ? "#10B981" : g.medie >= 3 ? "#FBBF24" : "#F87171" }}>{g.medie} ★</span></td>
+                      <td style={tableCell}><Nota val={g.medie} size={13} color={g.medie >= 4 ? "#10B981" : g.medie >= 3 ? "#FBBF24" : "#F87171"} /></td>
                       <td style={{ ...tableCell, color: g.negative ? "#F87171" : "#6B7280", fontWeight: g.negative ? 800 : 400 }}>{g.negative || "—"}</td>
                       <td style={{ ...tableCell, color: g.faraRaspuns ? "#FBBF24" : "#6B7280" }}>{g.faraRaspuns || "—"}</td>
                       <td style={{ ...tableCell, color: "#9CA3AF", fontSize: 12 }}>{new Date(g.ultima).toLocaleDateString("ro-RO")}</td>
                       <td style={tableCell}>
-                        <span style={{ border: "1px solid #2A2A2A", color: "#9CA3AF", padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>Vezi recenziile →</span>
+                        <span style={{ border: "1px solid #2A2A2A", color: "#9CA3AF", padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>Vezi recenziile <ArrowRight size={12} strokeWidth={2.4} /></span>
                       </td>
                     </tr>
                   ))}
@@ -1223,10 +1270,10 @@ function TicheteTab({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <h2 style={sectionTitle}>🎫 Tichete suport ({tichete.length})</h2>
+      <TitluTab Icon={Ticket}>Tichete suport ({tichete.length})</TitluTab>
 
       <div style={{ ...card, marginBottom: 16, background: "rgba(251,191,36,.08)", borderColor: "rgba(251,191,36,.3)" }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#FBBF24", marginBottom: 6 }}>Date demo</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#FBBF24", marginBottom: 6, display: "flex", alignItems: "center", gap: 7 }}><Info size={15} strokeWidth={2.4} /> Date demo</div>
         <p style={{ fontSize: 13, color: "#E5E7EB", lineHeight: 1.6, margin: 0 }}>
           Nu există încă tabel de tichete în Supabase și nici formular de suport în dashboardul salonului.
           Tichetele de mai jos sunt exemple, ca să se vadă cum va arăta ecranul. Modificările de status nu se salvează nicăieri.
@@ -1254,16 +1301,16 @@ function TicheteTab({ data }: { data: AdminData }) {
                   <div style={{ fontSize: 12, color: "#9CA3AF" }}>De la <strong style={{ color: "#E5E7EB" }}>{t.salon}</strong> · {t.email}</div>
                 </div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <span style={badge(`${urgColor}22`, urgColor)}>{t.urgenta === "urgenta" ? "🚨 Urgent" : t.urgenta === "normala" ? "Normal" : "Scăzut"}</span>
+                  <span style={badge(`${urgColor}22`, urgColor)}>{t.urgenta === "urgenta" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Siren size={11} strokeWidth={2.6} /> Urgent</span> : t.urgenta === "normala" ? "Normal" : "Scăzut"}</span>
                   <span style={badge(`${statColor}22`, statColor)}>{statLabel}</span>
                 </div>
               </div>
               <p style={{ fontSize: 13.5, color: "#E5E7EB", lineHeight: 1.6, margin: "12px 0", padding: 12, background: "#0A0A0A", borderRadius: 8, border: "1px solid #1F1F1F" }}>{t.mesaj}</p>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontSize: 11, color: "#6B7280" }}>📅 {new Date(t.data).toLocaleDateString("ro-RO")}</div>
+                <div style={{ fontSize: 11, color: "#6B7280", display: "flex", alignItems: "center", gap: 5 }}><CalendarDays size={12} strokeWidth={2.2} /> {new Date(t.data).toLocaleDateString("ro-RO")}</div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  {t.status !== "raspuns" && <button onClick={() => setStatus(t.id, "raspuns")} style={{ background: "transparent", border: "1px solid #FBBF24", color: "#FBBF24", padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito" }}>📨 Marchează răspuns</button>}
-                  {t.status !== "rezolvat" && <button onClick={() => setStatus(t.id, "rezolvat")} style={{ background: "transparent", border: "1px solid #10B981", color: "#10B981", padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito" }}>✓ Rezolvat</button>}
+                  {t.status !== "raspuns" && <button onClick={() => setStatus(t.id, "raspuns")} style={{ background: "transparent", border: "1px solid #FBBF24", color: "#FBBF24", padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito", display: "inline-flex", alignItems: "center", gap: 5 }}><Send size={12} strokeWidth={2.4} /> Marchează răspuns</button>}
+                  {t.status !== "rezolvat" && <button onClick={() => setStatus(t.id, "rezolvat")} style={{ background: "transparent", border: "1px solid #10B981", color: "#10B981", padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito", display: "inline-flex", alignItems: "center", gap: 5 }}><Check size={12} strokeWidth={2.8} /> Rezolvat</button>}
                 </div>
               </div>
             </div>
@@ -1294,10 +1341,10 @@ function MarketingTab({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <h2 style={sectionTitle}>📈 Marketing & SEO</h2>
+      <TitluTab Icon={TrendingUp}>Marketing & SEO</TitluTab>
 
       <div style={{ ...card, marginBottom: 20, background: "rgba(251,191,36,.08)", borderColor: "rgba(251,191,36,.3)" }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#FBBF24", marginBottom: 6 }}>Fără date de trafic</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#FBBF24", marginBottom: 6, display: "flex", alignItems: "center", gap: 7 }}><Info size={15} strokeWidth={2.4} /> Fără date de trafic</div>
         <p style={{ fontSize: 13, color: "#E5E7EB", lineHeight: 1.6, margin: 0 }}>
           Google Search Console și Analytics nu sunt conectate — și politica de confidențialitate declară explicit că nu rulăm analytics.
           Aici arătăm doar ce știm sigur: ce pagini generăm și cât conținut real au. Cifrele de trafic vor apărea când conectăm Search Console
@@ -1354,7 +1401,7 @@ function ConfiguratieTab() {
 
   return (
     <div>
-      <h2 style={sectionTitle}>⚙️ Configurația sistemului</h2>
+      <TitluTab Icon={Settings}>Configurația sistemului</TitluTab>
       <div style={{ ...card, marginBottom: 20, padding: "14px 18px", fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6 }}>
         Ecran de citire. Valorile de mai jos vin din codul aplicației, dintr-un singur loc fiecare — se modifică acolo, nu de aici,
         ca să nu ajungem cu prețuri diferite pe pagina publică și în dashboard.
@@ -1446,7 +1493,7 @@ function ConfiguratieTab() {
         <div style={{ display: "grid", gap: 10 }}>
           {neconectat.map(x => (
             <div key={x.nume} style={{ background: "#0A0A0A", border: "1px solid #1F1F1F", borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: "#F87171", marginBottom: 4 }}>✕ {x.nume}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: "#F87171", marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}><X size={14} strokeWidth={2.8} /> {x.nume}</div>
               <div style={{ fontSize: 12.5, color: "#E5E7EB", lineHeight: 1.6 }}>{x.efect}</div>
               <div style={{ fontSize: 11.5, color: "#6B7280", marginTop: 4, fontFamily: "monospace" }}>{x.fisier}</div>
             </div>
