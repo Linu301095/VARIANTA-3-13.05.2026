@@ -210,6 +210,44 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 
 - **Salonul care face și oameni, și animale:** rămâne regula un salon = o verticală. Cazul e practic imposibil în același spațiu (autorizare sanitară diferită). Cine are ambele afaceri își face două conturi; soluția curată vine mai târziu prin **multi-locație** (deja promisă ca „în curând" în planul Business), unde fiecare locație are verticala ei.
 
+## Panoul de admin (`/admin`) — refăcut 04.08.2026
+
+Panoul nu știa de verticale și, mai grav, **inventa cifre**: fiecare salon era citit ca `plan: "basic"`
+și `status: "activ"` (hardcodat în cod, nu din bază), ratingul era mereu `0`, iar graficul „Evoluție MRR"
+și distribuția planurilor veneau din `Math.random()`. Adică dashboardul arăta venituri care nu există.
+
+**Ce e acum real, citit din Supabase:** planul, verticala (`domeniu`), starea de trial (prin `lib/trial.ts`),
+mărimea echipei, numărul de servicii, speciile, ratingul și recenziile (din tabelul `recenzii`),
+graficul de înscrieri pe ultimele 6 luni (din `created_at`).
+
+**Verticala:** comutator global în header („Toate / Înfrumusețare / Grooming") care filtrează Overview,
+Saloane, Programări, Abonamente, Recenzii. Clienții NU se filtrează — un cont de client nu aparține unei
+verticale; în schimb tabul Clienți arată „cu animal" (grooming + înfrumusețare) vs „fără animal"
+(doar înfrumusețare), care e distincția reală din D1.
+
+**MRR-ul e împărțit în două:** „MRR real (încasat)" = doar saloanele cu `abonament_activ = true`, deci 0
+cât timp Stripe nu e conectat; „MRR potențial" = saloanele în trial × prețul planului lor. Plus pâlnia
+trialului și rata de conversie.
+
+**Ce a fost scos pentru că era fals:** butoanele „Blochează client" și „Suspendă salon" (scriau doar în
+`localStorage`, se pierdeau la refresh — nu există coloană de stare în bază), moderarea recenziilor
+(nu există coloană de raportare), cifrele de trafic din Marketing (Search Console neconectat), și
+câmpurile editabile de preț din Setări (arătau planul `starter` la 0 lei și Pro la 99 — valori vechi).
+
+**Ce a rămas demo, marcat explicit ca atare:** tichetele de suport — nu există tabel și nici formular
+de suport în dashboardul salonului.
+
+**Taburi reformulate:** „Setări sistem" → **„Configurație"**, ecran de citire care arată planurile din
+`lib/planuri.ts` (cu comutator pe verticală), regulile din `lib/trial.ts`, verticalele, orașele SEO și o
+listă „ce nu e conectat încă" (Stripe, Resend, pagina publică de salon, Search Console, OAuth).
+„Marketing/SEO" arată inventarul real de rute și câte saloane există în fiecare oraș.
+
+**De revenit:** blocare/suspendare reală (odată cu Stripe), moderarea recenziilor (odată cu raportarea
+din dashboardul salonului), tabel de tichete, date de trafic (odată cu Search Console — și numai după
+actualizarea politicii de cookie-uri).
+
+---
+
 ## ⚠️ ETAPĂ ÎNAINTE DE LANSARE — Partea publică: pagina de salon + paginile de oraș
 
 **Decis 04.08.2026: se face aproape de lansare, nu acum.** Motivul: cât timp baza e goală,
