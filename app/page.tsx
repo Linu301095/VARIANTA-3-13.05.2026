@@ -4,7 +4,7 @@ import Logo from "../components/Logo";
 import Footer from "../components/Footer";
 import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
-import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim } from "../components/SectionIcons";
+import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim, IconDouaLumi } from "../components/SectionIcons";
 import {
   PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
   Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check, Bell,
@@ -102,7 +102,7 @@ export default function HomePage() {
           <div className="ch-orb c" style={{ width: 230, height: 230, background: "rgba(255,185,120,.18)", top: 330, left: "46%" }} />
 
           <div style={{ position: "relative", zIndex: 1, maxWidth: 860, margin: "0 auto", textAlign: "center" }}>
-            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 20, animationDelay: ".05s" }}>PROGRAMĂRI ONLINE · ÎNFRUMUSEȚARE &amp; GROOMING</div>
+            <div className="ch-hero-anim" style={{ ...eyebrow, marginBottom: 20, animationDelay: ".05s" }}><IconDouaLumi /> PROGRAMĂRI ONLINE · ÎNFRUMUSEȚARE &amp; GROOMING</div>
             <h1 className="ch-hero-anim" style={{ fontSize: "clamp(34px,5.4vw,56px)", fontWeight: 900, lineHeight: 1.03, letterSpacing: -1.5, color: C.text, animationDelay: ".15s" }}>
               Toate programările de îngrijire,<br />într-o <span style={{ color: C.orange }}>singură platformă</span>.
             </h1>

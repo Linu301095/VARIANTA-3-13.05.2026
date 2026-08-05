@@ -2,6 +2,68 @@ const ORANGE = "var(--pub-orange)";
 const SOFT = "var(--pub-orange-soft)";
 const BORDER = "var(--pub-orange-border)";
 
+/**
+ * CELE DOUĂ LUMI — foarfecă ↔ lăbuță, alternând.
+ *
+ * Stă în badge-ul din capul paginii principale, înaintea titlului. E primul
+ * lucru pe care îl vede un vizitator, așa că spune mesajul care ne diferențiază
+ * — „și pentru tine, și pentru animalul tău" — înainte să apuce să citească.
+ *
+ * Desenul e redus la minimum pentru că textul din badge are 11px: la mărimea
+ * asta orice detaliu în plus devine o pată. O singură mișcare, lentă.
+ *
+ * Când sistemul cere reducerea mișcării, cele două se așază una lângă alta,
+ * statice — mesajul rămâne întreg, doar animația dispare.
+ */
+export function IconDouaLumi({ size = 15 }: { size?: number }) {
+  const comun = {
+    width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+    stroke: ORANGE, strokeWidth: 2.2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
+  };
+  return (
+    <span className="ch-lumi" aria-hidden="true">
+      {/* Foarfecă — înfrumusețare */}
+      <svg {...comun} className="ch-lumi-a">
+        <circle cx="6" cy="6" r="3" />
+        <circle cx="6" cy="18" r="3" />
+        <path d="M20 4 8.12 15.88M14.8 14.8 20 20M8.12 8.12 12 12" />
+      </svg>
+      {/* Lăbuță — grooming */}
+      <svg {...comun} className="ch-lumi-b">
+        <circle cx="5.5" cy="10" r="2.2" fill={ORANGE} stroke="none" />
+        <circle cx="10" cy="5.5" r="2.2" fill={ORANGE} stroke="none" />
+        <circle cx="15.5" cy="6.5" r="2.2" fill={ORANGE} stroke="none" />
+        <circle cx="19" cy="11" r="2.2" fill={ORANGE} stroke="none" />
+        <path d="M12.2 12.4c2.8 0 5.1 2 5.1 4.4s-2 3.4-3.6 3.4h-3c-1.6 0-3.6-1-3.6-3.4s2.3-4.4 5.1-4.4z" fill={ORANGE} stroke="none" />
+      </svg>
+      <style>{`
+        /* Varianta sigură: amândouă vizibile, una lângă alta, fără mișcare. */
+        .ch-lumi { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .ch-lumi-a, .ch-lumi-b { display: block; }
+
+        @media (prefers-reduced-motion: no-preference) {
+          /* Suprapuse în aceeași celulă, ca să se schimbe pe loc. */
+          .ch-lumi { display: inline-grid; gap: 0; }
+          .ch-lumi-a, .ch-lumi-b { grid-area: 1 / 1; }
+          .ch-lumi-a { animation: chLumiA 6s ease-in-out infinite; }
+          .ch-lumi-b { animation: chLumiB 6s ease-in-out infinite; }
+        }
+        /* Fiecare stă afișată ~2,4s, cu o trecere scurtă între ele. */
+        @keyframes chLumiA {
+          0%, 40% { opacity: 1; transform: scale(1); }
+          48%, 92% { opacity: 0; transform: scale(.7); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes chLumiB {
+          0%, 40% { opacity: 0; transform: scale(.7); }
+          48%, 92% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(.7); }
+        }
+      `}</style>
+    </span>
+  );
+}
+
 /** HUB — noduri care converg spre centru („De ce CalyHub": totul într-un loc) */
 export function IconHub({ size = 60 }: { size?: number }) {
   const nodes = [
