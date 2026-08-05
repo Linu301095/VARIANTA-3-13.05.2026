@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import TemaPagina from "../components/TemaPagina";
 
 const SITE_URL = "https://calyhub.ro";
 
@@ -126,7 +127,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('calyhub_theme');if(t==='dark'){document.documentElement.dataset.theme='dark';}}catch(e){}`,
+            // Tema întunecată se aplică DOAR în dashboard. Paginile publice rămân
+            // mereu deschise, chiar dacă utilizatorul a ales dark în contul lui.
+            __html: `try{if(location.pathname.indexOf('/dashboard')===0){var t=localStorage.getItem('calyhub_theme');if(t==='dark'){document.documentElement.dataset.theme='dark';}}}catch(e){}`,
           }}
         />
         <script
@@ -138,7 +141,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <TemaPagina />
+        {children}
+      </body>
     </html>
   );
 }

@@ -630,7 +630,10 @@ export default function DashboardClient() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
+    // Tema aleasă rămâne în `profiluri.tema` și se recitește la reconectare.
+    // Aici curățăm și cache-ul local, altfel paginile publice ar rămâne întunecate.
     document.documentElement.dataset.theme = "";
+    try { localStorage.removeItem("calyhub_theme"); } catch {}
     router.push("/login");
   }
 
