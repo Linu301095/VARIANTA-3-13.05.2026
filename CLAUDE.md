@@ -210,30 +210,28 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 
 - **Salonul care face și oameni, și animale:** rămâne regula un salon = o verticală. Cazul e practic imposibil în același spațiu (autorizare sanitară diferită). Cine are ambele afaceri își face două conturi; soluția curată vine mai târziu prin **multi-locație** (deja promisă ca „în curând" în planul Business), unde fiecare locație are verticala ei.
 
-## ⏳ ÎN PROBĂ — Home scurtat (05.08.2026)
+## Home — împărțit în două zone (05.08.2026)
 
-**Se testează live. Dacă utilizatorul spune că nu-i place, se revine la commit `feb5bc0`.**
+**Varianta scurtă (3 secțiuni, 294 de cuvinte) a fost încercată și respinsă de utilizator.**
+S-a revenit la Home-ul plin și s-a rezolvat doar problema reală: pagina vorbea alternativ cu
+clientul și cu proprietarul de salon, fără să spună vreodată unde se termină partea fiecăruia.
 
-Home avea 6 secțiuni, 729 de cuvinte, 11,4 ecrane pe telefon — și vorbea alternativ cu
-clientul și cu proprietarul de salon, fiecare citind pe jumătate degeaba. Peste asta se
-adăugau cele două verticale, deci pagina servea patru situații deodată.
+Conținutul a rămas tot (823 de cuvinte, 6 secțiuni). Ce s-a adăugat e **semnalizarea**:
 
-Acum are **3 secțiuni, 294 de cuvinte, 4,6 ecrane**:
+| Unde | Ce |
+|---|---|
+| Sub cele două carduri din hero | bară „Vezi în detaliu: Partea clienților · Partea saloanelor" — sar direct la ancore |
+| Începutul zonei client | bandă portocalie `#pentru-clienti` — „Zona 1 din 2 · De aici încolo vorbim cu tine, clientul", cu buton „Am un salon →" |
+| Sfârșitul zonei client | „Aici se termină partea clienților. Ai un salon? Sari la partea ta ↓" + CTA de cont |
+| Începutul zonei salon | bandă `#pentru-saloane` — „Zona 2 din 2", cu buton „Sunt client →" |
+| Secțiunea Planuri | eyebrow devine „PLANURI · TOT PARTEA SALOANELOR", ca să se vadă că e aceeași zonă |
+| Sfârșitul zonei salon | „Aici se termină partea saloanelor. Ce urmează e din nou pentru amândoi." |
 
-| # | Secțiune | Ce s-a întâmplat |
-|---|---|---|
-| 0 | Hero | a rămas; cele două carduri mari au fost înlocuite cu trei motive scurte |
-| 1 | **„Cu ce ai venit azi?"** | **nouă** — bifurcație client / salon, fiecare cu 3 puncte și buton |
-| 2 | Deținem intersecția + CTA | a rămas neatinsă |
+Funcția `banda()` din `app/page.tsx` generează benzile; `scrollMarginTop: 86` le oprește sub
+antetul lipit. Zonele au rămas în ordinea de dinainte (client, apoi salon) — nu s-a mutat
+niciun conținut, doar s-a marcat unde începe și unde se termină fiecare.
 
-**Ce s-a scos și unde există deja:** „Totul, într-un loc" (6 carduri → 3 rânduri în hero),
-„Găsești, rezervi, revii" → `/cum-functioneaza#clienti`, „Transformă-ți salonul" →
-`/cum-functioneaza#parteneri`, „Acces complet la platformă" → `/preturi`. Ambele ancore
-existau deja, deci nu a fost nevoie de pagină nouă.
-
-**⚠️ De urmărit:** Home a coborât de la 729 la 294 de cuvinte. Pentru „CalyHub" ca marcă nu
-contează, iar traficul local vine din paginile de oraș — dar dacă la lansare vedem că Home nu
-mai prinde termeni generali, se adaugă înapoi text, nu secțiuni.
+**Nu s-a pierdut nimic din SEO** — dimpotrivă, Home a urcat de la 729 la 823 de cuvinte.
 
 ---
 
