@@ -191,17 +191,16 @@ export default function HomePage() {
 
             {/* Alegerea drumului — restul paginii e împărțită în două zone, iar
                 săgeata în jos arată că duce mai jos în pagină, nu în altă parte. */}
-            <div className="ch-hero-anim ch-fork" style={{ marginTop: 34, maxWidth: 620, marginLeft: "auto", marginRight: "auto", animationDelay: ".84s" }}>
+            <div className="ch-hero-anim ch-fork" style={{ marginTop: 34, maxWidth: 720, marginLeft: "auto", marginRight: "auto", animationDelay: ".84s" }}>
+              {/* Aceleași iconițe ca în zonele către care duc, ca legătura să fie evidentă. */}
               {[
-                { href: "#pentru-clienti", Icon: User, titlu: "Sunt client", sub: "Caut un salon" },
-                { href: "#pentru-saloane", Icon: Scissors, titlu: "Am un salon", sub: "Vreau programări" },
+                { href: "#pentru-clienti", Icon: IconRezervare, titlu: "Pentru clienți", sub: "Cauți și rezervi" },
+                { href: "#pentru-saloane", Icon: IconCrestere, titlu: "Pentru saloane partenere", sub: "Primești programări" },
               ].map((o, i) => (
                 <React.Fragment key={o.href}>
                   {i === 1 && <span aria-hidden className="ch-fork-sep" />}
                   <Link href={o.href} className="ch-fork-half">
-                    <span style={{ width: 40, height: 40, borderRadius: 12, background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <o.Icon size={19} color={C.orange} strokeWidth={2.1} />
-                    </span>
+                    <o.Icon size={42} />
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: "block", fontSize: 15, fontWeight: 900, color: C.text, letterSpacing: -0.2 }}>{o.titlu}</span>
                       <span style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: C.muted, marginTop: 1 }}>{o.sub}</span>
