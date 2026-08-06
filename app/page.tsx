@@ -6,7 +6,7 @@ import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
 import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim, IconDouaLumi } from "../components/SectionIcons";
 import {
-  PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
+  PawPrint, Scissors, User, Calendar, BarChart3, Users, Sparkles,
   Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check, Bell,
 } from "lucide-react";
 
@@ -190,12 +190,12 @@ export default function HomePage() {
 
             {/* Sari direct la partea ta — restul paginii e împărțită în două zone. */}
             <div className="ch-hero-anim" style={{ marginTop: 30, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap", animationDelay: ".84s" }}>
-              <span style={{ fontSize: 13.5, color: C.dim, fontWeight: 700 }}>Vezi în detaliu:</span>
+              <span style={{ fontSize: 13.5, color: C.dim, fontWeight: 700 }}>Pagina are două părți. Sari direct la:</span>
               <Link href="#pentru-clienti" style={{ ...btnSecondary, padding: "11px 20px", fontSize: 13.5 }}>
-                <PawPrint size={15} color={C.orange} strokeWidth={2.2} /> Partea clienților
+                <User size={15} color={C.orange} strokeWidth={2.2} /> Partea clienților ↓
               </Link>
               <Link href="#pentru-saloane" style={{ ...btnSecondary, padding: "11px 20px", fontSize: 13.5 }}>
-                <Scissors size={15} color={C.orange} strokeWidth={2.2} /> Partea saloanelor
+                <Scissors size={15} color={C.orange} strokeWidth={2.2} /> Partea saloanelor ↓
               </Link>
             </div>
           </div>
@@ -234,44 +234,54 @@ export default function HomePage() {
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             {banda({
               id: "pentru-clienti",
-              eticheta: "Zona 1 din 2",
+              eticheta: "Zona 1 din 2 · pentru clienți",
               titlu: "De aici încolo vorbim cu tine, clientul",
               sub: "Cum cauți, cum rezervi și ce rămâne salvat în cont, după fiecare vizită.",
-              Icon: PawPrint,
+              Icon: User,
               sariLa: "#pentru-saloane",
-              sariText: "Am un salon →",
+              sariText: "Sari la partea saloanelor ↓",
             })}
-            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
+            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 34px" }}>
               <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconRezervare size={60} /></div>
               <div data-reveal style={eyebrow}>PENTRU CLIENȚI</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Găsești, rezervi, revii — fără bătăi de cap</h2>
-              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Alege lumea în care intri și rezervă în câteva minute. Aceeași experiență simplă, fie că e vorba de animalul tău sau de tine.</p>
+              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>
+                Contul e unul singur, al tău. Animalul e opțional — îl adaugi când vrei, sau niciodată.
+                Ce vezi în aplicație depinde de asta:
+              </p>
             </div>
+
+            {/* Cele două feluri de cont de client — regula din dashboard, spusă pe față. */}
             <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><PawPrint size={14} strokeWidth={2} /> Pentru animalul tău</span>
-                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Grooming, cu tot salvat</h3>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Găsești cel mai bun salon de grooming din oraș, cu preț exact pe talia animalului.</p>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><User size={14} strokeWidth={2.2} /> Vii doar pentru tine</span>
+                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Fără animal în cont</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Vezi doar saloanele de înfrumusețare. Nimic despre animale nu îți apare în cale.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                  {chk(<>Filtrezi după <b style={{ color: C.text, fontWeight: 800 }}>oraș, serviciu și rating</b></>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț exact</b> pe talia animalului tău</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Profil animal</b> cu rasă, talie și istoricul vizitelor</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Recomandări de îngrijire</b> după fiecare tuns</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Reminder pe WhatsApp sau SMS</b>, cu 24 de ore înainte</>)}
-                </div>
-              </div>
-              <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><Scissors size={14} strokeWidth={2} /> Pentru tine</span>
-                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Frizerie &amp; coafor, la câteva atingeri</h3>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Descoperi frizerii și saloane de coafură și rezervi cu specialistul preferat.</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Frizerii și saloane de coafură</b> din orașul tău</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Frizerii, coafor, manichiură, cosmetică</b> din orașul tău</>)}
                   {chk(<>Rezervi cu <b style={{ color: C.text, fontWeight: 800 }}>specialistul preferat</b> și ora aleasă</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț pe serviciu</b>, afișat înainte de rezervare</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Tot istoricul serviciilor</b>, într-un singur cont</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Sfaturi de îngrijire</b> după fiecare vizită</>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Reminder pe WhatsApp sau SMS</b>, cu 24 de ore înainte</>)}
                 </div>
               </div>
+
+              <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><PawPrint size={14} strokeWidth={2} /> Vii și cu animalul</span>
+                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Cu animal în cont</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Ai tot ce e în varianta fără animal, plus grooming — și un comutator între cele două lumi.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                  {chk(<>Comutator <b style={{ color: C.text, fontWeight: 800 }}>„Pentru tine" / „Pentru animalul tău"</b></>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Saloane de grooming</b>, cu preț exact pe talia animalului</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Profil animal</b> cu rasă, talie și istoricul vizitelor</>)}
+                  {chk(<>Vezi <b style={{ color: C.text, fontWeight: 800 }}>cu ce animale lucrează</b> fiecare salon</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Recomandări de îngrijire</b> după fiecare tuns</>)}
+                </div>
+              </div>
+            </div>
+
+            <div data-reveal style={{ textAlign: "center", marginTop: 20, fontSize: 13.5, color: C.muted, fontWeight: 600 }}>
+              Nu trebuie să alegi acum. Începi fără animal și îl adaugi oricând din contul tău.
             </div>
             <div data-reveal style={{ textAlign: "center", marginTop: 32, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/register" style={btnPrimary}>Creează cont gratuit →</Link>
@@ -289,12 +299,12 @@ export default function HomePage() {
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             {banda({
               id: "pentru-saloane",
-              eticheta: "Zona 2 din 2",
+              eticheta: "Zona 2 din 2 · pentru saloane",
               titlu: "De aici încolo vorbim cu tine, salonul",
               sub: "Ce primești, ce fac asistenții AI și cât costă. Înfrumusețare sau grooming, la fel.",
               Icon: Scissors,
               sariLa: "#pentru-clienti",
-              sariText: "Sunt client →",
+              sariText: "Urcă la partea clienților ↑",
             })}
             <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 38px" }}>
               <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconCrestere size={60} /></div>

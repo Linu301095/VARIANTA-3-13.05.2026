@@ -231,6 +231,18 @@ Funcția `banda()` din `app/page.tsx` generează benzile; `scrollMarginTop: 86` 
 antetul lipit. Zonele au rămas în ordinea de dinainte (client, apoi salon) — nu s-a mutat
 niciun conținut, doar s-a marcat unde începe și unde se termină fiecare.
 
+**Corecții după prima trecere (05.08.2026):**
+1. **Butoanele din benzi spun ce fac, nu cine ești.** „Am un salon →" pus în zona clienților se
+   citea invers, ca și cum acolo ar fi fost partea saloanelor. Acum: „Sari la partea saloanelor ↓"
+   și „Urcă la partea clienților ↑". La fel, bara de sub hero începe cu „Pagina are două părți."
+2. **Iconița zonei client e `User`, nu `PawPrint`.** Clientul e om; animalul e opțional. Foarfeca
+   a rămas la saloane.
+3. **Zona clienților are acum două sub-ramuri explicite**, care spun regula din D1 pe față:
+   „Fără animal în cont" (vezi doar înfrumusețare) și „Cu animal în cont" (plus grooming și
+   comutatorul). Sub ele: „Nu trebuie să alegi acum. Începi fără animal și îl adaugi oricând."
+   Înainte, cardurile erau „Pentru animalul tău" / „Pentru tine" — descriau serviciile, nu tipul
+   de cont, deci nu explicau de ce unii clienți nu văd grooming.
+
 **Nu s-a pierdut nimic din SEO** — dimpotrivă, Home a urcat de la 729 la 823 de cuvinte.
 
 ---
