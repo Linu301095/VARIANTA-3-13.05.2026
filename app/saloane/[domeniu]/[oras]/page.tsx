@@ -220,7 +220,7 @@ export default async function SaloaneOrasPage({ params }: { params: Promise<{ do
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
-              <Link href="/register" style={btnPrimary}>Creează cont și caută {data.numeArticulat} →</Link>
+              <Link href="/register?tip=client" style={btnPrimary}>Creează cont și caută {data.numeArticulat} →</Link>
               <Link href="/cum-functioneaza#clienti" style={btnSecondary}>Cum funcționează</Link>
             </div>
 
@@ -322,7 +322,7 @@ export default async function SaloaneOrasPage({ params }: { params: Promise<{ do
                 Contul e gratuit pentru clienți. Cauți, compari prețuri și rezervi în câteva minute.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Creează cont gratuit →</Link>
+                <Link href="/register?tip=client" style={btnPrimary}>Creează cont gratuit →</Link>
                 <Link href={urlFor(celalalt.slug, data.slug)} style={btnSecondary}>{celalalt.eticheta} {data.numeArticulat}</Link>
               </div>
             </div>

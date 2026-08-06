@@ -68,6 +68,14 @@ export default function RegisterPage() {
   const [registerError, setRegisterError] = useState("");
   const [focus, setFocus] = useState<string | null>(null);
 
+  // Butoanele publice spun în adresă cu ce a venit omul (?tip=salon sau ?tip=client),
+  // ca selectorul să pice de la început pe partea potrivită. Citim din
+  // `window.location` ca să nu avem nevoie de o graniță Suspense doar pentru atât.
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tip");
+    if (t === "salon" || t === "client") alegeTip(t);
+  }, []);
+
   // Daca exista deja o sesiune activa, nu are rost formularul — ducem userul in contul lui.
   useEffect(() => {
     let anulat = false;
@@ -203,7 +211,7 @@ export default function RegisterPage() {
           <div style={{ background: C.surface, borderRadius: 28, padding: "clamp(26px,5vw,44px)", border: `1px solid ${C.line}`, boxShadow: "0 20px 60px var(--pub-shadow-warm), 0 4px 22px var(--pub-shadow)" }}>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: C.text, textAlign: "center", marginBottom: 8, letterSpacing: "-.02em" }}>Creează-ți contul</h1>
             <p style={{ fontSize: 14.5, color: C.muted, textAlign: "center", marginBottom: 24, lineHeight: 1.55 }}>
-              Gratuit, în mai puțin de un minut.
+              {tip === "salon" ? "Trial gratuit, fără card. În mai puțin de un minut." : "Gratuit, în mai puțin de un minut."}
             </p>
 
             {/* ── Tipul contului ── */}

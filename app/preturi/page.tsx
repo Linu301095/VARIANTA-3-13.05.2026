@@ -204,7 +204,7 @@ export default function Preturi() {
                       ))}
                     </div>
 
-                    <Link href="/register" style={{ ...(p.recomandat ? btnPrimary : btnSecondary), width: "100%", marginTop: 22 }}>
+                    <Link href="/register?tip=salon" style={{ ...(p.recomandat ? btnPrimary : btnSecondary), width: "100%", marginTop: 22 }}>
                       Începe trialul gratuit →
                     </Link>
                   </div>
@@ -277,7 +277,7 @@ export default function Preturi() {
                 Îți configurezi salonul în câteva minute și primești programări online din prima zi. Fără card, fără comision.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Începe trialul gratuit →</Link>
+                <Link href="/register?tip=salon" style={btnPrimary}>Începe trialul gratuit →</Link>
                 <Link href="/cum-functioneaza#parteneri" style={btnSecondary}>Vezi cum funcționează</Link>
               </div>
             </div>

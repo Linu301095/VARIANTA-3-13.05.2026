@@ -146,7 +146,7 @@ export default function HomePage() {
             <HeroSearch />
 
             <div className="ch-hero-anim" style={{ marginTop: 18, fontSize: 13.5, fontWeight: 700, animationDelay: ".64s" }}>
-              <span style={{ color: C.muted }}>Ai un salon? <Link href="/register" style={{ color: C.orangeText, fontWeight: 800, textDecoration: "none" }}>Începe trialul gratuit →</Link></span>
+              <span style={{ color: C.muted }}>Ai un salon? <Link href="/register?tip=salon" style={{ color: C.orangeText, fontWeight: 800, textDecoration: "none" }}>Începe trialul gratuit →</Link></span>
             </div>
 
             {/* doua carduri de public */}
@@ -167,7 +167,7 @@ export default function HomePage() {
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Check size={15} strokeWidth={2.6} /> Gratuit pentru clienți</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără cost, fără card — plătești doar serviciul, la salon</div>
                 </div>
-                <Link href="/register" style={btnPrimary}>Creează cont gratuit →</Link>
+                <Link href="/register?tip=client" style={btnPrimary}>Creează cont gratuit →</Link>
               </div>
               <div className="ch-card" style={{ ...card, display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
@@ -185,7 +185,7 @@ export default function HomePage() {
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> Trial gratuit</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără card · 0% comision · anulezi oricând</div>
                 </div>
-                <Link href="/register" style={btnPrimary}>Începe trialul gratuit →</Link>
+                <Link href="/register?tip=salon" style={btnPrimary}>Începe trialul gratuit →</Link>
               </div>
             </div>
 
@@ -297,7 +297,7 @@ export default function HomePage() {
               Nu trebuie să alegi acum. Începi fără animal și îl adaugi oricând din contul tău.
             </div>
             <div data-reveal style={{ textAlign: "center", marginTop: 32, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <Link href="/register" style={btnPrimary}>Creează cont gratuit →</Link>
+              <Link href="/register?tip=client" style={btnPrimary}>Creează cont gratuit →</Link>
               <Link href="/cum-functioneaza#clienti" style={btnSecondary}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează →</Link>
             </div>
             {/* Capătul zonei clienților — cine a citit destul poate opri aici. */}
@@ -445,8 +445,8 @@ export default function HomePage() {
                 Rezervă primul serviciu în câteva minute, sau înscrie-ți salonul și începe cu trial gratuit.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 22, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Creează cont gratuit</Link>
-                <Link href="/register" style={btnSecondary}>Înscrie-ți salonul →</Link>
+                <Link href="/register?tip=client" style={btnPrimary}>Creează cont gratuit</Link>
+                <Link href="/register?tip=salon" style={btnSecondary}>Înscrie-ți salonul →</Link>
               </div>
             </div>
           </div>

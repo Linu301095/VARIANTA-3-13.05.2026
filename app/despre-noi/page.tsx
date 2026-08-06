@@ -263,7 +263,7 @@ export default function DespreNoi() {
                 În ambele cazuri, începi în câteva minute.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Creează cont gratuit</Link>
+                <Link href="/register?tip=client" style={btnPrimary}>Creează cont gratuit</Link>
                 <Link href="/cum-functioneaza" style={btnSecondary}>Vezi cum funcționează →</Link>
               </div>
             </div>

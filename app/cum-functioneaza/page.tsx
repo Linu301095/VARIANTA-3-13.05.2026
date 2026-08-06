@@ -225,7 +225,7 @@ export default function CumFunctioneaza() {
             </div>
 
             <div style={{ textAlign: "center", marginTop: 32 }}>
-              <Link href="/register" style={btnPrimary}>Creează cont gratuit →</Link>
+              <Link href="/register?tip=client" style={btnPrimary}>Creează cont gratuit →</Link>
             </div>
           </div>
         </section>
@@ -281,7 +281,7 @@ export default function CumFunctioneaza() {
             </div>
 
             <div style={{ textAlign: "center", marginTop: 32 }}>
-              <Link href="/register" style={btnPrimary}>Începe trialul gratuit →</Link>
+              <Link href="/register?tip=salon" style={btnPrimary}>Începe trialul gratuit →</Link>
             </div>
           </div>
         </section>
@@ -313,8 +313,8 @@ export default function CumFunctioneaza() {
                 Clienții rezervă în câteva minute, gratuit. Saloanele încep cu trial gratuit, fără card și fără comision.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Creează cont gratuit</Link>
-                <Link href="/register" style={btnSecondary}>Înscrie-ți salonul →</Link>
+                <Link href="/register?tip=client" style={btnPrimary}>Creează cont gratuit</Link>
+                <Link href="/register?tip=salon" style={btnSecondary}>Înscrie-ți salonul →</Link>
               </div>
             </div>
           </div>
