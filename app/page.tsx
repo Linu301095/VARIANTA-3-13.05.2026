@@ -140,7 +140,7 @@ export default function HomePage() {
               Toate programările de îngrijire,<br />într-o <span style={{ color: C.orange }}>singură platformă</span>.
             </h1>
             <p className="ch-hero-anim" style={{ margin: "22px auto 0", maxWidth: "56ch", fontSize: 19, lineHeight: 1.65, fontWeight: 500, color: C.muted, animationDelay: ".28s" }}>
-              CalyHub conectează clienții cu cele mai bune saloane de <b style={{ color: C.text, fontWeight: 800 }}>înfrumusețare</b> și de <b style={{ color: C.text, fontWeight: 800 }}>grooming</b> din orașul lor. Găsești, compari și rezervi online în câteva minute — <b style={{ color: C.text, fontWeight: 800 }}>pentru tine și pentru animalul tău</b>.
+              CalyHub conectează clienții cu cele mai bune saloane de <b style={{ color: C.text, fontWeight: 800 }}>înfrumusețare</b> și de <b style={{ color: C.text, fontWeight: 800 }}>grooming</b> din orașul lor. Găsești, compari și rezervi online în câteva minute — <b style={{ color: C.text, fontWeight: 800 }}>pentru tine dar și pentru animalul tău</b>.
             </p>
 
             <HeroSearch />

@@ -49,7 +49,7 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
           <div style={{ flex: "1 1 260px", minWidth: 0 }}>
             {LOGO}
             <p style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.7, marginTop: 14, maxWidth: 320 }}>
-              Programări online la saloane de înfrumusețare și de grooming — pentru tine și pentru animalul tău.
+              Programări online la saloane de înfrumusețare și de grooming — pentru tine dar și pentru animalul tău.
             </p>
             <div style={{ marginTop: 16 }}><SocialIcons /></div>
           </div>

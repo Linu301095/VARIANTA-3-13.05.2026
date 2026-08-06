@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/despre-noi" },
   openGraph: {
     title: "Despre noi — Povestea CalyHub",
-    description: "Un singur loc pentru toate programările de îngrijire — pentru tine și pentru animalul tău.",
+    description: "Un singur loc pentru toate programările de îngrijire — pentru tine dar și pentru animalul tău.",
     url: "/despre-noi",
     type: "website",
   },
