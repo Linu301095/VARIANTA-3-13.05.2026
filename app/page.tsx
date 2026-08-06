@@ -312,7 +312,7 @@ export default function HomePage() {
             {banda({
               id: "pentru-saloane",
               eticheta: "Zona 2 din 2 · pentru saloane",
-              titlu: "De aici încolo vorbim cu tine, salonul",
+              titlu: "De aici încolo vorbim cu tine, partenerul",
               sub: "Agendă, statistici, asistenți AI și prețuri — pentru salon de înfrumusețare sau de grooming.",
               Icon: Scissors,
               sariLa: "#pentru-clienti",
