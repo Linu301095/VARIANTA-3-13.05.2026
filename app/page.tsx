@@ -4,11 +4,8 @@ import Logo from "../components/Logo";
 import Footer from "../components/Footer";
 import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
-import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim, IconDouaLumi } from "../components/SectionIcons";
-import {
-  PawPrint, Scissors, Calendar, BarChart3, Users, Sparkles,
-  Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check, Bell,
-} from "lucide-react";
+import { IconIntersectie, IconDouaLumi } from "../components/SectionIcons";
+import { PawPrint, Scissors, Search, Calendar, Sparkles, Tag, Star, Check } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "CalyHub — Programări online pentru saloane de înfrumusețare și grooming",
@@ -46,10 +43,6 @@ const C = {
 const card: React.CSSProperties = {
   background: C.surface, border: `1px solid ${C.line}`, borderRadius: 28,
   padding: 26, boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
-};
-const tile: React.CSSProperties = {
-  background: C.surface, border: `1px solid ${C.line}`, borderRadius: 22,
-  padding: 22, boxShadow: "0 1px 3px rgba(0,0,0,.04), 0 10px 34px rgba(120,90,60,.06)",
 };
 const eyebrow: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 7,
@@ -116,183 +109,95 @@ export default function HomePage() {
               <span style={{ color: C.muted }}>Ai un salon? <Link href="/register" style={{ color: C.orangeText, fontWeight: 800, textDecoration: "none" }}>Înscrie-te gratuit →</Link></span>
             </div>
 
-            {/* doua carduri de public */}
-            <div className="ch-hero-anim ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 44, textAlign: "left", animationDelay: ".74s" }}>
-              <div className="ch-card" style={{ ...card, display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                  {iconBox(PawPrint)}
-                  <div><div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Ești client</div><h2 style={{ fontSize: 19, fontWeight: 900, marginTop: 2, color: C.text }}>Găsește și rezervă</h2></div>
-                </div>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 16, minHeight: 63 }}>Salon de grooming pentru animalul tău sau frizerie și coafor pentru tine — cauți, compari și rezervi online în câteva minute.</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Prețuri transparente</b> și disponibilitate live</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Rezervare 24/7</b> cu confirmare instantă</>)}
-                  {chk(<>Alegi <b style={{ color: C.text, fontWeight: 800 }}>specialistul</b> și ora preferată</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Istoric și recomandări</b> după fiecare vizită</>)}
-                </div>
-                <div style={{ marginTop: "auto", background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 14, padding: "11px 14px", marginBottom: 14 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Check size={15} strokeWidth={2.6} /> Gratuit pentru clienți</div>
-                  <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără cost, fără card — plătești doar serviciul, la salon</div>
-                </div>
-                <Link href="/register" style={btnPrimary}>Caută un salon →</Link>
-              </div>
-              <div className="ch-card" style={{ ...card, display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                  {iconBox(Scissors)}
-                  <div><div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Ai un salon</div><h2 style={{ fontSize: 19, fontWeight: 900, marginTop: 2, color: C.text }}>Umple-ți agenda</h2></div>
-                </div>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 16, minHeight: 63 }}>Înfrumusețare sau grooming — programări online, agendă digitală și instrumente care îți fidelizează clienții.</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Programări online 24/7</b>, fără un telefon dat</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Calendar per specialist</b> și statistici reale</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>4 asistenți AI</b> care îți fidelizează clienții</>)}
-                  {chk(<>Recenzii, istoric client și <b style={{ color: C.text, fontWeight: 800 }}>export Excel</b></>)}
-                </div>
-                <div style={{ marginTop: "auto", background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", borderRadius: 14, padding: "11px 14px", marginBottom: 14 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> Trial gratuit</div>
-                  <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără card · 0% comision · anulezi oricând</div>
-                </div>
-                <Link href="/register" style={btnPrimary}>Înscrie-te gratuit →</Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* DE CE CALYHUB */}
-        <section style={{ background: C.surface2, padding: "64px 20px" }}>
-          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
-              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconHub size={60} /></div>
-              <div data-reveal style={eyebrow}>DE CE CALYHUB</div>
-              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Totul, într-un loc care lucrează pentru tine</h2>
-              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Înfrumusețare pentru tine și grooming pentru animalul tău, sub același cont. Prețuri la vedere, istoric salvat și recomandări după fiecare vizită — o experiență digitală completă.</p>
-            </div>
-            <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+            {/* trei motive scurte — înlocuiesc secțiunea „De ce CalyHub" */}
+            <div className="ch-hero-anim ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginTop: 46, textAlign: "left", animationDelay: ".74s" }}>
               {[
-                { Icon: Sparkles, t: "Ambele lumi, într-un singur cont", d: "Grooming pentru animalul tău și frizerie sau coafor pentru tine — cauți și rezervi din același loc." },
-                { Icon: Tag, t: "Prețuri transparente", d: "Vezi prețul exact înainte să rezervi — pe talia animalului sau pe serviciu. Fără surprize la final." },
-                { Icon: Calendar, t: "Programări 24/7", d: "Rezervi oricând, cu confirmare instantă și disponibilitate live. Fără telefoane, fără așteptare." },
-                { Icon: Clock, t: "Istoric complet", d: "Toate vizitele tale și ale animalului, salvate într-un singur cont — vezi mereu ce urmează și ce a fost." },
-                { Icon: Star, t: "Recenzii reale", d: "Alegi salonul potrivit în siguranță, pe baza experienței altor clienți verificați." },
-                { Icon: Smartphone, t: "Web și mobil", d: "Aceleași date, sincronizate în timp real — programează de pe laptop, continuă de pe telefon." },
+                { Icon: Tag, t: "Prețul, înainte de rezervare", d: "Vezi cât plătești pentru fiecare serviciu — pe talia animalului sau pe serviciu. Fără surprize la final." },
+                { Icon: Calendar, t: "Rezervi la orice oră", d: "Inclusiv când salonul e închis. Alegi ora și persoana, iar confirmarea vine în cont." },
+                { Icon: Star, t: "Recenzii de la clienți reali", d: "Scrise doar de cine a fost efectiv la salon, după vizită. Alegi în cunoștință de cauză." },
               ].map(({ Icon, t, d }) => (
-                <div key={t} data-reveal className="ch-card" style={{ ...card, padding: 26 }}>
-                  {iconBox(Icon)}
-                  <h3 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>{t}</h3>
-                  <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8 }}>{d}</p>
+                <div key={t} style={{ display: "flex", gap: 13, alignItems: "flex-start" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon size={19} color={C.orange} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{t}</div>
+                    <div style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.55, marginTop: 4 }}>{d}</div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* PENTRU CLIENTI */}
-        <section style={{ padding: "64px 20px" }}>
-          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
-              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconRezervare size={60} /></div>
-              <div data-reveal style={eyebrow}>PENTRU CLIENȚI</div>
-              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Găsești, rezervi, revii — fără bătăi de cap</h2>
-              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Alege lumea în care intri și rezervă în câteva minute. Aceeași experiență simplă, fie că e vorba de animalul tău sau de tine.</p>
-            </div>
-            <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><PawPrint size={14} strokeWidth={2} /> Pentru animalul tău</span>
-                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Grooming, cu tot salvat</h3>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Găsești cel mai bun salon de grooming din oraș, cu preț exact pe talia animalului.</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                  {chk(<>Filtrezi după <b style={{ color: C.text, fontWeight: 800 }}>oraș, serviciu și rating</b></>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț exact</b> pe talia animalului tău</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Profil animal</b> cu rasă, talie și istoricul vizitelor</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Recomandări de îngrijire</b> după fiecare tuns</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Reminder pe WhatsApp sau SMS</b>, cu 24 de ore înainte</>)}
-                </div>
-              </div>
-              <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><Scissors size={14} strokeWidth={2} /> Pentru tine</span>
-                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Frizerie &amp; coafor, la câteva atingeri</h3>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Descoperi frizerii și saloane de coafură și rezervi cu specialistul preferat.</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Frizerii și saloane de coafură</b> din orașul tău</>)}
-                  {chk(<>Rezervi cu <b style={{ color: C.text, fontWeight: 800 }}>specialistul preferat</b> și ora aleasă</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Tot istoricul serviciilor</b>, într-un singur cont</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Sfaturi de îngrijire</b> după fiecare vizită</>)}
-                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Reminder pe WhatsApp sau SMS</b>, cu 24 de ore înainte</>)}
-                </div>
-              </div>
-            </div>
-            <div data-reveal style={{ textAlign: "center", marginTop: 32 }}>
-              <Link href="/cum-functioneaza#clienti" style={btnSecondary}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează pentru clienți →</Link>
-            </div>
-          </div>
-        </section>
-
-        {/* PENTRU SALOANE / PARTENERI */}
+        {/* BIFURCAȚIA — clientul și salonul își aleg drumul devreme, ca să nu
+            citească fiecare jumătate din pagină degeaba. */}
         <section style={{ background: C.surface2, padding: "64px 20px" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 38px" }}>
-              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconCrestere size={60} /></div>
-              <div data-reveal style={eyebrow}>PENTRU SALOANE · PARTENERI</div>
-              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Transformă-ți salonul într-o afacere digitală</h2>
-              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Mai multe programări onorate, mai puțin timp pierdut la telefon. Agendă digitală, statistici reale și 4 asistenți AI care îți aduc clienții înapoi — trial gratuit, fără comision.</p>
+            <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 34px" }}>
+              <div data-reveal style={eyebrow}>ALEGE DRUMUL</div>
+              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Cu ce ai venit azi?</h2>
             </div>
-            <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
-              {[
-                { Icon: Calendar, t: "Agendă mereu plină", d: "Programări online 24/7, fără un telefon dat." },
-                { Icon: BarChart3, t: "Statistici reale", d: "Încasări, top servicii, productivitate, export Excel." },
-                { Icon: Users, t: "Calendar per specialist", d: "Orar individual, sloturi de 30 min, anti-dublă-rezervare." },
-                { Icon: Star, t: "Clienți fideli", d: "Recenzii, istoric per client și reactivare automată." },
-                { Icon: Smartphone, t: "Web și mobil", d: "Aceleași date, sincronizate în timp real, oriunde ești." },
-                { Icon: Bell, t: "Remindere automate", d: "Trimise pe WhatsApp și SMS, fără efort din partea ta. Cea mai simplă metodă de a reduce neprezentările." },
-              ].map(({ Icon, t, d }) => (
-                <div key={t} data-reveal className="ch-tile" style={tile}>
-                  <div style={{ width: 40, height: 40, borderRadius: 11, background: C.orangeSoft, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={20} color={C.orange} strokeWidth={2} /></div>
-                  <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{t}</div>
-                  <div style={{ fontSize: 12.5, color: C.muted, fontWeight: 600, marginTop: 5, lineHeight: 1.5 }}>{d}</div>
-                </div>
-              ))}
-            </div>
-            <div data-reveal style={{ textAlign: "center", marginTop: 32 }}>
-              <Link href="/cum-functioneaza#parteneri" style={btnSecondary}><PlayCircle size={17} color={C.orange} strokeWidth={2} /> Vezi cum funcționează pentru saloane →</Link>
-            </div>
-            {/* Instrumente AI — teaser compact */}
-            <div data-reveal style={{ textAlign: "center", maxWidth: 660, margin: "48px auto 0" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><SparkleAnim size={44} glow /></div>
-              <div style={eyebrow}><Sparkles size={13} strokeWidth={2.4} /> INSTRUMENTE AI</div>
-              <h3 style={{ fontSize: "clamp(20px,2.6vw,26px)", fontWeight: 900, letterSpacing: -0.5, color: C.text, marginTop: 12 }}>Patru asistenți AI care îți cresc afacerea</h3>
-              <p style={{ fontSize: 15.5, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>
-                Inteligență integrată direct în salonul tău: răspunde la recenzii, îți aduce înapoi clienții care nu au mai
-                revenit, trimite recomandări de îngrijire după fiecare vizită și îți livrează rapoarte de business din
-                datele tale reale. Fără setări, fără costuri suplimentare.
-              </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 22 }}>
-                <Link href="/instrumente-ai" style={btnPrimary}><Sparkles size={16} strokeWidth={2.4} /> Descoperă instrumentele AI →</Link>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* PLANURI */}
-        <section style={{ background: C.surface2, padding: "64px 20px" }}>
-          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto" }}>
-              <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconPlanuri size={60} /></div>
-              <div data-reveal style={eyebrow}>PLANURI</div>
-              <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Acces complet la platformă, de la primul plan</h2>
-              <p data-reveal style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 14 }}>
-                Fiecare plan include agenda digitală, programările online și agenții AI. Diferența e mărimea echipei
-                și instrumentele avansate — nu accesul la esențial.
-              </p>
-              <div data-reveal style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
-                {["Programări nelimitate", "0% comision", "Anulezi oricând", "Asistenți AI incluși"].map((t) => (
-                  <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--pub-surface)", border: `1px solid ${C.line}`, borderRadius: 50, padding: "9px 16px", fontSize: 13, fontWeight: 800, color: C.text }}>
-                    <Check size={15} color={C.orange} strokeWidth={2.8} /> {t}
-                  </span>
-                ))}
+            <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+              <div data-reveal className="ch-card" style={{ ...card, display: "flex", flexDirection: "column", padding: 30 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 4 }}>
+                  {iconBox(Search, 22)}
+                  <div>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Sunt client</div>
+                    <h3 style={{ fontSize: 21, fontWeight: 900, marginTop: 2, color: C.text, letterSpacing: -0.3 }}>Caut un salon</h3>
+                  </div>
+                </div>
+                <p style={{ fontSize: 14.5, color: C.muted, fontWeight: 600, lineHeight: 1.65, margin: "15px 0 16px" }}>
+                  Frizerie și coafor pentru tine, sau grooming pentru animalul tău. Cauți în orașul tău, compari și rezervi în câteva minute.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                  {chk(<>Prețuri afișate, <b style={{ color: C.text, fontWeight: 800 }}>pe serviciu sau pe talia animalului</b></>)}
+                  {chk(<>Alegi <b style={{ color: C.text, fontWeight: 800 }}>ora și persoana</b> care te preia</>)}
+                  {chk(<>Tot <b style={{ color: C.text, fontWeight: 800 }}>istoricul vizitelor</b>, într-un singur cont</>)}
+                </div>
+                <div style={{ marginTop: "auto" }}>
+                  <Link href="/register" style={{ ...btnPrimary, width: "100%" }}>Caută un salon →</Link>
+                  <div style={{ textAlign: "center", marginTop: 12 }}>
+                    <Link href="/cum-functioneaza#clienti" style={{ fontSize: 13, fontWeight: 800, color: C.orangeText, textDecoration: "none" }}>Vezi întâi cum funcționează →</Link>
+                  </div>
+                  <div style={{ textAlign: "center", fontSize: 12.5, color: C.dim, fontWeight: 600, marginTop: 8 }}>Contul e gratuit pentru clienți</div>
+                </div>
               </div>
-              <div data-reveal style={{ marginTop: 30 }}>
-                <Link href="/preturi" style={btnPrimary}>Vezi planurile →</Link>
+
+              <div data-reveal className="ch-card" style={{ ...card, display: "flex", flexDirection: "column", padding: 30 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 4 }}>
+                  {iconBox(Scissors, 22)}
+                  <div>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Am un salon</div>
+                    <h3 style={{ fontSize: 21, fontWeight: 900, marginTop: 2, color: C.text, letterSpacing: -0.3 }}>Vreau programări</h3>
+                  </div>
+                </div>
+                <p style={{ fontSize: 14.5, color: C.muted, fontWeight: 600, lineHeight: 1.65, margin: "15px 0 16px" }}>
+                  Agendă digitală, echipă cu orar separat, statistici reale și asistenți AI. Zero comision pe programări — plătești doar abonamentul.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                  {chk(<>Clienții rezervă singuri, <b style={{ color: C.text, fontWeight: 800 }}>și noaptea, și duminica</b></>)}
+                  {chk(<>Vezi <b style={{ color: C.text, fontWeight: 800 }}>încasările, serviciile cerute</b> și cine aduce bani</>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Patru asistenți AI</b> care lucrează între programări</>)}
+                </div>
+                <div style={{ marginTop: "auto" }}>
+                  <Link href="/register" style={{ ...btnPrimary, width: "100%" }}>Înscrie-ți salonul →</Link>
+                  <div style={{ textAlign: "center", marginTop: 12 }}>
+                    <Link href="/cum-functioneaza#parteneri" style={{ fontSize: 13, fontWeight: 800, color: C.orangeText, textDecoration: "none" }}>Vezi întâi ce primești →</Link>
+                  </div>
+                  <div style={{ textAlign: "center", fontSize: 12.5, color: C.dim, fontWeight: 600, marginTop: 8 }}>Trial gratuit, fără card</div>
+                </div>
               </div>
+            </div>
+
+            <div data-reveal style={{ textAlign: "center", marginTop: 28, display: "flex", gap: 22, justifyContent: "center", flexWrap: "wrap", fontSize: 13.5, fontWeight: 700 }}>
+              <Link href="/instrumente-ai" style={{ color: C.muted, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7 }}>
+                <Sparkles size={15} color={C.orange} strokeWidth={2.2} /> Asistenții AI
+              </Link>
+              <Link href="/preturi" style={{ color: C.muted, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7 }}>
+                <Tag size={15} color={C.orange} strokeWidth={2.2} /> Planuri și prețuri
+              </Link>
             </div>
           </div>
         </section>

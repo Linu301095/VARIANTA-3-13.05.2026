@@ -210,6 +210,33 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 
 - **Salonul care face și oameni, și animale:** rămâne regula un salon = o verticală. Cazul e practic imposibil în același spațiu (autorizare sanitară diferită). Cine are ambele afaceri își face două conturi; soluția curată vine mai târziu prin **multi-locație** (deja promisă ca „în curând" în planul Business), unde fiecare locație are verticala ei.
 
+## ⏳ ÎN PROBĂ — Home scurtat (05.08.2026)
+
+**Se testează live. Dacă utilizatorul spune că nu-i place, se revine la commit `feb5bc0`.**
+
+Home avea 6 secțiuni, 729 de cuvinte, 11,4 ecrane pe telefon — și vorbea alternativ cu
+clientul și cu proprietarul de salon, fiecare citind pe jumătate degeaba. Peste asta se
+adăugau cele două verticale, deci pagina servea patru situații deodată.
+
+Acum are **3 secțiuni, 294 de cuvinte, 4,6 ecrane**:
+
+| # | Secțiune | Ce s-a întâmplat |
+|---|---|---|
+| 0 | Hero | a rămas; cele două carduri mari au fost înlocuite cu trei motive scurte |
+| 1 | **„Cu ce ai venit azi?"** | **nouă** — bifurcație client / salon, fiecare cu 3 puncte și buton |
+| 2 | Deținem intersecția + CTA | a rămas neatinsă |
+
+**Ce s-a scos și unde există deja:** „Totul, într-un loc" (6 carduri → 3 rânduri în hero),
+„Găsești, rezervi, revii" → `/cum-functioneaza#clienti`, „Transformă-ți salonul" →
+`/cum-functioneaza#parteneri`, „Acces complet la platformă" → `/preturi`. Ambele ancore
+existau deja, deci nu a fost nevoie de pagină nouă.
+
+**⚠️ De urmărit:** Home a coborât de la 729 la 294 de cuvinte. Pentru „CalyHub" ca marcă nu
+contează, iar traficul local vine din paginile de oraș — dar dacă la lansare vedem că Home nu
+mai prinde termeni generali, se adaugă înapoi text, nu secțiuni.
+
+---
+
 ## Panoul de admin (`/admin`) — refăcut 04.08.2026
 
 Panoul nu știa de verticale și, mai grav, **inventa cifre**: fiecare salon era citit ca `plan: "basic"`
