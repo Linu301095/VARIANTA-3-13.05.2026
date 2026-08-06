@@ -478,6 +478,30 @@ label:hover {
   .ch-hero-anim { opacity: 1 !important; }
   .ch-bloc { opacity: 1 !important; transform: none !important; }
 }
+/* ---------- Alegerea drumului din capul paginii principale ---------- */
+.ch-fork {
+  display: flex; align-items: stretch;
+  background: var(--pub-surface);
+  border: 1.5px solid var(--pub-line);
+  border-radius: 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 12px 34px rgba(120,90,60,.08);
+  overflow: hidden;
+}
+.ch-fork-half {
+  flex: 1; display: flex; align-items: center; gap: 13px;
+  padding: 17px 22px; text-decoration: none; text-align: left;
+  transition: background .2s ease;
+}
+.ch-fork-half:hover { background: var(--pub-orange-soft); }
+.ch-fork-half:hover .ch-fork-sageata { transform: translateY(3px); }
+.ch-fork-sageata { transition: transform .22s cubic-bezier(.2,.7,.2,1); }
+.ch-fork-sep { width: 1px; background: var(--pub-line); flex: 0 0 auto; }
+
+@media (max-width: 640px) {
+  .ch-fork { flex-direction: column; }
+  .ch-fork-sep { width: auto; height: 1px; }
+}
+
 .ch-card, .ch-tile { transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s ease, border-color .3s ease; }
 .ch-card:hover, .ch-tile:hover { transform: translateY(-8px) scale(1.012); box-shadow: 0 26px 56px rgba(255,107,0,.14); border-color: #FFC9A0 !important; }
 @media (max-width: 640px), (hover: none) {

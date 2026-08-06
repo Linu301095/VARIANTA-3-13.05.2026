@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import React from "react";
 import Link from "next/link";
 import Logo from "../components/Logo";
 import Footer from "../components/Footer";
@@ -6,7 +7,7 @@ import ScrollReveal from "../components/ScrollReveal";
 import HeroSearch from "../components/HeroSearch";
 import { IconRezervare, IconCrestere, IconHub, IconIntersectie, IconPlanuri, SparkleAnim, IconDouaLumi } from "../components/SectionIcons";
 import {
-  PawPrint, Scissors, User, Calendar, BarChart3, Users, Sparkles,
+  PawPrint, Scissors, User, ChevronDown, Calendar, BarChart3, Users, Sparkles,
   Clock, Tag, Gift, Smartphone, Star, PlayCircle, Check, Bell,
 } from "lucide-react";
 
@@ -188,15 +189,27 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Sari direct la partea ta — restul paginii e împărțită în două zone. */}
-            <div className="ch-hero-anim" style={{ marginTop: 30, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap", animationDelay: ".84s" }}>
-              <span style={{ fontSize: 13.5, color: C.dim, fontWeight: 700 }}>Pagina are două părți. Sari direct la:</span>
-              <Link href="#pentru-clienti" style={{ ...btnSecondary, padding: "11px 20px", fontSize: 13.5 }}>
-                <User size={15} color={C.orange} strokeWidth={2.2} /> Partea clienților ↓
-              </Link>
-              <Link href="#pentru-saloane" style={{ ...btnSecondary, padding: "11px 20px", fontSize: 13.5 }}>
-                <Scissors size={15} color={C.orange} strokeWidth={2.2} /> Partea saloanelor ↓
-              </Link>
+            {/* Alegerea drumului — restul paginii e împărțită în două zone, iar
+                săgeata în jos arată că duce mai jos în pagină, nu în altă parte. */}
+            <div className="ch-hero-anim ch-fork" style={{ marginTop: 34, maxWidth: 620, marginLeft: "auto", marginRight: "auto", animationDelay: ".84s" }}>
+              {[
+                { href: "#pentru-clienti", Icon: User, titlu: "Sunt client", sub: "Caut un salon" },
+                { href: "#pentru-saloane", Icon: Scissors, titlu: "Am un salon", sub: "Vreau programări" },
+              ].map((o, i) => (
+                <React.Fragment key={o.href}>
+                  {i === 1 && <span aria-hidden className="ch-fork-sep" />}
+                  <Link href={o.href} className="ch-fork-half">
+                    <span style={{ width: 40, height: 40, borderRadius: 12, background: C.orangeSoft, border: "1px solid var(--pub-orange-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <o.Icon size={19} color={C.orange} strokeWidth={2.1} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: "block", fontSize: 15, fontWeight: 900, color: C.text, letterSpacing: -0.2 }}>{o.titlu}</span>
+                      <span style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: C.muted, marginTop: 1 }}>{o.sub}</span>
+                    </span>
+                    <ChevronDown className="ch-fork-sageata" size={17} color={C.orange} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                  </Link>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         </section>
