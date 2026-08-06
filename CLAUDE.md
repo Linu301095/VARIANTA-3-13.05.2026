@@ -237,11 +237,18 @@ niciun conținut, doar s-a marcat unde începe și unde se termină fiecare.
    și „Urcă la partea clienților ↑". La fel, bara de sub hero începe cu „Pagina are două părți."
 2. **Iconița zonei client e `User`, nu `PawPrint`.** Clientul e om; animalul e opțional. Foarfeca
    a rămas la saloane.
-3. **Zona clienților are acum două sub-ramuri explicite**, care spun regula din D1 pe față:
-   „Fără animal în cont" (vezi doar înfrumusețare) și „Cu animal în cont" (plus grooming și
-   comutatorul). Sub ele: „Nu trebuie să alegi acum. Începi fără animal și îl adaugi oricând."
-   Înainte, cardurile erau „Pentru animalul tău" / „Pentru tine" — descriau serviciile, nu tipul
-   de cont, deci nu explicau de ce unii clienți nu văd grooming.
+3. **Fiecare zonă are acum două sub-ramuri, simetric.**
+   - **Clienți:** „Cont fără animal → Saloane de înfrumusețare" și „Cont cu animal →
+     Înfrumusețare și grooming". Spun regula din D1 pe față: de ce unii clienți nu văd grooming.
+     Dedesubt: „Nu trebuie să alegi acum. Începi fără animal și îl adaugi oricând."
+   - **Saloane:** „Salon de înfrumusețare → Frizerie, coafor, unghii, cosmetică" și „Salon de
+     grooming → Tuns, îmbăiere, îngrijire animale", cu diferențele reale din `lib/planuri.ts`
+     (preț pe serviciu vs pe talie, specialiști vs groomeri, recomandări după vizită vs fișă
+     post-grooming, specii acceptate). Sub ele, grila de 6 funcții comune, introdusă de
+     „Restul e la fel, indiferent ce alegi".
+4. **Titlurile descriu oferta, nu comportamentul omului.** Prima variantă avea „Vii doar pentru
+   tine" / „Vii și cu animalul" — respinse. La fel, „ce primești" a fost scos din banda
+   saloanelor.
 
 **Nu s-a pierdut nimic din SEO** — dimpotrivă, Home a urcat de la 729 la 823 de cuvinte.
 

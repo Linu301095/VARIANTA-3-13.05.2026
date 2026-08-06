@@ -254,9 +254,9 @@ export default function HomePage() {
             {/* Cele două feluri de cont de client — regula din dashboard, spusă pe față. */}
             <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><User size={14} strokeWidth={2.2} /> Vii doar pentru tine</span>
-                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Fără animal în cont</h3>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Vezi doar saloanele de înfrumusețare. Nimic despre animale nu îți apare în cale.</p>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><User size={14} strokeWidth={2.2} /> Cont fără animal</span>
+                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Saloane de înfrumusețare</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Frizerie, coafor, manichiură și cosmetică. Nu ai nevoie de un animal ca să rezervi.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Frizerii, coafor, manichiură, cosmetică</b> din orașul tău</>)}
                   {chk(<>Rezervi cu <b style={{ color: C.text, fontWeight: 800 }}>specialistul preferat</b> și ora aleasă</>)}
@@ -267,9 +267,9 @@ export default function HomePage() {
               </div>
 
               <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><PawPrint size={14} strokeWidth={2} /> Vii și cu animalul</span>
-                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Cu animal în cont</h3>
-                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Ai tot ce e în varianta fără animal, plus grooming — și un comutator între cele două lumi.</p>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><PawPrint size={14} strokeWidth={2} /> Cont cu animal</span>
+                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Înfrumusețare și grooming</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Adaugi un animal în cont și primești ambele lumi, cu un comutator între ele.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
                   {chk(<>Comutator <b style={{ color: C.text, fontWeight: 800 }}>„Pentru tine" / „Pentru animalul tău"</b></>)}
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Saloane de grooming</b>, cu preț exact pe talia animalului</>)}
@@ -301,7 +301,7 @@ export default function HomePage() {
               id: "pentru-saloane",
               eticheta: "Zona 2 din 2 · pentru saloane",
               titlu: "De aici încolo vorbim cu tine, salonul",
-              sub: "Ce primești, ce fac asistenții AI și cât costă. Înfrumusețare sau grooming, la fel.",
+              sub: "Agendă, statistici, asistenți AI și prețuri — pentru salon de înfrumusețare sau de grooming.",
               Icon: Scissors,
               sariLa: "#pentru-clienti",
               sariText: "Urcă la partea clienților ↑",
@@ -310,7 +310,43 @@ export default function HomePage() {
               <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconCrestere size={60} /></div>
               <div data-reveal style={eyebrow}>PENTRU SALOANE · PARTENERI</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Transformă-ți salonul într-o afacere digitală</h2>
-              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>Mai multe programări onorate, mai puțin timp pierdut la telefon. Agendă digitală, statistici reale și 4 asistenți AI care îți aduc clienții înapoi — trial gratuit, fără comision.</p>
+              <p data-reveal style={{ fontSize: 16, color: C.muted, fontWeight: 500, lineHeight: 1.7, marginTop: 12 }}>
+                Alegi verticala la înregistrare, iar aplicația se potrivește singură — denumirile echipei,
+                felul în care pui prețul și rapoartele vorbesc limba salonului tău.
+              </p>
+            </div>
+
+            {/* Cele două verticale — un salon alege una, iar restul aplicației se adaptează. */}
+            <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 34 }}>
+              <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><Scissors size={14} strokeWidth={2} /> Salon de înfrumusețare</span>
+                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Frizerie, coafor, unghii, cosmetică</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Aplicația vorbește despre specialiști și servicii, fără nimic legat de animale.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț și durată pe serviciu</b>, simplu de întreținut</>)}
+                  {chk(<>Echipă de <b style={{ color: C.text, fontWeight: 800 }}>specialiști</b>, fiecare cu orarul lui</>)}
+                  {chk(<>Clientul <b style={{ color: C.text, fontWeight: 800 }}>își alege specialistul</b> la rezervare</>)}
+                  {chk(<>Asistent AI: <b style={{ color: C.text, fontWeight: 800 }}>recomandări trimise după vizită</b></>)}
+                  {chk(<>Rapoarte pe servicii, ore de vârf și clienți fideli</>)}
+                </div>
+              </div>
+
+              <div data-reveal className="ch-card" style={{ ...card, padding: 28 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 800, color: C.orangeText, background: C.orangeSoft, padding: "6px 12px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 0.5 }}><PawPrint size={14} strokeWidth={2} /> Salon de grooming</span>
+                <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: C.text, marginTop: 14 }}>Tuns, îmbăiere, îngrijire animale</h3>
+                <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginTop: 8, marginBottom: 16 }}>Aplicația știe de talii, specii și fișe de îngrijire — lucruri care la înfrumusețare nu apar.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț și durată pe talie</b> — mică, medie, mare</>)}
+                  {chk(<>Echipă de <b style={{ color: C.text, fontWeight: 800 }}>groomeri</b>, fiecare cu orarul lui</>)}
+                  {chk(<>Alegi <b style={{ color: C.text, fontWeight: 800 }}>cu ce specii lucrezi</b>, iar clientul vede asta</>)}
+                  {chk(<>Asistent AI: <b style={{ color: C.text, fontWeight: 800 }}>fișă de îngrijire post-grooming</b></>)}
+                  {chk(<>Istoric per animal, cu rasă, talie și alergii</>)}
+                </div>
+              </div>
+            </div>
+
+            <div data-reveal style={{ textAlign: "center", fontSize: 13.5, fontWeight: 800, color: C.text2, marginBottom: 20 }}>
+              Restul e la fel, indiferent ce alegi:
             </div>
             <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
               {[
