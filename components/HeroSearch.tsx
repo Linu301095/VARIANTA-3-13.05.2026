@@ -22,12 +22,16 @@ export default function HeroSearch() {
   const grooming = mod === "grooming";
 
   function cauta() {
-    // Căutarea reală vine ulterior; deocamdată ducem clientul spre înregistrare/conectare.
+    // Căutarea reală se face în dashboard, deci mai întâi trebuie cont.
+    // Ducem omul la conectare, nu la înregistrare: cei mai mulți dintre cei
+    // care caută au deja cont, iar cine nu are găsește acolo „Nu ai cont?
+    // Înregistrează-te gratuit". Ce a scris în căutare merge mai departe în
+    // adresă, ca să nu se piardă când vom lega căutarea reală.
     const params = new URLSearchParams();
     params.set("mod", mod);
     if (q.trim()) params.set("q", q.trim());
     if (oras.trim()) params.set("oras", oras.trim());
-    router.push(`/register?${params.toString()}`);
+    router.push(`/login?${params.toString()}`);
   }
 
   const tabBase: React.CSSProperties = {
