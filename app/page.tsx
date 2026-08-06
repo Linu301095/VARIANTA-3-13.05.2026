@@ -326,7 +326,7 @@ export default function HomePage() {
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț și durată pe serviciu</b>, simplu de întreținut</>)}
                   {chk(<>Echipă de <b style={{ color: C.text, fontWeight: 800 }}>specialiști</b>, fiecare cu orarul lui</>)}
                   {chk(<>Clientul <b style={{ color: C.text, fontWeight: 800 }}>își alege specialistul</b> la rezervare</>)}
-                  {chk(<>Asistent AI: <b style={{ color: C.text, fontWeight: 800 }}>recomandări trimise după vizită</b></>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Agenți AI</b> incluși, indiferent de plan</>)}
                   {chk(<>Rapoarte pe servicii, ore de vârf și clienți fideli</>)}
                 </div>
               </div>
@@ -339,7 +339,7 @@ export default function HomePage() {
                   {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Preț și durată pe talie</b> — mică, medie, mare</>)}
                   {chk(<>Echipă de <b style={{ color: C.text, fontWeight: 800 }}>groomeri</b>, fiecare cu orarul lui</>)}
                   {chk(<>Alegi <b style={{ color: C.text, fontWeight: 800 }}>cu ce specii lucrezi</b>, iar clientul vede asta</>)}
-                  {chk(<>Asistent AI: <b style={{ color: C.text, fontWeight: 800 }}>fișă de îngrijire post-grooming</b></>)}
+                  {chk(<><b style={{ color: C.text, fontWeight: 800 }}>Agenți AI</b> incluși, indiferent de plan</>)}
                   {chk(<>Istoric per animal, cu rasă, talie și alergii</>)}
                 </div>
               </div>
