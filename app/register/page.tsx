@@ -362,7 +362,8 @@ export default function RegisterPage() {
 
               <button onClick={handleSubmit} disabled={loading} className="ch-cta"
                 style={{ padding: "15px 24px", borderRadius: 50, border: "none", background: loading ? "#FFB07A" : C.orange, color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading ? "default" : "pointer", boxShadow: "0 8px 24px rgba(255,107,0,.32)", fontFamily: "Nunito, sans-serif", marginTop: 3, transition: "transform .18s, box-shadow .18s, background .2s" }}>
-                {loading ? "Se procesează..." : "Creează cont gratuit →"}
+                {/* Clientul chiar are cont gratuit pe veci; salonul are trial, apoi plan. */}
+                {loading ? "Se procesează..." : tip === "salon" ? "Creează cont și pornește trialul →" : "Creează cont gratuit →"}
               </button>
 
               {tip === "salon" && (

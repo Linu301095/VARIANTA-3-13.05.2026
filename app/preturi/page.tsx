@@ -95,7 +95,7 @@ export default function Preturi() {
           <Logo h={54} priority />
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
             <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "var(--pub-surface)", border: "1.5px solid var(--pub-line2)", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
-            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
+            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Creează cont</Link>
           </nav>
         </div>
       </header>
@@ -205,7 +205,7 @@ export default function Preturi() {
                     </div>
 
                     <Link href="/register" style={{ ...(p.recomandat ? btnPrimary : btnSecondary), width: "100%", marginTop: 22 }}>
-                      Începe gratuit →
+                      Începe trialul gratuit →
                     </Link>
                   </div>
                 );
@@ -277,7 +277,7 @@ export default function Preturi() {
                 Îți configurezi salonul în câteva minute și primești programări online din prima zi. Fără card, fără comision.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Înscrie-ți salonul gratuit →</Link>
+                <Link href="/register" style={btnPrimary}>Începe trialul gratuit →</Link>
                 <Link href="/cum-functioneaza#parteneri" style={btnSecondary}>Vezi cum funcționează</Link>
               </div>
             </div>

@@ -122,7 +122,7 @@ export default function LoginPage() {
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pub-surface)", borderBottom: `1px solid ${C.line}`, height: 66 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 20px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Logo h={44} priority />
-          <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Înregistrare gratuită</Link>
+          <Link href="/register" className="hdr-btn" style={{ padding: "9px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>Creează cont</Link>
         </div>
       </header>
 
@@ -210,7 +210,7 @@ export default function LoginPage() {
 
             <div style={{ textAlign: "center", marginTop: 24, paddingTop: 18, borderTop: `1px solid ${C.line}` }}>
               <span style={{ fontSize: 13.5, color: C.muted }}>Nu ai cont? </span>
-              <Link href="/register" style={{ fontSize: 13.5, fontWeight: 800, color: C.orange, textDecoration: "none" }}>Înregistrează-te gratuit</Link>
+              <Link href="/register" style={{ fontSize: 13.5, fontWeight: 800, color: C.orange, textDecoration: "none" }}>Creează unul acum</Link>
             </div>
           </div>
         </div>

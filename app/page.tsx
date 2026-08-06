@@ -121,7 +121,7 @@ export default function HomePage() {
           <Logo h={54} priority />
           <nav className="hdr-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
             <Link href="/login" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: "var(--pub-surface)", border: "1.5px solid var(--pub-line2)", fontSize: 14, fontWeight: 800, color: C.text, textDecoration: "none", boxShadow: "0 2px 8px rgba(120,90,60,.08)" }}>Conectare</Link>
-            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Înregistrare gratuită</Link>
+            <Link href="/register" className="hdr-btn" style={{ padding: "10px 20px", borderRadius: 50, background: C.orange, fontSize: 14, fontWeight: 800, color: "#fff", textDecoration: "none", boxShadow: "0 6px 18px rgba(255,107,0,.32)" }}>Creează cont</Link>
           </nav>
         </div>
       </header>
@@ -146,7 +146,7 @@ export default function HomePage() {
             <HeroSearch />
 
             <div className="ch-hero-anim" style={{ marginTop: 18, fontSize: 13.5, fontWeight: 700, animationDelay: ".64s" }}>
-              <span style={{ color: C.muted }}>Ai un salon? <Link href="/register" style={{ color: C.orangeText, fontWeight: 800, textDecoration: "none" }}>Înscrie-te gratuit →</Link></span>
+              <span style={{ color: C.muted }}>Ai un salon? <Link href="/register" style={{ color: C.orangeText, fontWeight: 800, textDecoration: "none" }}>Începe trialul gratuit →</Link></span>
             </div>
 
             {/* doua carduri de public */}
@@ -167,7 +167,7 @@ export default function HomePage() {
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Check size={15} strokeWidth={2.6} /> Gratuit pentru clienți</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără cost, fără card — plătești doar serviciul, la salon</div>
                 </div>
-                <Link href="/register" style={btnPrimary}>Caută un salon →</Link>
+                <Link href="/register" style={btnPrimary}>Creează cont gratuit →</Link>
               </div>
               <div className="ch-card" style={{ ...card, display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
@@ -185,7 +185,7 @@ export default function HomePage() {
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, display: "flex", alignItems: "center", gap: 6 }}><Gift size={14} strokeWidth={2} /> Trial gratuit</div>
                   <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 2 }}>Fără card · 0% comision · anulezi oricând</div>
                 </div>
-                <Link href="/register" style={btnPrimary}>Înscrie-te gratuit →</Link>
+                <Link href="/register" style={btnPrimary}>Începe trialul gratuit →</Link>
               </div>
             </div>
 
@@ -445,7 +445,7 @@ export default function HomePage() {
                 Rezervă primul serviciu în câteva minute, sau înscrie-ți salonul și începe cu trial gratuit.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 22, flexWrap: "wrap" }}>
-                <Link href="/register" style={btnPrimary}>Caută un salon</Link>
+                <Link href="/register" style={btnPrimary}>Creează cont gratuit</Link>
                 <Link href="/register" style={btnSecondary}>Înscrie-ți salonul →</Link>
               </div>
             </div>
