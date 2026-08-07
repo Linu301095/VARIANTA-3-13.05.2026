@@ -482,6 +482,29 @@ label:hover {
     transform: translateY(calc(var(--iesire, 0) * -34px)) scale(calc(1 - var(--iesire, 0) * .035));
     will-change: opacity, transform;
   }
+
+  /*
+   * Pe telefon, mai puțină mișcare.
+   *
+   * Acolo cardurile se așază pe verticală, unul sub altul. Intrările alternate
+   * stânga/dreapta, rotația și arcul de la final — care pe desktop dau viață
+   * unui rând de trei carduri — fac blocurile să pară că țopăie când derulezi.
+   * Rămâne doar o ridicare scurtă și dreaptă. Ieșirea nu mai deplasează
+   * secțiunea deloc și se estompează mai blând.
+   */
+  @media (max-width: 760px) {
+    [data-reveal],
+    [data-reveal]:nth-child(even),
+    [data-reveal]:nth-child(odd),
+    [data-reveal]:first-child {
+      transform: translateY(16px);
+      transition: opacity .42s ease-out, transform .42s cubic-bezier(.2,.7,.2,1);
+    }
+    .ch-bloc {
+      transform: none;
+      opacity: calc(1 - var(--iesire, 0) * .55);
+    }
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { opacity: 1 !important; transform: none !important; }

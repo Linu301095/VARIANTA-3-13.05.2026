@@ -68,9 +68,12 @@ export default function ScrollReveal() {
     const inregistreaza = (el: HTMLElement) => {
       if (observate.has(el) || el.classList.contains("is-revealed")) return;
       observate.add(el);
-      // cascadă: decalaj după poziția în părinte
+      // Cascadă: decalaj după poziția în părinte. Pe telefon cardurile stau unul
+      // sub altul, deci un decalaj mare le-ar face să apară pe rând, vizibil —
+      // acolo îl înjumătățim.
       const idx = Array.prototype.indexOf.call(el.parentElement?.children ?? [], el);
-      el.style.transitionDelay = `${Math.min(Math.max(idx, 0), 6) * 65}ms`;
+      const pas = window.innerWidth <= 760 ? 32 : 65;
+      el.style.transitionDelay = `${Math.min(Math.max(idx, 0), 6) * pas}ms`;
       io.observe(el);
     };
 
