@@ -455,6 +455,14 @@ label:hover {
   [data-reveal].is-revealed:nth-child(odd),
   [data-reveal].is-revealed:first-child { opacity: 1; transform: none; }
 
+  /*
+   * Iconițele de secțiune joacă un număr limitat de reprize și apoi se opresc
+   * (vezi `components/SectionIcons.tsx`). Aici le ținem oprite până ajung în
+   * ecran, altfel una din josul paginii și-ar consuma reprizele înainte s-o
+   * vadă cineva — și ar părea că nu se mișcă niciodată.
+   */
+  [data-reveal]:not(.is-revealed) svg * { animation-play-state: paused !important; }
+
   .ch-hero-anim { opacity: 0; animation: ch-riseIn .85s cubic-bezier(.16,.8,.24,1) both; }
   .ch-orb { animation: ch-floatA 14s ease-in-out infinite; }
   .ch-orb.b { animation: ch-floatB 18s ease-in-out infinite; }

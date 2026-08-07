@@ -94,9 +94,9 @@ export function IconHub({ size = 60 }: { size?: number }) {
         @keyframes chHubHalo { 0%{opacity:.55;transform:scale(1)} 100%{opacity:0;transform:scale(1.9)} }
         .ch-hub-halo{transform-origin:32px 34px}
         @media (prefers-reduced-motion: no-preference){
-          .ch-hub-node{animation:chHubNode 2.6s ease-in-out infinite}
-          .ch-hub-ray{animation:chHubRay 2.6s ease-in-out infinite}
-          .ch-hub-halo{animation:chHubHalo 2.6s ease-out infinite}
+          .ch-hub-node{animation:chHubNode 2.6s ease-in-out 3}
+          .ch-hub-ray{animation:chHubRay 2.6s ease-in-out 3}
+          .ch-hub-halo{animation:chHubHalo 2.6s ease-out 3}
         }
       `}</style>
     </span>
@@ -121,11 +121,11 @@ export function IconPlanuri({ size = 60 }: { size?: number }) {
       </svg>
       <style>{`
         @keyframes chPlanLift { 0%,100%{transform:translateY(0)} 45%{transform:translateY(-4px)} }
-        @keyframes chPlanCheck { 0%,20%{stroke-dashoffset:14} 50%,88%{stroke-dashoffset:0} 100%{stroke-dashoffset:14} }
+        @keyframes chPlanCheck { from{stroke-dashoffset:14} to{stroke-dashoffset:0} }
         .ch-plan-check{stroke-dasharray:14;stroke-dashoffset:0}
         @media (prefers-reduced-motion: no-preference){
-          .ch-plan-top{animation:chPlanLift 3s ease-in-out infinite}
-          .ch-plan-check{animation:chPlanCheck 3s ease-in-out infinite}
+          .ch-plan-top{animation:chPlanLift 3s ease-in-out 2}
+          .ch-plan-check{animation:chPlanCheck .7s ease-in-out .35s both}
         }
       `}</style>
     </span>
@@ -150,13 +150,13 @@ export function IconIntersectie({ size = 60 }: { size?: number }) {
         </g>
       </svg>
       <style>{`
-        @keyframes chVennFill { 0%,18%{opacity:0} 45%,82%{opacity:1} 100%{opacity:0} }
+        @keyframes chVennFill { from{opacity:0} to{opacity:1} }
         @keyframes chVennPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
         .ch-venn-fill{opacity:0}
         @media (prefers-reduced-motion: no-preference){
-          .ch-venn-fill{animation:chVennFill 3.4s ease-in-out infinite}
-          .ch-venn-a{animation:chVennPulse 3.4s ease-in-out infinite}
-          .ch-venn-b{animation:chVennPulse 3.4s ease-in-out infinite .3s}
+          .ch-venn-fill{animation:chVennFill 1s ease-in-out both}
+          .ch-venn-a{animation:chVennPulse 3.4s ease-in-out 2}
+          .ch-venn-b{animation:chVennPulse 3.4s ease-in-out .3s 2}
         }
         @media (prefers-reduced-motion: reduce){ .ch-venn-fill{opacity:1} }
       `}</style>
@@ -179,9 +179,9 @@ export function SparkleAnim({ size = 38, glow = false }: { size?: number; glow?:
         @keyframes chSpTwinkle { 0%,100%{opacity:.35;transform:scale(.75)} 50%{opacity:1;transform:scale(1.15)} }
         .ch-sp2{opacity:.75} .ch-sp3{opacity:.6}
         @media (prefers-reduced-motion: no-preference){
-          .ch-sp1{animation:chSpMain 3s ease-in-out infinite}
-          .ch-sp2{animation:chSpTwinkle 2.2s ease-in-out infinite}
-          .ch-sp3{animation:chSpTwinkle 2.2s ease-in-out infinite 1.1s}
+          .ch-sp1{animation:chSpMain 3s ease-in-out 3}
+          .ch-sp2{animation:chSpTwinkle 2.2s ease-in-out 4}
+          .ch-sp3{animation:chSpTwinkle 2.2s ease-in-out 1.1s 4}
         }
       `}</style>
     </span>
@@ -224,8 +224,8 @@ export function IconClienti({ size = 60 }: { size?: number }) {
         @keyframes chDuoFade { 0%,100%{opacity:.4} 50%{opacity:1} }
         .ch-duo-a, .ch-duo-b { opacity: 1; }
         @media (prefers-reduced-motion: no-preference){
-          .ch-duo-a{animation:chDuoFade 3.2s ease-in-out infinite}
-          .ch-duo-b{animation:chDuoFade 3.2s ease-in-out infinite reverse}
+          .ch-duo-a{animation:chDuoFade 3.2s ease-in-out 3}
+          .ch-duo-b{animation:chDuoFade 3.2s ease-in-out 3 reverse}
         }
       `}</style>
     </span>
@@ -261,9 +261,9 @@ export function IconFoarfeca({ size = 60 }: { size?: number }) {
         @keyframes chSnip { 0%,60%{opacity:0;transform:scale(.6)} 72%{opacity:.9;transform:scale(1)} 100%{opacity:0;transform:scale(1.15)} }
         .ch-snip{transform-origin:32px 16px}
         @media (prefers-reduced-motion: no-preference){
-          .ch-blade-1{animation:chBlade1 3.4s ease-in-out infinite}
-          .ch-blade-2{animation:chBlade2 3.4s ease-in-out infinite}
-          .ch-snip{animation:chSnip 3.4s ease-out infinite}
+          .ch-blade-1{animation:chBlade1 3.4s ease-in-out 2}
+          .ch-blade-2{animation:chBlade2 3.4s ease-in-out 2}
+          .ch-snip{animation:chSnip 3.4s ease-out 2}
         }
         @media (prefers-reduced-motion: reduce){ .ch-snip{opacity:0} }
       `}</style>
@@ -287,13 +287,13 @@ export function IconRezervare({ size = 56 }: { size?: number }) {
         <circle className="ch-cal-pulse" cx="32" cy="33" r="15" stroke={ORANGE} strokeWidth="1.6" opacity="0" />
       </svg>
       <style>{`
-        @keyframes chCalDraw { 0%{stroke-dashoffset:26} 55%{stroke-dashoffset:0} 92%{stroke-dashoffset:0} 100%{stroke-dashoffset:26} }
-        @keyframes chCalPulse { 0%,55%{opacity:0;transform:scale(.72)} 70%{opacity:.5;transform:scale(1)} 100%{opacity:0;transform:scale(1.25)} }
+        @keyframes chCalDraw { from{stroke-dashoffset:26} to{stroke-dashoffset:0} }
+        @keyframes chCalPulse { 0%{opacity:0;transform:scale(.72)} 45%{opacity:.5;transform:scale(1)} 100%{opacity:0;transform:scale(1.25)} }
         .ch-cal-check{stroke-dasharray:26;stroke-dashoffset:26}
         .ch-cal-pulse{transform-origin:32px 33px}
         @media (prefers-reduced-motion: no-preference){
-          .ch-cal-check{animation:chCalDraw 3.6s ease-in-out infinite}
-          .ch-cal-pulse{animation:chCalPulse 3.6s ease-out infinite}
+          .ch-cal-check{animation:chCalDraw .85s ease-in-out both}
+          .ch-cal-pulse{animation:chCalPulse 1.1s ease-out .5s both}
         }
         @media (prefers-reduced-motion: reduce){ .ch-cal-check{stroke-dashoffset:0} }
       `}</style>
@@ -318,17 +318,17 @@ export function IconCrestere({ size = 56 }: { size?: number }) {
         <path className="ch-trend-tip" d="M38.5 17H45v6.5" stroke={ORANGE} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <style>{`
-        @keyframes chBarGrow { 0%{transform:scaleY(0)} 45%{transform:scaleY(1)} 88%{transform:scaleY(1)} 100%{transform:scaleY(0)} }
-        @keyframes chTrendDraw { 0%{stroke-dashoffset:40} 50%{stroke-dashoffset:0} 90%{stroke-dashoffset:0} 100%{stroke-dashoffset:40} }
-        @keyframes chTipIn { 0%,42%{opacity:0} 58%{opacity:1} 92%{opacity:1} 100%{opacity:0} }
+        @keyframes chBarGrow { from{transform:scaleY(0)} to{transform:scaleY(1)} }
+        @keyframes chTrendDraw { from{stroke-dashoffset:40} to{stroke-dashoffset:0} }
+        @keyframes chTipIn { from{opacity:0} to{opacity:1} }
         .ch-bar{transform-origin:50% 50px}
         .ch-trend{stroke-dasharray:40;stroke-dashoffset:0}
         @media (prefers-reduced-motion: no-preference){
-          .ch-bar{animation:chBarGrow 3.8s ease-in-out infinite}
+          .ch-bar{animation:chBarGrow .8s cubic-bezier(.2,.8,.3,1) both}
           .ch-bar.b2{animation-delay:.12s}
           .ch-bar.b3{animation-delay:.24s}
-          .ch-trend{animation:chTrendDraw 3.8s ease-in-out infinite}
-          .ch-trend-tip{animation:chTipIn 3.8s ease-in-out infinite}
+          .ch-trend{animation:chTrendDraw 1s ease-in-out .3s both}
+          .ch-trend-tip{animation:chTipIn .4s ease-out 1.2s both}
         }
       `}</style>
     </span>
