@@ -174,7 +174,7 @@ export default function HomePage() {
               <div className="ch-card" style={{ ...card, display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                   {iconBox(Scissors)}
-                  <div><div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Ai un salon</div><h2 style={{ fontSize: 19, fontWeight: 900, marginTop: 2, color: C.text }}>Umple-ți agenda</h2></div>
+                  <div><div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.5, textTransform: "uppercase" }}>Ai un salon</div><h2 style={{ fontSize: 19, fontWeight: 900, marginTop: 2, color: C.text }}>Primește și confirmă</h2></div>
                 </div>
                 <p style={{ fontSize: 13.5, color: C.muted, fontWeight: 600, lineHeight: 1.6, marginBottom: 16, minHeight: 63 }}>Înfrumusețare sau grooming — programări online, agendă digitală și instrumente care îți fidelizează clienții.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
