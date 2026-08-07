@@ -4,7 +4,9 @@
 
 html, body {
   max-width: 100%;
-  overflow-x: hidden;
+  /* `clip` taie la fel ca `hidden`, dar NU face din html un container de
+     derulare — altfel `position: sticky` din antete nu mai funcționează. */
+  overflow-x: clip;
 }
 
 html {
