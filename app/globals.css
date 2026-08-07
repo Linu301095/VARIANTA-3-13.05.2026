@@ -480,6 +480,27 @@ label:hover {
   .ch-hero-anim { opacity: 1 !important; }
   .ch-bloc { opacity: 1 !important; transform: none !important; }
 }
+/*
+ * ---------- Trecerea dintre secțiuni, pe paginile publice ----------
+ *
+ * O linie subțire portocalie la mijloc, care se stinge spre margini. Marchează
+ * granița fără să taie pagina în bucăți — portocaliul rămâne culoarea lucrurilor
+ * pe care se apasă, nu a decorului.
+ *
+ * Se pune pe orice `<section>` care urmează după alta, deci prima secțiune
+ * (hero-ul, cu orbii lui poziționați absolut) rămâne neatinsă. Dashboardurile
+ * nu folosesc `<section>`, așa că regula nu ajunge la ele.
+ */
+main > section + section { position: relative; }
+main > section + section::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--pub-orange) 50%, transparent 100%);
+  pointer-events: none;
+}
+
 /* ---------- Alegerea drumului din capul paginii principale ---------- */
 .ch-fork {
   display: flex; align-items: stretch;
