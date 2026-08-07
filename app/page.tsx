@@ -395,15 +395,13 @@ export default function HomePage() {
                 <Link href="/instrumente-ai" style={btnPrimary}><Sparkles size={16} strokeWidth={2.4} /> Descoperă instrumentele AI →</Link>
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* PLANURI */}
-        <section style={{ background: C.surface2, padding: "64px 20px" }}>
-          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto" }}>
+            {/* Planurile — parte din aceeași zonă, nu secțiune separată. Cine a
+                citit ce primește vede imediat și cât costă, fără altă graniță. */}
+            <div style={{ height: 1, background: "var(--pub-line)", maxWidth: 560, margin: "56px auto 0" }} />
+            <div style={{ textAlign: "center", maxWidth: 700, margin: "48px auto 0" }}>
               <div data-reveal style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><IconPlanuri size={60} /></div>
-              <div data-reveal style={eyebrow}>PLANURI · TOT PARTEA SALOANELOR</div>
+              <div data-reveal style={eyebrow}>PLANURI</div>
               <h2 data-reveal style={{ fontSize: "clamp(26px,3.4vw,38px)", fontWeight: 900, letterSpacing: -0.8, color: C.text, marginTop: 12 }}>Acces complet la platformă, de la primul plan</h2>
               <p data-reveal style={{ fontSize: 16.5, color: C.muted, fontWeight: 500, lineHeight: 1.75, marginTop: 14 }}>
                 Fiecare plan include agenda digitală, programările online și agenții AI. Diferența e mărimea echipei
