@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useMemo, useRef, useContext, createContext } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
+import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
@@ -2249,7 +2250,7 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             {/* On mobile with sub-tab or onBack active, hide logo and show back button instead */}
             {!(isMobile && (tab !== "saloane" || onBack)) && (
-              <Image src={theme === "dark" ? "/logo-dark.png" : "/logo.png"} alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain" }} priority />
+              <LogoSemn size={40} tema={theme} priority />
             )}
             {/* Comutatorul intre cele doua lumi — apare doar daca omul are un animal in cont */}
             {areAnimal && !onBack && tab === "saloane" && (

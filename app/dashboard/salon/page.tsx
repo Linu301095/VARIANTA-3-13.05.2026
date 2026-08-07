@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect, useMemo, useContext, createContext, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
+import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { stareTrial, zileText, ZILE_AVERTISMENT } from "../../../lib/trial";
 import { numePlan } from "../../../lib/planuri";
@@ -2009,7 +2010,7 @@ export default function DashboardSalon() {
             {/* Left: logo + name OR back button when in sub-tab */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexShrink: 0 }}>
               {!(isMobile && isSubTab) && (
-                <Image src={theme === "dark" ? "/logo-dark.png" : "/logo.png"} alt="CalyHub" width={110} height={38} style={{ height: 38, width: "auto", objectFit: "contain", flexShrink: 0 }} priority />
+                <LogoSemn size={40} tema={theme} priority />
               )}
               {!isMobile && !isSubTab && (
                 <>

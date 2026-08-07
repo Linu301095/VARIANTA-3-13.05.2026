@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     description: "Ghiduri, întrebări frecvente și contact direct pentru saloanele partenere CalyHub.",
     url: "/suport-parteneri",
     type: "website",
+    // fără asta, pagina pierde imaginea de share definită în layout
+    images: ["/og-image.png"],
   },
 };
 

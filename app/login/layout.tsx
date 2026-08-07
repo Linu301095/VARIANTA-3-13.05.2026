@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     description: "Intră în contul tău CalyHub: programările tale sau agenda salonului.",
     url: "/login",
     type: "website",
+    // fără asta, pagina pierde imaginea de share definită în layout
+    images: ["/og-image.png"],
   },
   robots: { index: true, follow: true },
 };

@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     description: "Patru asistenți AI care lucrează pe datele reale ale salonului tău, incluși în abonament.",
     url: "/instrumente-ai",
     type: "website",
+    // fără asta, pagina pierde imaginea de share definită în layout
+    images: ["/og-image.png"],
   },
 };
 

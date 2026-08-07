@@ -20,6 +20,8 @@ export const metadata: Metadata = {
       "Trei planuri pentru saloane de înfrumusețare și grooming. O subscripție pe salon, nu per angajat. 0% comision, asistenți AI incluși, trial gratuit la început.",
     url: "/preturi",
     type: "website",
+    // fără asta, pagina pierde imaginea de share definită în layout
+    images: ["/og-image.png"],
   },
 };
 

@@ -26,6 +26,8 @@ export const metadata: Metadata = {
       "Saloane de înfrumusețare pentru oameni și saloane de grooming pentru animale. Programări online 24/7, gratuit pentru clienți; agendă digitală și AI pentru saloane.",
     url: "/",
     type: "website",
+    // fără asta, pagina pierde imaginea de share definită în layout
+    images: ["/og-image.png"],
   },
 };
 

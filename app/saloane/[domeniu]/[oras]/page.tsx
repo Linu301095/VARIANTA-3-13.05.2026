@@ -150,7 +150,7 @@ export async function generateMetadata({ params }: { params: Promise<{ domeniu: 
     description,
     keywords: dom.keywords(data.nume),
     alternates: { canonical: url },
-    openGraph: { title, description, url, type: "website" },
+    openGraph: { title, description, url, type: "website", images: ["/og-image.png"] },
   };
 }
 

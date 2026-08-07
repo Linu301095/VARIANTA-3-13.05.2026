@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { Lock, Eye, EyeOff, AlertTriangle, ArrowRight } from "lucide-react";
 
@@ -52,7 +53,7 @@ export default function AdminLogin() {
       <div style={{ width: "100%", maxWidth: 420, background: "#111", border: "1px solid #2A2A2A", borderRadius: 24, padding: "40px 32px", boxShadow: "0 30px 80px rgba(0,0,0,.5)" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
           <div style={{ marginBottom: 14 }}>
-            <Image src="/logo-dark.png" alt="CalyHub" width={56} height={56} style={{ height: 56, width: "auto", objectFit: "contain" }} priority />
+            <LogoSemn size={58} tema="dark" priority />
           </div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#FF6B00", color: "#fff", padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>
             <Lock size={11} strokeWidth={2.6} /> Zonă restricționată

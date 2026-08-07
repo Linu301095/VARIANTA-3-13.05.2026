@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     description: "Un cont pentru programările tale sau pentru salonul tău — înfrumusețare și grooming.",
     url: "/register",
     type: "website",
+    // fără asta, pagina pierde imaginea de share definită în layout
+    images: ["/og-image.png"],
   },
   robots: { index: true, follow: true },
 };

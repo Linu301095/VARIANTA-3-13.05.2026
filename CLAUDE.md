@@ -185,6 +185,34 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 - Footer cu varianta corectă pe fiecare tip de pagină
 - Limba română pentru tot conținutul UI
 
+## Identitatea vizuală — trei piese + ansamblul (05.08.2026)
+
+| Piesă | Fișiere | Unde se folosește |
+|---|---|---|
+| **Logo** (chenar + siluete) | `logo-semn.png` + `-dark` | dashboard client, dashboard salon, admin, favicon |
+| **Denumirea** („CalyHub") | `logo-nume.png` + `-dark` | antetul paginilor publice |
+| **Sloganul** | `logo-slogan.png` + `-dark` | antetul paginilor publice (peste 560px) |
+| **Ansamblul** | `logo.png` + `-dark` | imaginea de share, print, oriunde e nevoie de marca întreagă |
+
+Numele și sloganul sunt **decupate din `logo.png`**, deci literele sunt exact cele din logo.
+Chenarul e desenat ca vector (în `Logo.tsx` și `LogoSemn.tsx`), ca să se coloreze după temă.
+
+**Componente:** `components/Logo.tsx` = toate trei (pagini publice) · `components/LogoSemn.tsx` =
+doar logo-ul (dashboarduri, admin). La 38px, badge-ul întreg avea numele de ~10px și sloganul de
+~4px — o mâzgăleală în colț; de aceea acolo folosim doar logo-ul.
+
+**Iconițe generate din logo** (script cu PIL, chenarul „ars" în imagine fiindcă un fișier de
+iconiță nu poate conține vector adaptabil): `favicon.ico` (16/32/48), `apple-touch-icon.png` (180,
+fundal alb — iOS nu ține transparența), `icon.png` (512, Android/PWA).
+
+**⚠️ Imaginea de share (`og-image.png`, 1200×630, fundal alb).** Apare când cineva trimite linkul
+pe WhatsApp, Facebook, LinkedIn, Telegram, iMessage. Înainte era declarată în `layout.tsx` dar
+**fișierul nu exista** — la fel `favicon.ico` și `apple-touch-icon.png`, toate trei dădeau 404.
+
+**Capcana Next.js:** o pagină care își definește propriul `openGraph` îl **înlocuiește** pe cel din
+layout, imaginea inclusă. Zece pagini făceau asta și pierdeau imaginea. Fiecare are acum explicit
+`images: ["/og-image.png"]`. **Orice pagină publică nouă cu `openGraph` propriu trebuie s-o adauge.**
+
 ## Logo (OFICIAL — rămâne acesta)
 
 - Fișierul `public/logo.png` este logo-ul oficial al aplicației CalyHub și **rămâne acesta**.

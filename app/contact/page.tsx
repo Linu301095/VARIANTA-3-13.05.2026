@@ -17,6 +17,8 @@ export const metadata: Metadata = {
     description: "Cum ne contactezi: suport clienți, parteneriate saloane, aspecte legale.",
     url: "/contact",
     type: "website",
+    // fără asta, pagina pierde imaginea de share definită în layout
+    images: ["/og-image.png"],
   },
   keywords: ["contact CalyHub", "suport CalyHub", "parteneri CalyHub", "adresa CalyHub", "email CalyHub"],
   robots: { index: true, follow: true },
