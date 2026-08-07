@@ -136,10 +136,8 @@ export default function LoginPage() {
 
         <div className="ch-hero-anim" style={{ width: "100%", maxWidth: 460, position: "relative", zIndex: 1 }}>
           <div style={{ background: C.surface, borderRadius: 28, padding: "clamp(28px,5vw,46px)", border: `1px solid ${C.line}`, boxShadow: "0 20px 60px rgba(255,107,0,.10), 0 4px 22px rgba(26,26,26,.06)" }}>
-            <h1 style={{ fontSize: 27, fontWeight: 900, color: C.text, textAlign: "center", marginBottom: 8, letterSpacing: "-.02em" }}>Bine ai revenit</h1>
-            <p style={{ fontSize: 14.5, color: C.muted, textAlign: "center", marginBottom: 26, lineHeight: 1.55 }}>
-              Intră în cont ca să îți vezi programările sau agenda salonului.
-            </p>
+            {/* Fără subtitlu: pe o pagină de conectare, titlul și cele două câmpuri spun tot. */}
+            <h1 style={{ fontSize: 27, fontWeight: 900, color: C.text, textAlign: "center", marginBottom: 26, letterSpacing: "-.02em" }}>Bine ai revenit</h1>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
               <div>
