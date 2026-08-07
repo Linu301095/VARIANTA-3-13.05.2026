@@ -212,6 +212,12 @@ deschisă pe temă întunecată.
 **`logo.png` rămâne neatins** și se folosește mai departe pentru OpenGraph, favicon, dashboarduri
 și panoul de admin.
 
+**Cele trei bucăți sunt elemente separate, nu un singur link.** Doar chenarul cu siluetele e
+`<Link>` către pagina principală; numele și sloganul stau lângă el, ca imagini. Când toate trei
+erau într-un singur `<a>`, regula generală `a:hover` din `globals.css` (ridică 2px și adaugă
+`box-shadow`) desena un dreptunghi gri de 256px peste tot ansamblul — arăta ca o selecție.
+Clasa `.ch-marca-link` anulează efectele generale de link și lasă doar o estompare ușoară.
+
 **Animația** (`components/MarcaAnim.tsx` + `.ch-marca*` în `globals.css`): semnul apare, numele se
 dezvăluie de la stânga la dreapta ca și cum ar fi scris, sloganul vine ultimul. Rulează **o
 singură dată pe sesiune** (`sessionStorage`) — antetul e pe fiecare pagină, iar o mișcare la

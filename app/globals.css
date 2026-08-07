@@ -531,10 +531,8 @@ html[data-theme="dark"] .logo-dark { display: inline-block; }
 html[data-theme="dark"] { --marca-contur: #F0EBE7; }
 
 /*
- * Semnul e un logo, nu text. Fără regulile astea, la atingere sau la o
- * trecere cu degetul peste el apărea o casetă gri: pe telefon evidențierea
- * de atingere, pe desktop selecția care prindea toate bucățile deodată.
- * Conturul de la navigarea cu tastatura rămâne — de aia nu scoatem `outline`.
+ * Semnul e un logo, nu text: fără evidențiere la atingere, fără selecție,
+ * fără tragerea imaginilor.
  */
 .ch-marca {
   -webkit-tap-highlight-color: transparent;
@@ -542,7 +540,23 @@ html[data-theme="dark"] { --marca-contur: #F0EBE7; }
   -webkit-user-select: none;
 }
 .ch-marca img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }
-.ch-marca:focus-visible { outline: 3px solid var(--pub-orange-border); outline-offset: 4px; border-radius: 10px; }
+
+/*
+ * Linkul din jurul logo-ului NU primește efectele generale de link.
+ * Regula `a:hover` din secțiunea de mai sus ridică elementul și îi pune o
+ * umbră — pe un buton arată bine, dar pe logo desena un dreptunghi gri în
+ * jurul lui. Aici vrem doar o umbrire ușoară a desenului.
+ */
+.ch-marca-link,
+.ch-marca-link:hover,
+.ch-marca-link:active {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.ch-marca-link { transition: opacity .18s ease; }
+.ch-marca-link:hover { opacity: .82; }
+.ch-marca-link:focus-visible { outline: 3px solid var(--pub-orange); outline-offset: 3px; border-radius: 14px; }
 
 /*
  * Pe ecrane mici semnul trebuie să lase loc butoanelor din dreapta.
