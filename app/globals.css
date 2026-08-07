@@ -525,6 +525,52 @@ html { scroll-behavior: smooth; }
 html[data-theme="dark"] .logo-light { display: none; }
 html[data-theme="dark"] .logo-dark { display: inline-block; }
 
+/* ---------- Semnul CalyHub din antet ---------- */
+/* Culoarea jumătății „negre" a chenarului — deschisă pe temă întunecată. */
+:root { --marca-contur: #1A1A1A; }
+html[data-theme="dark"] { --marca-contur: #F0EBE7; }
+
+/*
+ * Pe ecrane mici semnul trebuie să lase loc butoanelor din dreapta.
+ * Coborâm în trepte: întâi cade sloganul, apoi se micșorează tot semnul,
+ * iar la urmă se strâng și butoanele. Numele rămâne vizibil pe orice lățime —
+ * el e motivul pentru care am scos badge-ul.
+ */
+@media (max-width: 560px) {
+  .ch-marca-slogan { display: none !important; }
+  .ch-marca { gap: 9px !important; }
+  .ch-marca-semn { width: 42px !important; height: 42px !important; }
+  .ch-marca-semn img { height: 31px !important; }
+  .ch-marca-nume, .ch-marca-nume img { height: 18px !important; }
+}
+@media (max-width: 400px) {
+  .ch-marca { gap: 7px !important; }
+  .ch-marca-semn { width: 38px !important; height: 38px !important; }
+  .ch-marca-semn img { height: 28px !important; }
+  .ch-marca-nume, .ch-marca-nume img { height: 16px !important; }
+  .hdr-btn { padding: 6px 10px !important; font-size: 11.5px !important; }
+  .hdr-nav { gap: 5px !important; }
+}
+/* Sub 340px (telefoane foarte vechi) nu mai încape nici numele — rămâne semnul. */
+@media (max-width: 340px) {
+  .ch-marca-nume { display: none !important; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /*
+   * Intrarea semnului. Cuvântul se dezvăluie de la stânga la dreapta, ca și
+   * cum ar fi scris; sloganul vine ultimul. Clasa `ch-anim-marca` e pusă pe
+   * <html> o singură dată pe sesiune (vezi components/MarcaAnim.tsx), altfel
+   * mișcarea s-ar relua la fiecare navigare.
+   */
+  html.ch-anim-marca .ch-marca-semn { opacity: 0; transform: scale(.86); animation: ch-marcaSemn .5s cubic-bezier(.3,1.3,.4,1) .05s forwards; }
+  html.ch-anim-marca .ch-marca-nume { clip-path: inset(0 100% 0 0); animation: ch-marcaNume .8s cubic-bezier(.6,0,.2,1) .25s forwards; }
+  html.ch-anim-marca .ch-marca-slogan { opacity: 0; animation: ch-marcaSlogan .6s ease .85s forwards; }
+}
+@keyframes ch-marcaSemn { to { opacity: 1; transform: none; } }
+@keyframes ch-marcaNume { to { clip-path: inset(0 0 0 0); } }
+@keyframes ch-marcaSlogan { to { opacity: 1; } }
+
 /* inputurile din paginile publice / ecranele de acces isi pastreaza paleta calda si pe dark
    (regula generica de mai sus le-ar face reci) */
 html[data-theme="dark"] input[style*="var(--pub-surface)"],

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import TemaPagina from "../components/TemaPagina";
+import MarcaAnim from "../components/MarcaAnim";
 
 const SITE_URL = "https://calyhub.ro";
 
@@ -143,6 +144,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <TemaPagina />
+        <MarcaAnim />
         {children}
       </body>
     </html>

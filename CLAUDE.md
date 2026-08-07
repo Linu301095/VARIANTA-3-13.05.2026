@@ -194,6 +194,41 @@ Orice pagină publică nouă adăugată în aplicație trebuie să respecte stan
 - NU se modifică designul logo-ului fără cerere explicită. Dacă logo-ul se mărește, butoanele din header se micșorează pe mobil prin clasele `.hdr-btn` / `.hdr-nav` din `app/globals.css` (media query `@max-width:640px`).
 - Notă: `logo.png` e folosit și ca imagine OpenGraph în `app/layout.tsx`; fiind transparent, pe share social fundalul poate apărea negru/alb — la nevoie se face o imagine OG dedicată cu fundal, separat de logo.
 
+### Semnul din antetul paginilor publice (05.08.2026)
+
+**Problema:** în antet, badge-ul întreg la 54px făcea numele „CalyHub" de ~14px și sloganul
+„BEAUTY · ÎNGRIJIRE · ÎNCREDERE" de ~4px — o pată gri. Purtam pe fiecare pagină un nume ilizibil.
+
+**Soluția:** `components/Logo.tsx` afișează cele trei bucăți una lângă alta — chenarul cu
+siluetele, cuvântul și sloganul. **Toate sunt decupate din `logo.png`**, nu rescrise cu alt font,
+deci literele sunt exact cele din logo. Fișiere noi în `public/`:
+`logo-semn.png`, `logo-nume.png`, `logo-slogan.png` + variantele `-dark`.
+
+**Singurul lucru redesenat e chenarul.** În logo el înconjoară tot pătratul, inclusiv zona de
+text, deci nu se putea decupa doar partea de sus. E acum vector în `Logo.tsx`, cu aceeași formă
+rotunjită și aceleași două culori; jumătatea „neagră" folosește `--marca-contur`, care devine
+deschisă pe temă întunecată.
+
+**`logo.png` rămâne neatins** și se folosește mai departe pentru OpenGraph, favicon, dashboarduri
+și panoul de admin.
+
+**Animația** (`components/MarcaAnim.tsx` + `.ch-marca*` în `globals.css`): semnul apare, numele se
+dezvăluie de la stânga la dreapta ca și cum ar fi scris, sloganul vine ultimul. Rulează **o
+singură dată pe sesiune** (`sessionStorage`) — antetul e pe fiecare pagină, iar o mișcare la
+fiecare navigare ar deveni obositoare.
+
+**Scara pe ecrane mici** — semnul e mult mai lat decât pătratul de dinainte, deci trebuia făcut
+loc butoanelor din dreapta:
+
+| Lățime | Ce se vede |
+|---|---|
+| ≥ 561px | semn + nume + slogan |
+| 401–560px | semn + nume, semn micșorat la 42px |
+| 341–400px | la fel, mai mic (38px), plus butoane mai strânse |
+| ≤ 340px | doar semnul — numele nu mai încape |
+
+Verificat că antetul încape pe 320, 360, 390, 430, 768 și 1280px.
+
 ## Branch & deploy
 
 - Development: `claude/change-project-background-zPuM4`
