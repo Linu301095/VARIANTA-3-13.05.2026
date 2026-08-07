@@ -91,20 +91,20 @@ const iconBox = (Icon: typeof PawPrint, size = 23) => (
  */
 const banda = (o: { id: string; eticheta: string; titlu: string; sub: string; Icon: typeof PawPrint; sariLa: string; sariText: string }) => (
   <div id={o.id} style={{ scrollMarginTop: 86, marginBottom: 34 }}>
-    <div data-reveal style={{
+    <div data-reveal className="ch-banda" style={{
       display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
       background: C.orangeSoft, border: "1px solid var(--pub-orange-border)",
       borderLeft: `5px solid ${C.orange}`, borderRadius: 18, padding: "16px 20px",
     }}>
-      <div style={{ width: 44, height: 44, borderRadius: 13, background: "var(--pub-surface)", border: "1px solid var(--pub-orange-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div className="ch-banda-ic" style={{ width: 44, height: 44, borderRadius: 13, background: "var(--pub-surface)", border: "1px solid var(--pub-orange-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         <o.Icon size={22} color={C.orange} strokeWidth={2} />
       </div>
-      <div style={{ flex: 1, minWidth: 200 }}>
+      <div className="ch-banda-txt" style={{ flex: 1, minWidth: 200 }}>
         <div style={{ fontSize: 10.5, fontWeight: 800, color: C.orangeText, letterSpacing: 1.6, textTransform: "uppercase" }}>{o.eticheta}</div>
         <div style={{ fontSize: 17, fontWeight: 900, color: C.text, marginTop: 2, letterSpacing: -0.3 }}>{o.titlu}</div>
         <div style={{ fontSize: 13, color: C.muted, fontWeight: 600, marginTop: 3, lineHeight: 1.5 }}>{o.sub}</div>
       </div>
-      <Link href={o.sariLa} style={{
+      <Link href={o.sariLa} className="ch-banda-btn" style={{
         fontSize: 13, fontWeight: 800, color: C.orangeText, textDecoration: "none",
         background: "var(--pub-surface)", border: "1.5px solid var(--pub-orange-border)",
         borderRadius: 50, padding: "10px 18px", whiteSpace: "nowrap",
