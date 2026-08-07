@@ -531,6 +531,20 @@ html[data-theme="dark"] .logo-dark { display: inline-block; }
 html[data-theme="dark"] { --marca-contur: #F0EBE7; }
 
 /*
+ * Semnul e un logo, nu text. Fără regulile astea, la atingere sau la o
+ * trecere cu degetul peste el apărea o casetă gri: pe telefon evidențierea
+ * de atingere, pe desktop selecția care prindea toate bucățile deodată.
+ * Conturul de la navigarea cu tastatura rămâne — de aia nu scoatem `outline`.
+ */
+.ch-marca {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ch-marca img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }
+.ch-marca:focus-visible { outline: 3px solid var(--pub-orange-border); outline-offset: 4px; border-radius: 10px; }
+
+/*
  * Pe ecrane mici semnul trebuie să lase loc butoanelor din dreapta.
  * Coborâm în trepte: întâi cade sloganul, apoi se micșorează tot semnul,
  * iar la urmă se strâng și butoanele. Numele rămâne vizibil pe orice lățime —
