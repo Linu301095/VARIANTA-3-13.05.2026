@@ -56,15 +56,31 @@ const PUTERE = [
   { t: "Puternică", c: "var(--pub-ok)" },
 ];
 
+/**
+ * Ce lipsește ca parola să fie mai puternică, în ordinea impactului.
+ * Bara singură spune „Slabă" și îl lasă pe om să ghicească de ce; asta îi spune
+ * ce să facă. Arătăm cel mult două sfaturi deodată, ca să nu pară o listă de
+ * cerințe imposibile.
+ */
+function sfaturiParola(p: string): string[] {
+  const s: string[] = [];
+  if (p.length < 12) s.push("fă-o de cel puțin 12 caractere");
+  if (!/[A-Z]/.test(p) || !/[a-z]/.test(p)) s.push("amestecă litere mari și mici");
+  if (!/\d/.test(p)) s.push("adaugă o cifră");
+  if (!/[^A-Za-z0-9]/.test(p)) s.push("pune un semn, de exemplu ! sau ?");
+  return s.slice(0, 2);
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [tip, setTip] = useState<"client" | "salon">("client");
   const [domeniu, setDomeniu] = useState<Domeniu | null>(null);
-  const [form, setForm] = useState({ numeSalon: "", numeComplet: "", email: "", telefon: "", parola: "" });
+  const [form, setForm] = useState({ numeSalon: "", numeComplet: "", email: "", telefon: "", parola: "", parolaConfirm: "" });
   const [acceptTermeni, setAcceptTermeni] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [showPass2, setShowPass2] = useState(false);
   const [registerError, setRegisterError] = useState("");
   const [focus, setFocus] = useState<string | null>(null);
 
@@ -114,6 +130,8 @@ export default function RegisterPage() {
     if (!form.telefon.trim()) e.telefon = "Câmp obligatoriu";
     if (!form.parola) e.parola = "Câmp obligatoriu";
     else if (form.parola.length < 8) e.parola = "Minim 8 caractere";
+    if (!form.parolaConfirm) e.parolaConfirm = "Confirmă parola";
+    else if (form.parolaConfirm !== form.parola) e.parolaConfirm = "Parolele nu se potrivesc";
     if (!acceptTermeni) e.termeni = "Trebuie să accepți termenii ca să continui";
     return e;
   }
@@ -183,6 +201,9 @@ export default function RegisterPage() {
   });
 
   const putere = putereParola(form.parola);
+  const sfaturi = sfaturiParola(form.parola);
+  // se potrivesc? doar cand omul a scris ceva in al doilea camp
+  const potrivite = form.parolaConfirm.length > 0 && form.parolaConfirm === form.parola;
   const domeniuAles = DOMENII.find(d => d.val === domeniu);
 
   const tipCard = (activ: boolean): React.CSSProperties => ({
@@ -334,16 +355,55 @@ export default function RegisterPage() {
                   </button>
                 </div>
                 {putere >= 0 && !errors.parola && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 8 }}>
-                    <div style={{ display: "flex", gap: 4, flex: 1 }}>
-                      {[0, 1, 2, 3].map(i => (
-                        <div key={i} style={{ height: 4, flex: 1, borderRadius: 4, background: i <= putere ? PUTERE[putere].c : C.line, transition: "background .25s" }} />
-                      ))}
+                  <>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 8 }}>
+                      <div style={{ display: "flex", gap: 4, flex: 1 }}>
+                        {[0, 1, 2, 3].map(i => (
+                          <div key={i} style={{ height: 4, flex: 1, borderRadius: 4, background: i <= putere ? PUTERE[putere].c : C.line, transition: "background .25s" }} />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: 11.5, fontWeight: 800, color: PUTERE[putere].c, flexShrink: 0 }}>{PUTERE[putere].t}</span>
                     </div>
-                    <span style={{ fontSize: 11.5, fontWeight: 800, color: PUTERE[putere].c, flexShrink: 0 }}>{PUTERE[putere].t}</span>
-                  </div>
+                    {/* Bara singură spune „Slabă" și îl lasă pe om să ghicească de ce. */}
+                    {sfaturi.length > 0 ? (
+                      <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 600, marginTop: 6, lineHeight: 1.5 }}>
+                        Ca să fie mai puternică: {sfaturi.join(" și ")}.
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 11.5, color: "var(--pub-ok)", fontWeight: 700, marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                        <Check size={13} strokeWidth={3} /> Parolă bine aleasă.
+                      </div>
+                    )}
+                  </>
                 )}
                 {errors.parola && <div style={errStyle}>{errors.parola}</div>}
+              </div>
+
+              {/* ── Confirmarea parolei ── */}
+              <div>
+                <label style={lbl}>Confirmă parola *</label>
+                <div style={{ position: "relative" }}>
+                  <input value={form.parolaConfirm} onChange={e => set("parolaConfirm", e.target.value)} type={showPass2 ? "text" : "password"}
+                    autoComplete="new-password" placeholder="Scrie parola încă o dată"
+                    style={{ ...fieldStyle("parolaConfirm", !!errors.parolaConfirm), paddingRight: 46 }}
+                    onFocus={() => setFocus("parolaConfirm")} onBlur={() => setFocus(null)}
+                    onKeyDown={e => e.key === "Enter" && handleSubmit()} />
+                  <button type="button" onClick={() => setShowPass2(s => !s)} aria-label={showPass2 ? "Ascunde parola" : "Arată parola"}
+                    style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "8px 10px", color: C.dim, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {showPass2 ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+                {/* Confirmarea se aprinde imediat ce se potrivesc — nu-l lăsăm să afle la trimitere. */}
+                {potrivite && !errors.parolaConfirm && (
+                  <div style={{ fontSize: 11.5, color: "var(--pub-ok)", fontWeight: 700, marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                    <Check size={13} strokeWidth={3} /> Parolele se potrivesc.
+                  </div>
+                )}
+                {errors.parolaConfirm && <div style={errStyle}>{errors.parolaConfirm}</div>}
               </div>
 
               {/* ── Acceptare termeni ── */}
