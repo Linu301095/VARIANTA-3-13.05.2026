@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
+import SelectCautabil from "../../../components/SelectCautabil";
+import { NUME_JUDETE, oraseDin, areSectoare, BUCURESTI } from "../../../lib/orase";
 import {
   Store, Scissors, Users, CheckCircle, Plus, Trash2, Clock,
   Building2, FileText, MapPin, Phone, AlignLeft, Globe, Receipt,
-  Camera, ImagePlus, X, PawPrint,
+  Camera, ImagePlus, X, PawPrint, Check,
 } from "lucide-react";
 
 const C = {
@@ -71,6 +73,42 @@ const DOM: Record<Domeniu, {
   },
 };
 
+/**
+ * Cui se adresează un salon de înfrumusețare.
+ *
+ * Serviciile diferă mult între cele două: un salon de bărbați nu face vopsit
+ * și extensii, unul de damă nu face barbă. Întrebăm întâi, apoi arătăm doar ce
+ * are sens — altfel lista de sugestii e pe jumătate nefolositoare.
+ */
+export type Public = "barbati" | "dama" | "ambele";
+
+const PUBLIC_OPTIUNI: { val: Public; titlu: string; sub: string; Icon: typeof Scissors }[] = [
+  { val: "barbati", titlu: "Bărbați", sub: "Frizerie, barbă, styling", Icon: Users },
+  { val: "dama", titlu: "Damă", sub: "Coafor, culoare, unghii, cosmetică", Icon: Users },
+  { val: "ambele", titlu: "Amândouă", sub: "Salon mixt", Icon: Users },
+];
+
+/** Serviciile propuse, pe public. Cele comune apar la amândouă. */
+const SERVICII_PUBLIC: Record<Exclude<Public, "ambele">, string[]> = {
+  barbati: [
+    "Tuns bărbați", "Tuns mașină", "Aranjat barbă", "Ras la brici", "Tuns copii",
+    "Spălat + styling", "Vopsit păr bărbați", "Tratament scalp",
+  ],
+  dama: [
+    "Tuns damă", "Coafat", "Vopsit", "Șuvițe", "Balayage", "Tratament păr",
+    "Coafură eveniment", "Manichiură", "Pedichiură", "Unghii cu gel",
+    "Tratament facial", "Extensii gene", "Pensat sprâncene", "Epilat",
+  ],
+};
+
+/** Lista propusă pentru publicul ales. */
+function serviciiPentru(p: Public | null): string[] {
+  if (p === "barbati") return SERVICII_PUBLIC.barbati;
+  if (p === "dama") return SERVICII_PUBLIC.dama;
+  if (p === "ambele") return [...SERVICII_PUBLIC.barbati, ...SERVICII_PUBLIC.dama];
+  return [];
+}
+
 const SPECII = [
   { val: "caine",   label: "Câine",     icon: "🐕" },
   { val: "pisica",  label: "Pisică",    icon: "🐈" },
@@ -110,10 +148,14 @@ export default function ConfigurareSalon() {
   const [domeniu, setDomeniu] = useState<Domeniu | null>(null);
 
   const [dateFirma, setDateFirma] = useState({
-    numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "",
+    numeSalon: "", strada: "", numar: "", judet: "", oras: "", telefon: "", descriere: "",
     tipEntitate: "SRL", denumireLegala: "", cui: "", sediuFiscal: "",
   });
+  /** Sediul fiscal e cel mai des la aceeași adresă — pornim de la „la fel". */
+  const [sediuLaFel, setSediuLaFel] = useState(true);
   const [speciiSelectate, setSpeciiSelectate] = useState<string[]>(["caine"]);
+  /** Cui se adresează salonul de înfrumusețare — decide ce servicii propunem. */
+  const [publicTinta, setPublicTinta] = useState<Public | null>(null);
   const [servicii, setServicii] = useState<Serviciu[]>([{ nume: "", pret: "", durata: "" }]);
   const [echipa, setEchipa] = useState<Membru[]>([{ nume: "", specialitate: "" }]);
   const [program, setProgram] = useState<Record<string, ZiProgram>>(PROGRAM_DEFAULT);
@@ -168,12 +210,31 @@ export default function ConfigurareSalon() {
     setProgram(p => ({ ...p, [key]: { ...p[key], [field]: value } }));
   }
 
+  /**
+   * Adresa, scrisă într-un singur rând. Baza păstrează un singur câmp `adresa`,
+   * iar clientul o vede așa pe cardul salonului; despărțirea în strada/număr
+   * există doar ca să nu fie scrisă greșit la completare.
+   */
+  function adresaCompleta(cuJudet = false) {
+    const strada = dateFirma.strada.trim();
+    const nr = dateFirma.numar.trim();
+    const oras = dateFirma.oras.trim();
+    const judet = dateFirma.judet.trim();
+    const inceput = [strada, nr && `nr. ${nr}`].filter(Boolean).join(" ");
+    // La București orașul e chiar sectorul, deci nu-l mai repetăm ca județ.
+    const loc = cuJudet && judet && judet !== oras && !areSectoare(judet) ? `${oras}, jud. ${judet}` : oras;
+    return [inceput, loc].filter(Boolean).join(", ");
+  }
+
   function validateStep0() {
     const e: Record<string, string> = {};
     if (!domeniu) e.domeniu = "Alege tipul salonului";
     if (!dateFirma.numeSalon.trim()) e.numeSalon = "Câmp obligatoriu";
-    if (!dateFirma.adresa.trim()) e.adresa = "Câmp obligatoriu";
-    if (!dateFirma.oras.trim()) e.oras = "Câmp obligatoriu";
+    if (!dateFirma.strada.trim()) e.strada = "Câmp obligatoriu";
+    if (!dateFirma.numar.trim()) e.numar = "Obligatoriu";
+    if (!dateFirma.judet.trim()) e.judet = "Alege județul";
+    if (!dateFirma.oras.trim()) e.oras = areSectoare(dateFirma.judet) ? "Alege sectorul" : "Alege orașul";
+    if (!sediuLaFel && !dateFirma.sediuFiscal.trim()) e.sediuFiscal = "Scrie adresa sediului fiscal";
     if (!dateFirma.cui.trim()) e.cui = "CUI obligatoriu";
     if (d?.areSpecii && speciiSelectate.length === 0) e.specii = "Selectează cel puțin o specie";
     return e;
@@ -181,6 +242,10 @@ export default function ConfigurareSalon() {
 
   function validateStep1() {
     const e: Record<string, string> = {};
+    // La înfrumusețare, publicul decide ce servicii propunem — fără el, lista de
+    // sugestii n-are ce arăta.
+    if (!d?.areSpecii && !publicTinta) e.publicTinta = "Alege cui se adresează salonul";
+    if (!servicii.some(s => s.nume.trim())) e.serviciiMinim = "Adaugă cel puțin un serviciu";
     servicii.forEach((s, i) => {
       if (!s.nume.trim()) e[`s_nume_${i}`] = "Obligatoriu";
       if (!s.pret.trim()) e[`s_pret_${i}`] = "Obligatoriu";
@@ -260,8 +325,9 @@ export default function ConfigurareSalon() {
         .upsert({
           user_id: user.id,
           nume: dateFirma.numeSalon.trim(),
-          adresa: dateFirma.adresa.trim(),
+          adresa: adresaCompleta(true),
           oras: dateFirma.oras.trim(),
+          judet: dateFirma.judet.trim(),
           telefon: dateFirma.telefon.trim(),
           descriere: dateFirma.descriere.trim(),
           servicii: servicii.filter(s => s.nume.trim()),
@@ -271,10 +337,11 @@ export default function ConfigurareSalon() {
           trial_expira_la: new Date(Date.now() + ZILE_TRIAL * 24 * 60 * 60 * 1000).toISOString(),
           domeniu,
           specii: d?.areSpecii ? speciiSelectate : [],
+          public_tinta: d?.areSpecii ? null : publicTinta,
           tip_entitate: dateFirma.tipEntitate,
           denumire_legala: dateFirma.denumireLegala.trim(),
           cui: dateFirma.cui.trim(),
-          sediu_fiscal: dateFirma.sediuFiscal.trim(),
+          sediu_fiscal: sediuLaFel ? adresaCompleta(true) : dateFirma.sediuFiscal.trim(),
           program,
         }, { onConflict: "user_id" });
 
@@ -373,16 +440,53 @@ export default function ConfigurareSalon() {
                     <input value={dateFirma.numeSalon} onChange={e => setFirma("numeSalon", e.target.value)} type="text" placeholder={d?.numePlaceholder || "Numele salonului"} style={errors.numeSalon ? inpErr : inp} />
                     {errors.numeSalon && <div style={errStyle}>{errors.numeSalon}</div>}
                   </div>
-                  <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <div>
-                      <label style={label}><MapPin size={12} strokeWidth={2.5} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />Adresa *</label>
-                      <input value={dateFirma.adresa} onChange={e => setFirma("adresa", e.target.value)} type="text" placeholder="Str. Florilor nr. 12" style={errors.adresa ? inpErr : inp} />
-                      {errors.adresa && <div style={errStyle}>{errors.adresa}</div>}
+                  {/* ── Adresa, pe bucăți ──
+                      Județul și orașul se aleg din listă, nu se scriu liber: baza are
+                      nevoie de o singură formă a numelui, altfel „Cluj" și „Cluj-Napoca"
+                      ajung două orașe diferite în căutare și în paginile de oraș. */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 110px", gap: 12 }}>
+                      <div>
+                        <label style={label}><MapPin size={12} strokeWidth={2.5} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />Strada *</label>
+                        <input value={dateFirma.strada} onChange={e => setFirma("strada", e.target.value)} type="text" placeholder="Str. Florilor" style={errors.strada ? inpErr : inp} />
+                        {errors.strada && <div style={errStyle}>{errors.strada}</div>}
+                      </div>
+                      <div>
+                        <label style={label}>Număr *</label>
+                        <input value={dateFirma.numar} onChange={e => setFirma("numar", e.target.value)} type="text" placeholder="12A" style={errors.numar ? inpErr : inp} />
+                        {errors.numar && <div style={errStyle}>{errors.numar}</div>}
+                      </div>
                     </div>
-                    <div>
-                      <label style={label}>Orașul *</label>
-                      <input value={dateFirma.oras} onChange={e => setFirma("oras", e.target.value)} type="text" placeholder="București" style={errors.oras ? inpErr : inp} />
-                      {errors.oras && <div style={errStyle}>{errors.oras}</div>}
+
+                    <div className="ch-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div>
+                        <label style={label}>Județul *</label>
+                        <SelectCautabil
+                          valoare={dateFirma.judet}
+                          optiuni={NUME_JUDETE}
+                          eroare={!!errors.judet}
+                          permiteLiber={false}
+                          placeholder="Alege județul"
+                          onSchimba={v => {
+                            // Alt județ înseamnă altă listă de orașe — golim alegerea veche.
+                            setDateFirma(f => ({ ...f, judet: v, oras: "" }));
+                            setErrors(er => { const n = { ...er }; delete n.judet; delete n.oras; return n; });
+                          }}
+                        />
+                        {errors.judet && <div style={errStyle}>{errors.judet}</div>}
+                      </div>
+                      <div>
+                        <label style={label}>{areSectoare(dateFirma.judet) ? "Sectorul *" : "Orașul *"}</label>
+                        <SelectCautabil
+                          valoare={dateFirma.oras}
+                          optiuni={oraseDin(dateFirma.judet)}
+                          eroare={!!errors.oras}
+                          dezactivat={!dateFirma.judet}
+                          placeholder={dateFirma.judet ? (areSectoare(dateFirma.judet) ? "Alege sectorul" : "Alege orașul") : "Întâi alege județul"}
+                          onSchimba={v => setFirma("oras", v)}
+                        />
+                        {errors.oras && <div style={errStyle}>{errors.oras}</div>}
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -440,9 +544,56 @@ export default function ConfigurareSalon() {
                     <input value={dateFirma.denumireLegala} onChange={e => setFirma("denumireLegala", e.target.value)} type="text" placeholder="Ex: Bella Studio SRL" style={inp} />
                     <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>Dacă diferă de numele comercial al salonului</div>
                   </div>
+                  {/* ── Sediul fiscal ──
+                      La majoritatea saloanelor e aceeași adresă, deci pornim de la „la fel"
+                      și o completăm singuri. Cine are sediul în altă parte bifează a doua
+                      variantă și primește un câmp de scris. */}
                   <div>
                     <label style={label}><MapPin size={12} strokeWidth={2.5} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />Sediu fiscal</label>
-                    <input value={dateFirma.sediuFiscal} onChange={e => setFirma("sediuFiscal", e.target.value)} type="text" placeholder="Dacă diferă de adresa salonului" style={inp} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {([
+                        { laFel: true, titlu: "La aceeași adresă cu salonul", sub: "Se completează singur din adresa de mai sus" },
+                        { laFel: false, titlu: "La altă adresă", sub: "Scrii tu adresa sediului social" },
+                      ]).map(o => {
+                        const bifat = sediuLaFel === o.laFel;
+                        return (
+                          <button key={String(o.laFel)} type="button"
+                            onClick={() => { setSediuLaFel(o.laFel); setErrors(er => { const n = { ...er }; delete n.sediuFiscal; return n; }); }}
+                            style={{
+                              display: "flex", alignItems: "flex-start", gap: 11, textAlign: "left", width: "100%",
+                              padding: "12px 14px", borderRadius: 14, cursor: "pointer", fontFamily: "Nunito, sans-serif",
+                              border: bifat ? "1.5px solid var(--pub-orange)" : `1.5px solid ${C.line}`,
+                              background: bifat ? C.orangeSoft : C.surface,
+                              transition: "border-color .18s, background .18s",
+                            }}>
+                            <span aria-hidden style={{
+                              width: 19, height: 19, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                              border: bifat ? "none" : `1.5px solid ${C.line}`,
+                              background: bifat ? "var(--pub-orange)" : C.surface,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                            }}>
+                              {bifat && <Check size={13} color="#fff" strokeWidth={3.2} />}
+                            </span>
+                            <span>
+                              <span style={{ display: "block", fontSize: 13.5, fontWeight: 800, color: C.text }}>{o.titlu}</span>
+                              <span style={{ display: "block", fontSize: 12, color: C.muted, marginTop: 2 }}>{o.sub}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {sediuLaFel ? (
+                      <div style={{ marginTop: 9, padding: "10px 14px", background: C.surface2, border: `1px solid ${C.line}`, borderRadius: 12, fontSize: 13, color: C.muted, fontWeight: 600 }}>
+                        {adresaCompleta(true) || "Se completează după ce scrii adresa salonului."}
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: 9 }}>
+                        <input value={dateFirma.sediuFiscal} onChange={e => setFirma("sediuFiscal", e.target.value)} type="text"
+                          placeholder="Str. Exemplu nr. 5, București" style={errors.sediuFiscal ? inpErr : inp} />
+                        {errors.sediuFiscal && <div style={errStyle}>{errors.sediuFiscal}</div>}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -461,12 +612,43 @@ export default function ConfigurareSalon() {
                   </div>
                 </div>
 
-                {/* Sugestii rapide, specifice verticalei */}
-                {d && (
+                {/* ── Cui se adresează salonul — doar la înfrumusețare ──
+                    Un salon de bărbați nu face vopsit și extensii, unul de damă nu
+                    face barbă. Întrebăm întâi, apoi propunem doar ce are sens. */}
+                {d && !d.areSpecii && (
+                  <div style={{ marginBottom: 22 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 4 }}>Pe cine tunzi? *</div>
+                    <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+                      După ce alegi, îți propunem serviciile potrivite. Poți adăuga oricând altele.
+                    </div>
+                    <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 9 }}>
+                      {PUBLIC_OPTIUNI.map(o => {
+                        const ales = publicTinta === o.val;
+                        return (
+                          <button key={o.val} type="button"
+                            onClick={() => { setPublicTinta(o.val); setErrors(er => { const n = { ...er }; delete n.publicTinta; return n; }); }}
+                            style={{
+                              padding: "13px 11px", borderRadius: 14, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "center",
+                              border: ales ? "2px solid var(--pub-orange)" : `1.5px solid ${C.line}`,
+                              background: ales ? C.orangeSoft : C.surface,
+                              transition: "border-color .18s, background .18s",
+                            }}>
+                            <div style={{ fontSize: 13.5, fontWeight: 900, color: ales ? "var(--pub-orange-text)" : C.text }}>{o.titlu}</div>
+                            <div style={{ fontSize: 11.5, color: C.muted, marginTop: 3, lineHeight: 1.4 }}>{o.sub}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {errors.publicTinta && <div style={errStyle}>{errors.publicTinta}</div>}
+                  </div>
+                )}
+
+                {/* Sugestii rapide — după publicul ales la înfrumusețare, fixe la grooming */}
+                {d && (d.areSpecii || publicTinta) && (
                   <div style={{ marginBottom: 20 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, marginBottom: 9 }}>Adaugă rapid, apoi completează prețul și durata:</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                      {d.serviciiSugerate.map(s => {
+                      {(d.areSpecii ? d.serviciiSugerate : serviciiPentru(publicTinta)).map(s => {
                         const deja = servicii.some(x => x.nume.trim().toLowerCase() === s.toLowerCase());
                         return (
                           <button key={s} type="button" onClick={() => adaugaServiciuSugerat(s)} disabled={deja}
@@ -477,6 +659,10 @@ export default function ConfigurareSalon() {
                       })}
                     </div>
                   </div>
+                )}
+
+                {errors.serviciiMinim && (
+                  <div style={{ ...errStyle, marginBottom: 12, fontSize: 13 }}>{errors.serviciiMinim}</div>
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -685,7 +871,7 @@ export default function ConfigurareSalon() {
                     )}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.text2, fontWeight: 600 }}>
                       <MapPin size={14} color={C.orange} strokeWidth={2} />
-                      {dateFirma.adresa}, {dateFirma.oras}
+                      {adresaCompleta(true)}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.text2, fontWeight: 600 }}>
                       <Scissors size={14} color={C.orange} strokeWidth={2} />

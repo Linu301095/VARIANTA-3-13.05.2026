@@ -555,6 +555,19 @@ main > section + section::before {
   }
 }
 
+/*
+ * ---------- Planurile la înscriere ----------
+ * Pe telefon, trei carduri cu toate caracteristicile fac șapte ecrane de
+ * derulat. Arătăm primele patru rânduri și restul la cerere. Pe desktop
+ * cardurile stau unul lângă altul, deci încap toate.
+ */
+.ch-plan-rest, .ch-plan-buton { display: none; }
+@media (max-width: 760px) {
+  .ch-planuri:not(.ch-planuri-tot) .ch-plan-extra { display: none !important; }
+  .ch-planuri:not(.ch-planuri-tot) .ch-plan-rest { display: block; }
+  .ch-plan-buton { display: block; }
+}
+
 /* ---------- Alegerea drumului din capul paginii principale ---------- */
 .ch-fork {
   display: flex; align-items: stretch;

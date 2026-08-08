@@ -29,8 +29,24 @@ export default function AbonamentSalon() {
   const [vert, setVert] = useState<Vertical>("grooming");
   const [loading, setLoading] = useState(false);
   const [eroare, setEroare] = useState("");
+  /** Pe telefon caracteristicile sunt strânse — vezi comentariul de la buton. */
+  const [toateCaract, setToateCaract] = useState(false);
 
-  // Verticala salonului decide cum sunt formulate caracteristicile.
+  /*
+   * Verticala hotărăște cum sunt formulate caracteristicile: „groomer" sau
+   * „specialist", preț pe talie sau pe serviciu. O citim întâi din memoria
+   * browserului, unde a pus-o wizardul cu un pas înainte — altfel pagina se
+   * deschidea pe grooming și se schimba sub ochii omului, după două cereri
+   * la bază.
+   */
+  useEffect(() => {
+    try {
+      const d = sessionStorage.getItem("calyhub_reg_domeniu");
+      if (d === "infrumusetare" || d === "grooming") setVert(d);
+    } catch {}
+  }, []);
+
+  // Confirmarea din bază, pentru cine revine mai târziu sau de pe alt dispozitiv.
   useEffect(() => {
     let anulat = false;
     (async () => {
@@ -39,7 +55,7 @@ export default function AbonamentSalon() {
       const { data: salon } = await supabase
         .from("saloane").select("domeniu, plan").eq("user_id", user.id).single();
       if (anulat || !salon) return;
-      if (salon.domeniu === "infrumusetare") setVert("infrumusetare");
+      setVert(salon.domeniu === "infrumusetare" ? "infrumusetare" : "grooming");
       if (salon.plan === "basic" || salon.plan === "pro" || salon.plan === "business") setAles(salon.plan);
     })();
     return () => { anulat = true; };
@@ -109,7 +125,7 @@ export default function AbonamentSalon() {
           </div>
 
           {/* ── Planuri ── */}
-          <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, alignItems: "start", marginBottom: 26 }}>
+          <div className={`ch-grid-3 ch-planuri${toateCaract ? " ch-planuri-tot" : ""}`} style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, alignItems: "start", marginBottom: 26 }}>
             {PLANURI.map(p => {
               const activ = ales === p.id;
               const Icon = ICON_PLAN[p.id];
@@ -149,17 +165,30 @@ export default function AbonamentSalon() {
 
                   {p.prefix && <div style={{ fontSize: 12.5, fontWeight: 800, color: C.orangeText, marginBottom: 10 }}>{p.prefix}</div>}
                   <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                    {p.features.map(f => (
-                      <div key={f} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                    {p.features.map((f, i) => (
+                      <div key={f} className={i >= 4 ? "ch-plan-extra" : undefined} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
                         <Check size={15} color={C.orange} strokeWidth={2.6} style={{ marginTop: 2, flexShrink: 0 }} />
                         <span style={{ fontSize: 12.5, color: C.muted, fontWeight: 600, lineHeight: 1.45 }}>{f}</span>
                       </div>
                     ))}
+                    {p.features.length > 4 && (
+                      <div className="ch-plan-rest" style={{ fontSize: 12, color: C.dim, fontWeight: 700, marginTop: 2 }}>
+                        și încă {p.features.length - 4}
+                      </div>
+                    )}
                   </div>
                 </button>
               );
             })}
           </div>
+
+          {/* Pe telefon, cele trei carduri cu toate caracteristicile înseamnă șapte
+              ecrane de derulat ca să compari trei planuri. Le strângem la patru
+              rânduri și le deschidem la cerere. Pe desktop stau toate. */}
+          <button type="button" onClick={() => setToateCaract(t => !t)} className="ch-plan-buton"
+            style={{ width: "100%", marginBottom: 22, padding: "12px 18px", borderRadius: 50, border: `1.5px solid ${C.line}`, background: C.surface, color: C.text, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+            {toateCaract ? "Ascunde caracteristicile" : "Vezi toate caracteristicile"}
+          </button>
 
           {/* ── Ce urmează ── */}
           <div style={{ background: C.surface2, border: `1px solid ${C.line}`, borderRadius: 18, padding: "16px 20px", marginBottom: 22, display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
