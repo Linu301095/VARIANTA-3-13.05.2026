@@ -7,7 +7,7 @@ import Footer from "../../../components/Footer";
 import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
-import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, type LucideIcon } from "lucide-react";
+import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
   { nume: "Băiță + uscare", pret: "50", durata: "40" },
@@ -1670,6 +1670,39 @@ export default function DashboardClient() {
     return true;
   });
 
+  // ── Stilurile panoului de filtrare ──
+  const stilGrup = (primul: boolean): React.CSSProperties => ({
+    display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 0", flexWrap: "wrap",
+    borderTop: primul ? "none" : `1px solid ${c.border2}`,
+  });
+  const stilCap: React.CSSProperties = { display: "flex", alignItems: "center", gap: 7, minWidth: 108, flexShrink: 0, paddingTop: 7 };
+  const stilCapTxt: React.CSSProperties = { fontSize: 11, fontWeight: 800, letterSpacing: 1.1, textTransform: "uppercase", color: c.xmuted };
+  const stilChips: React.CSSProperties = { display: "flex", gap: 7, flexWrap: "wrap" };
+  const chipF = (activ: boolean): React.CSSProperties => ({
+    padding: "8px 15px", borderRadius: 11,
+    border: activ ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`,
+    background: activ ? c.orangeAccent : c.surface,
+    color: activ ? "#FF6B00" : c.text2,
+    fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif",
+    boxShadow: activ ? "0 2px 8px rgba(255,107,0,.14)" : "none", transition: "all .16s",
+  });
+
+  /**
+   * Câte filtre chiar restrâng lista. Sortarea nu intră — schimbă ordinea,
+   * nu ce se vede, iar „1 filtru activ" pentru A–Z ar fi o minciună mică.
+   */
+  const filtreActive = [cautare !== "", filtruOras !== "", filtruSpec !== "", filtruServiciu !== "", tintaCautata !== null].filter(Boolean).length;
+
+  function stergeFiltrele() {
+    setCautare("");
+    setFiltruOras("");
+    setFiltruSpec("");
+    setFiltruServiciu("");
+    setPentruCine("toate");
+    setAltcinevaCine(null);
+    setSortareSalon("recomandat");
+  }
+
   /** Câte saloane ascunde acum filtrul de public — ca să i-o putem spune omului. */
   const ascunseDeGen = tintaCautata
     ? saloaneLume.filter(s => {
@@ -1796,125 +1829,150 @@ export default function DashboardClient() {
               </div>
             </div>
 
-            {/* Sortare + filtru serviciu */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+            {/* ── Panoul de filtrare ──
+                Erau trei rânduri plutind pe fundal, fără nimic care să spună că
+                fac parte din același lucru. Acum stau într-un card, despărțite
+                de linii subțiri, iar sub el o bară arată ce e pornit. */}
+            <div style={{ background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 20, padding: "2px 18px", boxShadow: c.shadow, marginBottom: filtreActive > 0 ? 10 : 18 }}>
 
-              {/* Rând 0: pentru cine — doar la înfrumusețare și doar dacă știm genul */}
+              {/* Caut — doar la înfrumusețare și doar dacă știm genul */}
               {eBeauty && genUser && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Caut:</span>
-                    {[
-                      { val: "mine", label: "Pentru mine" },
-                      { val: "altcineva", label: "Pentru altcineva" },
-                      { val: "toate", label: "Toate saloanele" },
-                    ].map(opt => (
-                      <button key={opt.val}
-                        onClick={() => { setPentruCine(opt.val as any); if (opt.val !== "altcineva") setAltcinevaCine(null); }}
-                        style={{ padding: "7px 14px", borderRadius: 50, border: pentruCine === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: pentruCine === opt.val ? "#FFF3EA" : c.surface, color: pentruCine === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                  {pentruCine === "altcineva" && (
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", paddingLeft: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Pentru cine?</span>
+                <div style={stilGrup(true)}>
+                  <span style={stilCap}>
+                    <Search size={14} strokeWidth={2.2} color={c.xmuted} />
+                    <span style={stilCapTxt}>Caut</span>
+                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 0 }}>
+                    <div style={stilChips}>
                       {[
-                        { val: "barbat", label: "Un bărbat" },
-                        { val: "femeie", label: "O femeie" },
-                        { val: "copil", label: "Un copil" },
+                        { val: "mine", label: "Pentru mine" },
+                        { val: "altcineva", label: "Pentru altcineva" },
+                        { val: "toate", label: "Toate saloanele" },
                       ].map(opt => (
-                        <button key={opt.val} onClick={() => setAltcinevaCine(opt.val as any)}
-                          style={{ padding: "6px 13px", borderRadius: 50, border: altcinevaCine === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: altcinevaCine === opt.val ? "#FFF3EA" : c.surface, color: altcinevaCine === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                        <button key={opt.val}
+                          onClick={() => { setPentruCine(opt.val as any); if (opt.val !== "altcineva") setAltcinevaCine(null); }}
+                          style={chipF(pentruCine === opt.val)}>
                           {opt.label}
                         </button>
                       ))}
                     </div>
-                  )}
-                  {ascunseDeGen > 0 && (
-                    <div style={{ fontSize: 11.5, color: c.xmuted }}>
-                      {ascunseDeGen} {ascunseDeGen === 1 ? "salon nu lucrează" : "saloane nu lucrează"} cu publicul ăsta.{" "}
-                      <button onClick={() => { setPentruCine("toate"); setAltcinevaCine(null); }}
-                        style={{ background: "none", border: "none", padding: 0, color: "#FF6B00", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", textDecoration: "underline" }}>
-                        Arată-mi tot
-                      </button>
-                    </div>
-                  )}
+                    {pentruCine === "altcineva" && (
+                      <div style={{ ...stilChips, alignItems: "center" }}>
+                        <span style={{ fontSize: 11.5, fontWeight: 700, color: c.muted }}>Pentru cine?</span>
+                        {[
+                          { val: "barbat", label: "Un bărbat" },
+                          { val: "femeie", label: "O femeie" },
+                          { val: "copil", label: "Un copil" },
+                        ].map(opt => (
+                          <button key={opt.val} onClick={() => setAltcinevaCine(opt.val as any)}
+                            style={{ ...chipF(altcinevaCine === opt.val), padding: "6px 13px", fontSize: 12 }}>
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {ascunseDeGen > 0 && (
+                      <div style={{ fontSize: 11.5, color: c.xmuted }}>
+                        {ascunseDeGen} {ascunseDeGen === 1 ? "salon nu lucrează" : "saloane nu lucrează"} cu publicul ăsta.{" "}
+                        <button onClick={() => { setPentruCine("toate"); setAltcinevaCine(null); }}
+                          style={{ background: "none", border: "none", padding: 0, color: "#FF6B00", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", textDecoration: "underline" }}>
+                          Arată-mi tot
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* Rând 0b: specializări */}
+              {/* Tip salon — apare doar dacă există saloane cu specializarea respectivă */}
               {specializariDisponibile.length > 0 && (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Tip salon:</span>
-                  <button onClick={() => setFiltruSpec("")}
-                    style={{ padding: "7px 14px", borderRadius: 50, border: !filtruSpec ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: !filtruSpec ? "#FFF3EA" : c.surface, color: !filtruSpec ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                    Toate
-                  </button>
-                  {specializariDisponibile.map(sp => (
-                    <button key={sp.val} onClick={() => setFiltruSpec(filtruSpec === sp.val ? "" : sp.val)}
-                      style={{ padding: "7px 14px", borderRadius: 50, border: filtruSpec === sp.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruSpec === sp.val ? "#FFF3EA" : c.surface, color: filtruSpec === sp.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                      {sp.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Rând 1: sortare */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Sortare:</span>
-                {[
-                  { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
-                  { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
-                  { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
-                ].map(opt => (
-                  <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
-                    style={{ padding: "7px 14px", borderRadius: 50, border: sortareSalon === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: sortareSalon === opt.val ? "#FFF3EA" : c.surface, color: sortareSalon === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
-                    {opt.icon}{opt.label}
-                  </button>
-                ))}
-              </div>
-              {/* Rând 2: filtru serviciu */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Serviciu:</span>
-                <div style={{ position: "relative" }}>
-                  <button onClick={() => setFiltruServiciuDropdown(v => !v)}
-                    style={{ padding: "7px 14px", borderRadius: 50, border: filtruServiciu ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruServiciu ? "#FFF3EA" : c.surface, color: filtruServiciu ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Scissors size={14} strokeWidth={2} />
-                    <span>{filtruServiciu || "Toate"}</span>
-                    <span style={{ fontSize: 10, opacity: .6 }}>{filtruServiciuDropdown ? "▲" : "▼"}</span>
-                  </button>
-                {filtruServiciuDropdown && (
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 40, minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
-                    {filtruServiciu && (
-                      <button onClick={() => { setFiltruServiciu(""); setFiltruServiciuDropdown(false); }}
-                        style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
-                        ✕ Toate serviciile
-                      </button>
-                    )}
-                    {serviciiDisponibile.length === 0 && (
-                      <div style={{ padding: "14px 18px", fontSize: 12, color: c.xmuted, textAlign: "center" }}>Niciun serviciu</div>
-                    )}
-                    {serviciiDisponibile.map(sv => (
-                      <button key={sv} onClick={() => { setFiltruServiciu(sv); setFiltruServiciuDropdown(false); }}
-                        style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruServiciu === sv ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruServiciu === sv ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruServiciu === sv ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Scissors size={12} strokeWidth={2} /> {sv}</span>
+                <div style={stilGrup(!(eBeauty && genUser))}>
+                  <span style={stilCap}>
+                    <LayoutGrid size={14} strokeWidth={2.2} color={c.xmuted} />
+                    <span style={stilCapTxt}>Tip salon</span>
+                  </span>
+                  <div style={stilChips}>
+                    <button onClick={() => setFiltruSpec("")} style={chipF(!filtruSpec)}>Toate</button>
+                    {specializariDisponibile.map(sp => (
+                      <button key={sp.val} onClick={() => setFiltruSpec(filtruSpec === sp.val ? "" : sp.val)}
+                        style={chipF(filtruSpec === sp.val)}>
+                        {sp.label}
                       </button>
                     ))}
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* Sortare */}
+              <div style={stilGrup(!(eBeauty && genUser) && specializariDisponibile.length === 0)}>
+                <span style={stilCap}>
+                  <ArrowDownWideNarrow size={14} strokeWidth={2.2} color={c.xmuted} />
+                  <span style={stilCapTxt}>Sortare</span>
+                </span>
+                <div style={stilChips}>
+                  {[
+                    { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
+                    { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
+                    { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
+                  ].map(opt => (
+                    <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
+                      style={{ ...chipF(sortareSalon === opt.val), display: "flex", alignItems: "center", gap: 5 }}>
+                      {opt.icon}{opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Serviciu */}
+              <div style={stilGrup(false)}>
+                <span style={stilCap}>
+                  <Scissors size={14} strokeWidth={2.2} color={c.xmuted} />
+                  <span style={stilCapTxt}>Serviciu</span>
+                </span>
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setFiltruServiciuDropdown(v => !v)}
+                    style={{ ...chipF(!!filtruServiciu), display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>{filtruServiciu || "Toate serviciile"}</span>
+                    <span style={{ fontSize: 10, opacity: .6 }}>{filtruServiciuDropdown ? "▲" : "▼"}</span>
+                  </button>
+                  {filtruServiciuDropdown && (
+                    <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 16, boxShadow: c.shadow, zIndex: 40, minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
+                      {filtruServiciu && (
+                        <button onClick={() => { setFiltruServiciu(""); setFiltruServiciuDropdown(false); }}
+                          style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#EF4444", fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                          ✕ Toate serviciile
+                        </button>
+                      )}
+                      {serviciiDisponibile.length === 0 && (
+                        <div style={{ padding: "14px 18px", fontSize: 12, color: c.xmuted, textAlign: "center" }}>Niciun serviciu</div>
+                      )}
+                      {serviciiDisponibile.map(sv => (
+                        <button key={sv} onClick={() => { setFiltruServiciu(sv); setFiltruServiciuDropdown(false); }}
+                          style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruServiciu === sv ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruServiciu === sv ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruServiciu === sv ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Scissors size={12} strokeWidth={2} /> {sv}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* Bara de sub panou — ce e pornit acum și cum scapi de tot */}
+            {filtreActive > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", background: c.orangeAccent, border: `1.5px solid ${theme === "dark" ? "#4A3320" : "#FFD9BF"}`, borderRadius: 14, padding: "10px 14px", marginBottom: 18 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: theme === "dark" ? "#FFA35E" : "#E05A00" }}>
+                  {filtreActive} {filtreActive === 1 ? "filtru activ" : "filtre active"} · {saloneFiltrate.length} {saloneFiltrate.length === 1 ? "salon găsit" : "saloane găsite"}
+                </span>
+                <button onClick={stergeFiltrele}
+                  style={{ marginLeft: "auto", background: "none", border: "none", padding: 0, color: theme === "dark" ? "#FFA35E" : "#E05A00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", textDecoration: "underline" }}>
+                  Șterge filtrele
+                </button>
+              </div>
+            )}
+
             {filtrareActiva ? (
               <>
-                <div style={{ fontSize: 13, fontWeight: 700, color: c.muted, marginBottom: 14 }}>
-                  {saloneFiltrate.length > 0 ? `${saloneFiltrate.length} salon${saloneFiltrate.length === 1 ? "" : "e"} găsite` : "Niciun salon găsit"}
-                  {filtruOras && <span style={{ marginLeft: 8, color: "#FF6B00" }}>în {filtruOras}</span>}
-                  {filtruServiciu && <span style={{ marginLeft: 8, color: "#FF6B00" }}>· {filtruServiciu}</span>}
-                  {filtruSpec && <span style={{ marginLeft: 8, color: "#FF6B00" }}>· {labelSpecializare(filtruSpec)}</span>}
-                </div>
                 {saloneFiltrate.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
                     {saloneFiltrate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
