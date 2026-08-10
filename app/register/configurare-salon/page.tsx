@@ -32,8 +32,9 @@ const errStyle: React.CSSProperties = { fontSize: 12, color: "var(--pub-danger)"
 const sectiune: React.CSSProperties = { fontSize: 11, fontWeight: 800, color: "var(--pub-orange-text)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 };
 
 type Serviciu = { nume: string; pret: string; durata: string };
-type Membru = { nume: string; specialitate: string };
-type ZiProgram = { deschis: boolean; start: string; end: string };
+/** `orar` lipsă = specialistul ține programul salonului. Așa îl citesc și dashboardurile. */
+type Membru = { nume: string; specialitate: string; orar?: Record<string, ZiProgram> };
+type ZiProgram = { activ: boolean; start: string; end: string };
 type Domeniu = "infrumusetare" | "grooming";
 
 const STEPS = ["Date firmă", "Servicii", "Echipă & Program", "Fotografii", "Gata!"];
@@ -120,16 +121,23 @@ const SPECII = [
 ];
 
 const ZILE = ["Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă", "Duminică"];
-const ZILE_KEYS = ["luni", "marti", "miercuri", "joi", "vineri", "sambata", "duminica"];
+/**
+ * Cheile sunt zilele din JavaScript (`getDay()`: duminică = 0), fiindcă exact
+ * așa citesc programul agenda salonului și calendarul de rezervare. Wizardul
+ * scria „luni"/„marti" și câmpul `deschis`, iar dashboardurile căutau „1"/„2"
+ * și `activ` — programul ales la înscriere se pierdea în tăcere și salonul
+ * rămânea pe orarul implicit.
+ */
+const ZILE_KEYS = ["1", "2", "3", "4", "5", "6", "0"];
 
 const PROGRAM_DEFAULT: Record<string, ZiProgram> = {
-  luni:      { deschis: true,  start: "09:00", end: "18:00" },
-  marti:     { deschis: true,  start: "09:00", end: "18:00" },
-  miercuri:  { deschis: true,  start: "09:00", end: "18:00" },
-  joi:       { deschis: true,  start: "09:00", end: "18:00" },
-  vineri:    { deschis: true,  start: "09:00", end: "18:00" },
-  sambata:   { deschis: true,  start: "10:00", end: "14:00" },
-  duminica:  { deschis: false, start: "10:00", end: "14:00" },
+  "1": { activ: true,  start: "09:00", end: "18:00" },
+  "2": { activ: true,  start: "09:00", end: "18:00" },
+  "3": { activ: true,  start: "09:00", end: "18:00" },
+  "4": { activ: true,  start: "09:00", end: "18:00" },
+  "5": { activ: true,  start: "09:00", end: "18:00" },
+  "6": { activ: true,  start: "10:00", end: "14:00" },
+  "0": { activ: false, start: "10:00", end: "14:00" },
 };
 
 const ENTITATI = ["SRL", "SRL-D", "PFA", "Persoană fizică", "Altele"];
@@ -358,7 +366,7 @@ export default function ConfigurareSalon() {
   const progress = (step / (STEPS.length - 1)) * 100;
 
   const programRezumat = ZILE_KEYS
-    .filter(k => program[k].deschis)
+    .filter(k => program[k].activ)
     .map(k => `${ZILE[ZILE_KEYS.indexOf(k)].slice(0, 3)} ${program[k].start}–${program[k].end}`)
     .join(" · ");
 
@@ -724,26 +732,83 @@ export default function ConfigurareSalon() {
                   <Users size={12} strokeWidth={2.5} /> Echipa <span style={{ color: C.dim, fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>(opțional)</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                  {echipa.map((g, i) => (
-                    <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
-                      <div style={{ flex: "1 1 140px" }}>
-                        <label style={{ ...label, fontSize: 12 }}>Nume {d?.rol || "specialist"}</label>
-                        <input value={g.nume} onChange={e => setEchipa(ec => ec.map((x, idx) => idx === i ? { ...x, nume: e.target.value } : x))}
-                          placeholder={d?.rolPlaceholder || "Ex: Maria Ionescu"} style={inp} />
+                  {echipa.map((g, i) => {
+                    const areOrar = !!g.orar;
+                    const orarG = g.orar || PROGRAM_DEFAULT;
+                    const setOrarZi = (k: string, camp: keyof ZiProgram, val: string | boolean) =>
+                      setEchipa(ec => ec.map((x, idx) => idx === i
+                        ? { ...x, orar: { ...(x.orar || program), [k]: { ...(x.orar || program)[k], [camp]: val } } }
+                        : x));
+                    return (
+                    <div key={i} style={{ border: `1.5px solid ${areOrar ? "var(--pub-orange-border)" : C.line}`, borderRadius: 14, padding: 14, background: C.surface }}>
+                      <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
+                        <div style={{ flex: "1 1 140px" }}>
+                          <label style={{ ...label, fontSize: 12 }}>Nume {d?.rol || "specialist"}</label>
+                          <input value={g.nume} onChange={e => setEchipa(ec => ec.map((x, idx) => idx === i ? { ...x, nume: e.target.value } : x))}
+                            placeholder={d?.rolPlaceholder || "Ex: Maria Ionescu"} style={inp} />
+                        </div>
+                        <div style={{ flex: "1 1 140px" }}>
+                          <label style={{ ...label, fontSize: 12 }}>Specialitate</label>
+                          <input value={g.specialitate} onChange={e => setEchipa(ec => ec.map((x, idx) => idx === i ? { ...x, specialitate: e.target.value } : x))}
+                            placeholder={d?.specialitatePlaceholder || "Ex: Colorist"} style={inp} />
+                        </div>
+                        {echipa.length > 1 && (
+                          <button onClick={() => setEchipa(ec => ec.filter((_, idx) => idx !== i))}
+                            style={{ padding: "11px", borderRadius: 10, border: `1px solid ${C.line}`, background: C.surface, cursor: "pointer", color: C.dim, display: "flex", alignItems: "center", flexShrink: 0 }}>
+                            <Trash2 size={15} strokeWidth={2} />
+                          </button>
+                        )}
                       </div>
-                      <div style={{ flex: "1 1 140px" }}>
-                        <label style={{ ...label, fontSize: 12 }}>Specialitate</label>
-                        <input value={g.specialitate} onChange={e => setEchipa(ec => ec.map((x, idx) => idx === i ? { ...x, specialitate: e.target.value } : x))}
-                          placeholder={d?.specialitatePlaceholder || "Ex: Colorist"} style={inp} />
-                      </div>
-                      {echipa.length > 1 && (
-                        <button onClick={() => setEchipa(ec => ec.filter((_, idx) => idx !== i))}
-                          style={{ padding: "11px", borderRadius: 10, border: `1px solid ${C.line}`, background: C.surface, cursor: "pointer", color: C.dim, display: "flex", alignItems: "center", flexShrink: 0 }}>
-                          <Trash2 size={15} strokeWidth={2} />
-                        </button>
+
+                      {/* Orar propriu — opțional. Fără el, specialistul ține programul salonului. */}
+                      <button
+                        onClick={() => setEchipa(ec => ec.map((x, idx) => {
+                          if (idx !== i) return x;
+                          if (x.orar) { const { orar, ...rest } = x; return rest; }
+                          return { ...x, orar: JSON.parse(JSON.stringify(program)) };
+                        }))}
+                        style={{ marginTop: 12, padding: "8px 14px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, fontWeight: 800,
+                          border: areOrar ? `1.5px solid ${C.orange}` : `1.5px solid ${C.line}`,
+                          background: areOrar ? C.orangeSoft : C.surface2,
+                          color: areOrar ? "var(--pub-orange-text)" : C.muted,
+                          display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <Clock size={13} strokeWidth={2.4} /> {areOrar ? "Are orar propriu ▲" : "Lucrează alt orar? ▼"}
+                      </button>
+
+                      {areOrar && (
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.line}` }}>
+                          <div style={{ fontSize: 11.5, color: C.muted, marginBottom: 10 }}>
+                            Pornit de la programul salonului. Schimbă doar zilele care diferă — poți reveni oricând din cont.
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {ZILE_KEYS.map((k, idx) => {
+                              const zi = orarG[k];
+                              return (
+                                <div key={k} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                  <div style={{ width: 66, fontSize: 12, fontWeight: 800, color: zi.activ ? C.text : C.dim, flexShrink: 0 }}>{ZILE[idx]}</div>
+                                  <label style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer", flexShrink: 0 }}>
+                                    <input type="checkbox" checked={zi.activ} onChange={e => setOrarZi(k, "activ", e.target.checked)}
+                                      style={{ accentColor: "#FF6B00", width: 15, height: 15, cursor: "pointer" }} />
+                                    <span style={{ fontSize: 11.5, fontWeight: 700, color: zi.activ ? "var(--pub-orange-text)" : C.dim }}>{zi.activ ? "Lucrează" : "Liber"}</span>
+                                  </label>
+                                  {zi.activ && (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+                                      <input type="time" value={zi.start} onChange={e => setOrarZi(k, "start", e.target.value)}
+                                        style={{ ...inp, width: "auto", padding: "5px 8px", fontSize: 12.5, fontWeight: 700 }} />
+                                      <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>–</span>
+                                      <input type="time" value={zi.end} onChange={e => setOrarZi(k, "end", e.target.value)}
+                                        style={{ ...inp, width: "auto", padding: "5px 8px", fontSize: 12.5, fontWeight: 700 }} />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                   <button onClick={() => setEchipa(ec => [...ec, { nume: "", specialitate: "" }])}
                     style={{ padding: "12px", borderRadius: 12, border: `1.5px dashed ${C.orange}`, background: C.orangeSoft, color: "var(--pub-orange-text)", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <Plus size={16} strokeWidth={2.5} /> Adaugă {d?.rol || "specialist"}
@@ -755,14 +820,14 @@ export default function ConfigurareSalon() {
                 <div style={sectiune}><Clock size={12} strokeWidth={2.5} /> Program de lucru</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {ZILE_KEYS.map((key, idx) => (
-                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: program[key].deschis ? C.orangeSoft : C.surface2, border: `1px solid ${program[key].deschis ? "var(--pub-orange-border)" : C.line}`, transition: "all .18s", flexWrap: "wrap" }}>
-                      <div style={{ width: 72, fontSize: 13, fontWeight: 800, color: program[key].deschis ? C.text : C.dim, flexShrink: 0 }}>{ZILE[idx]}</div>
+                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: program[key].activ ? C.orangeSoft : C.surface2, border: `1px solid ${program[key].activ ? "var(--pub-orange-border)" : C.line}`, transition: "all .18s", flexWrap: "wrap" }}>
+                      <div style={{ width: 72, fontSize: 13, fontWeight: 800, color: program[key].activ ? C.text : C.dim, flexShrink: 0 }}>{ZILE[idx]}</div>
                       <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", flexShrink: 0 }}>
-                        <input type="checkbox" checked={program[key].deschis} onChange={e => setZi(key, "deschis", e.target.checked)}
+                        <input type="checkbox" checked={program[key].activ} onChange={e => setZi(key, "activ", e.target.checked)}
                           style={{ accentColor: "#FF6B00", width: 16, height: 16, cursor: "pointer" }} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: program[key].deschis ? "var(--pub-orange-text)" : C.dim }}>{program[key].deschis ? "Deschis" : "Închis"}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: program[key].activ ? "var(--pub-orange-text)" : C.dim }}>{program[key].activ ? "Deschis" : "Închis"}</span>
                       </label>
-                      {program[key].deschis && (
+                      {program[key].activ && (
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
                           <input type="time" value={program[key].start} onChange={e => setZi(key, "start", e.target.value)}
                             style={{ ...inp, width: "auto", padding: "6px 10px", fontSize: 13, fontWeight: 700 }} />
