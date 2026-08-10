@@ -7,6 +7,7 @@ import Footer from "../../../components/Footer";
 import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
+import SiluetaGen from "../../../components/SiluetaGen";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
@@ -426,9 +427,6 @@ export default function DashboardClient() {
         setProfilForm({ numeComplet: profile.nume || "", email: authUser.email || "", telefon: profile.telefon || "", gen: profile.gen || "" });
         setGenUser(profile.gen || "");
         // Conturile fără gen (cele dinainte) n-au de unde ști ce înseamnă „pentru mine".
-        if (!profile.gen) setPentruCine("toate");
-        setGenUser(profile.gen || "");
-        // Conturile fără gen (cele dinainte) nu au de unde ști „pentru mine".
         if (!profile.gen) setPentruCine("toate");
         if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
         if (profile.tema === "dark") {
@@ -1736,7 +1734,15 @@ export default function DashboardClient() {
 
           {/* Bun venit */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>Bună, {prenume}! {lume === "animal" && animal ? specieInfo(animal.specie).icon : <Sparkles size={22} color="#FF6B00" strokeWidth={2} />}</h1>
+            <h1 style={{ fontSize: "clamp(20px,3vw,26px)", fontWeight: 900, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>Bună, {prenume}! {
+              lume === "animal" && animal
+                ? specieInfo(animal.specie).icon
+                /* În lumea „pentru tine" salutul poartă silueta din logo, potrivită
+                   cu genul din profil. Fără gen (conturile vechi) rămâne steluța. */
+                : genUser === "masculin" || genUser === "feminin"
+                  ? <SiluetaGen gen={genUser} size={26} />
+                  : <Sparkles size={22} color="#FF6B00" strokeWidth={2} />
+            }</h1>
             {lume === "animal" && animal && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: c.surface, border: "2px solid #FF6B00", borderRadius: 50, padding: "8px 18px", fontSize: 13, flexWrap: "wrap" }}>
                 {animal.poza_url
@@ -2113,6 +2119,9 @@ export default function DashboardClient() {
                       await supabase.from("profiluri").update({ nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen || null }).eq("id", authUser.id);
                     }
                     setUser((u: any) => ({ ...u, nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen }));
+                    // Fără asta, silueta din salut și filtrul „Caut" rămâneau pe valoarea veche până la refresh.
+                    setGenUser(profilForm.gen);
+                    if (profilForm.gen && pentruCine === "toate") setPentruCine("mine");
                     salveaza("Profil actualizat!");
                   }} style={{ ...btnPrimary, marginTop: 4 }}>Salvează modificările</button>
                 </div>
