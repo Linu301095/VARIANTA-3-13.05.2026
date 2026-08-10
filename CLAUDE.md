@@ -47,6 +47,7 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 4. **Bifa de Termeni** — obligatorie ȘI salvată în bază (`profiluri.termeni_acceptati_la` + `termeni_versiune`), ca să existe dovada consimțământului.
 
 **SQL de rulat în Supabase:**
+- `sql/program_zile_numerice.sql` — repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Programul ales la înscriere era ignorat de agendă și de calendarul de rezervare, iar salonul rămânea pe orarul implicit. Wizardul scrie corect de la 10.08.2026.
 - `sql/gen_client.sql` — adaugă `profiluri.gen` (masculin/feminin). Obligatoriu la înregistrarea clientului, indiferent dacă are animal; editabil din dashboard → Profil. Conturile mai vechi îl au gol.
 - `sql/adresa_judet.sql` — ✅ rulat (adaugă `saloane.judet` și `saloane.public_tinta`, index județ+oraș)
 - `sql/etapa2_domeniu_si_termeni.sql` — ✅ rulat (adaugă `saloane.domeniu`, coloanele de termeni, index domeniu+oraș)
