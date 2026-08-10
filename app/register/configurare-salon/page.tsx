@@ -212,6 +212,26 @@ export default function ConfigurareSalon() {
     if (propuse.length > 0) setSpecializari(propuse);
   }, [servicii]);
 
+  /**
+   * Serviciile scrise de mână — cele care nu se regăsesc în lista propusă.
+   * Nu le trimitem nicăieri și nu le folosim pentru alte saloane: rămân ale
+   * salonului, salvate exact cum le-a scris. Le arătăm doar ca să se vadă că
+   * fac parte din același set, nu că sunt o excepție.
+   */
+  const serviciiProprii = (() => {
+    if (!d) return [];
+    const propuse = new Set((d.areSpecii ? d.serviciiSugerate : serviciiPentru(publicTinta)).map(s => s.toLowerCase()));
+    const vazute = new Set<string>();
+    return servicii
+      .map(s => s.nume.trim())
+      .filter(n => {
+        const k = n.toLowerCase();
+        if (!n || propuse.has(k) || vazute.has(k)) return false;
+        vazute.add(k);
+        return true;
+      });
+  })();
+
   function setFirma(k: string, v: string) {
     setDateFirma(f => ({ ...f, [k]: v }));
     setErrors(e => { const n = { ...e }; delete n[k]; return n; });
@@ -643,9 +663,9 @@ export default function ConfigurareSalon() {
                     face barbă. Întrebăm întâi, apoi propunem doar ce are sens. */}
                 {d && !d.areSpecii && (
                   <div style={{ marginBottom: 22 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 4 }}>Pe cine tunzi? *</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 4 }}>Cui se adresează salonul *</div>
                     <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
-                      După ce alegi, îți propunem serviciile potrivite. Poți adăuga oricând altele.
+                      După asta îți arătăm lista de servicii potrivită.
                     </div>
                     <div className="ch-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 9 }}>
                       {PUBLIC_OPTIUNI.map(o => {
@@ -672,7 +692,9 @@ export default function ConfigurareSalon() {
                 {/* Sugestii rapide — după publicul ales la înfrumusețare, fixe la grooming */}
                 {d && (d.areSpecii || publicTinta) && (
                   <div style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, marginBottom: 9 }}>Adaugă rapid, apoi completează prețul și durata:</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, marginBottom: 9, lineHeight: 1.5 }}>
+                      Alege din listă serviciile pe care le faci. Dacă unul nu e în listă, îl scrii tu mai jos.
+                    </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                       {(d.areSpecii ? d.serviciiSugerate : serviciiPentru(publicTinta)).map(s => {
                         const deja = servicii.some(x => x.nume.trim().toLowerCase() === s.toLowerCase());
@@ -683,7 +705,21 @@ export default function ConfigurareSalon() {
                           </button>
                         );
                       })}
+
+                      {/* Serviciile scrise de mână stau lângă celelalte, nu separat — sunt
+                          servicii la fel de bune, doar că nu erau în lista noastră. */}
+                      {serviciiProprii.map(s => (
+                        <span key={`propriu-${s}`}
+                          style={{ padding: "7px 13px", borderRadius: 50, border: `1.5px dashed ${C.line}`, background: C.surface2, color: C.text2, fontSize: 12.5, fontWeight: 800, fontFamily: "Nunito, sans-serif", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                          <CheckCircle size={13} strokeWidth={2.5} color={C.dim} /> {s}
+                        </span>
+                      ))}
                     </div>
+                    {serviciiProprii.length > 0 && (
+                      <div style={{ fontSize: 11.5, color: C.dim, marginTop: 8 }}>
+                        Cele cu contur punctat sunt scrise de tine. Se salvează exact așa cum le-ai scris.
+                      </div>
+                    )}
                   </div>
                 )}
 
