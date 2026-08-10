@@ -47,6 +47,8 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 4. **Bifa de Termeni** — obligatorie ȘI salvată în bază (`profiluri.termeni_acceptati_la` + `termeni_versiune`), ca să existe dovada consimțământului.
 
 **SQL de rulat în Supabase:**
+- `sql/gen_client.sql` — adaugă `profiluri.gen` (masculin/feminin). Obligatoriu la înregistrarea clientului, indiferent dacă are animal; editabil din dashboard → Profil. Conturile mai vechi îl au gol.
+- `sql/adresa_judet.sql` — ✅ rulat (adaugă `saloane.judet` și `saloane.public_tinta`, index județ+oraș)
 - `sql/etapa2_domeniu_si_termeni.sql` — ✅ rulat (adaugă `saloane.domeniu`, coloanele de termeni, index domeniu+oraș)
 - `sql/etapa3_animal_optional.sql` — ✅ rulat (face opționale `sex`, `rasa`, `greutate`, `varsta`, `alergii` din `animale`)
 - `sql/trial_si_planuri.sql` — adaugă `saloane.trial_expira_la`, scoate planul `starter`, restricționează `plan` la basic/pro/business

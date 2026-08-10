@@ -12,6 +12,14 @@ const TERMENI_VERSIUNE = "1.1 (03.08.2026)";
 
 type Domeniu = "infrumusetare" | "grooming";
 
+/** Genul clientului. La înfrumusețare serviciile sunt împărțite pe bărbați / damă. */
+type Gen = "masculin" | "feminin";
+
+const GENURI: { val: Gen; label: string; simbol: string }[] = [
+  { val: "masculin", label: "Masculin", simbol: "♂" },
+  { val: "feminin", label: "Feminin", simbol: "♀" },
+];
+
 const DOMENII: { val: Domeniu; Icon: typeof Scissors; titlu: string; desc: string; placeholder: string }[] = [
   { val: "infrumusetare", Icon: Scissors, titlu: "Înfrumusețare", desc: "Frizerie, coafor, manichiură, cosmetică", placeholder: "Ex: Studio Bella" },
   { val: "grooming", Icon: PawPrint, titlu: "Grooming", desc: "Îngrijire pentru câini și pisici", placeholder: "Ex: Pet Spa Băneasa" },
@@ -76,6 +84,7 @@ export default function RegisterPage() {
   const [tip, setTip] = useState<"client" | "salon">("client");
   const [domeniu, setDomeniu] = useState<Domeniu | null>(null);
   const [form, setForm] = useState({ numeSalon: "", numeComplet: "", email: "", telefon: "", parola: "", parolaConfirm: "" });
+  const [gen, setGen] = useState<Gen | null>(null);
   const [acceptTermeni, setAcceptTermeni] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -125,6 +134,7 @@ export default function RegisterPage() {
       if (!form.numeSalon.trim()) e.numeSalon = "Câmp obligatoriu";
     }
     if (!form.numeComplet.trim()) e.numeComplet = "Câmp obligatoriu";
+    if (tip === "client" && !gen) e.gen = "Alege genul";
     if (!form.email.trim()) e.email = "Câmp obligatoriu";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Email invalid";
     if (!form.telefon.trim()) e.telefon = "Câmp obligatoriu";
@@ -150,6 +160,7 @@ export default function RegisterPage() {
           tip,
           nume: form.numeComplet.trim(),
           telefon: form.telefon.trim(),
+          gen: tip === "client" ? gen : null,
           numeSalon: tip === "salon" ? form.numeSalon.trim() : null,
           // verticala aleasa acum; se scrie in tabelul `saloane` la finalul wizardului
           domeniu: tip === "salon" ? domeniu : null,
@@ -175,6 +186,7 @@ export default function RegisterPage() {
           tip,
           nume: form.numeComplet.trim(),
           telefon: form.telefon.trim(),
+          gen: tip === "client" ? gen : null,
           tema: "light",
           termeni_acceptati_la: new Date().toISOString(),
           termeni_versiune: TERMENI_VERSIUNE,
@@ -320,6 +332,34 @@ export default function RegisterPage() {
                   onFocus={() => setFocus("numeComplet")} onBlur={() => setFocus(null)} />
                 {errors.numeComplet && <div style={errStyle}>{errors.numeComplet}</div>}
               </div>
+
+              {/* Genul persoanei — la înfrumusețare serviciile diferă (tuns bărbați / damă),
+                  deci saloanele potrivite se pot arăta din prima. Nu ține de animal:
+                  se cere și celui care nu are unul. */}
+              {tip === "client" && (
+                <div>
+                  <label style={lbl}>Gen *</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {GENURI.map(g => {
+                      const activ = gen === g.val;
+                      return (
+                        <button key={g.val} type="button"
+                          onClick={() => { setGen(g.val); setErrors(e => { const n = { ...e }; delete n.gen; return n; }); }}
+                          style={{
+                            padding: "12px", borderRadius: 12, cursor: "pointer", fontFamily: "Nunito, sans-serif",
+                            border: activ ? `2px solid ${C.orange}` : `1.5px solid ${errors.gen ? "var(--pub-danger)" : C.line}`,
+                            background: activ ? C.orangeSoft : C.surface,
+                            fontSize: 14, fontWeight: 800, color: activ ? "var(--pub-orange-text)" : C.text2,
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                          }}>
+                          {g.simbol} {g.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {errors.gen && <div style={errStyle}>{errors.gen}</div>}
+                </div>
+              )}
 
               <div>
                 <label style={lbl}>Email *</label>

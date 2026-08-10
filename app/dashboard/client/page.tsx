@@ -270,7 +270,7 @@ export default function DashboardClient() {
   const [notifSettings, setNotifSettings] = useState({ sms: true, newsletter: false });
   const [notificari, setNotificari] = useState<Notificare[]>([]);
   const [userId, setUserId] = useState("");
-  const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "" });
+  const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "", gen: "" });
   const [animalForm, setAnimalForm] = useState({ numeAnimal: "", specie: "caine", sex: "", rasa: "", talie: "", greutate: "", varsta: "", alergii: "", vaccinat: false });
   const [savedMsg, setSavedMsg] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -409,7 +409,7 @@ export default function DashboardClient() {
 
       if (profile) {
         setUser({ ...profile, email: authUser.email });
-        setProfilForm({ numeComplet: profile.nume || "", email: authUser.email || "", telefon: profile.telefon || "" });
+        setProfilForm({ numeComplet: profile.nume || "", email: authUser.email || "", telefon: profile.telefon || "", gen: profile.gen || "" });
         if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
         if (profile.tema === "dark") {
           setTheme("dark");
@@ -1916,12 +1916,28 @@ export default function DashboardClient() {
                       <input value={(profilForm as any)[f.key]} onChange={e => setProfilForm(pf => ({ ...pf, [f.key]: e.target.value }))} placeholder={f.placeholder} style={inp} />
                     </div>
                   ))}
+                  <div>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Gen</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      {[{ val: "masculin", label: "♂ Masculin" }, { val: "feminin", label: "♀ Feminin" }].map(g => {
+                        const activ = profilForm.gen === g.val;
+                        return (
+                          <button key={g.val} onClick={() => setProfilForm(pf => ({ ...pf, gen: g.val }))}
+                            style={{ padding: "11px", borderRadius: 12, cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 14, fontWeight: 800,
+                              border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`,
+                              background: activ ? c.orangeAccent : c.surface, color: activ ? "#FF6B00" : c.text2 }}>
+                            {g.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <button onClick={async () => {
                     const { data: { user: authUser } } = await supabase.auth.getUser();
                     if (authUser) {
-                      await supabase.from("profiluri").update({ nume: profilForm.numeComplet, telefon: profilForm.telefon }).eq("id", authUser.id);
+                      await supabase.from("profiluri").update({ nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen || null }).eq("id", authUser.id);
                     }
-                    setUser((u: any) => ({ ...u, nume: profilForm.numeComplet, telefon: profilForm.telefon }));
+                    setUser((u: any) => ({ ...u, nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen }));
                     salveaza("Profil actualizat!");
                   }} style={{ ...btnPrimary, marginTop: 4 }}>Salvează modificările</button>
                 </div>
