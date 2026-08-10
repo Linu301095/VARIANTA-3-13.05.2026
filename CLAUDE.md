@@ -47,7 +47,8 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 4. **Bifa de Termeni** — obligatorie ȘI salvată în bază (`profiluri.termeni_acceptati_la` + `termeni_versiune`), ca să existe dovada consimțământului.
 
 **SQL de rulat în Supabase:**
-- `sql/program_zile_numerice.sql` — repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Programul ales la înscriere era ignorat de agendă și de calendarul de rezervare, iar salonul rămânea pe orarul implicit. Wizardul scrie corect de la 10.08.2026.
+- `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.
+- `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
 - `sql/gen_client.sql` — adaugă `profiluri.gen` (masculin/feminin). Obligatoriu la înregistrarea clientului, indiferent dacă are animal; editabil din dashboard → Profil. Conturile mai vechi îl au gol.
 - `sql/adresa_judet.sql` — ✅ rulat (adaugă `saloane.judet` și `saloane.public_tinta`, index județ+oraș)
 - `sql/etapa2_domeniu_si_termeni.sql` — ✅ rulat (adaugă `saloane.domeniu`, coloanele de termeni, index domeniu+oraș)
@@ -111,6 +112,24 @@ Scris în Termeni, secțiunea 5 (versiunea 1.1).
 **Atenție:** `TERMENI_VERSIUNE` din `app/register/page.tsx` trebuie schimbat ori de câte ori se modifică textul din Termeni sau Confidențialitate.
 
 **Ce NU se atinge în categoria C:** logica Supabase existentă (`signInWithPassword`, `signUp`, upsert profil, temă, redirect pe rol) și OAuth-ul social — butoanele Google/Facebook/telefon rămân decorative până la etapa lor din TODO-ul de lansare.
+
+### Specializările salonului + „pentru cine caut" (10.08.2026)
+
+Două filtre noi în dashboardul clientului, amândouă doar pe verticala de înfrumusețare.
+
+**Specializări** — listă fixă de 7 (`lib/specializari.ts`), **cel mult 3 per salon**. Lista fixă
+împiedică „Frizerie" / „frizerie barbati" / „Barber Shop" să devină categorii diferite; limita de 3
+împiedică salonul să le bifeze pe toate ca să apară peste tot. Se aleg în wizard (pasul Servicii,
+obligatoriu minim 1) și se pot schimba din dashboard → Profilul salonului. Wizardul le **propune**
+din serviciile deja scrise, o singură dată — după prima bifă alegerea e a omului.
+Coloană: `saloane.specializari text[]`.
+
+**„Caut: pentru mine / pentru altcineva / toate"** — genul din `profiluri.gen` filtrează saloanele
+după `saloane.public_tinta`. **Nu ascunde nimic definitiv**: „Toate" e mereu la un clic, iar sub
+butoane scrie câte saloane sunt lăsate deoparte, cu un link „Arată-mi tot". Motivul: femeia rezervă
+des pentru copil sau pentru soț, iar un salon ascuns e o rezervare pierdută. „Pentru altcineva"
+deschide bărbat / femeie / copil; la copil nu se filtrează deloc (se tund și la frizerie, și la coafor).
+Saloanele fără `public_tinta` (cele vechi) rămân vizibile mereu. Conturile fără gen pornesc pe „Toate".
 
 ### Speciile acceptate (rezolvat 03–04.08.2026)
 Clientul vede acum cu ce animale lucrează salonul: iconițe pe cardul din listă și

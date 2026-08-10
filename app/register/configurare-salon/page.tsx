@@ -1,15 +1,16 @@
 "use client";
 import Logo from "../../../components/Logo";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
 import SelectCautabil from "../../../components/SelectCautabil";
 import { NUME_JUDETE, oraseDin, areSectoare, BUCURESTI } from "../../../lib/orase";
+import { SPECIALIZARI, MAX_SPECIALIZARI, specializariSugerate } from "../../../lib/specializari";
 import {
   Store, Scissors, Users, CheckCircle, Plus, Trash2, Clock,
   Building2, FileText, MapPin, Phone, AlignLeft, Globe, Receipt,
-  Camera, ImagePlus, X, PawPrint, Check,
+  Camera, ImagePlus, X, PawPrint, Check, Sparkles,
 } from "lucide-react";
 
 const C = {
@@ -165,6 +166,10 @@ export default function ConfigurareSalon() {
   /** Cui se adresează salonul de înfrumusețare — decide ce servicii propunem. */
   const [publicTinta, setPublicTinta] = useState<Public | null>(null);
   const [servicii, setServicii] = useState<Serviciu[]>([{ nume: "", pret: "", durata: "" }]);
+  /** Categoriile după care clientul filtrează. Listă fixă, cel mult 3. */
+  const [specializari, setSpecializari] = useState<string[]>([]);
+  /** Sugestia s-a aplicat o dată; după aceea alegerea e a omului. */
+  const specializariAtinse = useRef(false);
   const [echipa, setEchipa] = useState<Membru[]>([{ nume: "", specialitate: "" }]);
   const [program, setProgram] = useState<Record<string, ZiProgram>>(PROGRAM_DEFAULT);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -195,6 +200,17 @@ export default function ConfigurareSalon() {
   }, []);
 
   const d = domeniu ? DOM[domeniu] : null;
+
+  /**
+   * Propunem specializările din serviciile deja scrise — un salon care are
+   * „Manichiură" și „Unghii cu gel" e evident de unghii. Se întâmplă o singură
+   * dată: din clipa în care omul atinge o bifă, alegerea îi aparține.
+   */
+  useEffect(() => {
+    if (specializariAtinse.current) return;
+    const propuse = specializariSugerate(servicii.map(s => s.nume).filter(Boolean));
+    if (propuse.length > 0) setSpecializari(propuse);
+  }, [servicii]);
 
   function setFirma(k: string, v: string) {
     setDateFirma(f => ({ ...f, [k]: v }));
@@ -254,6 +270,7 @@ export default function ConfigurareSalon() {
     // sugestii n-are ce arăta.
     if (!d?.areSpecii && !publicTinta) e.publicTinta = "Alege cui se adresează salonul";
     if (!servicii.some(s => s.nume.trim())) e.serviciiMinim = "Adaugă cel puțin un serviciu";
+    if (!d?.areSpecii && specializari.length === 0) e.specializari = "Alege cel puțin o specializare";
     servicii.forEach((s, i) => {
       if (!s.nume.trim()) e[`s_nume_${i}`] = "Obligatoriu";
       if (!s.pret.trim()) e[`s_pret_${i}`] = "Obligatoriu";
@@ -346,6 +363,7 @@ export default function ConfigurareSalon() {
           domeniu,
           specii: d?.areSpecii ? speciiSelectate : [],
           public_tinta: d?.areSpecii ? null : publicTinta,
+          specializari: d?.areSpecii ? [] : specializari,
           tip_entitate: dateFirma.tipEntitate,
           denumire_legala: dateFirma.denumireLegala.trim(),
           cui: dateFirma.cui.trim(),
@@ -712,6 +730,59 @@ export default function ConfigurareSalon() {
                     <Plus size={16} strokeWidth={2.5} /> Adaugă serviciu
                   </button>
                 </div>
+
+                {/* ── Specializări — doar la înfrumusețare ── */}
+                {!d?.areSpecii && (
+                  <div style={{ marginTop: 30, paddingTop: 24, borderTop: `1px solid ${C.line}` }}>
+                    <div style={sectiune}>
+                      <Sparkles size={12} strokeWidth={2.5} /> Ce fel de salon ești? *
+                    </div>
+                    <p style={{ fontSize: 13, color: C.muted, margin: "-8px 0 14px" }}>
+                      După asta te găsesc clienții care caută exact ce faci tu.
+                      Alege între 1 și {MAX_SPECIALIZARI} — pe cele în care chiar ești bun.
+                    </p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 210px), 1fr))", gap: 10 }}>
+                      {SPECIALIZARI.map(sp => {
+                        const activ = specializari.includes(sp.val);
+                        const plin = specializari.length >= MAX_SPECIALIZARI && !activ;
+                        return (
+                          <button key={sp.val} type="button" disabled={plin}
+                            onClick={() => {
+                              specializariAtinse.current = true;
+                              setSpecializari(prev => prev.includes(sp.val)
+                                ? prev.filter(x => x !== sp.val)
+                                : prev.length >= MAX_SPECIALIZARI ? prev : [...prev, sp.val]);
+                              setErrors(e => { const n = { ...e }; delete n.specializari; return n; });
+                            }}
+                            style={{
+                              textAlign: "left", padding: "13px 15px", borderRadius: 14, cursor: plin ? "not-allowed" : "pointer",
+                              fontFamily: "Nunito, sans-serif", opacity: plin ? .45 : 1,
+                              border: activ ? `2px solid ${C.orange}` : `1.5px solid ${errors.specializari ? "var(--pub-danger)" : C.line}`,
+                              background: activ ? C.orangeSoft : C.surface, transition: "all .18s",
+                            }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+                              <span style={{
+                                width: 17, height: 17, borderRadius: 5, flexShrink: 0,
+                                border: activ ? "none" : `1.5px solid ${C.line}`,
+                                background: activ ? C.orange : "transparent",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                              }}>
+                                {activ && <Check size={11} color="#fff" strokeWidth={3.5} />}
+                              </span>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: activ ? "var(--pub-orange-text)" : C.text }}>{sp.label}</span>
+                            </div>
+                            <div style={{ fontSize: 11.5, color: C.muted, lineHeight: 1.45, paddingLeft: 24 }}>{sp.exemple}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: specializari.length >= MAX_SPECIALIZARI ? "var(--pub-orange-text)" : C.dim }}>
+                      {specializari.length} din {MAX_SPECIALIZARI} alese
+                      {specializari.length >= MAX_SPECIALIZARI && " — scoate una ca să pui alta"}
+                    </div>
+                    {errors.specializari && <div style={errStyle}>{errors.specializari}</div>}
+                  </div>
+                )}
               </div>
             )}
 

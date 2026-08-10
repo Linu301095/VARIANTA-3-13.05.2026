@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
+import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
   { nume: "Tuns complet", pret: "80", durata: "60" },
@@ -26,7 +27,7 @@ type Domeniu = "infrumusetare" | "grooming";
 /** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
 type Lume = "tine" | "animal";
 const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
-type SalonItem = { domeniu?: Domeniu; specii?: string[]; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -53,6 +54,8 @@ function mapSalonDB(s: any, i: number): SalonItem {
   return {
     domeniu: s.domeniu === "infrumusetare" ? "infrumusetare" : "grooming",
     specii: Array.isArray(s.specii) ? s.specii : [],
+    specializari: Array.isArray(s.specializari) ? s.specializari : [],
+    publicTinta: s.public_tinta || null,
     id: s.id,
     nume: s.nume || "Salon",
     oras: s.oras || "România",
@@ -297,6 +300,17 @@ export default function DashboardClient() {
   const [observatiiBooking, setObservatiiBooking] = useState("");
   const [sortareSalon, setSortareSalon] = useState<"recomandat" | "rating" | "alfabetic">("recomandat");
   const [filtruServiciu, setFiltruServiciu] = useState("");
+  /** Genul din profil — decide pe cine punem în față în lista de saloane. */
+  const [genUser, setGenUser] = useState("");
+  /**
+   * Pentru cine caută omul acum. Genul lui e doar punctul de pornire: o femeie
+   * rezervă des pentru copil sau pentru soț, iar un salon ascuns e o rezervare
+   * pierdută. De asta „Toate" e mereu la un clic distanță — nu ascundem nimic,
+   * doar punem în față ce se potrivește.
+   */
+  const [pentruCine, setPentruCine] = useState<"mine" | "altcineva" | "toate">("mine");
+  const [altcinevaCine, setAltcinevaCine] = useState<"barbat" | "femeie" | "copil" | null>(null);
+  const [filtruSpec, setFiltruSpec] = useState("");
   const [filtruServiciuDropdown, setFiltruServiciuDropdown] = useState(false);
   const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
   const [recenziiLoading, setRecenziiLoading] = useState(false);
@@ -404,12 +418,18 @@ export default function DashboardClient() {
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
-        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii").order("created_at", { ascending: false }),
+        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
       ]);
 
       if (profile) {
         setUser({ ...profile, email: authUser.email });
         setProfilForm({ numeComplet: profile.nume || "", email: authUser.email || "", telefon: profile.telefon || "", gen: profile.gen || "" });
+        setGenUser(profile.gen || "");
+        // Conturile fără gen (cele dinainte) n-au de unde ști ce înseamnă „pentru mine".
+        if (!profile.gen) setPentruCine("toate");
+        setGenUser(profile.gen || "");
+        // Conturile fără gen (cele dinainte) nu au de unde ști „pentru mine".
+        if (!profile.gen) setPentruCine("toate");
         if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
         if (profile.tema === "dark") {
           setTheme("dark");
@@ -1618,13 +1638,47 @@ export default function DashboardClient() {
 
   const serviciiDisponibile = Array.from(new Set(saloaneLume.flatMap(s => s.servicii))).sort();
 
-  const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || sortareSalon !== "recomandat";
+  // Doar la înfrumusețare are sens „pentru cine" — la grooming contează specia.
+  const eBeauty = domeniuLume === "infrumusetare";
+
+  /**
+   * Publicul căutat acum: „barbati", „dama" sau null (= arată tot).
+   * Copiii se tund și la frizerie, și la coafor, deci acolo nu filtrăm.
+   */
+  const tintaCautata: string | null = !eBeauty || pentruCine === "toate" ? null
+    : pentruCine === "mine" ? (genUser === "masculin" ? "barbati" : genUser === "feminin" ? "dama" : null)
+    : altcinevaCine === "barbat" ? "barbati"
+    : altcinevaCine === "femeie" ? "dama"
+    : null;
+
+  /** Un salon fără public declarat rămâne vizibil — nu-l pedepsim că e mai vechi. */
+  const potrivitPublicului = (s: SalonItem) =>
+    !tintaCautata || !s.publicTinta || s.publicTinta === "ambele" || s.publicTinta === tintaCautata;
+
+  /** Specializările pe care le are cineva în orașul ăsta — fără ele, chipsul n-are rost. */
+  const specializariDisponibile = eBeauty
+    ? SPECIALIZARI.filter(sp => saloaneLume.some(s => (s.specializari || []).includes(sp.val)))
+    : [];
+
+  const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || filtruSpec !== "" || sortareSalon !== "recomandat" || tintaCautata !== null;
   const saloneFiltrate = saloaneLume.filter(s => {
     if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase()) && !s.servicii.some(sv => sv.toLowerCase().includes(cautare.toLowerCase()))) return false;
     if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
     if (filtruServiciu && !s.servicii.some(sv => sv.toLowerCase() === filtruServiciu.toLowerCase())) return false;
+    if (filtruSpec && !(s.specializari || []).includes(filtruSpec)) return false;
+    if (!potrivitPublicului(s)) return false;
     return true;
   });
+
+  /** Câte saloane ascunde acum filtrul de public — ca să i-o putem spune omului. */
+  const ascunseDeGen = tintaCautata
+    ? saloaneLume.filter(s => {
+        if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase()) && !s.servicii.some(sv => sv.toLowerCase().includes(cautare.toLowerCase()))) return false;
+        if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
+        if (filtruSpec && !(s.specializari || []).includes(filtruSpec)) return false;
+        return !potrivitPublicului(s);
+      }).length
+    : 0;
 
   if (sortareSalon === "rating") {
     saloneFiltrate.sort((a, b) => {
@@ -1744,6 +1798,68 @@ export default function DashboardClient() {
 
             {/* Sortare + filtru serviciu */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+
+              {/* Rând 0: pentru cine — doar la înfrumusețare și doar dacă știm genul */}
+              {eBeauty && genUser && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Caut:</span>
+                    {[
+                      { val: "mine", label: "Pentru mine" },
+                      { val: "altcineva", label: "Pentru altcineva" },
+                      { val: "toate", label: "Toate saloanele" },
+                    ].map(opt => (
+                      <button key={opt.val}
+                        onClick={() => { setPentruCine(opt.val as any); if (opt.val !== "altcineva") setAltcinevaCine(null); }}
+                        style={{ padding: "7px 14px", borderRadius: 50, border: pentruCine === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: pentruCine === opt.val ? "#FFF3EA" : c.surface, color: pentruCine === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {pentruCine === "altcineva" && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", paddingLeft: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Pentru cine?</span>
+                      {[
+                        { val: "barbat", label: "Un bărbat" },
+                        { val: "femeie", label: "O femeie" },
+                        { val: "copil", label: "Un copil" },
+                      ].map(opt => (
+                        <button key={opt.val} onClick={() => setAltcinevaCine(opt.val as any)}
+                          style={{ padding: "6px 13px", borderRadius: 50, border: altcinevaCine === opt.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: altcinevaCine === opt.val ? "#FFF3EA" : c.surface, color: altcinevaCine === opt.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {ascunseDeGen > 0 && (
+                    <div style={{ fontSize: 11.5, color: c.xmuted }}>
+                      {ascunseDeGen} {ascunseDeGen === 1 ? "salon nu lucrează" : "saloane nu lucrează"} cu publicul ăsta.{" "}
+                      <button onClick={() => { setPentruCine("toate"); setAltcinevaCine(null); }}
+                        style={{ background: "none", border: "none", padding: 0, color: "#FF6B00", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", textDecoration: "underline" }}>
+                        Arată-mi tot
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Rând 0b: specializări */}
+              {specializariDisponibile.length > 0 && (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Tip salon:</span>
+                  <button onClick={() => setFiltruSpec("")}
+                    style={{ padding: "7px 14px", borderRadius: 50, border: !filtruSpec ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: !filtruSpec ? "#FFF3EA" : c.surface, color: !filtruSpec ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    Toate
+                  </button>
+                  {specializariDisponibile.map(sp => (
+                    <button key={sp.val} onClick={() => setFiltruSpec(filtruSpec === sp.val ? "" : sp.val)}
+                      style={{ padding: "7px 14px", borderRadius: 50, border: filtruSpec === sp.val ? "1.5px solid #FF6B00" : `1.5px solid ${c.border}`, background: filtruSpec === sp.val ? "#FFF3EA" : c.surface, color: filtruSpec === sp.val ? "#FF6B00" : c.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                      {sp.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Rând 1: sortare */}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: c.muted }}>Sortare:</span>
@@ -1797,6 +1913,7 @@ export default function DashboardClient() {
                   {saloneFiltrate.length > 0 ? `${saloneFiltrate.length} salon${saloneFiltrate.length === 1 ? "" : "e"} găsite` : "Niciun salon găsit"}
                   {filtruOras && <span style={{ marginLeft: 8, color: "#FF6B00" }}>în {filtruOras}</span>}
                   {filtruServiciu && <span style={{ marginLeft: 8, color: "#FF6B00" }}>· {filtruServiciu}</span>}
+                  {filtruSpec && <span style={{ marginLeft: 8, color: "#FF6B00" }}>· {labelSpecializare(filtruSpec)}</span>}
                 </div>
                 {saloneFiltrate.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>

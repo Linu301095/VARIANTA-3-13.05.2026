@@ -8,6 +8,7 @@ import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { stareTrial, zileText, ZILE_AVERTISMENT } from "../../../lib/trial";
 import { numePlan } from "../../../lib/planuri";
+import { SPECIALIZARI, MAX_SPECIALIZARI } from "../../../lib/specializari";
 import Cropper from "react-easy-crop";
 import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
 
@@ -840,6 +841,7 @@ export default function DashboardSalon() {
   const [savedMsg, setSavedMsg] = useState("");
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
   const [speciiSalon, setSpeciiSalon] = useState<string[]>([]);
+  const [specializariSalon, setSpecializariSalon] = useState<string[]>([]);
   const [pozaUrl, setPozaUrl] = useState<string | null>(null);
   const [galerie, setGalerie] = useState<string[]>([]);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -940,6 +942,8 @@ export default function DashboardSalon() {
           descriere: salonRow.descriere || "",
         });
         if (Array.isArray(salonRow.specii)) setSpeciiSalon(salonRow.specii);
+        if (Array.isArray(salonRow.specializari)) setSpecializariSalon(salonRow.specializari);
+        if (Array.isArray(salonRow.specializari)) setSpecializariSalon(salonRow.specializari);
         if (salonRow.poza_url) setPozaUrl(salonRow.poza_url);
         if (salonRow.galerie && Array.isArray(salonRow.galerie)) setGalerie(salonRow.galerie);
         if (salonRow.program && typeof salonRow.program === "object" && Object.keys(salonRow.program).length > 0) {
@@ -3633,8 +3637,43 @@ export default function DashboardSalon() {
                       </div>
                     )}
 
+                    {/* Specializări — doar la înfrumusețare. Listă fixă, cel mult 3:
+                        altfel fiecare salon le bifează pe toate ca să apară peste tot,
+                        iar filtrul clientului nu mai selectează nimic. */}
+                    {!areAnimale && (
+                      <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>
+                          Ce fel de salon ești <span style={{ color: c.xmuted, fontWeight: 600 }}>(max. {MAX_SPECIALIZARI})</span>
+                        </label>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: 8 }}>
+                          {SPECIALIZARI.map(sp => {
+                            const sel = specializariSalon.includes(sp.val);
+                            const plin = specializariSalon.length >= MAX_SPECIALIZARI && !sel;
+                            return (
+                              <button key={sp.val} type="button" disabled={plin}
+                                onClick={() => setSpecializariSalon(prev => prev.includes(sp.val)
+                                  ? prev.filter(x => x !== sp.val)
+                                  : prev.length >= MAX_SPECIALIZARI ? prev : [...prev, sp.val])}
+                                style={{ textAlign: "left", padding: "11px 13px", borderRadius: 12, cursor: plin ? "not-allowed" : "pointer", opacity: plin ? .45 : 1,
+                                  border: sel ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: sel ? c.orangeAccent : c.surface2,
+                                  fontFamily: "Nunito, sans-serif", transition: "all .18s" }}>
+                                <div style={{ fontSize: 13, fontWeight: 800, color: sel ? "#FF6B00" : c.text }}>{sel ? "✓ " : ""}{sp.label}</div>
+                                <div style={{ fontSize: 10.5, color: c.muted, marginTop: 2, lineHeight: 1.4 }}>{sp.exemple}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div style={{ fontSize: 11, color: specializariSalon.length === 0 ? "#EF4444" : c.muted, marginTop: 8, fontWeight: specializariSalon.length === 0 ? 700 : 400 }}>
+                          {specializariSalon.length === 0
+                            ? "Alege cel puțin una — după ea te găsesc clienții care caută exact ce faci."
+                            : `${specializariSalon.length} din ${MAX_SPECIALIZARI} alese. Clienții filtrează lista de saloane după ele.`}
+                        </div>
+                      </div>
+                    )}
+
                     <button onClick={async () => {
                       if (areAnimale && speciiSalon.length === 0) { salveaza("Selectează cel puțin o specie."); return; }
+                      if (!areAnimale && specializariSalon.length === 0) { salveaza("Alege cel puțin o specializare."); return; }
                       const { data: { user: authUser } } = await supabase.auth.getUser();
                       if (authUser) {
                         const patch: any = {
@@ -3645,6 +3684,7 @@ export default function DashboardSalon() {
                           descriere: profilSalon.descriere,
                         };
                         if (areAnimale) patch.specii = speciiSalon;
+                        else patch.specializari = specializariSalon;
                         await supabase.from("saloane").update(patch).eq("user_id", authUser.id);
                         setSalonData((s: any) => ({ ...s, ...patch }));
                       }
