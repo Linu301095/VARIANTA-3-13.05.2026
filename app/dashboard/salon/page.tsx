@@ -3840,7 +3840,35 @@ export default function DashboardSalon() {
                                             {activ ? "✓ Face" : "Nu face"}
                                           </button>
                                         </div>
-                                        {activ && (
+                                        {activ && !areAnimale && (
+                                          <>
+                                            {/* Fără talii: la oameni un serviciu are un preț, nu trei.
+                                                Se scrie pe toate trei cheile ca citirea de la client
+                                                (care cade pe „medie") să găsească aceeași valoare. */}
+                                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                                              <div>
+                                                <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, marginBottom: 4 }}>Preț (RON)</div>
+                                                <input type="number" value={preturiOv.medie || ""} placeholder={preturiBaza.medie ? `${preturiBaza.medie} (salon)` : "—"}
+                                                  onChange={e => { const v = e.target.value; updateOv(o => ({ ...o, preturi: { mica: v, medie: v, mare: v } })); }}
+                                                  style={inpSmall} />
+                                              </div>
+                                              <div>
+                                                <div style={{ fontSize: 10, fontWeight: 800, color: c.xmuted, marginBottom: 4 }}>Durată (min)</div>
+                                                <input type="number" value={durateOv.medie || ""} placeholder={durateBaza.medie ? `${durateBaza.medie} (salon)` : "—"}
+                                                  onChange={e => { const v = e.target.value; updateOv(o => ({ ...o, durate: { mica: v, medie: v, mare: v } })); }}
+                                                  style={inpSmall} />
+                                              </div>
+                                            </div>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                              <div style={{ fontSize: 10, color: c.xmuted }}>Lasă gol → folosește prețul salonului ({preturiBaza.medie || "—"} RON / {durateBaza.medie || "—"} min).</div>
+                                              <button onClick={() => updateOv(o => ({ nume: o.nume }))}
+                                                style={{ fontSize: 11, fontWeight: 700, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, padding: "4px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                                ↺ Folosește prețurile salonului
+                                              </button>
+                                            </div>
+                                          </>
+                                        )}
+                                        {activ && areAnimale && (
                                           <>
                                             <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr", gap: 6, alignItems: "center", marginBottom: 8 }}>
                                               <div></div>
