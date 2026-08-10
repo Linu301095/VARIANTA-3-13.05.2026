@@ -217,12 +217,16 @@ function timpRelativ(iso: string): string {
   return ani === 1 ? "acum 1 an" : `acum ${ani} ani`;
 }
 
-/* ── Color palette ── */
+/* ── Color palette ──
+   Marginile sunt portocaliu deschis, nu gri: ecranul se leagă de marcă fără
+   să piardă semnalul „asta e selectat", care rămâne portocaliul plin.
+   Dacă ne răzgândim, se schimbă doar cele două valori `border` de mai jos:
+   light → "#EBEBEB" / "#F3F4F6", dark → "#2A2A2A" / "#2A2A2A". */
 const C = {
   light: {
     pageBg: "#F8F8F8", surface: "#ffffff", surface2: "#F9FAFB", surface3: "#F3F4F6",
     text: "#1A1A1A", text2: "#374151", muted: "#6B7280", xmuted: "#9CA3AF",
-    border: "#EBEBEB", border2: "#F3F4F6", input: "#ffffff",
+    border: "#FFD9BF", border2: "#FFE9D8", input: "#ffffff",
     orangeAccent: "#FFF3EA", orangeBorder: "#FFDCC6",
     shadow: "0 8px 32px rgba(0,0,0,.12)", cardShadow: "0 2px 16px rgba(0,0,0,.05)",
     toggleOff: "#E5E7EB",
@@ -230,7 +234,7 @@ const C = {
   dark: {
     pageBg: "#0A0A0A", surface: "#161616", surface2: "#1F1F1F", surface3: "#262626",
     text: "#F5F5F5", text2: "#E5E7EB", muted: "#9CA3AF", xmuted: "#6B7280",
-    border: "#2A2A2A", border2: "#2A2A2A", input: "#111111",
+    border: "#4A3320", border2: "#3A2A1C", input: "#111111",
     orangeAccent: "rgba(255,107,0,0.13)", orangeBorder: "rgba(255,107,0,0.25)",
     shadow: "0 8px 32px rgba(0,0,0,.5)", cardShadow: "0 2px 16px rgba(0,0,0,.3)",
     toggleOff: "#3A3A3A",
