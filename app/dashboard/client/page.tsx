@@ -307,14 +307,6 @@ export default function DashboardClient() {
   const [filtruServiciu, setFiltruServiciu] = useState("");
   /** Genul din profil — decide pe cine punem în față în lista de saloane. */
   const [genUser, setGenUser] = useState("");
-  /**
-   * Pentru cine caută omul acum. Genul lui e doar punctul de pornire: o femeie
-   * rezervă des pentru copil sau pentru soț, iar un salon ascuns e o rezervare
-   * pierdută. De asta „Toate" e mereu la un clic distanță — nu ascundem nimic,
-   * doar punem în față ce se potrivește.
-   */
-  const [pentruCine, setPentruCine] = useState<"mine" | "altcineva" | "toate">("mine");
-  const [altcinevaCine, setAltcinevaCine] = useState<"barbat" | "femeie" | "copil" | null>(null);
   const [filtruSpec, setFiltruSpec] = useState("");
   const [filtruServiciuDropdown, setFiltruServiciuDropdown] = useState(false);
   const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
@@ -430,8 +422,6 @@ export default function DashboardClient() {
         setUser({ ...profile, email: authUser.email });
         setProfilForm({ numeComplet: profile.nume || "", email: authUser.email || "", telefon: profile.telefon || "", gen: profile.gen || "" });
         setGenUser(profile.gen || "");
-        // Conturile fără gen (cele dinainte) n-au de unde ști ce înseamnă „pentru mine".
-        if (!profile.gen) setPentruCine("toate");
         if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
         if (profile.tema === "dark") {
           setTheme("dark");
@@ -1644,31 +1634,36 @@ export default function DashboardClient() {
   const eBeauty = domeniuLume === "infrumusetare";
 
   /**
-   * Publicul căutat acum: „barbati", „dama" sau null (= arată tot).
-   * Copiii se tund și la frizerie, și la coafor, deci acolo nu filtrăm.
+   * Genul din profil, tradus în publicul salonului. Nu ascunde nimic: e doar
+   * cheia după care ordonăm. Un filtru care scoate din listă salonul greșit
+   * costă o rezervare; o ordine greșită nu costă nimic — iar mama care rezervă
+   * pentru băiat nu mai trebuie să caute un buton ca să vadă frizeriile.
    */
-  const tintaCautata: string | null = !eBeauty || pentruCine === "toate" ? null
-    : pentruCine === "mine" ? (genUser === "masculin" ? "barbati" : genUser === "feminin" ? "dama" : null)
-    : altcinevaCine === "barbat" ? "barbati"
-    : altcinevaCine === "femeie" ? "dama"
+  const publicPotrivit: string | null = !eBeauty
+    ? null
+    : genUser === "masculin" ? "barbati"
+    : genUser === "feminin" ? "dama"
     : null;
 
-  /** Un salon fără public declarat rămâne vizibil — nu-l pedepsim că e mai vechi. */
-  const potrivitPublicului = (s: SalonItem) =>
-    !tintaCautata || !s.publicTinta || s.publicTinta === "ambele" || s.publicTinta === tintaCautata;
+  /** Cât de bine se potrivește un salon: 0 = direct pentru tine, 2 = altceva. */
+  const prioritatePublic = (s: SalonItem) => {
+    if (!publicPotrivit) return 0;
+    if (s.publicTinta === publicPotrivit) return 0;
+    if (s.publicTinta === "ambele" || !s.publicTinta) return 1;
+    return 2;
+  };
 
   /** Specializările pe care le are cineva în orașul ăsta — fără ele, chipsul n-are rost. */
   const specializariDisponibile = eBeauty
     ? SPECIALIZARI.filter(sp => saloaneLume.some(s => (s.specializari || []).includes(sp.val)))
     : [];
 
-  const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || filtruSpec !== "" || sortareSalon !== "recomandat" || tintaCautata !== null;
+  const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || filtruSpec !== "" || sortareSalon !== "recomandat";
   const saloneFiltrate = saloaneLume.filter(s => {
     if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase()) && !s.servicii.some(sv => sv.toLowerCase().includes(cautare.toLowerCase()))) return false;
     if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
     if (filtruServiciu && !s.servicii.some(sv => sv.toLowerCase() === filtruServiciu.toLowerCase())) return false;
     if (filtruSpec && !(s.specializari || []).includes(filtruSpec)) return false;
-    if (!potrivitPublicului(s)) return false;
     return true;
   });
 
@@ -1693,27 +1688,15 @@ export default function DashboardClient() {
    * Câte filtre chiar restrâng lista. Sortarea nu intră — schimbă ordinea,
    * nu ce se vede, iar „1 filtru activ" pentru A–Z ar fi o minciună mică.
    */
-  const filtreActive = [cautare !== "", filtruOras !== "", filtruSpec !== "", filtruServiciu !== "", tintaCautata !== null].filter(Boolean).length;
+  const filtreActive = [cautare !== "", filtruOras !== "", filtruSpec !== "", filtruServiciu !== ""].filter(Boolean).length;
 
   function stergeFiltrele() {
     setCautare("");
     setFiltruOras("");
     setFiltruSpec("");
     setFiltruServiciu("");
-    setPentruCine("toate");
-    setAltcinevaCine(null);
     setSortareSalon("recomandat");
   }
-
-  /** Câte saloane ascunde acum filtrul de public — ca să i-o putem spune omului. */
-  const ascunseDeGen = tintaCautata
-    ? saloaneLume.filter(s => {
-        if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase()) && !s.servicii.some(sv => sv.toLowerCase().includes(cautare.toLowerCase()))) return false;
-        if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
-        if (filtruSpec && !(s.specializari || []).includes(filtruSpec)) return false;
-        return !potrivitPublicului(s);
-      }).length
-    : 0;
 
   if (sortareSalon === "rating") {
     saloneFiltrate.sort((a, b) => {
@@ -1726,6 +1709,11 @@ export default function DashboardClient() {
     });
   } else if (sortareSalon === "alfabetic") {
     saloneFiltrate.sort((a, b) => a.nume.localeCompare(b.nume, "ro"));
+  } else if (publicPotrivit) {
+    // „Recomandate" chiar recomandă acum ceva: saloanele care lucrează cu tine
+    // primele, apoi cele mixte și cele care nu și-au declarat publicul, apoi
+    // restul. Nimic nu dispare din listă.
+    saloneFiltrate.sort((a, b) => prioritatePublic(a) - prioritatePublic(b));
   }
 
   return (
@@ -1845,58 +1833,9 @@ export default function DashboardClient() {
                 de linii subțiri, iar sub el o bară arată ce e pornit. */}
             <div style={{ background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 20, padding: "2px 18px", boxShadow: c.shadow, marginBottom: filtreActive > 0 ? 10 : 18 }}>
 
-              {/* Caut — doar la înfrumusețare și doar dacă știm genul */}
-              {eBeauty && genUser && (
-                <div style={stilGrup(true)}>
-                  <span style={stilCap}>
-                    <Search size={14} strokeWidth={2.2} color={c.xmuted} />
-                    <span style={stilCapTxt}>Caut</span>
-                  </span>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 0 }}>
-                    <div style={stilChips}>
-                      {[
-                        { val: "mine", label: "Pentru mine" },
-                        { val: "altcineva", label: "Pentru altcineva" },
-                        { val: "toate", label: "Toate saloanele" },
-                      ].map(opt => (
-                        <button key={opt.val}
-                          onClick={() => { setPentruCine(opt.val as any); if (opt.val !== "altcineva") setAltcinevaCine(null); }}
-                          style={chipF(pentruCine === opt.val)}>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                    {pentruCine === "altcineva" && (
-                      <div style={{ ...stilChips, alignItems: "center" }}>
-                        <span style={{ fontSize: 11.5, fontWeight: 700, color: c.muted }}>Pentru cine?</span>
-                        {[
-                          { val: "barbat", label: "Un bărbat" },
-                          { val: "femeie", label: "O femeie" },
-                          { val: "copil", label: "Un copil" },
-                        ].map(opt => (
-                          <button key={opt.val} onClick={() => setAltcinevaCine(opt.val as any)}
-                            style={{ ...chipF(altcinevaCine === opt.val), padding: "6px 13px", fontSize: 12 }}>
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {ascunseDeGen > 0 && (
-                      <div style={{ fontSize: 11.5, color: c.xmuted }}>
-                        {ascunseDeGen} {ascunseDeGen === 1 ? "salon nu lucrează" : "saloane nu lucrează"} cu publicul ăsta.{" "}
-                        <button onClick={() => { setPentruCine("toate"); setAltcinevaCine(null); }}
-                          style={{ background: "none", border: "none", padding: 0, color: "#FF6B00", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", textDecoration: "underline" }}>
-                          Arată-mi tot
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* Tip salon — apare doar dacă există saloane cu specializarea respectivă */}
               {specializariDisponibile.length > 0 && (
-                <div style={stilGrup(!(eBeauty && genUser))}>
+                <div style={stilGrup(true)}>
                   <span style={stilCap}>
                     <LayoutGrid size={14} strokeWidth={2.2} color={c.xmuted} />
                     <span style={stilCapTxt}>Tip salon</span>
@@ -1914,22 +1853,30 @@ export default function DashboardClient() {
               )}
 
               {/* Sortare */}
-              <div style={stilGrup(!(eBeauty && genUser) && specializariDisponibile.length === 0)}>
+              <div style={stilGrup(specializariDisponibile.length === 0)}>
                 <span style={stilCap}>
                   <ArrowDownWideNarrow size={14} strokeWidth={2.2} color={c.xmuted} />
                   <span style={stilCapTxt}>Sortare</span>
                 </span>
-                <div style={stilChips}>
-                  {[
-                    { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
-                    { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
-                    { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
-                  ].map(opt => (
-                    <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
-                      style={{ ...chipF(sortareSalon === opt.val), display: "flex", alignItems: "center", gap: 5 }}>
-                      {opt.icon}{opt.label}
-                    </button>
-                  ))}
+                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  <div style={stilChips}>
+                    {[
+                      { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
+                      { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
+                      { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
+                    ].map(opt => (
+                      <button key={opt.val} onClick={() => setSortareSalon(opt.val as any)}
+                        style={{ ...chipF(sortareSalon === opt.val), display: "flex", alignItems: "center", gap: 5 }}>
+                        {opt.icon}{opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Spunem pe față de ce e lista în ordinea asta — altfel pare arbitrară. */}
+                  {sortareSalon === "recomandat" && publicPotrivit && (
+                    <div style={{ fontSize: 11.5, color: c.xmuted }}>
+                      Saloanele care lucrează cu tine apar primele. Toate rămân în listă.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2125,7 +2072,6 @@ export default function DashboardClient() {
                     setUser((u: any) => ({ ...u, nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen }));
                     // Fără asta, silueta din salut și filtrul „Caut" rămâneau pe valoarea veche până la refresh.
                     setGenUser(profilForm.gen);
-                    if (profilForm.gen && pentruCine === "toate") setPentruCine("mine");
                     salveaza("Profil actualizat!");
                   }} style={{ ...btnPrimary, marginTop: 4 }}>Salvează modificările</button>
                 </div>

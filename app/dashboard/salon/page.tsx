@@ -845,6 +845,7 @@ export default function DashboardSalon() {
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
   const [speciiSalon, setSpeciiSalon] = useState<string[]>([]);
   const [specializariSalon, setSpecializariSalon] = useState<string[]>([]);
+  const [publicTinta, setPublicTinta] = useState<string>("");
   const [pozaUrl, setPozaUrl] = useState<string | null>(null);
   const [galerie, setGalerie] = useState<string[]>([]);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -946,6 +947,7 @@ export default function DashboardSalon() {
         });
         if (Array.isArray(salonRow.specii)) setSpeciiSalon(salonRow.specii);
         if (Array.isArray(salonRow.specializari)) setSpecializariSalon(salonRow.specializari);
+        if (salonRow.public_tinta) setPublicTinta(salonRow.public_tinta);
         if (Array.isArray(salonRow.specializari)) setSpecializariSalon(salonRow.specializari);
         if (salonRow.poza_url) setPozaUrl(salonRow.poza_url);
         if (salonRow.galerie && Array.isArray(salonRow.galerie)) setGalerie(salonRow.galerie);
@@ -3640,6 +3642,36 @@ export default function DashboardSalon() {
                       </div>
                     )}
 
+                    {/* Publicul salonului — se alegea doar în wizardul de înscriere, deci
+                        saloanele înscrise înainte n-aveau cum să-l completeze niciodată. */}
+                    {!areAnimale && (
+                      <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Cui se adresează salonul</label>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 8 }}>
+                          {[
+                            { val: "barbati", titlu: "Bărbați", sub: "Frizerie, barbă, styling" },
+                            { val: "dama", titlu: "Damă", sub: "Coafor, culoare, unghii" },
+                            { val: "ambele", titlu: "Amândouă", sub: "Salon mixt" },
+                          ].map(o => {
+                            const sel = publicTinta === o.val;
+                            return (
+                              <button key={o.val} type="button" onClick={() => setPublicTinta(o.val)}
+                                style={{ padding: "11px 12px", borderRadius: 12, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "center",
+                                  border: sel ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: sel ? c.orangeAccent : c.surface2, transition: "all .18s" }}>
+                                <div style={{ fontSize: 13, fontWeight: 900, color: sel ? "#FF6B00" : c.text }}>{o.titlu}</div>
+                                <div style={{ fontSize: 10.5, color: c.muted, marginTop: 2, lineHeight: 1.4 }}>{o.sub}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div style={{ fontSize: 11, color: publicTinta ? c.muted : "#EF4444", marginTop: 8, fontWeight: publicTinta ? 400 : 700 }}>
+                          {publicTinta
+                            ? "Clienții văd întâi saloanele care lucrează cu ei."
+                            : "Necompletat — clienții nu știu dacă lucrezi cu ei."}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Specializări — doar la înfrumusețare. Listă fixă, cel mult 3:
                         altfel fiecare salon le bifează pe toate ca să apară peste tot,
                         iar filtrul clientului nu mai selectează nimic. */}
@@ -3687,7 +3719,7 @@ export default function DashboardSalon() {
                           descriere: profilSalon.descriere,
                         };
                         if (areAnimale) patch.specii = speciiSalon;
-                        else patch.specializari = specializariSalon;
+                        else { patch.specializari = specializariSalon; patch.public_tinta = publicTinta || null; }
                         await supabase.from("saloane").update(patch).eq("user_id", authUser.id);
                         setSalonData((s: any) => ({ ...s, ...patch }));
                       }

@@ -124,12 +124,16 @@ obligatoriu minim 1) și se pot schimba din dashboard → Profilul salonului. Wi
 din serviciile deja scrise, o singură dată — după prima bifă alegerea e a omului.
 Coloană: `saloane.specializari text[]`.
 
-**„Caut: pentru mine / pentru altcineva / toate"** — genul din `profiluri.gen` filtrează saloanele
-după `saloane.public_tinta`. **Nu ascunde nimic definitiv**: „Toate" e mereu la un clic, iar sub
-butoane scrie câte saloane sunt lăsate deoparte, cu un link „Arată-mi tot". Motivul: femeia rezervă
-des pentru copil sau pentru soț, iar un salon ascuns e o rezervare pierdută. „Pentru altcineva"
-deschide bărbat / femeie / copil; la copil nu se filtrează deloc (se tund și la frizerie, și la coafor).
-Saloanele fără `public_tinta` (cele vechi) rămân vizibile mereu. Conturile fără gen pornesc pe „Toate".
+**Genul ordonează, NU filtrează (decizie 11.08.2026).** Prima variantă avea rândul „Caut: pentru
+mine / pentru altcineva / toate", care chiar ascundea saloane. A fost scoasă: un filtru care scoate
+din listă salonul greșit costă o rezervare, o ordine greșită nu costă nimic. Acum `profiluri.gen`
+doar ordonează lista sub sortarea „Recomandate" — saloanele cu `public_tinta` potrivit primele, apoi
+cele mixte și cele nedeclarate, apoi restul. Sub butoanele de sortare scrie de ce e lista în ordinea
+aia. Nimic nu dispare, deci mama care rezervă pentru băiat n-are nevoie de niciun buton.
+
+**Publicul salonului se editează și din dashboard** (Profilul salonului → „Cui se adresează
+salonul"). Înainte se putea alege doar în wizard, deci saloanele înscrise mai devreme rămâneau
+`public_tinta` gol pentru totdeauna — și ordonarea lucra pe date pe care nimeni nu le putea completa.
 
 ### Speciile acceptate (rezolvat 03–04.08.2026)
 Clientul vede acum cu ce animale lucrează salonul: iconițe pe cardul din listă și
