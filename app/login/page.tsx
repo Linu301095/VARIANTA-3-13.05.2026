@@ -91,9 +91,18 @@ export default function LoginPage() {
 
     const { data: profile } = await supabase
       .from("profiluri")
-      .select("tip, tema")
+      .select("tip, tema, sters_la")
       .eq("id", data.user.id)
       .single();
+
+    // Contul închis nu mai intră: parola încă e validă în Supabase Auth, deci
+    // fără verificarea asta „ștergerea" n-ar însemna nimic.
+    if (profile?.sters_la) {
+      await supabase.auth.signOut();
+      setLoginError("Acest cont a fost șters. Dacă vrei să revii, creează un cont nou.");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (profile?.tema === "dark") {

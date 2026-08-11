@@ -321,6 +321,11 @@ export default function DashboardClient() {
   const [parolaVizibila, setParolaVizibila] = useState({ veche: false, noua: false, confirm: false });
   const [parolaEroare, setParolaEroare] = useState("");
   const [parolaLoading, setParolaLoading] = useState(false);
+  /** Închiderea contului. */
+  const [stergeDeschis, setStergeDeschis] = useState(false);
+  const [stergeParola, setStergeParola] = useState("");
+  const [stergeEroare, setStergeEroare] = useState("");
+  const [stergeLoading, setStergeLoading] = useState(false);
   const [filtruServiciuDropdown, setFiltruServiciuDropdown] = useState(false);
   const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
   const [recenziiLoading, setRecenziiLoading] = useState(false);
@@ -553,7 +558,7 @@ export default function DashboardClient() {
       if (arataLoading) setRecenziiLoading(true);
       const { data: recs } = await supabase
         .from("recenzii")
-        .select("id, user_id, rating, text, created_at, raspuns_salon, raspuns_at")
+        .select("id, user_id, rating, text, created_at, raspuns_salon, raspuns_at, autor_anonim")
         .eq("salon_id", salonSelectat)
         .order("created_at", { ascending: false });
       if (!activ) return;
@@ -564,8 +569,9 @@ export default function DashboardClient() {
       const pmap = new Map((profile || []).map((p: any) => [p.id, p]));
       setRecenziiSalon(recs.map((r: any) => ({
         id: r.id, user_id: r.user_id, rating: r.rating, text: r.text, created_at: r.created_at,
-        nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
-        avatar_url: pmap.get(r.user_id)?.avatar_url || null,
+        // Autorul și-a închis contul: recenzia rămâne, legătura cu el nu.
+        nume: r.autor_anonim ? "Client CalyHub" : (pmap.get(r.user_id)?.nume || "Client CalyHub"),
+        avatar_url: r.autor_anonim ? null : (pmap.get(r.user_id)?.avatar_url || null),
         raspuns_salon: r.raspuns_salon || null,
         raspuns_at: r.raspuns_at || null,
       })));
@@ -1806,6 +1812,59 @@ export default function DashboardClient() {
     salveaza("Parola a fost schimbată.");
   }
 
+  /**
+   * Închiderea contului — varianta B stabilită cu utilizatorul.
+   *
+   * Se șterg datele personale (nume, telefon, poză, animale) și contul devine
+   * inutilizabil. Recenziile rămân, dar anonime: fără ele, un salon ar pierde
+   * reputația construită într-un an fiindcă niște clienți și-au închis contul.
+   *
+   * Cerem parola înainte: e o acțiune ireversibilă, iar un telefon lăsat
+   * descuiat n-ar trebui să fie de ajuns ca să-i ștergi cuiva contul.
+   */
+  async function inchideContul() {
+    setStergeEroare("");
+    if (!stergeParola) { setStergeEroare("Scrie parola ca să confirmi."); return; }
+
+    setStergeLoading(true);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const email = authUser?.email;
+    if (!authUser || !email) { setStergeEroare("Nu am putut citi contul. Reintră și încearcă din nou."); setStergeLoading(false); return; }
+
+    const { error: eLogin } = await supabase.auth.signInWithPassword({ email, password: stergeParola });
+    if (eLogin) { setStergeEroare("Parola nu e corectă."); setStergeLoading(false); return; }
+
+    // Recenziile rămân, dar rup legătura cu persoana.
+    await supabase.from("recenzii").update({ autor_anonim: true }).eq("user_id", authUser.id);
+
+    // Animalele sunt date ale lui — plecă odată cu el.
+    await supabase.from("animale").delete().eq("user_id", authUser.id);
+
+    // Poza de profil din storage.
+    if (avatarUrl) {
+      const cale = avatarUrl.split("/avatars/")[1]?.split("?")[0];
+      if (cale) await supabase.storage.from("avatars").remove([decodeURIComponent(cale)]);
+    }
+
+    // Profilul rămâne ca rând, dar golit: salonul își păstrează istoricul
+    // programărilor, unde clientul apare de acum ca „Client șters".
+    const { error } = await supabase.from("profiluri").update({
+      nume: "Client șters",
+      telefon: null,
+      avatar_url: null,
+      gen: null,
+      sters_la: new Date().toISOString(),
+    }).eq("id", authUser.id);
+
+    if (error) { setStergeEroare("Nu am putut închide contul. Încearcă din nou sau scrie-ne la support@calyhub.ro."); setStergeLoading(false); return; }
+
+    localStorage.removeItem("calyhub_theme");
+    localStorage.removeItem("calyhub_lume");
+    localStorage.removeItem("calyhub_saloane_cache");
+    await supabase.auth.signOut();
+    router.push("/?cont=inchis");
+  }
+
   function stergeFiltrele() {
     setCautare("");
     setFiltruOras("");
@@ -2549,11 +2608,37 @@ export default function DashboardClient() {
                 <div style={{ fontSize: 13, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>
                   Ștergerea contului este permanentă și nu poate fi anulată.
                 </div>
-                <div style={{ fontSize: 12.5, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: 12, padding: "12px 14px", lineHeight: 1.6 }}>
-                  Deocamdată ștergerea se face la cerere: scrie-ne la{" "}
-                  <a href="mailto:support@calyhub.ro?subject=Cerere%20stergere%20cont" style={{ color: "#FF6B00", fontWeight: 800 }}>support@calyhub.ro</a>{" "}
-                  și îți ștergem contul și datele în cel mult 30 de zile.
-                </div>
+                {!stergeDeschis ? (
+                  <button onClick={() => { setStergeDeschis(true); setStergeParola(""); setStergeEroare(""); }}
+                    style={{ fontSize: 13, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "9px 18px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    Șterge contul
+                  </button>
+                ) : (
+                  <div style={{ border: "1.5px solid rgba(239,68,68,.35)", background: theme === "dark" ? "rgba(239,68,68,.08)" : "#FEF2F2", borderRadius: 14, padding: "16px 18px" }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: c.text, marginBottom: 8 }}>Ce se întâmplă mai exact</div>
+                    <ul style={{ margin: "0 0 14px", paddingLeft: 18, fontSize: 12.5, color: c.text2, lineHeight: 1.75 }}>
+                      <li>Se șterg numele, telefonul, poza de profil și animalele din cont.</li>
+                      <li>Nu mai poți intra cu acest cont.</li>
+                      <li>Recenziile pe care le-ai scris rămân pe saloane, dar fără numele și poza ta — apar ca „Client CalyHub".</li>
+                      <li>Saloanele la care ai fost își păstrează istoricul programărilor, unde vei apărea ca „Client șters".</li>
+                    </ul>
+                    <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Scrie parola ca să confirmi</label>
+                    <input type="password" value={stergeParola} autoComplete="current-password"
+                      onChange={e => { setStergeParola(e.target.value); setStergeEroare(""); }}
+                      placeholder="Parola contului" style={{ ...inp, marginBottom: 10 }} />
+                    {stergeEroare && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444", marginBottom: 10 }}>{stergeEroare}</div>}
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button onClick={inchideContul} disabled={stergeLoading}
+                        style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#EF4444", border: "none", padding: "10px 20px", borderRadius: 50, cursor: stergeLoading ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", opacity: stergeLoading ? .6 : 1 }}>
+                        {stergeLoading ? "Se închide..." : "Da, șterge contul"}
+                      </button>
+                      <button onClick={() => { setStergeDeschis(false); setStergeParola(""); setStergeEroare(""); }} disabled={stergeLoading}
+                        style={{ ...btnSecondary, padding: "10px 20px", fontSize: 13 }}>
+                        Renunț
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -1846,7 +1846,7 @@ export default function DashboardSalon() {
     (async () => {
       const { data } = await supabase
         .from("recenzii")
-        .select("id, user_id, programare_id, rating, text, created_at, raspuns_salon, raspuns_at")
+        .select("id, user_id, programare_id, rating, text, created_at, raspuns_salon, raspuns_at, autor_anonim")
         .eq("salon_id", salonData.id)
         .order("created_at", { ascending: false });
       if (!data || data.length === 0) { setRatingSalon({ medie: 0, nr: 0 }); setRecenziiSalon([]); return; }
@@ -1872,8 +1872,9 @@ export default function DashboardSalon() {
         const animal = animalId ? amap.get(animalId) : null;
         return {
           id: r.id, user_id: r.user_id, programare_id: r.programare_id || null, rating: r.rating, text: r.text, created_at: r.created_at,
-          nume: pmap.get(r.user_id)?.nume || "Client CalyHub",
-          avatar_url: pmap.get(r.user_id)?.avatar_url || null,
+          // Autorul și-a închis contul: recenzia rămâne, numele și poza nu.
+          nume: r.autor_anonim ? "Client CalyHub" : (pmap.get(r.user_id)?.nume || "Client CalyHub"),
+          avatar_url: r.autor_anonim ? null : (pmap.get(r.user_id)?.avatar_url || null),
           raspuns_salon: r.raspuns_salon || null,
           raspuns_at: r.raspuns_at || null,
           animal: animal ? { nume: animal.nume, rasa: animal.rasa || null } : null,
