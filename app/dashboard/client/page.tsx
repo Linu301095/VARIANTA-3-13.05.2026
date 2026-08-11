@@ -7,6 +7,7 @@ import Footer from "../../../components/Footer";
 import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
+import { SECTOARE, BUCURESTI } from "../../../lib/orase";
 import SiluetaGen from "../../../components/SiluetaGen";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
@@ -28,7 +29,7 @@ type Domeniu = "infrumusetare" | "grooming";
 /** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
 type Lume = "tine" | "animal";
 const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
-type SalonItem = { domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 const PALETA_SALOANE = [
   { badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
@@ -57,6 +58,7 @@ function mapSalonDB(s: any, i: number): SalonItem {
     specii: Array.isArray(s.specii) ? s.specii : [],
     specializari: Array.isArray(s.specializari) ? s.specializari : [],
     publicTinta: s.public_tinta || null,
+    judet: s.judet || "",
     id: s.id,
     nume: s.nume || "Salon",
     oras: s.oras || "România",
@@ -415,7 +417,7 @@ export default function DashboardClient() {
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
-        supabase.from("saloane").select("id, nume, oras, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
+        supabase.from("saloane").select("id, nume, oras, judet, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
       ]);
 
       if (profile) {
@@ -1626,7 +1628,34 @@ export default function DashboardClient() {
   // Saloanele din lumea activa — restul nici nu se vad.
   const saloaneLume = saloaneList.filter(s => (s.domeniu || "grooming") === domeniuLume);
 
-  const oraseleDisponibile = Array.from(new Set(saloaneLume.map(s => s.oras.split(",")[0].trim()))).sort();
+  /**
+   * Bucureștiul e părinte, sectoarele îi sunt copii.
+   * Salonul își scrie sectorul în `oras`, deci fără gruparea asta „Sector 3"
+   * apărea în listă ca oraș de sine stătător, lângă București — iar cine alegea
+   * Bucureștiul nu găsea nimic.
+   */
+  const eDinBucuresti = (s: SalonItem) =>
+    s.judet === BUCURESTI || SECTOARE.includes(s.oras.split(",")[0].trim());
+
+  const oraseleDisponibile: { nume: string; copil?: boolean }[] = (() => {
+    const simple = new Set<string>();
+    const sectoare = new Set<string>();
+    let areBucuresti = false;
+    for (const s of saloaneLume) {
+      const o = s.oras.split(",")[0].trim();
+      if (!o) continue;
+      if (eDinBucuresti(s)) {
+        areBucuresti = true;
+        if (SECTOARE.includes(o)) sectoare.add(o);
+      } else simple.add(o);
+    }
+    const lista = Array.from(simple).sort((a, b) => a.localeCompare(b, "ro"))
+      .map(nume => ({ nume }));
+    if (!areBucuresti) return lista;
+    const copii = Array.from(sectoare).sort((a, b) => a.localeCompare(b, "ro"))
+      .map(nume => ({ nume, copil: true }));
+    return [{ nume: BUCURESTI }, ...copii, ...lista];
+  })();
 
   const serviciiDisponibile = Array.from(new Set(saloaneLume.flatMap(s => s.servicii))).sort();
 
@@ -1658,10 +1687,32 @@ export default function DashboardClient() {
     ? SPECIALIZARI.filter(sp => saloaneLume.some(s => (s.specializari || []).includes(sp.val)))
     : [];
 
+  /** Când scrii în câmp, un sector găsit ține și Bucureștiul în listă. */
+  const oraseFiltrate = (() => {
+    const q = orasInput.toLowerCase().trim();
+    if (!q) return oraseleDisponibile;
+    const pastrate = oraseleDisponibile.filter(o => o.nume.toLowerCase().includes(q));
+    const areCopilGasit = pastrate.some(o => o.copil);
+    if (areCopilGasit && !pastrate.some(o => o.nume === BUCURESTI)) {
+      return [{ nume: BUCURESTI }, ...pastrate];
+    }
+    if (pastrate.some(o => o.nume === BUCURESTI)) {
+      // „bucur" scris în câmp trebuie să aducă și sectoarele sub el
+      const copii = oraseleDisponibile.filter(o => o.copil && !pastrate.includes(o));
+      return [...pastrate, ...copii];
+    }
+    return pastrate;
+  })();
+
   const filtrareActiva = cautare !== "" || filtruOras !== "" || filtruServiciu !== "" || filtruSpec !== "" || sortareSalon !== "recomandat";
   const saloneFiltrate = saloaneLume.filter(s => {
     if (cautare && !s.nume.toLowerCase().includes(cautare.toLowerCase()) && !s.oras.toLowerCase().includes(cautare.toLowerCase()) && !s.servicii.some(sv => sv.toLowerCase().includes(cautare.toLowerCase()))) return false;
-    if (filtruOras && !s.oras.toLowerCase().includes(filtruOras.toLowerCase())) return false;
+    if (filtruOras) {
+      const potrivit = filtruOras === BUCURESTI
+        ? eDinBucuresti(s)
+        : s.oras.toLowerCase().includes(filtruOras.toLowerCase());
+      if (!potrivit) return false;
+    }
     if (filtruServiciu && !s.servicii.some(sv => sv.toLowerCase() === filtruServiciu.toLowerCase())) return false;
     if (filtruSpec && !(s.specializari || []).includes(filtruSpec)) return false;
     return true;
@@ -1812,12 +1863,18 @@ export default function DashboardClient() {
                         ✕ Toate orașele
                       </button>
                     )}
-                    {oraseleDisponibile.filter(o => o.toLowerCase().includes(orasInput.toLowerCase().trim())).map(o => (
-                      <button key={o} onClick={() => { setFiltruOras(o); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: filtruOras === o ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruOras === o ? "#FF6B00" : c.text, fontSize: 13, fontWeight: filtruOras === o ? 800 : 600, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={12} strokeWidth={2} /> {o}</span>
+                    {oraseFiltrate.map(o => (
+                      <button key={o.nume} onClick={() => { setFiltruOras(o.nume); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }}
+                        style={{ width: "100%", padding: o.copil ? "10px 18px 10px 38px" : "12px 18px", textAlign: "left", background: filtruOras === o.nume ? c.orangeAccent : "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: filtruOras === o.nume ? "#FF6B00" : o.copil ? c.text2 : c.text, fontSize: o.copil ? 12.5 : 13, fontWeight: filtruOras === o.nume ? 800 : o.copil ? 600 : 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          {o.copil
+                            ? <span style={{ color: c.xmuted, fontSize: 11 }}>└</span>
+                            : <MapPin size={12} strokeWidth={2} />}
+                          {o.nume}
+                        </span>
                       </button>
                     ))}
-                    {orasInput.trim() && oraseleDisponibile.filter(o => o.toLowerCase().includes(orasInput.toLowerCase().trim())).length === 0 && (
+                    {orasInput.trim() && oraseFiltrate.length === 0 && (
                       <button onClick={() => { setFiltruOras(orasInput.trim()); setGeoError(""); setOrasInput(""); setOrasDropdown(false); }} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", color: c.text, fontSize: 13, fontWeight: 700, fontFamily: "Nunito, sans-serif", cursor: "pointer" }}>
                         Caută „{orasInput.trim()}"
                       </button>
