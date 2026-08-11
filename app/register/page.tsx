@@ -7,6 +7,8 @@ import Footer from "../../components/Footer";
 import { supabase } from "../../lib/supabase";
 import { User, Store, Scissors, PawPrint, AlertTriangle, Check } from "lucide-react";
 
+import { putereParola, sfaturiParola, PUTERE_PUBLIC as PUTERE } from "../../lib/parola";
+
 /** Versiunea documentelor legale acceptate la inregistrare (vezi /termeni si /confidentialitate). */
 const TERMENI_VERSIUNE = "1.1 (03.08.2026)";
 
@@ -45,39 +47,6 @@ const inp: React.CSSProperties = {
 const inpErr: React.CSSProperties = { ...inp, border: "1.5px solid var(--pub-danger)" };
 const lbl: React.CSSProperties = { display: "block", fontSize: 13, fontWeight: 700, color: C.text2, marginBottom: 7 };
 const errStyle: React.CSSProperties = { fontSize: 12, color: "var(--pub-danger)", marginTop: 5, fontWeight: 600 };
-
-/** Putere parola: 0 slaba, 1 acceptabila, 2 buna, 3 puternica. */
-function putereParola(p: string) {
-  if (!p) return -1;
-  let scor = 0;
-  if (p.length >= 8) scor++;
-  if (p.length >= 12) scor++;
-  if (/[a-z]/.test(p) && /[A-Z]/.test(p)) scor++;
-  if (/\d/.test(p)) scor++;
-  if (/[^A-Za-z0-9]/.test(p)) scor++;
-  return Math.min(3, Math.max(0, scor - 1));
-}
-const PUTERE = [
-  { t: "Slabă", c: "var(--pub-danger)" },
-  { t: "Acceptabilă", c: "#E08900" },
-  { t: "Bună", c: "var(--pub-ok)" },
-  { t: "Puternică", c: "var(--pub-ok)" },
-];
-
-/**
- * Ce lipsește ca parola să fie mai puternică, în ordinea impactului.
- * Bara singură spune „Slabă" și îl lasă pe om să ghicească de ce; asta îi spune
- * ce să facă. Arătăm cel mult două sfaturi deodată, ca să nu pară o listă de
- * cerințe imposibile.
- */
-function sfaturiParola(p: string): string[] {
-  const s: string[] = [];
-  if (p.length < 12) s.push("fă-o de cel puțin 12 caractere");
-  if (!/[A-Z]/.test(p) || !/[a-z]/.test(p)) s.push("amestecă litere mari și mici");
-  if (!/\d/.test(p)) s.push("adaugă o cifră");
-  if (!/[^A-Za-z0-9]/.test(p)) s.push("pune un semn, de exemplu ! sau ?");
-  return s.slice(0, 2);
-}
 
 export default function RegisterPage() {
   const router = useRouter();
