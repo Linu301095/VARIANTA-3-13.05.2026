@@ -198,6 +198,8 @@ type Programare = {
   status: StatusProgramare;
   pret: number;
   groomer: string | null;
+  /** Gol = programare pentru tine. Completat = pentru animal. */
+  animal_id: string | null;
 };
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
@@ -310,6 +312,9 @@ export default function DashboardClient() {
   /** Genul din profil — decide pe cine punem în față în lista de saloane. */
   const [genUser, setGenUser] = useState("");
   const [filtruSpec, setFiltruSpec] = useState("");
+  /** Tabul Programări: pentru cine și în ce stare. */
+  const [progCine, setProgCine] = useState<"toate" | "mine" | "animal">("toate");
+  const [progStare, setProgStare] = useState<"urmatoarele" | "istoric" | "anulate">("urmatoarele");
   const [filtruServiciuDropdown, setFiltruServiciuDropdown] = useState(false);
   const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
   const [recenziiLoading, setRecenziiLoading] = useState(false);
@@ -483,7 +488,7 @@ export default function DashboardClient() {
     async function loadProgramari(userId: string) {
       const { data } = await supabase
         .from("programari")
-        .select("id, salon_id, serviciu, pret, data, ora, status, groomer, saloane(nume)")
+        .select("id, salon_id, serviciu, pret, data, ora, status, groomer, animal_id, saloane(nume)")
         .eq("user_id", userId)
         .order("data", { ascending: false })
         .order("ora", { ascending: false });
@@ -499,6 +504,7 @@ export default function DashboardClient() {
           status: p.status as StatusProgramare,
           pret: Number(p.pret) || 0,
           groomer: p.groomer || null,
+          animal_id: p.animal_id || null,
         })));
       }
       const { data: recs } = await supabase
@@ -823,6 +829,7 @@ export default function DashboardClient() {
       status: "în așteptare",
       pret: pretNumeric,
       groomer: groomerSelectat || null,
+      animal_id: salonCereAnimal ? (animal?.id ?? null) : null,
     }, ...prev]);
 
     // Notificare pentru proprietarul salonului
@@ -1622,8 +1629,25 @@ export default function DashboardClient() {
     );
   }
 
-  const viitoare = programari.filter(p => p.status === "confirmat" || p.status === "în așteptare");
-  const trecute = programari.filter(p => p.status === "finalizat" || p.status === "anulat");
+  /**
+   * Programările se împart pe două axe.
+   *
+   * Pe „pentru cine": `animal_id` gol înseamnă că e a ta, completat că e a
+   * animalului. Fără separarea asta, tunsul tău și băița câinelui stau în
+   * aceeași grămadă. Comutatorul apare doar dacă ai animal în cont.
+   *
+   * Pe stare: anulatele ies din istoric — n-au avut loc niciodată, iar
+   * amestecate acolo ascund vizitele reale, singurele care se pot evalua.
+   */
+  const programariLume = programari.filter(p =>
+    progCine === "toate" ? true : progCine === "mine" ? !p.animal_id : !!p.animal_id
+  );
+  const viitoare = programariLume.filter(p => p.status === "confirmat" || p.status === "în așteptare");
+  const trecute = programariLume.filter(p => p.status === "finalizat");
+  const anulate = programariLume.filter(p => p.status === "anulat");
+  const listaProg = progStare === "urmatoarele" ? viitoare : progStare === "istoric" ? trecute : anulate;
+  /** Vizite încheiate pe care încă nu le-a evaluat — punctul de pe „Istoric". */
+  const neevaluate = trecute.filter(p => !recenziiProgramari[p.id]).length;
 
   // Saloanele din lumea activa — restul nici nu se vad.
   const saloaneLume = saloaneList.filter(s => (s.domeniu || "grooming") === domeniuLume);
@@ -2037,25 +2061,74 @@ export default function DashboardClient() {
           {tab === "programari" && (
             <div>
               <PageHeader icon={Calendar} title="Programările mele" sub="Vezi programările viitoare și istoricul tău" />
-              {viitoare.length > 0 && (<>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Viitoare</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-                  {viitoare.map(p => <CardProgramare key={p.id} p={p}
+
+              {programari.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+
+                  {/* Pentru cine — doar dacă are animal, altfel toate sunt ale lui */}
+                  {areAnimal && (
+                    <div style={stilChips}>
+                      {[
+                        { val: "toate", label: "Toate" },
+                        { val: "mine", label: "Pentru mine" },
+                        { val: "animal", label: animale.length === 1 ? `Pentru ${animale[0].nume}` : "Pentru animale" },
+                      ].map(opt => (
+                        <button key={opt.val} onClick={() => setProgCine(opt.val as any)} style={chipF(progCine === opt.val)}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Starea */}
+                  <div style={stilChips}>
+                    {[
+                      { val: "urmatoarele", label: "Următoarele", nr: viitoare.length },
+                      { val: "istoric", label: "Istoric", nr: trecute.length },
+                      { val: "anulate", label: "Anulate", nr: anulate.length },
+                    ].map(opt => (
+                      <button key={opt.val} onClick={() => setProgStare(opt.val as any)}
+                        style={{ ...chipF(progStare === opt.val), display: "flex", alignItems: "center", gap: 6 }}>
+                        {opt.label}
+                        <span style={{ fontSize: 11, fontWeight: 800, opacity: progStare === opt.val ? 1 : .6 }}>({opt.nr})</span>
+                        {/* Punct portocaliu cât timp există vizite neevaluate — recenziile
+                            se scriu doar de aici, altfel butonul se pierde în listă. */}
+                        {opt.val === "istoric" && neevaluate > 0 && (
+                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF6B00", flexShrink: 0 }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {listaProg.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {listaProg.map(p => <CardProgramare key={p.id} p={p}
+                    recenzie={recenziiProgramari[p.id] || null}
+                    onTrimiteRecenzie={trimiteRecenziePentruProgramare}
                     onAnuleazaConfirmat={prog => { setAnulareModal(prog); setMotivAnulare(""); setAnulareError(""); }}
                     onRetrageCerere={async id => {
                       await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
                       setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x));
                     }} />)}
                 </div>
-              </>)}
-              {trecute.length > 0 && (<>
-                <div style={{ fontSize: 13, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Istoric</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {trecute.map(p => <CardProgramare key={p.id} p={p}
-                    recenzie={recenziiProgramari[p.id] || null}
-                    onTrimiteRecenzie={trimiteRecenziePentruProgramare} />)}
+              )}
+
+              {programari.length > 0 && listaProg.length === 0 && (
+                <div style={{ textAlign: "center", padding: "44px 20px", color: c.xmuted }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: c.muted }}>
+                    {progStare === "urmatoarele" ? "Nicio programare care urmează"
+                      : progStare === "istoric" ? "Nicio vizită încheiată"
+                      : "Nicio programare anulată"}
+                    {progCine === "mine" ? " pentru tine" : progCine === "animal" ? (animale.length === 1 ? ` pentru ${animale[0].nume}` : " pentru animale") : ""}.
+                  </div>
+                  {progStare === "urmatoarele" && (
+                    <button onClick={() => setTab("saloane")} style={{ ...btnPrimary, marginTop: 14 }}>Caută salon</button>
+                  )}
                 </div>
-              </>)}
+              )}
+
               {programari.length === 0 && (
                 <div style={{ textAlign: "center", padding: "60px 20px", color: c.xmuted }}>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><Calendar size={48} color="#FF6B00" strokeWidth={1.5} /></div>
