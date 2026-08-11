@@ -1847,9 +1847,9 @@ export default function DashboardClient() {
     }
 
     // Profilul rămâne ca rând, dar golit: salonul își păstrează istoricul
-    // programărilor, unde clientul apare de acum ca „Client șters".
+    // programărilor, unde clientul apare de acum ca „Cont închis".
     const { error } = await supabase.from("profiluri").update({
-      nume: "Client șters",
+      nume: "Cont închis",
       telefon: null,
       avatar_url: null,
       gen: null,
@@ -2620,7 +2620,7 @@ export default function DashboardClient() {
                       <li>Se șterg numele, telefonul, poza de profil și animalele din cont.</li>
                       <li>Nu mai poți intra cu acest cont.</li>
                       <li>Recenziile pe care le-ai scris rămân pe saloane, dar fără numele și poza ta — apar ca „Client CalyHub".</li>
-                      <li>Saloanele la care ai fost își păstrează istoricul programărilor, unde vei apărea ca „Client șters".</li>
+                      <li>Saloanele la care ai fost își păstrează istoricul programărilor, unde vei apărea ca „Cont închis".</li>
                     </ul>
                     <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Scrie parola ca să confirmi</label>
                     <input type="password" value={stergeParola} autoComplete="current-password"
