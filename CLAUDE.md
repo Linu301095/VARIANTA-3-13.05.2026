@@ -452,6 +452,23 @@ decât „coafor Cluj". Și e argumentul de vânzare: *„te înscrii și prime�
 
 ## TODO post-lansare
 
+- **⚠️ NOTIFICĂRI — cererea de permisiune la instalare (decis 11.08.2026).**
+  În `app/dashboard/client/page.tsx`, tabul Notificări → blocul „Preferințe notificări" are două
+  comutatoare („Remindere programări — WhatsApp sau SMS, cu 24 de ore înainte" și „Newsletter
+  CalyHub") care **nu se salvează nicăieri**: sunt stare locală, iar butonul „Salvează preferințele"
+  doar afișează un toast. La refresh revin la implicit. Nu există niciun sistem de SMS sau push în
+  aplicație. Aceeași promisiune apare și în FAQ (tabul Ajutor, întrebarea 3).
+
+  **Ce se face când ajungem la aplicația de telefon (PWA sau nativă):** la instalare, aplicația
+  întreabă o singură dată dacă vrea notificări push — momentul potrivit e **după prima programare
+  reușită**, nu la prima deschidere (altfel omul refuză din reflex și nu mai poate fi întrebat,
+  iOS nu redeschide dialogul). Răspunsul se salvează în bază, iar comutatoarele din tabul Notificări
+  devin reale și reflectă starea permisiunii din sistem. Push-ul rezolvă și reminderul de 24h fără
+  costul SMS-urilor (~0.04–0.07 EUR/mesaj prin Twilio).
+
+  **Până atunci:** ori scoatem comutatoarele și fraza din FAQ, ori le salvăm în bază și le marcăm
+  explicit ca „în curând". A doua variantă e mai onestă doar dacă chiar urmează repede.
+
 - **Code splitting pe tab-uri (punctul E din optimizarea de performanță)** — `app/dashboard/client/page.tsx` (~2300 linii) și `app/dashboard/salon/page.tsx` (~2150 linii) sunt fișiere uriașe cu toate tab-urile la un loc. De spart fiecare tab într-un fișier separat (`tabs/saloane.tsx`, `tabs/programari.tsx`, etc.), de creat un Context provider pentru state-ul comun (user, salon, theme, notificari) și de folosit `dynamic(() => import(...))` pentru lazy loading. Estimare: 4-6 ore. Câștig: -40% bundle inițial. De făcut DUPĂ ce restul aplicației e stabilă post-lansare.
 
 - **Pagina Confidențialitate (`app/confidentialitate/page.tsx`) — parțial corectată (iulie 2026).**
