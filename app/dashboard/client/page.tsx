@@ -736,6 +736,34 @@ export default function DashboardClient() {
     setMotivAnulare("");
   }
 
+  /**
+   * Retragerea unei cereri încă neconfirmate.
+   *
+   * Anularea unei programări confirmate anunța salonul; retragerea unei cereri
+   * nu anunța pe nimeni — aceeași acțiune, două comportamente. Salonul o vedea
+   * în agendă și se putea pregăti pentru ea.
+   *
+   * Aici nu cerem motiv, spre deosebire de anularea unei programări confirmate:
+   * o cerere pe care salonul n-a apucat s-o accepte nu obligă la explicații.
+   */
+  async function retrageCerere(id: string) {
+    const prog = programari.find(p => p.id === id);
+    const { error } = await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
+    if (error) { salveaza("Nu am putut retrage cererea. Încearcă din nou."); return; }
+    setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x));
+    if (!prog) return;
+    const { data: salonRow } = await supabase.from("saloane").select("user_id").eq("id", prog.salon_id).single();
+    if (salonRow?.user_id) {
+      await supabase.from("notificari").insert({
+        user_id: salonRow.user_id,
+        tip: "anulat",
+        mesaj: `${user?.nume || "Un client"} și-a retras cererea de programare — ${prog.serviciu}, ${formatData(prog.data)} ${prog.ora}.`,
+        programare_id: prog.id,
+      });
+    }
+    salveaza("Cererea a fost retrasă.");
+  }
+
   const c = C[theme];
   const prenume = user?.nume?.split(" ")[0] || "Utilizator";
   const necitite = notificari.filter(n => !n.citit).length;
@@ -2335,10 +2363,7 @@ export default function DashboardClient() {
                     recenzie={recenziiProgramari[p.id] || null}
                     onTrimiteRecenzie={trimiteRecenziePentruProgramare}
                     onAnuleazaConfirmat={prog => { setAnulareModal(prog); setMotivAnulare(""); setAnulareError(""); }}
-                    onRetrageCerere={async id => {
-                      await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
-                      setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x));
-                    }} />)}
+                    onRetrageCerere={retrageCerere} />)}
                 </div>
               )}
 
