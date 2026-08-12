@@ -1340,6 +1340,9 @@ export default function DashboardClient() {
                       clienți, iar clienții nu vedeau nimic. */}
                   {salon.descriere?.trim() && (
                     <div style={{ marginBottom: 16, padding: "14px 16px", background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 12 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                        <FileEdit size={12} strokeWidth={2.4} /> Despre salon
+                      </div>
                       <div style={{ fontSize: 13.5, color: c.text2, lineHeight: 1.65, whiteSpace: "pre-line" }}>{salon.descriere.trim()}</div>
                     </div>
                   )}
