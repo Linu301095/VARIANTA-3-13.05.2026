@@ -21,6 +21,16 @@ type Lume = "tine" | "animal";
 const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
 type SalonItem = { createdAt?: string | null; lat?: number | null; lng?: number | null; domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
+/**
+ * Cu câte ore înainte se poate anula fără explicații.
+ *
+ * Peste prag: anulare simplă, salonul are timp să umple ora. Sub prag: se cere
+ * un motiv, pentru că ora rămâne aproape sigur goală. Anularea nu se blochează
+ * niciodată — un „nu mai ajung" cu trei ore înainte e mai bun pentru salon
+ * decât un client care pur și simplu nu apare.
+ */
+const ORE_ANULARE_LIBERA = 24;
+
 /* Culorile cardului. Eticheta nu mai vine de aici — se calculează din date,
    în lib/badges.ts. */
 const PALETA_SALOANE = [
@@ -712,14 +722,21 @@ export default function DashboardClient() {
     return null;
   }
 
+  /** Sub prag se cere motiv; peste, nu. Se calculează din ora programării. */
+  const anulareCereMotiv = anulareModal
+    ? (new Date(`${anulareModal.data}T${anulareModal.ora}:00`).getTime() - Date.now()) / 3600000 < ORE_ANULARE_LIBERA
+    : false;
+
   async function confirmaAnulare() {
     if (!anulareModal) return;
     const motiv = motivAnulare.trim();
-    if (motiv.length < 5) { setAnulareError("Te rugăm să scrii un motiv (minim 5 caractere)."); return; }
+    if (anulareCereMotiv && motiv.length < 5) { setAnulareError("Te rugăm să scrii un motiv (minim 5 caractere)."); return; }
     setAnulareError("");
     setAnulareLoading(true);
     const prog = anulareModal;
-    const { error } = await supabase.from("programari").update({ status: "anulat", motiv_anulare: motiv }).eq("id", prog.id);
+    // `motiv_anulare` rămâne gol la anulările din timp — tot el e și semnalul
+    // după care salonul numără anulările târzii ale unui client.
+    const { error } = await supabase.from("programari").update({ status: "anulat", motiv_anulare: anulareCereMotiv ? motiv : null }).eq("id", prog.id);
     if (error) { setAnulareError("Nu am putut anula. Încearcă din nou."); setAnulareLoading(false); return; }
     setProgramari(pr => pr.map(x => x.id === prog.id ? { ...x, status: "anulat" } : x));
     const { data: salonRow } = await supabase.from("saloane").select("user_id").eq("id", prog.salon_id).single();
@@ -727,7 +744,9 @@ export default function DashboardClient() {
       await supabase.from("notificari").insert({
         user_id: salonRow.user_id,
         tip: "anulat",
-        mesaj: `⚠️ ${user?.nume || "Un client"} a anulat programarea — ${prog.serviciu}, ${formatData(prog.data)} ${prog.ora}. Motiv: ${motiv}`,
+        mesaj: anulareCereMotiv
+          ? `⚠️ ${user?.nume || "Un client"} a anulat programarea — ${prog.serviciu}, ${formatData(prog.data)} ${prog.ora}. Motiv: ${motiv}`
+          : `${user?.nume || "Un client"} a anulat programarea — ${prog.serviciu}, ${formatData(prog.data)} ${prog.ora}. Ora e din nou liberă.`,
         programare_id: prog.id,
       });
     }
@@ -2869,10 +2888,23 @@ export default function DashboardClient() {
             <div onClick={e => e.stopPropagation()} style={{ background: c.surface, borderRadius: 20, padding: "26px 24px", maxWidth: 440, width: "100%", boxShadow: "0 12px 48px rgba(0,0,0,.3)" }}>
               <div style={{ fontSize: 18, fontWeight: 900, color: c.text, marginBottom: 6 }}>Anulezi programarea?</div>
               <div style={{ fontSize: 13, color: c.muted, marginBottom: 16 }}>{anulareModal.salon_nume} · {anulareModal.serviciu}<br /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><CalendarDays size={12} strokeWidth={2} /> {formatData(anulareModal.data)}</span> · <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Clock size={12} strokeWidth={2} /> {anulareModal.ora}</span></div>
-              <label style={{ fontSize: 13, fontWeight: 700, color: c.text2, display: "block", marginBottom: 6 }}>Scrie un motiv pentru salon <span style={{ color: "#EF4444" }}>*</span></label>
-              <textarea value={motivAnulare} onChange={e => { setMotivAnulare(e.target.value); if (anulareError) setAnulareError(""); }}
-                placeholder="Ex: a apărut o urgență, nu mai pot ajunge la ora stabilită…" rows={3}
-                style={{ ...inp, resize: "vertical", minHeight: 70 }} />
+              {/* Motivul se cere doar sub prag: cu peste 24 de ore înainte salonul
+                  are timp să umple ora, deci n-are rost să ceară explicații. */}
+              {anulareCereMotiv ? (
+                <>
+                  <div style={{ fontSize: 12.5, color: c.text2, background: theme === "dark" ? "rgba(217,119,6,.12)" : "#FFFBEB", border: "1px solid rgba(217,119,6,.35)", borderRadius: 12, padding: "10px 12px", marginBottom: 12, lineHeight: 1.6 }}>
+                    Mai sunt sub {ORE_ANULARE_LIBERA} de ore până la programare. Salonul cu greu mai umple ora, așa că te rugăm să spui de ce nu mai ajungi.
+                  </div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: c.text2, display: "block", marginBottom: 6 }}>Scrie un motiv pentru salon <span style={{ color: "#EF4444" }}>*</span></label>
+                  <textarea value={motivAnulare} onChange={e => { setMotivAnulare(e.target.value); if (anulareError) setAnulareError(""); }}
+                    placeholder="Ex: a apărut o urgență, nu mai pot ajunge la ora stabilită…" rows={3}
+                    style={{ ...inp, resize: "vertical", minHeight: 70 }} />
+                </>
+              ) : (
+                <div style={{ fontSize: 13, color: c.muted, lineHeight: 1.6 }}>
+                  Anunțăm salonul, iar ora se eliberează pentru alți clienți.
+                </div>
+              )}
               {anulareError && <div style={{ fontSize: 12.5, color: "#EF4444", fontWeight: 700, marginTop: 8 }}>{anulareError}</div>}
               <div style={{ display: "flex", gap: 10, marginTop: 18, justifyContent: "flex-end" }}>
                 <button onClick={() => setAnulareModal(null)} disabled={anulareLoading} style={{ padding: "11px 20px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Renunță</button>
@@ -3161,7 +3193,7 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
   const { theme, c } = useContext(ThemeCtx);
   const st = statusStyle(theme)[p.status];
   const oreRamase = (new Date(`${p.data}T${p.ora}:00`).getTime() - Date.now()) / 3600000;
-  const poateAnula = oreRamase >= 12;
+  const cereMotiv = oreRamase < ORE_ANULARE_LIBERA;
   const anulBtn: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "4px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" };
 
   const [evaluareDeschisa, setEvaluareDeschisa] = useState(false);
@@ -3197,9 +3229,7 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
             <button onClick={() => onRetrageCerere(p.id)} style={anulBtn}>Anulează</button>
           )}
           {onAnuleazaConfirmat && p.status === "confirmat" && (
-            poateAnula
-              ? <button onClick={() => onAnuleazaConfirmat(p)} style={anulBtn}>Anulează</button>
-              : <span style={{ fontSize: 10.5, fontWeight: 700, color: c.xmuted, textAlign: "right", lineHeight: 1.3, display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={10} strokeWidth={2} /> Anulare blocată<br />(sub 12h)</span>
+            <button onClick={() => onAnuleazaConfirmat(p)} style={anulBtn}>Anulează</button>
           )}
         </div>
       </div>

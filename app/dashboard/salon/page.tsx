@@ -101,6 +101,14 @@ const ZILE_FULL = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "
 const LUNA = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const LUNA_FULL = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
 
+/**
+ * De la câte anulări târzii încoace îi propunem salonului să decidă dacă mai
+ * primește clientul. „Târzie" = anulată cu mai puțin de 24 de ore înainte,
+ * singurul caz în care clientul e obligat să scrie un motiv — de asta se
+ * numără exact rândurile care au `motiv_anulare` completat.
+ */
+const ANULARI_PANA_LA_AVERTISMENT = 3;
+
 const PROGRAM_DEFAULT: ProgramSaptamanal = {
   "1": { activ: true, start: "09:00", end: "18:00" },
   "2": { activ: true, start: "09:00", end: "18:00" },
@@ -462,7 +470,16 @@ function AgendaCalendar({
                       <div style={{ fontSize: 15.5, fontWeight: 900, color: c.text, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                         {p.client}
                         {blocat && <span style={{ fontSize: 10.5, fontWeight: 800, color: "#EF4444", background: "rgba(239,68,68,.12)", padding: "2px 8px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 3 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Blocat</span>}
-                        {abateri > 0 && <span style={{ fontSize: 10.5, fontWeight: 800, color: "#D97706", background: "rgba(217,119,6,.12)", padding: "2px 8px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 3 }}><AlertTriangle size={10} color="#D97706" strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare" : "anulări"}</span>}
+                        {abateri > 0 && (() => {
+                          const greu = abateri >= ANULARI_PANA_LA_AVERTISMENT;
+                          const cul = greu ? "#EF4444" : "#D97706";
+                          return (
+                            <span title={greu ? "Poți bloca acest client din lista de anulări" : undefined}
+                              style={{ fontSize: 10.5, fontWeight: 800, color: cul, background: greu ? "rgba(239,68,68,.12)" : "rgba(217,119,6,.12)", padding: "2px 8px", borderRadius: 50, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                              <AlertTriangle size={10} color={cul} strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare târzie" : "anulări târzii"}
+                            </span>
+                          );
+                        })()}
                       </div>
                       {p.groomer && (
                         <div style={{ fontSize: 12, color: c.muted, fontWeight: 600, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>
@@ -627,11 +644,21 @@ function AgendaCalendar({
                   <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Scissors size={12} color={c.muted} strokeWidth={2} /> {p.serviciu}</div>
                   {p.motivAnulare && <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>}
                 </div>
-                {p.esteApp && p.user_id && (
-                  <button onClick={() => toggleBlocClient(p.user_id)} style={{ padding: "7px 13px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
-                    {blocat ? "✓ Deblochează" : "Blochează"}
-                  </button>
-                )}
+                {p.esteApp && p.user_id && (() => {
+                  const nrAnulari = abateriMap[p.user_id] || 0;
+                  return (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+                      {!blocat && nrAnulari >= ANULARI_PANA_LA_AVERTISMENT && (
+                        <span style={{ fontSize: 11, fontWeight: 800, color: "#EF4444" }}>
+                          Are {nrAnulari} anulări târzii
+                        </span>
+                      )}
+                      <button onClick={() => toggleBlocClient(p.user_id)} style={{ padding: "7px 13px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                        {blocat ? "✓ Deblochează" : "Blochează"}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -2212,7 +2239,7 @@ export default function DashboardSalon() {
                                   return (
                                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${c.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "space-between" }}>
                                       <div style={{ fontSize: 12, color: c.muted, fontWeight: 700 }}>
-                                        {blocat ? <span style={{ color: "#EF4444", display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Client blocat — nu poate rezerva</span> : abateri > 0 ? <span style={{ color: "#D97706", display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={12} color="#D97706" strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare" : "anulări"} cu motiv</span> : <span>✓ Fără anulări</span>}
+                                        {blocat ? <span style={{ color: "#EF4444", display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} /> Client blocat — nu poate rezerva</span> : abateri > 0 ? <span style={{ color: abateri >= ANULARI_PANA_LA_AVERTISMENT ? "#EF4444" : "#D97706", display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={12} color={abateri >= ANULARI_PANA_LA_AVERTISMENT ? "#EF4444" : "#D97706"} strokeWidth={2} /> {abateri} {abateri === 1 ? "anulare târzie" : "anulări târzii"}{abateri >= ANULARI_PANA_LA_AVERTISMENT ? " — poți bloca clientul" : ""}</span> : <span>✓ Fără anulări</span>}
                                       </div>
                                       <button onClick={() => toggleBlocClient(a.stapanUserId!)} style={{ padding: "7px 16px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                                         {blocat ? "✓ Deblochează clientul" : "Blochează clientul"}

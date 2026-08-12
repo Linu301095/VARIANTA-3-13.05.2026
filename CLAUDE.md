@@ -137,6 +137,25 @@ aia. Nimic nu dispare, deci mama care rezervă pentru băiat n-are nevoie de nic
 salonul"). Înainte se putea alege doar în wizard, deci saloanele înscrise mai devreme rămâneau
 `public_tinta` gol pentru totdeauna — și ordonarea lucra pe date pe care nimeni nu le putea completa.
 
+### Anularea programărilor — regulile (stabilite 12.08.2026)
+
+| Situație | Ce poate face clientul |
+|---|---|
+| Cerere **neconfirmată** de salon | O retrage oricând, **fără motiv**. Salonul primește notificare. |
+| Programare **confirmată**, cu peste 24h înainte | O anulează **fără motiv**. Salonul primește notificare că ora e liberă. |
+| Programare **confirmată**, sub 24h | O anulează, dar **trebuie să scrie un motiv** (min. 5 caractere). |
+
+Anularea **nu se blochează niciodată** (înainte era interzisă sub 12h): un „nu mai ajung" cu
+trei ore înainte e mai bun pentru salon decât un client care pur și simplu nu apare.
+
+`ORE_ANULARE_LIBERA = 24` în `app/dashboard/client/page.tsx`.
+
+**Anulările târzii se numără.** `motiv_anulare` completat = anulare sub 24h, deci `abateriMap`
+din dashboardul salonului numără exact anulările târzii ale fiecărui client. De la
+`ANULARI_PANA_LA_AVERTISMENT = 3` (în `app/dashboard/salon/page.tsx`) semnalul devine roșu și
+salonul e invitat explicit să decidă dacă mai primește clientul — butonul „Blochează" există
+deja și scrie în `saloane.clienti_blocati`.
+
 ### Speciile acceptate (rezolvat 03–04.08.2026)
 Clientul vede acum cu ce animale lucrează salonul: iconițe pe cardul din listă și
 un rând „Lucrează cu" în profil. Dacă animalul selectat nu e pe listă, apare un
