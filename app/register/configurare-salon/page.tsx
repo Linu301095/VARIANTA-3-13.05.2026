@@ -7,6 +7,7 @@ import { supabase } from "../../../lib/supabase";
 import SelectCautabil from "../../../components/SelectCautabil";
 import { NUME_JUDETE, oraseDin, areSectoare, BUCURESTI } from "../../../lib/orase";
 import { SPECIALIZARI, MAX_SPECIALIZARI, specializariSugerate } from "../../../lib/specializari";
+import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import {
   Store, Scissors, Users, CheckCircle, Plus, Trash2, Clock,
   Building2, FileText, MapPin, Phone, AlignLeft, Globe, Receipt,
@@ -302,12 +303,20 @@ export default function ConfigurareSalon() {
   function onCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    const problema = verificaPoza(file);
+    if (problema) { setErrors(er => ({ ...er, poze: problema })); return; }
+    setErrors(er => { const n = { ...er }; delete n.poze; return n; });
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
   }
 
   function onGalerieChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
+    for (const f of files) {
+      const problema = verificaPoza(f);
+      if (problema) { setErrors(er => ({ ...er, poze: `${f.name}: ${problema}` })); return; }
+    }
+    setErrors(er => { const n = { ...er }; delete n.poze; return n; });
     setGalerieFiles(prev => [...prev, ...files]);
     setGaleriePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
   }
@@ -977,6 +986,13 @@ export default function ConfigurareSalon() {
                     <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>Poți adăuga sau modifica oricând din cont</p>
                   </div>
                 </div>
+
+                {errors.poze && (
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--pub-danger)", background: "rgba(239,68,68,.08)", border: "1.5px solid rgba(239,68,68,.35)", borderRadius: 12, padding: "11px 14px", marginBottom: 16 }}>
+                    {errors.poze}
+                  </div>
+                )}
+                <div style={{ fontSize: 12, color: C.dim, marginBottom: 16 }}>{TEXT_REGULI_POZA}</div>
 
                 <div style={{ marginBottom: 24 }}>
                   <div style={sectiune}><Camera size={12} strokeWidth={2.5} /> Poza de profil / cover</div>

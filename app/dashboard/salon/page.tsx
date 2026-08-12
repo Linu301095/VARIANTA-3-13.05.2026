@@ -9,6 +9,7 @@ import { supabase } from "../../../lib/supabase";
 import { stareTrial, zileText, ZILE_AVERTISMENT } from "../../../lib/trial";
 import { numePlan } from "../../../lib/planuri";
 import { SPECIALIZARI, MAX_SPECIALIZARI } from "../../../lib/specializari";
+import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import Cropper from "react-easy-crop";
 import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
 
@@ -1944,6 +1945,8 @@ export default function DashboardSalon() {
 
   async function uploadAvatar(file: File) {
     if (!userId) return;
+    const problema = verificaPoza(file);
+    if (problema) { salveaza(problema); return; }
     setUploadingAvatar(true);
     const ext = file.name.split(".").pop();
     const path = `${userId}/avatar.${ext}`;
@@ -1994,6 +1997,8 @@ export default function DashboardSalon() {
 
   async function uploadCover(file: File) {
     if (!salonData?.id) return;
+    const problema = verificaPoza(file);
+    if (problema) { salveaza(problema); return; }
     setUploadingCover(true);
     const ext = file.name.split(".").pop();
     const path = `${salonData.user_id}/cover.${ext}`;
@@ -2010,6 +2015,12 @@ export default function DashboardSalon() {
 
   async function uploadGalerie(files: FileList) {
     if (!salonData?.id) return;
+    // La galerie se aleg mai multe deodată: verificăm tot lotul înainte, ca să
+    // nu urcăm jumătate și să ne oprim la mijloc.
+    for (let i = 0; i < files.length; i++) {
+      const problema = verificaPoza(files[i]);
+      if (problema) { salveaza(`${files[i].name}: ${problema}`); return; }
+    }
     setUploadingGalerie(true);
     const newUrls: string[] = [];
     for (let i = 0; i < files.length; i++) {
@@ -3594,7 +3605,7 @@ export default function DashboardSalon() {
                     </div>
                     <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingCover} onChange={handleCoverSelect} />
                   </label>
-                  <div style={{ fontSize: 11, color: c.muted, marginTop: 8 }}>JPG, PNG, WEBP — max 5MB. Această poză apare pe cardul salonului tău.</div>
+                  <div style={{ fontSize: 11, color: c.muted, marginTop: 8 }}>{TEXT_REGULI_POZA}. Această poză apare pe cardul salonului tău.</div>
                 </div>
 
                 {/* GALERIE */}
@@ -4139,7 +4150,7 @@ export default function DashboardSalon() {
                       )}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>JPG, PNG, WEBP — max 5MB</div>
+                  <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>{TEXT_REGULI_POZA}</div>
                 </div>
 
                 <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>

@@ -9,6 +9,7 @@ import { supabase } from "../../../lib/supabase";
 import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
 import { SECTOARE, BUCURESTI } from "../../../lib/orase";
 import { putereParola, sfaturiParola, PUTERE_DASH, PAROLA_MIN } from "../../../lib/parola";
+import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import { calculeazaBadge, culoriBadge } from "../../../lib/badges";
 import { alegeRecomandate } from "../../../lib/recomandate";
 import { distantaKm, scrieDistanta, punctSalon } from "../../../lib/distanta";
@@ -840,6 +841,8 @@ export default function DashboardClient() {
 
   async function uploadAvatar(file: File) {
     if (!userId) return;
+    const problema = verificaPoza(file);
+    if (problema) { salveaza(problema); return; }
     setUploadingAvatar(true);
     const ext = file.name.split(".").pop();
     const path = `${userId}/avatar.${ext}`;
@@ -2438,7 +2441,7 @@ export default function DashboardClient() {
                     )}
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>JPG, PNG, WEBP — max 5MB</div>
+                <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>{TEXT_REGULI_POZA}</div>
               </div>
 
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
@@ -3302,6 +3305,8 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
 
   async function handlePhotoUpload(file: File) {
     if (!animalId || !userId) return;
+    const problema = verificaPoza(file);
+    if (problema) { alert(problema); return; }
     setUploadingPoza(true);
     const ext = file.name.split(".").pop();
     const path = `${userId}/${animalId}.${ext}`;
