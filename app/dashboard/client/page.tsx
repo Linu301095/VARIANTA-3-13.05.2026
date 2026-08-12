@@ -386,6 +386,15 @@ export default function DashboardClient() {
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
+          // Dacă poziția cade în afara României, nu e reală: e un VPN sau o
+          // aproximare din rețea. Fără verificarea asta punem filtrul pe un
+          // oraș străin și lista rămâne goală, fără ca omul să înțeleagă de ce.
+          const inRomania = latitude > 43.5 && latitude < 48.4 && longitude > 20.2 && longitude < 29.8;
+          if (!inRomania) {
+            setGeoError("Locația primită nu pare a fi din România. Dacă ai un VPN pornit, oprește-l și încearcă din nou — sau alege orașul din listă.");
+            setGeoLoading(false);
+            return;
+          }
           setPozitia({ lat: latitude, lng: longitude });
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=ro`);
           const data = await res.json();
@@ -2030,9 +2039,12 @@ export default function DashboardClient() {
                         style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none" }}
                       />
                     </div>
-                    {/* Locația ta — GPS. Merge și pe calculator: browserul
-                        aproximează din rețea, mai puțin exact decât pe telefon,
-                        dar destul cât să ordonezi saloanele dintr-un oraș. */}
+                    {/* Locația ta — doar pe telefon, unde există GPS real.
+                        Pe calculator browserul aproximează din rețea și poate
+                        greși cu mii de kilometri: în test a raportat un cartier
+                        din Xi'an, aplicația a pus filtrul pe el și lista a rămas
+                        goală. Mai bine lipsește decât să mintă. */}
+                    {esteMobil && (
                     <button onClick={detecteazaLocatia} disabled={geoLoading} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: geoLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 10 }}>
                         {geoLoading
                           ? <span style={{ fontSize: 15 }}>⏳</span>
@@ -2040,6 +2052,7 @@ export default function DashboardClient() {
                         }
                       {geoLoading ? "Se detectează..." : "Locația ta"}
                     </button>
+                    )}
                     {geoError && (
                       <div style={{ padding: "8px 18px", fontSize: 11, fontWeight: 600, color: "#EF4444", background: theme === "dark" ? "rgba(239,68,68,.1)" : "#FEF2F2", borderBottom: `1px solid ${c.border2}` }}>{geoError}</div>
                     )}
