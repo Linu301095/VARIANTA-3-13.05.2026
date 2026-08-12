@@ -32,6 +32,16 @@ type SalonItem = { createdAt?: string | null; lat?: number | null; lng?: number 
  */
 const ORE_ANULARE_LIBERA = 24;
 
+/**
+ * Cât timp după trimitere își poate corecta clientul recenzia.
+ *
+ * Destul cât să repari o greșeală de degete sau o notă dată la nervi, dar nu
+ * atât cât recenzia să se schimbe sub răspunsul salonului. Se blochează oricum
+ * mai devreme dacă salonul a apucat să răspundă: din acel moment e o
+ * conversație, nu un monolog. Ștergerea rămâne posibilă oricând.
+ */
+const ORE_EDITARE_RECENZIE = 48;
+
 /* Culorile cardului. Eticheta nu mai vine de aici — se calculează din date,
    în lib/badges.ts. */
 const PALETA_SALOANE = [
@@ -340,7 +350,7 @@ export default function DashboardClient() {
   const [recenziiSalon, setRecenziiSalon] = useState<RecenzieUI[]>([]);
   const [recenziiLoading, setRecenziiLoading] = useState(false);
   const [ratinguriSaloane, setRatinguriSaloane] = useState<Record<string, { medie: number; nr: number }>>({});
-  const [recenziiProgramari, setRecenziiProgramari] = useState<Record<string, { id: string; rating: number; text: string }>>({});
+  const [recenziiProgramari, setRecenziiProgramari] = useState<Record<string, { id: string; rating: number; text: string; created_at: string; raspuns_salon: string | null }>>({});
   const animal = animale.find(a => a.id === selectedAnimalId) || animale[0] || null;
   const areAnimal = animale.length > 0;
   const domeniuLume = LUME_DOMENIU[lume];
@@ -546,12 +556,12 @@ export default function DashboardClient() {
       }
       const { data: recs } = await supabase
         .from("recenzii")
-        .select("id, programare_id, rating, text")
+        .select("id, programare_id, rating, text, created_at, raspuns_salon")
         .eq("user_id", userId)
         .not("programare_id", "is", null);
       if (recs) {
-        const map: Record<string, { id: string; rating: number; text: string }> = {};
-        for (const r of recs as any[]) map[r.programare_id] = { id: r.id, rating: r.rating, text: r.text };
+        const map: Record<string, { id: string; rating: number; text: string; created_at: string; raspuns_salon: string | null }> = {};
+        for (const r of recs as any[]) map[r.programare_id] = { id: r.id, rating: r.rating, text: r.text, created_at: r.created_at, raspuns_salon: r.raspuns_salon || null };
         setRecenziiProgramari(map);
       }
     }
@@ -696,13 +706,53 @@ export default function DashboardClient() {
     router.push("/login");
   }
 
+  /**
+   * Modificarea unei recenzii deja trimise.
+   *
+   * Se poate doar în primele ore și doar cât timp salonul n-a răspuns — vezi
+   * `ORE_EDITARE_RECENZIE`. Cine decide dacă butonul apare e cardul; aici doar
+   * scriem, iar media salonului se recalculează pe loc.
+   */
+  async function modificaRecenzie(prog: Programare, rating: number, text: string): Promise<string | null> {
+    const veche = recenziiProgramari[prog.id];
+    if (!veche) return "Recenzia nu mai există.";
+    const { error } = await supabase.from("recenzii").update({ rating, text }).eq("id", veche.id);
+    if (error) return "Nu am putut salva modificarea. Încearcă din nou.";
+    setRecenziiProgramari(prev => ({ ...prev, [prog.id]: { ...veche, rating, text } }));
+    setRatinguriSaloane(prev => {
+      const k = String(prog.salon_id); const cur = prev[k];
+      if (!cur || cur.nr === 0) return prev;
+      // Scoatem nota veche din medie și o punem pe cea nouă.
+      return { ...prev, [k]: { medie: (cur.medie * cur.nr - veche.rating + rating) / cur.nr, nr: cur.nr } };
+    });
+    salveaza("Recenzie modificată.");
+    return null;
+  }
+
+  /** Ștergerea rămâne posibilă oricând — e ce a scris omul despre el. */
+  async function stergeRecenzie(prog: Programare): Promise<string | null> {
+    const veche = recenziiProgramari[prog.id];
+    if (!veche) return null;
+    const { error } = await supabase.from("recenzii").delete().eq("id", veche.id);
+    if (error) return "Nu am putut șterge recenzia. Încearcă din nou.";
+    setRecenziiProgramari(prev => { const n = { ...prev }; delete n[prog.id]; return n; });
+    setRatinguriSaloane(prev => {
+      const k = String(prog.salon_id); const cur = prev[k];
+      if (!cur || cur.nr <= 1) { const n = { ...prev }; delete n[k]; return n; }
+      const nrNou = cur.nr - 1;
+      return { ...prev, [k]: { medie: (cur.medie * cur.nr - veche.rating) / nrNou, nr: nrNou } };
+    });
+    salveaza("Recenzia a fost ștearsă.");
+    return null;
+  }
+
   async function trimiteRecenziePentruProgramare(prog: Programare, rating: number, text: string): Promise<string | null> {
     const { data: inserted, error } = await supabase.from("recenzii").insert({
       salon_id: prog.salon_id, user_id: userId, programare_id: prog.id,
       rating, text,
-    }).select("id, rating, text").single();
+    }).select("id, rating, text, created_at, raspuns_salon").single();
     if (error) return "Nu am putut trimite recenzia. Poate ai evaluat deja această programare.";
-    setRecenziiProgramari(prev => ({ ...prev, [prog.id]: { id: inserted.id, rating: inserted.rating, text: inserted.text } }));
+    setRecenziiProgramari(prev => ({ ...prev, [prog.id]: { id: inserted.id, rating: inserted.rating, text: inserted.text, created_at: inserted.created_at, raspuns_salon: null } }));
     setRatinguriSaloane(prev => {
       const k = String(prog.salon_id); const cur = prev[k] || { medie: 0, nr: 0 };
       const nrNou = cur.nr + 1;
@@ -2384,6 +2434,8 @@ export default function DashboardClient() {
                   {listaProg.map(p => <CardProgramare key={p.id} p={p}
                     recenzie={recenziiProgramari[p.id] || null}
                     onTrimiteRecenzie={trimiteRecenziePentruProgramare}
+                    onModificaRecenzie={modificaRecenzie}
+                    onStergeRecenzie={stergeRecenzie}
                     onAnuleazaConfirmat={prog => { setAnulareModal(prog); setMotivAnulare(""); setAnulareError(""); }}
                     onRetrageCerere={retrageCerere} />)}
                 </div>
@@ -3192,7 +3244,7 @@ function formatData(iso: string): string {
   } catch { return iso; }
 }
 
-function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onTrimiteRecenzie }: { p: Programare; onAnuleazaConfirmat?: (p: Programare) => void; onRetrageCerere?: (id: string) => void; recenzie?: { id: string; rating: number; text: string } | null; onTrimiteRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null> }) {
+function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onTrimiteRecenzie, onModificaRecenzie, onStergeRecenzie }: { p: Programare; onAnuleazaConfirmat?: (p: Programare) => void; onRetrageCerere?: (id: string) => void; recenzie?: { id: string; rating: number; text: string; created_at: string; raspuns_salon: string | null } | null; onTrimiteRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null>; onModificaRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null>; onStergeRecenzie?: (p: Programare) => Promise<string | null> }) {
   const { theme, c } = useContext(ThemeCtx);
   const st = statusStyle(theme)[p.status];
   const oreRamase = (new Date(`${p.data}T${p.ora}:00`).getTime() - Date.now()) / 3600000;
@@ -3204,12 +3256,18 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
   const [textNou, setTextNou] = useState("");
   const [eroareEvaluare, setEroareEvaluare] = useState("");
   const [seTrimiteEvaluare, setSeTrimiteEvaluare] = useState(false);
+  /** Se poate corecta doar în primele ore și doar dacă salonul n-a răspuns. */
+  const oreDeLaRecenzie = recenzie ? (Date.now() - new Date(recenzie.created_at).getTime()) / 3600000 : 0;
+  const potModifica = !!recenzie && !recenzie.raspuns_salon && oreDeLaRecenzie < ORE_EDITARE_RECENZIE;
 
   async function handleTrimiteEvaluare() {
     if (ratingNou < 1) { setEroareEvaluare("Alege un număr de stele."); return; }
     if (textNou.trim().length < 10) { setEroareEvaluare("Scrie minim 10 caractere."); return; }
     setEroareEvaluare(""); setSeTrimiteEvaluare(true);
-    const eroare = await onTrimiteRecenzie?.(p, ratingNou, textNou.trim()) ?? null;
+    // Aceeași formă face și trimiterea, și corectarea.
+    const eroare = recenzie
+      ? (await onModificaRecenzie?.(p, ratingNou, textNou.trim()) ?? null)
+      : (await onTrimiteRecenzie?.(p, ratingNou, textNou.trim()) ?? null);
     setSeTrimiteEvaluare(false);
     if (eroare) { setEroareEvaluare(eroare); return; }
     setEvaluareDeschisa(false); setRatingNou(0); setTextNou("");
@@ -3239,17 +3297,45 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
 
       {p.status === "finalizat" && (
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1.5px solid ${c.border}` }}>
-          {recenzie ? (
+          {recenzie && !evaluareDeschisa ? (
             <div>
               <div style={{ fontSize: 12, fontWeight: 800, color: "#10B981", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={14} color="#10B981" strokeWidth={2} /> Ai evaluat acest serviciu</div>
               <div style={{ display: "flex", gap: 2, marginBottom: 6 }}>
                 {[1, 2, 3, 4, 5].map(s => <Star key={s} size={15} color="#F59E0B" fill={s <= recenzie.rating ? "#F59E0B" : "none"} strokeWidth={s <= recenzie.rating ? 0 : 1.5} />)}
               </div>
               <div style={{ fontSize: 13, color: c.muted, fontStyle: "italic" }}>„{recenzie.text}"</div>
+
+              {/* Modifică dispare după prag sau după ce salonul a răspuns. Șterge rămâne. */}
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
+                {potModifica && onModificaRecenzie && (
+                  <button onClick={() => { setRatingNou(recenzie.rating); setTextNou(recenzie.text); setEroareEvaluare(""); setEvaluareDeschisa(true); }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    <Pencil size={12} strokeWidth={2} /> Modifică
+                  </button>
+                )}
+                {onStergeRecenzie && (
+                  <button onClick={async () => {
+                    if (!confirm("Ștergi recenzia? Nu se mai poate recupera.")) return;
+                    setSeTrimiteEvaluare(true);
+                    const err = await onStergeRecenzie(p);
+                    setSeTrimiteEvaluare(false);
+                    if (err) setEroareEvaluare(err);
+                  }} disabled={seTrimiteEvaluare}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 50, border: "1.5px solid rgba(239,68,68,.35)", background: "transparent", color: "#EF4444", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    <Trash2 size={12} strokeWidth={2} /> Șterge
+                  </button>
+                )}
+                {!potModifica && (
+                  <span style={{ fontSize: 11, color: c.xmuted }}>
+                    {recenzie.raspuns_salon ? "Salonul a răspuns — nu se mai poate modifica." : "Perioada de modificare a trecut."}
+                  </span>
+                )}
+              </div>
+              {eroareEvaluare && <div style={{ fontSize: 12, fontWeight: 700, color: "#EF4444", marginTop: 8 }}>{eroareEvaluare}</div>}
             </div>
           ) : evaluareDeschisa ? (
             <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}><Pencil size={13} color={c.text} strokeWidth={2} /> Evaluează serviciul</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}><Pencil size={13} color={c.text} strokeWidth={2} /> {recenzie ? "Modifică evaluarea" : "Evaluează serviciul"}</div>
               <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
                 {[1, 2, 3, 4, 5].map(s => (
                   <button key={s} onClick={() => setRatingNou(s)}
@@ -3268,7 +3354,7 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={handleTrimiteEvaluare} disabled={seTrimiteEvaluare}
                   style={{ padding: "9px 20px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", boxShadow: "0 4px 16px rgba(255,107,0,.35)", opacity: seTrimiteEvaluare ? .6 : 1, cursor: seTrimiteEvaluare ? "wait" : "pointer" }}>
-                  {seTrimiteEvaluare ? "Se trimite..." : "Trimite evaluarea"}
+                  {seTrimiteEvaluare ? "Se salvează..." : recenzie ? "Salvează modificarea" : "Trimite evaluarea"}
                 </button>
                 <button onClick={() => { setEvaluareDeschisa(false); setRatingNou(0); setTextNou(""); setEroareEvaluare(""); }}
                   style={{ padding: "9px 20px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: "none", color: c.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>

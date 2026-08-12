@@ -137,6 +137,16 @@ aia. Nimic nu dispare, deci mama care rezervă pentru băiat n-are nevoie de nic
 salonul"). Înainte se putea alege doar în wizard, deci saloanele înscrise mai devreme rămâneau
 `public_tinta` gol pentru totdeauna — și ordonarea lucra pe date pe care nimeni nu le putea completa.
 
+### Recenziile clientului — modificare și ștergere (12.08.2026)
+
+Clientul își poate **modifica** recenzia doar în primele `ORE_EDITARE_RECENZIE = 48` de ore și
+doar cât timp salonul n-a răspuns; după răspuns e o conversație, nu un monolog, iar o notă
+schimbată sub răspuns l-ar lăsa pe salon cu o replică fără sens. **Ștergerea rămâne posibilă
+oricând** — e ce a scris omul despre propria experiență.
+
+Media salonului se recalculează pe loc la ambele. Butoanele stau sub recenzie, în tabul
+Programări → Istoric; când modificarea nu mai e permisă, scrie de ce.
+
 ### Anularea programărilor — regulile (stabilite 12.08.2026)
 
 | Situație | Ce poate face clientul |
