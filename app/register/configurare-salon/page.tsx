@@ -7,7 +7,7 @@ import { supabase } from "../../../lib/supabase";
 import SelectCautabil from "../../../components/SelectCautabil";
 import { NUME_JUDETE, oraseDin, areSectoare, BUCURESTI } from "../../../lib/orase";
 import { SPECIALIZARI, MAX_SPECIALIZARI, specializariSugerate } from "../../../lib/specializari";
-import { verificaPoza } from "../../../lib/poze";
+import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import {
   Store, Scissors, Users, CheckCircle, Plus, Trash2, Clock,
   Building2, FileText, MapPin, Phone, AlignLeft, Globe, Receipt,
@@ -992,6 +992,7 @@ export default function ConfigurareSalon() {
                     {errors.poze}
                   </div>
                 )}
+                <div style={{ fontSize: 12, color: C.dim, marginBottom: 16 }}>{TEXT_REGULI_POZA}</div>
 
                 <div style={{ marginBottom: 24 }}>
                   <div style={sectiune}><Camera size={12} strokeWidth={2.5} /> Poza de profil / cover</div>

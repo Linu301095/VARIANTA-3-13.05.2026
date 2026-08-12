@@ -9,7 +9,7 @@ import { supabase } from "../../../lib/supabase";
 import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
 import { SECTOARE, BUCURESTI } from "../../../lib/orase";
 import { putereParola, sfaturiParola, PUTERE_DASH, PAROLA_MIN } from "../../../lib/parola";
-import { verificaPoza } from "../../../lib/poze";
+import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import { calculeazaBadge, culoriBadge } from "../../../lib/badges";
 import { alegeRecomandate } from "../../../lib/recomandate";
 import { distantaKm, scrieDistanta, punctSalon } from "../../../lib/distanta";
@@ -2441,7 +2441,7 @@ export default function DashboardClient() {
                     )}
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>JPG, PNG, WEBP — max 5MB</div>
+                <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>{TEXT_REGULI_POZA}</div>
               </div>
 
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>

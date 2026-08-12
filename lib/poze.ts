@@ -15,13 +15,22 @@ export const MARIME_MAX_MB = 5;
 const MARIME_MAX = MARIME_MAX_MB * 1024 * 1024;
 
 const TIPURI = ["image/jpeg", "image/png", "image/webp"];
+/** Ce scriem sub butoanele de încărcare, ca textul să nu se abată de la reguli. */
+export const TEXT_REGULI_POZA = `JPG, PNG sau WEBP — maximum ${MARIME_MAX_MB}MB`;
+
 /**
  * Întoarce un mesaj de eroare, sau `null` dacă poza e bună.
  *
  * Mesajul e gata de arătat omului: spune şi ce e greşit, şi ce să facă.
  */
 export function verificaPoza(file: File): string | null {
-  if (!TIPURI.includes(file.type)) return "Alege o poză în format JPG, PNG sau WEBP.";
+  if (!TIPURI.includes(file.type)) {
+    // Unele telefoane trimit HEIC din poza de galerie — merită spus pe nume,
+    // altfel omul crede că poza lui e stricată.
+    const heic = /heic|heif/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+    if (heic) return "Formatul HEIC nu e acceptat. În galerie apasă \u201eEditeaz\u0103\u201d pe poză și salveaz-o, sau schimbă din setările camerei pe \u201eCea mai compatibil\u0103\u201d.";
+    return `Alege o poză în format JPG, PNG sau WEBP.`;
+  }
   if (file.size > MARIME_MAX) {
     const mb = (file.size / 1024 / 1024).toFixed(1).replace(".", ",");
     return `Poza e prea mare (${mb}MB). Alege una sub ${MARIME_MAX_MB}MB.`;
