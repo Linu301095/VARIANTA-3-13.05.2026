@@ -1318,6 +1318,15 @@ export default function DashboardClient() {
               {/* ── SERVICII ── */}
               {profilSalonTab === "servicii" && (
                 <>
+                  {/* Descrierea scrisă de salon. Se salva în bază de la înscriere,
+                      dar nu se afișa pe niciun ecran — salonul scria pentru
+                      clienți, iar clienții nu vedeau nimic. */}
+                  {salon.descriere?.trim() && (
+                    <div style={{ marginBottom: 16, padding: "14px 16px", background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 12 }}>
+                      <div style={{ fontSize: 13.5, color: c.text2, lineHeight: 1.65, whiteSpace: "pre-line" }}>{salon.descriere.trim()}</div>
+                    </div>
+                  )}
+
                   {/* Cu ce animale lucreaza salonul — clientul trebuie sa stie inainte sa rezerve */}
                   {salonCereAnimal && (salon.specii?.length || 0) > 0 && (() => {
                     const speciiSalon = salon.specii || [];
