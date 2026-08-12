@@ -14,20 +14,6 @@ import { alegeRecomandate } from "../../../lib/recomandate";
 import { distantaKm, scrieDistanta, punctSalon } from "../../../lib/distanta";
 import SiluetaGen from "../../../components/SiluetaGen";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
-const SERVICII_DEMO = [
-  { nume: "Tuns complet", pret: "80", durata: "60" },
-  { nume: "Băiță + uscare", pret: "50", durata: "40" },
-  { nume: "Tuns + Băiță + Unghii", pret: "120", durata: "90" },
-  { nume: "Styling complet", pret: "150", durata: "120" },
-];
-
-const SALOANE = [
-  { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], serviciiComplete: SERVICII_DEMO, pretDe: 80, distanta: "1.2 km", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { id: 2, nume: "Fluffy Salon", oras: "București, Sector 1", rating: 4.8, recenzii: 89, servicii: ["Tuns", "Styling", "Spa"], serviciiComplete: SERVICII_DEMO, pretDe: 90, distanta: "2.1 km", culoare: "#8B5CF6", bg: "#F5F3FF" },
-  { id: 3, nume: "Happy Pets Grooming", oras: "București, Sector 3", rating: 4.7, recenzii: 214, servicii: ["Tuns", "Băiță", "Anti-purici"], serviciiComplete: SERVICII_DEMO, pretDe: 65, distanta: "3.4 km", culoare: "#10B981", bg: "#ECFDF5" },
-  { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", culoare: "#F59E0B", bg: "#FFFBEB" },
-];
-
 type ServiciuOferitC = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 type Domeniu = "infrumusetare" | "grooming";
 /** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
@@ -277,7 +263,12 @@ export default function DashboardClient() {
   const [lume, setLume] = useState<Lume>("tine");
   const lumeAleasa = useRef(false);
   const [salonSelectat, setSalonSelectat] = useState<string | number | null>(null);
-  const [saloaneList, setSaloaneList] = useState<SalonItem[]>(SALOANE);
+  /* Lista porneşte goală. Înainte porneau patru saloane inventate („Paws &
+     Style", 4.9 stele, 127 recenzii) care se vedeau până răspundea baza — şi
+     rămâneau pe ecran pentru totdeauna dacă baza nu răspundea deloc. */
+  const [saloaneList, setSaloaneList] = useState<SalonItem[]>([]);
+  const [saloaneLoading, setSaloaneLoading] = useState(true);
+  const [saloaneEroare, setSaloaneEroare] = useState(false);
   const [rezervare, setRezervare] = useState<{ salonId: string | number; servicii: string[]; ora: string } | null>(null);
   const [confirmat, setConfirmat] = useState(false);
   const [programari, setProgramari] = useState<Programare[]>([]);
@@ -439,7 +430,7 @@ export default function DashboardClient() {
         const cached = localStorage.getItem("calyhub_saloane_cache");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) setSaloaneList(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) { setSaloaneList(parsed); setSaloaneLoading(false); }
         }
       } catch {}
 
@@ -447,7 +438,7 @@ export default function DashboardClient() {
       const [
         { data: profile },
         { data: animaleData },
-        { data: dbSaloane },
+        { data: dbSaloane, error: eroareSaloane },
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
@@ -472,11 +463,17 @@ export default function DashboardClient() {
         setSelectedAnimalId(animaleData[0].id);
       }
 
-      if (dbSaloane && dbSaloane.length > 0) {
+      // Şi lista goală e un răspuns valid: înseamnă că nu există saloane încă.
+      // Doar eroarea e altceva, şi atunci o spunem pe faţă.
+      if (Array.isArray(dbSaloane)) {
         const mapped = dbSaloane.map(mapSalonDB);
         setSaloaneList(mapped);
+        setSaloaneEroare(false);
         try { localStorage.setItem("calyhub_saloane_cache", JSON.stringify(mapped)); } catch {}
+      } else if (eroareSaloane) {
+        setSaloaneEroare(true);
       }
+      setSaloaneLoading(false);
 
       // Restul în paralel; autoFinalizeaza nu blochează UI
       autoFinalizeaza(authUser.id);
@@ -2187,7 +2184,11 @@ export default function DashboardClient() {
 
             {filtrareActiva ? (
               <>
-                {saloneFiltrate.length > 0 ? (
+                {saloaneLoading ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                    {[0, 1, 2].map(i => <CardSchelet key={i} />)}
+                  </div>
+                ) : saloneFiltrate.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
                     {saloneFiltrate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} distanta={distanteSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                   </div>
@@ -2204,7 +2205,26 @@ export default function DashboardClient() {
               </>
             ) : (
               <>
-                {saloaneLume.length === 0 && (
+                {saloaneLoading && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                    {[0, 1, 2, 3].map(i => <CardSchelet key={i} />)}
+                  </div>
+                )}
+
+                {!saloaneLoading && saloaneEroare && (
+                  <div style={{ textAlign: "center", padding: "48px 20px", background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+                      <AlertTriangle size={38} color="#EF4444" strokeWidth={1.7} />
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: c.text, marginBottom: 8 }}>Nu am putut încărca saloanele</div>
+                    <div style={{ fontSize: 14, color: c.muted, marginBottom: 18, lineHeight: 1.6, maxWidth: 340, margin: "0 auto 18px" }}>
+                      Verifică legătura la internet și încearcă din nou.
+                    </div>
+                    <button onClick={() => window.location.reload()} style={btnPrimary}>Încearcă din nou</button>
+                  </div>
+                )}
+
+                {!saloaneLoading && !saloaneEroare && saloaneLume.length === 0 && (
                   <div style={{ textAlign: "center", padding: "56px 20px", background: c.surface, border: `1.5px solid ${c.border}`, borderRadius: 20 }}>
                     <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
                       {lume === "animal"
@@ -2219,7 +2239,7 @@ export default function DashboardClient() {
                     </div>
                   </div>
                 )}
-                {saloaneLume.length > 0 && (<>
+                {!saloaneLoading && saloaneLume.length > 0 && (<>
                 {/* „Recomandate" se aprinde singură: `alegeRecomandate` întoarce
                     lista goală cât timp saloanele sunt puține sau niciunul n-a
                     strâns destule recenzii. Înainte arăta primele două din listă
@@ -2996,6 +3016,36 @@ function RatingBadge({ ratingReal }: { ratingReal?: { medie: number; nr: number 
     return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 800, color: "#FF6B00" }}>Nou</div>;
   }
   return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}><Star size={13} color="#F59E0B" fill="#F59E0B" strokeWidth={0} /> {ratingReal.medie.toFixed(1)}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({ratingReal.nr})</span></div>;
+}
+
+/**
+ * Cardul gol care pulsează cât se încarcă lista.
+ *
+ * Înainte, în locul lui se vedeau patru saloane inventate cu 4.9 stele și 127
+ * de recenzii. O secundă de gri e mai bună decât o secundă de minciună — mai
+ * ales dacă cineva prinde ecranul într-o captură.
+ */
+function CardSchelet() {
+  const { c } = useContext(ThemeCtx);
+  const bloc = (w: string | number, h: number, mt = 0): React.CSSProperties => ({
+    width: w, height: h, marginTop: mt, borderRadius: 8, background: c.surface2,
+    animation: "ch-puls 1.4s ease-in-out infinite",
+  });
+  return (
+    <div style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
+      <div style={{ height: 160, background: c.surface2, animation: "ch-puls 1.4s ease-in-out infinite" }} />
+      <div style={{ padding: "16px 18px 20px" }}>
+        <div style={bloc(120, 14)} />
+        <div style={bloc("70%", 20, 10)} />
+        <div style={bloc("45%", 12, 8)} />
+        <div style={{ display: "flex", gap: 6, marginTop: 14 }}>
+          <div style={bloc(70, 22)} />
+          <div style={bloc(56, 22)} />
+          <div style={bloc(64, 22)} />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function CardSalon({ salon, onSelect, ratingReal, distanta }: { salon: SalonItem; onSelect: () => void; ratingReal?: { medie: number; nr: number }; distanta?: number }) {

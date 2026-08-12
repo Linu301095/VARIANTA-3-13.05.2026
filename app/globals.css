@@ -715,3 +715,13 @@ html[data-theme="dark"] textarea[style*="var(--pub-surface)"]::placeholder {
   .ch-teaser { flex-direction: column; align-items: flex-start !important; gap: 16px !important; padding: 24px 22px !important; }
   .ch-teaser > a { width: 100%; justify-content: center; padding: 15px 20px !important; }
 }
+
+/* Pulsul cardurilor goale, cât se încarcă lista de saloane.
+   Fără el ar sta niște dreptunghiuri moarte, care par o eroare de afișare. */
+@keyframes ch-puls {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes ch-puls { 0%, 100% { opacity: .7; } }
+}
