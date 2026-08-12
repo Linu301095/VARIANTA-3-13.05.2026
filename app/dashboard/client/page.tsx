@@ -9,6 +9,7 @@ import { supabase } from "../../../lib/supabase";
 import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
 import { SECTOARE, BUCURESTI } from "../../../lib/orase";
 import { putereParola, sfaturiParola, PUTERE_DASH, PAROLA_MIN } from "../../../lib/parola";
+import { calculeazaBadge, culoriBadge } from "../../../lib/badges";
 import SiluetaGen from "../../../components/SiluetaGen";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
@@ -19,10 +20,10 @@ const SERVICII_DEMO = [
 ];
 
 const SALOANE = [
-  { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], serviciiComplete: SERVICII_DEMO, pretDe: 80, distanta: "1.2 km", badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { id: 2, nume: "Fluffy Salon", oras: "București, Sector 1", rating: 4.8, recenzii: 89, servicii: ["Tuns", "Styling", "Spa"], serviciiComplete: SERVICII_DEMO, pretDe: 90, distanta: "2.1 km", badge: "Nou", culoare: "#8B5CF6", bg: "#F5F3FF" },
-  { id: 3, nume: "Happy Pets Grooming", oras: "București, Sector 3", rating: 4.7, recenzii: 214, servicii: ["Tuns", "Băiță", "Anti-purici"], serviciiComplete: SERVICII_DEMO, pretDe: 65, distanta: "3.4 km", badge: "Popular", culoare: "#10B981", bg: "#ECFDF5" },
-  { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", badge: "Premium", culoare: "#F59E0B", bg: "#FFFBEB" },
+  { id: 1, nume: "Paws & Style", oras: "București, Sector 2", rating: 4.9, recenzii: 127, servicii: ["Tuns", "Băiță", "Unghii"], serviciiComplete: SERVICII_DEMO, pretDe: 80, distanta: "1.2 km", culoare: "#FF6B00", bg: "#FFF3EA" },
+  { id: 2, nume: "Fluffy Salon", oras: "București, Sector 1", rating: 4.8, recenzii: 89, servicii: ["Tuns", "Styling", "Spa"], serviciiComplete: SERVICII_DEMO, pretDe: 90, distanta: "2.1 km", culoare: "#8B5CF6", bg: "#F5F3FF" },
+  { id: 3, nume: "Happy Pets Grooming", oras: "București, Sector 3", rating: 4.7, recenzii: 214, servicii: ["Tuns", "Băiță", "Anti-purici"], serviciiComplete: SERVICII_DEMO, pretDe: 65, distanta: "3.4 km", culoare: "#10B981", bg: "#ECFDF5" },
+  { id: 4, nume: "Royal Dog Salon", oras: "București, Sector 4", rating: 4.9, recenzii: 56, servicii: ["Premium grooming", "Spa", "Masaj"], serviciiComplete: SERVICII_DEMO, pretDe: 120, distanta: "4.0 km", culoare: "#F59E0B", bg: "#FFFBEB" },
 ];
 
 type ServiciuOferitC = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
@@ -30,13 +31,12 @@ type Domeniu = "infrumusetare" | "grooming";
 /** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
 type Lume = "tine" | "animal";
 const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
-type SalonItem = { domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; badge: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { createdAt?: string | null; domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
+/* Culorile cardului. Eticheta nu mai vine de aici — se calculează din date,
+   în lib/badges.ts. */
 const PALETA_SALOANE = [
-  { badge: "Top rated", culoare: "#FF6B00", bg: "#FFF3EA" },
-  { badge: "Nou",       culoare: "#FF6B00", bg: "#FFF3EA" },
-  { badge: "Popular",   culoare: "#FF6B00", bg: "#FFF3EA" },
-  { badge: "Premium",   culoare: "#FF6B00", bg: "#FFF3EA" },
+  { culoare: "#FF6B00", bg: "#FFF3EA" },
 ];
 
 function mapSalonDB(s: any, i: number): SalonItem {
@@ -60,6 +60,7 @@ function mapSalonDB(s: any, i: number): SalonItem {
     specializari: Array.isArray(s.specializari) ? s.specializari : [],
     publicTinta: s.public_tinta || null,
     judet: s.judet || "",
+    createdAt: s.created_at || null,
     id: s.id,
     nume: s.nume || "Salon",
     oras: s.oras || "România",
@@ -69,7 +70,6 @@ function mapSalonDB(s: any, i: number): SalonItem {
     serviciiComplete,
     pretDe,
     distanta: "",
-    badge: p.badge,
     culoare: p.culoare,
     bg: p.bg,
     poza_url: s.poza_url || null,
@@ -432,7 +432,7 @@ export default function DashboardClient() {
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
-        supabase.from("saloane").select("id, nume, oras, judet, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
+        supabase.from("saloane").select("id, created_at, nume, oras, judet, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
       ]);
 
       if (profile) {
@@ -1243,7 +1243,12 @@ export default function DashboardClient() {
               <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, pointerEvents: "none" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                   <div>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badge}</span>
+                    {(() => {
+                      const b = calculeazaBadge({ medie: medieRecenzii, nrRecenzii, createdAt: salon.createdAt });
+                      if (!b) return null;
+                      const col = culoriBadge(b.ton, theme === "dark");
+                      return <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: col.plin, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{b.text}</span>;
+                    })()}
                     <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "6px 0 2px", textShadow: "0 1px 4px rgba(0,0,0,.4)" }}>{salon.nume}</h2>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} color="rgba(255,255,255,.85)" strokeWidth={2} /> {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
                   </div>
@@ -2921,6 +2926,9 @@ function RatingBadge({ ratingReal }: { ratingReal?: { medie: number; nr: number 
 
 function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect: () => void; ratingReal?: { medie: number; nr: number } }) {
   const { c, theme } = useContext(ThemeCtx);
+  // Eticheta vine din date, nu din poziția în listă. Poate lipsi cu totul.
+  const badge = calculeazaBadge({ medie: ratingReal?.medie, nrRecenzii: ratingReal?.nr, createdAt: salon.createdAt });
+  const badgeCol = badge ? culoriBadge(badge.ton, theme === "dark") : null;
   return (
     <div style={{ background: c.surface, borderRadius: 20, border: "2px solid #FF6B00", overflow: "hidden", boxShadow: c.cardShadow, display: "flex", flexDirection: "column" }}>
       {/* Cover photo sau bara colorată */}
@@ -2928,7 +2936,9 @@ function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect
         <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
           <img src={salon.poza_url} alt={salon.nume} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.45) 100%)" }} />
-          <span style={{ position: "absolute", bottom: 10, left: 12, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#fff", background: salon.culoare, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badge}</span>
+          {badge && badgeCol && (
+            <span style={{ position: "absolute", bottom: 10, left: 12, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#fff", background: badgeCol.plin, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{badge.text}</span>
+          )}
         </div>
       ) : (
         <div style={{ height: 4, background: salon.culoare }} />
@@ -2937,7 +2947,9 @@ function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect
       <div style={{ padding: "18px 20px 20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
         {!salon.poza_url && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: salon.culoare, background: theme === "dark" ? `${salon.culoare}26` : salon.bg, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{salon.badge}</span>
+            {badge && badgeCol && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: badgeCol.text, background: badgeCol.fundal, padding: "4px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{badge.text}</span>
+            )}
             <RatingBadge ratingReal={ratingReal} />
           </div>
         )}
