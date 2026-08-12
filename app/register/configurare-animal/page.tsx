@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { supabase } from "../../../lib/supabase";
-import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
+import { verificaPoza } from "../../../lib/poze";
 import { Scissors, PawPrint, Check, ArrowRight, Camera, AlertTriangle } from "lucide-react";
 
 const C = {
@@ -428,7 +428,7 @@ export default function ConfigurareAnimal() {
                     <>
                       <Camera size={24} color={C.dim} strokeWidth={1.8} />
                       <span style={{ fontSize: 13, fontWeight: 700, color: C.muted }}>Click pentru a adăuga o poză</span>
-                      <span style={{ fontSize: 12, color: C.dim }}>{TEXT_REGULI_POZA}</span>
+                      <span style={{ fontSize: 12, color: C.dim }}>JPG, PNG — max 5MB</span>
                     </>
                   )}
                   <input type="file" accept="image/*" onChange={onSelectPoza} style={{ display: "none" }} />
