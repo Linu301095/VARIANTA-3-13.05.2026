@@ -28,7 +28,7 @@ export function verificaPoza(file: File): string | null {
     // Unele telefoane trimit HEIC din poza de galerie — merită spus pe nume,
     // altfel omul crede că poza lui e stricată.
     const heic = /heic|heif/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
-    if (heic) return "Formatul HEIC nu e acceptat. În galerie apasă \u201eEditeaz\u0103\u201d pe poză și salveaz-o, sau schimbă din setările camerei pe \u201eCea mai compatibil\u0103\u201d.";
+    if (heic) return "Pozele de pe iPhone (HEIC) nu pot fi afi\u0219ate pe web. Fă o captură de ecran cu poza și încarcă captura, sau schimbă din Setări \u2192 Cameră \u2192 Formate pe \u201eCea mai compatibil\u0103\u201d.";
     return `Alege o poză în format JPG, PNG sau WEBP.`;
   }
   if (file.size > MARIME_MAX) {
