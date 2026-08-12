@@ -280,7 +280,6 @@ export default function DashboardClient() {
   const [programari, setProgramari] = useState<Programare[]>([]);
   const [confirmareLoading, setConfirmareLoading] = useState(false);
   const [confirmareError, setConfirmareError] = useState("");
-  const [notifSettings, setNotifSettings] = useState({ sms: true, newsletter: false });
   const [notificari, setNotificari] = useState<Notificare[]>([]);
   const [userId, setUserId] = useState("");
   const [profilForm, setProfilForm] = useState({ numeComplet: "", email: "", telefon: "", gen: "" });
@@ -2280,12 +2279,26 @@ export default function DashboardClient() {
 
               <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {[{ key: "numeComplet", label: "Nume complet", placeholder: "Ion Popescu" }, { key: "email", label: "Email", placeholder: "ion@email.com" }, { key: "telefon", label: "Telefon", placeholder: "07XX XXX XXX" }].map(f => (
+                  {[{ key: "numeComplet", label: "Nume complet", placeholder: "Ion Popescu" }, { key: "telefon", label: "Telefon", placeholder: "07XX XXX XXX" }].map(f => (
                     <div key={f.key}>
                       <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>{f.label}</label>
                       <input value={(profilForm as any)[f.key]} onChange={e => setProfilForm(pf => ({ ...pf, [f.key]: e.target.value }))} placeholder={f.placeholder} style={inp} />
                     </div>
                   ))}
+
+                  {/* Emailul era editabil, dar la salvare se scriau doar numele,
+                      telefonul și genul — îl schimbai, primeai „Profil actualizat!",
+                      iar la reîncărcare era tot cel vechi. Schimbarea reală cere un
+                      email de confirmare către adresa nouă, deci așteaptă Resend. */}
+                  <div>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Email</label>
+                    <input value={profilForm.email} readOnly disabled
+                      style={{ ...inp, background: c.surface2, color: c.muted, cursor: "not-allowed" }} />
+                    <div style={{ fontSize: 11.5, color: c.xmuted, marginTop: 6, lineHeight: 1.6 }}>
+                      Emailul e cel cu care intri în cont și nu se poate schimba de aici.
+                      Scrie-ne la <a href="mailto:support@calyhub.ro?subject=Schimbare%20email%20cont" style={{ color: "#FF6B00", fontWeight: 800 }}>support@calyhub.ro</a> dacă ai nevoie să-l schimbi.
+                    </div>
+                  </div>
                   <div>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Gen</label>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -2513,24 +2526,30 @@ export default function DashboardClient() {
                   });
                 })()}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 12 }}>Preferințe notificări</div>
-              <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}`, display: "flex", flexDirection: "column", gap: 0 }}>
-                {[
-                  { key: "sms", label: "Remindere programări", sub: "WhatsApp sau SMS, cu 24 de ore înainte" },
-                  { key: "newsletter", label: "Newsletter CalyHub", sub: "Oferte și noutăți de la saloane" },
-                ].map((item, i) => (
-                  <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: i < 1 ? `1px solid ${c.border2}` : "none" }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{item.label}</div>
-                      <div style={{ fontSize: 12, color: c.xmuted, marginTop: 2 }}>{item.sub}</div>
+              {/* Aici erau două comutatoare care nu se salvau nicăieri („Remindere
+                  SMS/WhatsApp" și „Newsletter"), iar butonul spunea că le-a salvat.
+                  Nu există niciun sistem de SMS sau push în aplicație, deci
+                  promisiunea era goală. Le-am scos și am pus ce e adevărat.
+                  Se întorc, reale, odată cu aplicația de telefon — vezi CLAUDE.md. */}
+              <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 12 }}>Cum te anunțăm</div>
+              <div style={{ background: c.surface, borderRadius: 20, padding: "22px 24px", border: `1.5px solid ${c.border}` }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
+                  <span style={{ width: 34, height: 34, borderRadius: 10, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Bell size={16} color="#FF6B00" strokeWidth={2.2} />
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: c.text, marginBottom: 3 }}>Aici, în aplicație</div>
+                    <div style={{ fontSize: 12.5, color: c.muted, lineHeight: 1.6 }}>
+                      Primești o notificare de fiecare dată când salonul îți confirmă sau îți anulează o programare,
+                      și când răspunde la o recenzie de-a ta.
                     </div>
-                    <button onClick={() => setNotifSettings(n => ({ ...n, [item.key]: !n[item.key as keyof typeof n] }))}
-                      style={{ width: 44, height: 24, borderRadius: 12, border: "none", background: notifSettings[item.key as keyof typeof notifSettings] ? "#FF6B00" : c.toggleOff, cursor: "pointer", position: "relative", transition: "background .2s", flexShrink: 0 }}>
-                      <span style={{ position: "absolute", top: 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,.2)", transition: "left .2s", left: notifSettings[item.key as keyof typeof notifSettings] ? 22 : 2 }} />
-                    </button>
                   </div>
-                ))}
-                <button onClick={() => salveaza("Preferințe notificări salvate!")} style={{ ...btnPrimary, marginTop: 20 }}>Salvează preferințele</button>
+                </div>
+                <div style={{ height: 1, background: c.border2, margin: "16px 0" }} />
+                <div style={{ fontSize: 12.5, color: c.xmuted, lineHeight: 1.6 }}>
+                  Reminderele înainte de programare vin odată cu aplicația de telefon. Până atunci nu trimitem
+                  nici SMS, nici emailuri de marketing.
+                </div>
               </div>
             </div>
           )}
@@ -2637,7 +2656,7 @@ export default function DashboardClient() {
               <FAQ items={[
                 { q: "Cum anulez o programare?", r: "Mergi la Programările mele, găsești programarea confirmată și dai click pe Anulează. Poți anula cu cel puțin 12 ore înainte și trebuie să scrii un scurt motiv pentru salon." },
                 { q: "Pot schimba ora programării?", r: "Momentan poți anula și face o programare nouă. Funcția de reprogramare va fi disponibilă în curând." },
-                { q: "Primesc reminder înainte de programare?", r: "Da, cu 24 de ore înainte, pe WhatsApp sau SMS, dacă ai remindele active din meniul Notificări." },
+                { q: "Primesc reminder înainte de programare?", r: "Deocamdată nu. Primești notificare în aplicație când salonul îți confirmă programarea, dar nu trimitem SMS sau WhatsApp. Reminderele vin odată cu aplicația de telefon." },
                 { q: "Pot avea mai multe animale în cont?", r: "Da. Mergi la Animalele mele și apeși pe Adaugă animal nou. Comuți între ele oricând, iar la rezervare se folosește animalul selectat." },
                 { q: "Rezerv doar pentru animalul meu?", r: "Nu. Contul e al tău ca persoană: rezervi la saloane de înfrumusețare pentru tine, iar dacă ai un animal în cont ai și lumea de grooming. Comuți între ele din butonul de sus." },
                 { q: "Cum contactez salonul direct?", r: "Pe pagina salonului vei găsi numărul de telefon public al acestuia." },

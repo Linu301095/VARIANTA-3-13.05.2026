@@ -467,8 +467,17 @@ decât „coafor Cluj". Și e argumentul de vânzare: *„te înscrii și prime�
   devin reale și reflectă starea permisiunii din sistem. Push-ul rezolvă și reminderul de 24h fără
   costul SMS-urilor (~0.04–0.07 EUR/mesaj prin Twilio).
 
-  **Până atunci:** ori scoatem comutatoarele și fraza din FAQ, ori le salvăm în bază și le marcăm
-  explicit ca „în curând". A doua variantă e mai onestă doar dacă chiar urmează repede.
+  **Rezolvat provizoriu (11.08.2026):** comutatoarele au fost **scoase**, iar blocul se numește acum
+  „Cum te anunțăm" și spune adevărul — notificări în aplicație la confirmare, anulare și răspuns la
+  recenzie; fără SMS și fără emailuri de marketing. Răspunsul din FAQ a fost rescris la fel.
+  Se întorc, reale, odată cu aplicația de telefon.
+
+- **⚠️ SCHIMBAREA EMAILULUI (11.08.2026).** Câmpul Email din dashboardul clientului → Profil era
+  editabil, dar la salvare se scriau doar `nume`, `telefon` și `gen` — omul îl schimba, primea
+  „Profil actualizat!", iar la refresh era tot cel vechi. Acum e **doar de citit**, cu trimitere la
+  support. Schimbarea reală (`supabase.auth.updateUser({ email })`) trimite un link de confirmare la
+  adresa nouă, deci **așteaptă Resend** — cu mailerul implicit din Supabase riscăm ca omul să rămână
+  blocat între două adrese dacă emailul nu ajunge.
 
 - **Code splitting pe tab-uri (punctul E din optimizarea de performanță)** — `app/dashboard/client/page.tsx` (~2300 linii) și `app/dashboard/salon/page.tsx` (~2150 linii) sunt fișiere uriașe cu toate tab-urile la un loc. De spart fiecare tab într-un fișier separat (`tabs/saloane.tsx`, `tabs/programari.tsx`, etc.), de creat un Context provider pentru state-ul comun (user, salon, theme, notificari) și de folosit `dynamic(() => import(...))` pentru lazy loading. Estimare: 4-6 ore. Câștig: -40% bundle inițial. De făcut DUPĂ ce restul aplicației e stabilă post-lansare.
 
