@@ -47,6 +47,7 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 4. **Bifa de Termeni** — obligatorie ȘI salvată în bază (`profiluri.termeni_acceptati_la` + `termeni_versiune`), ca să existe dovada consimțământului.
 
 **SQL de rulat în Supabase:**
+- `sql/stergere_salon.sql` — **obligatoriu pentru ștergerea salonului**, adaugă `saloane.sters_la` + index parțial pe saloanele active. Fără el, butonul „Șterge salonul" eșuează, iar căutarea clientului crapă (filtrează după coloana asta).
 - `sql/rating_saloane.sql` — **obligatoriu pentru notele de pe carduri**, creează vederea `saloane_rating` (medie + număr per salon). Fără ea, dashboardul clientului nu mai poate calcula notele și toate saloanele apar ca „Nou". Înlocuiește descărcarea tuturor recenziilor din bază la fiecare intrare în cont.
 - `sql/coordonate_salon.sql` — **obligatoriu pentru distanță**, adaugă `saloane.lat`, `saloane.lng`, `saloane.geocodat_la`. Fără el, înscrierea salonului merge dar nu salvează coordonatele, iar pe carduri nu apare nicio distanță.
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
@@ -137,6 +138,19 @@ aia. Nimic nu dispare, deci mama care rezervă pentru băiat n-are nevoie de nic
 **Publicul salonului se editează și din dashboard** (Profilul salonului → „Cui se adresează
 salonul"). Înainte se putea alege doar în wizard, deci saloanele înscrise mai devreme rămâneau
 `public_tinta` gol pentru totdeauna — și ordonarea lucra pe date pe care nimeni nu le putea completa.
+
+### Închiderea contului de salon (decizie 12.08.2026)
+
+| Ce | Cum |
+|---|---|
+| Programările viitoare | Se anulează automat, iar fiecare client primește notificare: „X și-a închis contul, iar programarea ta din … a fost anulată." |
+| Datele salonului | Contact, poze, galerie, descriere, servicii, echipă, specializări, coordonate — golite. |
+| **Denumirea** | **Rămâne.** Altfel istoricul clienților ar arăta „Salon necunoscut" în locul unei vizite reale. E și ce promit Termenii, §5. |
+| Recenziile primite | Rămân legate de rândul salonului, care nu se șterge. |
+| Contul | `saloane.sters_la` + `profiluri.sters_la` — nu mai poate intra, la fel ca la client. |
+
+Căutarea clientului filtrează `.is("sters_la", null)`, deci saloanele închise dispar din listă.
+Se cere parola înainte de confirmare.
 
 ### Recenziile clientului — modificare și ștergere (12.08.2026)
 

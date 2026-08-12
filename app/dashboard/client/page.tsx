@@ -458,7 +458,11 @@ export default function DashboardClient() {
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
-        supabase.from("saloane").select("id, created_at, nume, oras, judet, lat, lng, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
+        supabase.from("saloane").select("id, created_at, nume, oras, judet, lat, lng, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta")
+          // Saloanele închise dispar din căutare; rândul lor rămâne doar ca
+          // istoricul clienților să aibă un nume, nu „Salon necunoscut".
+          .is("sters_la", null)
+          .order("created_at", { ascending: false }),
       ]);
 
       if (profile) {

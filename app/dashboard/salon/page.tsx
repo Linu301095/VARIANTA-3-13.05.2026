@@ -874,6 +874,11 @@ export default function DashboardSalon() {
   const [profilSalon, setProfilSalon] = useState({ numeSalon: "", adresa: "", oras: "", telefon: "", descriere: "" });
   const [speciiSalon, setSpeciiSalon] = useState<string[]>([]);
   const [specializariSalon, setSpecializariSalon] = useState<string[]>([]);
+  /** Închiderea contului de salon. */
+  const [stergeDeschis, setStergeDeschis] = useState(false);
+  const [stergeParola, setStergeParola] = useState("");
+  const [stergeEroare, setStergeEroare] = useState("");
+  const [stergeLoading, setStergeLoading] = useState(false);
   const [publicTinta, setPublicTinta] = useState<string>("");
   const [pozaUrl, setPozaUrl] = useState<string | null>(null);
   const [galerie, setGalerie] = useState<string[]>([]);
@@ -1213,6 +1218,87 @@ export default function DashboardSalon() {
       const { error } = await supabase.from("profiluri").update({ tema: t }).eq("id", authUser.id);
       if (error) console.error("Theme save error:", error);
     }
+  }
+
+  /**
+   * Închiderea contului de salon.
+   *
+   * Regula stabilită cu utilizatorul: salonul dispare din aplicație, dar
+   * **denumirea rămâne** — altfel istoricul clienților ar arăta „Salon
+   * necunoscut" în locul unei vizite reale. E și ce promit Termenii, §5.
+   *
+   * Programările viitoare se anulează și fiecare client e anunțat: un salon
+   * care dispare fără o vorbă lasă oameni să se prezinte degeaba.
+   */
+  // Escape închide fereastra de închidere a contului.
+  useEffect(() => {
+    if (!stergeDeschis) return;
+    const pe = (e: KeyboardEvent) => { if (e.key === "Escape" && !stergeLoading) setStergeDeschis(false); };
+    window.addEventListener("keydown", pe);
+    return () => window.removeEventListener("keydown", pe);
+  }, [stergeDeschis, stergeLoading]);
+
+  async function inchideSalonul() {
+    setStergeEroare("");
+    if (!stergeParola) { setStergeEroare("Scrie parola ca să confirmi."); return; }
+
+    setStergeLoading(true);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const email = authUser?.email;
+    if (!authUser || !email || !salonData?.id) { setStergeEroare("Nu am putut citi contul. Reintră și încearcă din nou."); setStergeLoading(false); return; }
+
+    const { error: eLogin } = await supabase.auth.signInWithPassword({ email, password: stergeParola });
+    if (eLogin) { setStergeEroare("Parola nu e corectă."); setStergeLoading(false); return; }
+
+    const azi = new Date().toISOString().slice(0, 10);
+
+    // 1. Cine are programări viitoare, ca să-i putem anunța pe nume.
+    const { data: viitoare } = await supabase
+      .from("programari")
+      .select("id, user_id, data, ora, serviciu")
+      .eq("salon_id", salonData.id)
+      .in("status", ["confirmat", "în așteptare"])
+      .gte("data", azi);
+
+    // 2. Le anulăm.
+    await supabase
+      .from("programari")
+      .update({ status: "anulat", motiv_anulare: "Salonul și-a închis contul." })
+      .eq("salon_id", salonData.id)
+      .in("status", ["confirmat", "în așteptare"])
+      .gte("data", azi);
+
+    // 3. Îi anunțăm. Programările făcute de salon la telefon n-au user_id.
+    const numeSalon = salonData.nume || "Salonul";
+    const notificari = (viitoare || [])
+      .filter((p: any) => p.user_id && p.user_id !== authUser.id)
+      .map((p: any) => ({
+        user_id: p.user_id,
+        tip: "anulat",
+        mesaj: `${numeSalon} și-a închis contul, iar programarea ta din ${p.data.split("-").reverse().join(".")} de la ${p.ora} a fost anulată.`,
+        programare_id: p.id,
+      }));
+    if (notificari.length > 0) await supabase.from("notificari").insert(notificari);
+
+    // 4. Golim salonul, dar păstrăm denumirea pentru istoricul clienților.
+    const { error } = await supabase.from("saloane").update({
+      sters_la: new Date().toISOString(),
+      telefon: "", adresa: "", descriere: "",
+      poza_url: null, galerie: [], servicii: [], echipa: [],
+      specializari: [], public_tinta: null, lat: null, lng: null,
+    }).eq("id", salonData.id);
+
+    if (error) { setStergeEroare("Nu am putut închide contul. Încearcă din nou sau scrie-ne la parteneri@calyhub.ro."); setStergeLoading(false); return; }
+
+    // 5. Contul de utilizator nu mai poate intra — aceeași regulă ca la client.
+    await supabase.from("profiluri").update({ sters_la: new Date().toISOString() }).eq("id", authUser.id);
+
+    try {
+      localStorage.removeItem("calyhub_theme");
+      localStorage.removeItem("calyhub_saloane_cache");
+    } catch {}
+    await supabase.auth.signOut();
+    router.push("/?cont=inchis");
   }
 
   async function handleLogout() {
@@ -4160,10 +4246,14 @@ export default function DashboardSalon() {
                 <div style={{ marginBottom: 16 }}>
                   <SchimbaParola c={c} inp={inp} btnPrimary={btnPrimary} theme={theme} onGata={salveaza} />
                 </div>
-                <div style={{ background: c.surface, borderRadius: 20, padding: "24px 28px", border: `1.5px solid ${c.border}` }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 6 }}>Zona periculoasa</div>
-                  <div style={{ fontSize: 13, color: c.muted, marginBottom: 14 }}>Stergerea salonului este permanenta si nu poate fi anulata.</div>
-                  <button style={{ fontSize: 13, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "9px 18px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Sterge salonul</button>
+                {/* Butonul n-avea niciun onClick. Avertismentul a plecat în
+                    fereastra de confirmare: are efect când apeși, nu cu trei
+                    ecrane înainte. */}
+                <div style={{ background: c.surface, borderRadius: 20, padding: "18px 22px", border: `1.5px solid ${c.border}` }}>
+                  <button onClick={() => { setStergeDeschis(true); setStergeParola(""); setStergeEroare(""); }}
+                    style={{ fontSize: 13, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "9px 18px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    Șterge salonul
+                  </button>
                 </div>
               </div>
             )}
@@ -4192,6 +4282,52 @@ export default function DashboardSalon() {
 
           </div>
         </main>
+
+        {/* Fereastra de închidere a contului. Escape sau clic pe fundal o
+            închid, iar „Renunț" e primul buton — la o acțiune fără întoarcere,
+            ieșirea trebuie să fie mai ușoară decât intrarea. */}
+        {stergeDeschis && (
+          <div onClick={() => !stergeLoading && setStergeDeschis(false)}
+            style={{ position: "fixed", inset: 0, background: theme === "dark" ? "rgba(0,0,0,.68)" : "rgba(20,14,10,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18, zIndex: 1000 }}>
+            <div onClick={e => e.stopPropagation()} role="dialog" aria-modal="true"
+              style={{ background: c.surface, borderRadius: 20, maxWidth: 430, width: "100%", boxShadow: c.shadow, border: `1.5px solid ${c.border}`, overflow: "hidden", maxHeight: "90vh", overflowY: "auto" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "20px 22px 0" }}>
+                <span style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(239,68,68,.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <AlertTriangle size={20} color="#EF4444" strokeWidth={2.2} />
+                </span>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: c.text, marginBottom: 3 }}>Închizi salonul?</div>
+                  <div style={{ fontSize: 12.5, color: c.muted, lineHeight: 1.5 }}>Nu se poate anula după aceea.</div>
+                </div>
+              </div>
+              <div style={{ padding: "14px 22px 20px" }}>
+                <ul style={{ margin: "0 0 14px", paddingLeft: 18, fontSize: 12.5, color: c.text2, lineHeight: 1.75 }}>
+                  <li>Salonul dispare din căutare și nu mai poate primi programări.</li>
+                  <li><b>Programările viitoare se anulează</b>, iar clienții sunt anunțați.</li>
+                  <li>Se șterg datele de contact, pozele, serviciile și echipa.</li>
+                  <li>Denumirea rămâne în istoricul clienților, ca vizitele lor să aibă sens.</li>
+                  <li>Nu mai poți intra cu acest cont.</li>
+                </ul>
+                <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Scrie parola ca să confirmi</label>
+                <input type="password" value={stergeParola} autoComplete="current-password" autoFocus
+                  onChange={e => { setStergeParola(e.target.value); setStergeEroare(""); }}
+                  onKeyDown={e => { if (e.key === "Enter" && !stergeLoading) inchideSalonul(); }}
+                  placeholder="Parola contului" style={{ ...inp, marginBottom: 10 }} />
+                {stergeEroare && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444", marginBottom: 10 }}>{stergeEroare}</div>}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button onClick={() => setStergeDeschis(false)} disabled={stergeLoading}
+                    style={{ padding: "10px 20px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text2, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    Renunț
+                  </button>
+                  <button onClick={inchideSalonul} disabled={stergeLoading}
+                    style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#EF4444", border: "none", padding: "10px 20px", borderRadius: 50, cursor: stergeLoading ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", opacity: stergeLoading ? .6 : 1 }}>
+                    {stergeLoading ? "Se închide..." : "Da, închide salonul"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Footer variant="salon" onAjutor={() => setTab("ajutor")} />
       </div>
