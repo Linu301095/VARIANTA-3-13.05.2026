@@ -8,8 +8,8 @@ import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
 import { SECTOARE, BUCURESTI } from "../../../lib/orase";
-import { putereParola, sfaturiParola, PUTERE_DASH, PAROLA_MIN } from "../../../lib/parola";
 import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
+import SchimbaParola from "../../../components/SchimbaParola";
 import { calculeazaBadge, culoriBadge } from "../../../lib/badges";
 import { alegeRecomandate } from "../../../lib/recomandate";
 import { distantaKm, scrieDistanta, punctSalon } from "../../../lib/distanta";
@@ -336,11 +336,6 @@ export default function DashboardClient() {
   /** Tabul Programări: pentru cine și în ce stare. */
   const [progCine, setProgCine] = useState<"toate" | "mine" | "animal">("toate");
   const [progStare, setProgStare] = useState<"urmatoarele" | "istoric" | "anulate">("urmatoarele");
-  /** Schimbarea parolei din tabul Setări. */
-  const [parole, setParole] = useState({ veche: "", noua: "", confirm: "" });
-  const [parolaVizibila, setParolaVizibila] = useState({ veche: false, noua: false, confirm: false });
-  const [parolaEroare, setParolaEroare] = useState("");
-  const [parolaLoading, setParolaLoading] = useState(false);
   /** Închiderea contului. */
   const [stergeDeschis, setStergeDeschis] = useState(false);
   const [stergeParola, setStergeParola] = useState("");
@@ -1962,8 +1957,6 @@ export default function DashboardClient() {
    */
   const filtreActive = [cautare !== "", filtruOras !== "", filtruSpec !== "", filtruServiciu !== ""].filter(Boolean).length;
 
-  const putereNoua = Math.max(0, putereParola(parole.noua));
-  const sfaturiNoua = sfaturiParola(parole.noua);
 
   /**
    * Schimbarea parolei.
@@ -1973,29 +1966,6 @@ export default function DashboardClient() {
    * altfel oricine prinde un telefon descuiat poate schimba parola și prelua
    * contul. `signInWithPassword` pe același email nu strică sesiunea existentă.
    */
-  async function schimbaParola() {
-    setParolaEroare("");
-    if (!parole.veche) { setParolaEroare("Scrie parola curentă."); return; }
-    if (parole.noua.length < PAROLA_MIN) { setParolaEroare(`Parola nouă trebuie să aibă cel puțin ${PAROLA_MIN} caractere.`); return; }
-    if (parole.noua !== parole.confirm) { setParolaEroare("Parolele noi nu se potrivesc."); return; }
-    if (parole.noua === parole.veche) { setParolaEroare("Parola nouă e aceeași cu cea curentă."); return; }
-
-    setParolaLoading(true);
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    const email = authUser?.email;
-    if (!email) { setParolaEroare("Nu am putut citi contul. Reintră în cont și încearcă din nou."); setParolaLoading(false); return; }
-
-    const { error: eLogin } = await supabase.auth.signInWithPassword({ email, password: parole.veche });
-    if (eLogin) { setParolaEroare("Parola curentă nu e corectă."); setParolaLoading(false); return; }
-
-    const { error } = await supabase.auth.updateUser({ password: parole.noua });
-    setParolaLoading(false);
-    if (error) { setParolaEroare(error.message || "Nu am putut schimba parola. Încearcă din nou."); return; }
-
-    setParole({ veche: "", noua: "", confirm: "" });
-    setParolaVizibila({ veche: false, noua: false, confirm: false });
-    salveaza("Parola a fost schimbată.");
-  }
 
   /**
    * Închiderea contului — varianta B stabilită cu utilizatorul.
@@ -2782,82 +2752,7 @@ export default function DashboardClient() {
             <div style={{ maxWidth: 520 }}>
               <PageHeader icon={Settings} title="Setări cont" sub="Parola și securitatea contului" />
 
-              {/* ── Schimbare parolă ──
-                  Câmpurile erau necontrolate, iar butonul afișa „Parolă schimbată cu
-                  succes!" fără să apeleze nimic. Acum cere parola curentă (o verificăm
-                  reautentificând cu ea), apoi o schimbă prin Supabase Auth. */}
-              <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}` }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 4 }}>Schimbă parola</div>
-                <div style={{ fontSize: 12.5, color: c.muted, marginBottom: 18 }}>
-                  Îți cerem parola curentă ca nimeni să nu poată schimba parola de pe un telefon lăsat deschis.
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {([
-                    { key: "veche", label: "Parola curentă", ph: "Parola cu care intri acum" },
-                    { key: "noua", label: "Parola nouă", ph: `Minim ${PAROLA_MIN} caractere` },
-                    { key: "confirm", label: "Confirmă parola nouă", ph: "Scrie-o încă o dată" },
-                  ] as const).map(f => (
-                    <div key={f.key}>
-                      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>{f.label}</label>
-                      <div style={{ position: "relative" }}>
-                        <input
-                          type={parolaVizibila[f.key] ? "text" : "password"}
-                          value={parole[f.key]}
-                          onChange={e => { setParole(pp => ({ ...pp, [f.key]: e.target.value })); setParolaEroare(""); }}
-                          placeholder={f.ph}
-                          autoComplete={f.key === "veche" ? "current-password" : "new-password"}
-                          style={{ ...inp, paddingRight: 44 }}
-                        />
-                        {/* Același ochi ca la conectare și înregistrare — o singură
-                            convenție în toată aplicația. */}
-                        <button type="button" onClick={() => setParolaVizibila(v => ({ ...v, [f.key]: !v[f.key] }))}
-                          aria-label={parolaVizibila[f.key] ? "Ascunde parola" : "Arată parola"}
-                          style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: c.xmuted, cursor: "pointer", padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          {parolaVizibila[f.key] ? (
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                          ) : (
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Bara de putere + ce lipsește, doar sub parola nouă */}
-                      {f.key === "noua" && parole.noua.length > 0 && (
-                        <div style={{ marginTop: 8 }}>
-                          <div style={{ display: "flex", gap: 4, marginBottom: 5 }}>
-                            {[0, 1, 2, 3].map(i => (
-                              <span key={i} style={{ flex: 1, height: 4, borderRadius: 4, background: i <= putereNoua ? PUTERE_DASH[putereNoua].c : c.toggleOff, transition: "background .2s" }} />
-                            ))}
-                          </div>
-                          <div style={{ fontSize: 11.5, fontWeight: 700, color: PUTERE_DASH[putereNoua].c }}>
-                            Parolă {PUTERE_DASH[putereNoua].t.toLowerCase()}
-                          </div>
-                          {sfaturiNoua.length > 0 && (
-                            <div style={{ fontSize: 11.5, color: c.muted, marginTop: 3, lineHeight: 1.5 }}>
-                              Ca s-o întărești: {sfaturiNoua.join(", ")}.
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {f.key === "confirm" && parole.confirm.length > 0 && parole.confirm === parole.noua && (
-                        <div style={{ fontSize: 11.5, fontWeight: 700, color: "#10B981", marginTop: 6 }}>Parolele se potrivesc</div>
-                      )}
-                    </div>
-                  ))}
-
-                  {parolaEroare && (
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444", background: theme === "dark" ? "rgba(239,68,68,.12)" : "#FEF2F2", border: "1.5px solid rgba(239,68,68,.35)", borderRadius: 12, padding: "10px 14px" }}>
-                      {parolaEroare}
-                    </div>
-                  )}
-
-                  <button onClick={schimbaParola} disabled={parolaLoading}
-                    style={{ ...btnPrimary, marginTop: 4, opacity: parolaLoading ? .6 : 1, cursor: parolaLoading ? "wait" : "pointer" }}>
-                    {parolaLoading ? "Se schimbă..." : "Schimbă parola"}
-                  </button>
-                </div>
-              </div>
+              <SchimbaParola c={c} inp={inp} btnPrimary={btnPrimary} theme={theme} onGata={salveaza} />
 
               {/* ── Zona periculoasă ──
                   Avertismentul nu mai stă aici: ai citi „ștergerea e permanentă"

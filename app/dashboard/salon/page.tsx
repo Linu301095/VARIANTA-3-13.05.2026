@@ -10,6 +10,7 @@ import { stareTrial, zileText, ZILE_AVERTISMENT } from "../../../lib/trial";
 import { numePlan } from "../../../lib/planuri";
 import { SPECIALIZARI, MAX_SPECIALIZARI } from "../../../lib/specializari";
 import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
+import SchimbaParola from "../../../components/SchimbaParola";
 import Cropper from "react-easy-crop";
 import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
 
@@ -4153,16 +4154,11 @@ export default function DashboardSalon() {
                   <div style={{ fontSize: 11, color: c.muted, marginTop: 12 }}>{TEXT_REGULI_POZA}</div>
                 </div>
 
-                <div style={{ background: c.surface, borderRadius: 20, padding: "28px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {["Parola curenta", "Parola noua", "Confirma parola noua"].map(label => (
-                      <div key={label}>
-                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: c.text2, marginBottom: 6 }}>{label}</label>
-                        <input type="password" placeholder="••••••••" style={inp} />
-                      </div>
-                    ))}
-                    <button onClick={() => salveaza("Parola schimbata!")} style={{ ...btnPrimary, marginTop: 4 }}>Schimba parola</button>
-                  </div>
+                {/* Cele trei câmpuri erau necontrolate, iar butonul afișa „Parola
+                    schimbata!" fără să apeleze nimic. Formularul e acum același
+                    cu cel din dashboardul clientului, dintr-un singur fișier. */}
+                <div style={{ marginBottom: 16 }}>
+                  <SchimbaParola c={c} inp={inp} btnPrimary={btnPrimary} theme={theme} onGata={salveaza} />
                 </div>
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px 28px", border: `1.5px solid ${c.border}` }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 6 }}>Zona periculoasa</div>
