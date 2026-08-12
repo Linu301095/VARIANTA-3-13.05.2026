@@ -10,6 +10,7 @@ import { SPECIALIZARI, labelSpecializare } from "../../../lib/specializari";
 import { SECTOARE, BUCURESTI } from "../../../lib/orase";
 import { putereParola, sfaturiParola, PUTERE_DASH, PAROLA_MIN } from "../../../lib/parola";
 import { calculeazaBadge, culoriBadge } from "../../../lib/badges";
+import { alegeRecomandate } from "../../../lib/recomandate";
 import SiluetaGen from "../../../components/SiluetaGen";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
@@ -1758,6 +1759,14 @@ export default function DashboardClient() {
     return true;
   });
 
+  /** Saloanele de pus în față. Goală = secțiunea nu se afișează. */
+  const recomandate = alegeRecomandate(saloaneLume, ratinguriSaloane);
+  const idRecomandate = new Set(recomandate.map(s => String(s.id)));
+  /** Restul, ca să nu apară aceleași carduri de două ori pe ecran. */
+  const restulSaloanelor = recomandate.length > 0
+    ? saloaneLume.filter(s => !idRecomandate.has(String(s.id)))
+    : saloaneLume;
+
   // ── Stilurile panoului de filtrare ──
   const stilGrup = (primul: boolean): React.CSSProperties => ({
     display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 0", flexWrap: "wrap",
@@ -2156,13 +2165,23 @@ export default function DashboardClient() {
                   </div>
                 )}
                 {saloaneLume.length > 0 && (<>
-                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><MapPin size={17} color="#FF6B00" strokeWidth={2} /> Recomandate</h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
-                  {saloaneLume.slice(0, 2).map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
-                </div>
-                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><Scissors size={17} color="#FF6B00" strokeWidth={2} /> Toți partenerii CalyHub</h2>
+                {/* „Recomandate" se aprinde singură: `alegeRecomandate` întoarce
+                    lista goală cât timp saloanele sunt puține sau niciunul n-a
+                    strâns destule recenzii. Înainte arăta primele două din listă
+                    sub un titlu care promitea o alegere — iar alea apăreau imediat
+                    încă o dată mai jos. */}
+                {recomandate.length > 0 && (
+                  <>
+                    <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}><Star size={17} color="#FF6B00" fill="#FF6B00" strokeWidth={0} /> Recomandate</h2>
+                    <div style={{ fontSize: 12.5, color: c.muted, marginBottom: 14 }}>Cele mai bine notate de clienți, în {filtruOras || "zona ta"}.</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
+                      {recomandate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
+                    </div>
+                  </>
+                )}
+                <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><Scissors size={17} color="#FF6B00" strokeWidth={2} /> {recomandate.length > 0 ? "Restul saloanelor" : "Toți partenerii CalyHub"}</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-                  {saloaneLume.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
+                  {restulSaloanelor.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
                 </>)}
               </>
