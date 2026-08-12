@@ -392,6 +392,22 @@ export default function ConfigurareSalon() {
         }, { onConflict: "user_id" });
 
       if (salonError) console.error("Salon upsert error:", salonError);
+
+      // Punctul pe hartă, ca să putem calcula distanța până la client.
+      // Dacă adresa nu e găsită, salonul rămâne fără coordonate și apare mai
+      // departe în listă, doar fără distanță — înscrierea nu se blochează.
+      try {
+        const r = await fetch(`/api/geocod?q=${encodeURIComponent(adresaCompleta(true))}`);
+        if (r.ok) {
+          const { lat, lng } = await r.json();
+          if (typeof lat === "number" && typeof lng === "number") {
+            await supabase.from("saloane")
+              .update({ lat, lng, geocodat_la: new Date().toISOString() })
+              .eq("user_id", user.id);
+          }
+        }
+      } catch { /* fără coordonate, mergem mai departe */ }
+
       setSaving(false);
     }
     if (step === 3 && savedUserId && (coverFile || galerieFiles.length > 0)) {

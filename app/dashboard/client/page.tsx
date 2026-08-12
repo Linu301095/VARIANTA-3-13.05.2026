@@ -11,6 +11,7 @@ import { SECTOARE, BUCURESTI } from "../../../lib/orase";
 import { putereParola, sfaturiParola, PUTERE_DASH, PAROLA_MIN } from "../../../lib/parola";
 import { calculeazaBadge, culoriBadge } from "../../../lib/badges";
 import { alegeRecomandate } from "../../../lib/recomandate";
+import { distantaKm, scrieDistanta, punctSalon } from "../../../lib/distanta";
 import SiluetaGen from "../../../components/SiluetaGen";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
 const SERVICII_DEMO = [
@@ -32,7 +33,7 @@ type Domeniu = "infrumusetare" | "grooming";
 /** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
 type Lume = "tine" | "animal";
 const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
-type SalonItem = { createdAt?: string | null; domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; distanta: string; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { createdAt?: string | null; lat?: number | null; lng?: number | null; domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 /* Culorile cardului. Eticheta nu mai vine de aici — se calculează din date,
    în lib/badges.ts. */
@@ -62,6 +63,8 @@ function mapSalonDB(s: any, i: number): SalonItem {
     publicTinta: s.public_tinta || null,
     judet: s.judet || "",
     createdAt: s.created_at || null,
+    lat: typeof s.lat === "number" ? s.lat : null,
+    lng: typeof s.lng === "number" ? s.lng : null,
     id: s.id,
     nume: s.nume || "Salon",
     oras: s.oras || "România",
@@ -70,7 +73,6 @@ function mapSalonDB(s: any, i: number): SalonItem {
     servicii: numeServicii.length > 0 ? numeServicii : ["Tuns", "Băiță"],
     serviciiComplete,
     pretDe,
-    distanta: "",
     culoare: p.culoare,
     bg: p.bg,
     poza_url: s.poza_url || null,
@@ -308,11 +310,17 @@ export default function DashboardClient() {
   const [geoError, setGeoError] = useState("");
   const [esteMobil, setEsteMobil] = useState(false);
   const [observatiiBooking, setObservatiiBooking] = useState("");
-  const [sortareSalon, setSortareSalon] = useState<"recomandat" | "rating" | "alfabetic">("recomandat");
+  const [sortareSalon, setSortareSalon] = useState<"recomandat" | "rating" | "alfabetic" | "distanta">("recomandat");
   const [filtruServiciu, setFiltruServiciu] = useState("");
   /** Genul din profil — decide pe cine punem în față în lista de saloane. */
   const [genUser, setGenUser] = useState("");
   const [filtruSpec, setFiltruSpec] = useState("");
+  /**
+   * Unde se află clientul acum, din GPS. Nu se salvează nicăieri și nu se
+   * trimite pe server — ține cât ține sesiunea, doar ca să putem calcula
+   * distanța până la saloane.
+   */
+  const [pozitia, setPozitia] = useState<{ lat: number; lng: number } | null>(null);
   /** Tabul Programări: pentru cine și în ce stare. */
   const [progCine, setProgCine] = useState<"toate" | "mine" | "animal">("toate");
   const [progStare, setProgStare] = useState<"urmatoarele" | "istoric" | "anulate">("urmatoarele");
@@ -378,6 +386,7 @@ export default function DashboardClient() {
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
+          setPozitia({ lat: latitude, lng: longitude });
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=ro`);
           const data = await res.json();
           const oras = data?.address?.city || data?.address?.town || data?.address?.municipality || data?.address?.county || "";
@@ -433,7 +442,7 @@ export default function DashboardClient() {
       ] = await Promise.all([
         supabase.from("profiluri").select("*").eq("id", authUser.id).single(),
         supabase.from("animale").select("*").eq("user_id", authUser.id).order("created_at", { ascending: true }),
-        supabase.from("saloane").select("id, created_at, nume, oras, judet, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
+        supabase.from("saloane").select("id, created_at, nume, oras, judet, lat, lng, servicii, poza_url, galerie, echipa, program, adresa, telefon, descriere, domeniu, specii, specializari, public_tinta").order("created_at", { ascending: false }),
       ]);
 
       if (profile) {
@@ -725,6 +734,13 @@ export default function DashboardClient() {
   const prenume = user?.nume?.split(" ")[0] || "Utilizator";
   const necitite = notificari.filter(n => !n.citit).length;
   const salon = saloaneList.find(s => s.id === salonSelectat);
+  /** Distanța până la salonul deschis — se calculează aici fiindcă ecranul de
+      profil se randează înaintea listei, unde stă harta cu toate distanțele. */
+  const distantaSalonDeschis = (() => {
+    if (!salon || !pozitia) return null;
+    const p = punctSalon(salon);
+    return p ? distantaKm(pozitia, p) : null;
+  })();
   // Doar saloanele de grooming au nevoie de un animal si de talie pentru pret.
   const salonCereAnimal = (salon?.domeniu || "grooming") === "grooming";
   const talieBooking = salonCereAnimal ? animal?.talie : undefined;
@@ -1251,7 +1267,7 @@ export default function DashboardClient() {
                       return <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: col.plin, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: 1 }}>{b.text}</span>;
                     })()}
                     <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "6px 0 2px", textShadow: "0 1px 4px rgba(0,0,0,.4)" }}>{salon.nume}</h2>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} color="rgba(255,255,255,.85)" strokeWidth={2} /> {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} color="rgba(255,255,255,.85)" strokeWidth={2} /> {salon.oras}{distantaSalonDeschis !== null ? ` · ${scrieDistanta(distantaSalonDeschis)}` : ""}</div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
                     {nrRecenzii > 0 ? (<>
@@ -1759,6 +1775,19 @@ export default function DashboardClient() {
     return true;
   });
 
+  /**
+   * Distanța de la client la fiecare salon, în km. Doar saloanele cu
+   * coordonate și doar dacă omul și-a dat poziția.
+   */
+  const distanteSaloane: Record<string, number> = {};
+  if (pozitia) {
+    for (const s of saloaneLume) {
+      const p = punctSalon(s);
+      if (p) distanteSaloane[String(s.id)] = distantaKm(pozitia, p);
+    }
+  }
+  const avemDistante = Object.keys(distanteSaloane).length > 0;
+
   /** Saloanele de pus în față. Goală = secțiunea nu se afișează. */
   const recomandate = alegeRecomandate(saloaneLume, ratinguriSaloane);
   const idRecomandate = new Set(recomandate.map(s => String(s.id)));
@@ -1905,6 +1934,13 @@ export default function DashboardClient() {
     });
   } else if (sortareSalon === "alfabetic") {
     saloneFiltrate.sort((a, b) => a.nume.localeCompare(b.nume, "ro"));
+  } else if (sortareSalon === "distanta") {
+    // Saloanele fără coordonate se duc la coadă, nu dispar.
+    saloneFiltrate.sort((a, b) => {
+      const da = distanteSaloane[String(a.id)] ?? Infinity;
+      const db = distanteSaloane[String(b.id)] ?? Infinity;
+      return da - db;
+    });
   } else if (publicPotrivit) {
     // „Recomandate" chiar recomandă acum ceva: saloanele care lucrează cu tine
     // primele, apoi cele mixte și cele care nu și-au declarat publicul, apoi
@@ -2064,6 +2100,8 @@ export default function DashboardClient() {
                   <div style={stilChips}>
                     {[
                       { val: "recomandat", label: "Recomandate", icon: null as React.ReactNode },
+                      // Apare doar după ce omul și-a dat locația — altfel ar sorta după nimic.
+                      ...(avemDistante ? [{ val: "distanta", label: "Aproape de mine", icon: <MapPin size={12} strokeWidth={2.4} /> as React.ReactNode }] : []),
                       { val: "rating", label: "Rating", icon: <Star size={12} color="currentColor" fill="currentColor" strokeWidth={0} /> },
                       { val: "alfabetic", label: "A–Z", icon: null as React.ReactNode },
                     ].map(opt => (
@@ -2134,7 +2172,7 @@ export default function DashboardClient() {
               <>
                 {saloneFiltrate.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-                    {saloneFiltrate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
+                    {saloneFiltrate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} distanta={distanteSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -2175,13 +2213,13 @@ export default function DashboardClient() {
                     <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}><Star size={17} color="#FF6B00" fill="#FF6B00" strokeWidth={0} /> Recomandate</h2>
                     <div style={{ fontSize: 12.5, color: c.muted, marginBottom: 14 }}>Cele mai bine notate de clienți, în {filtruOras || "zona ta"}.</div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 36 }}>
-                      {recomandate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
+                      {recomandate.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} distanta={distanteSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                     </div>
                   </>
                 )}
                 <h2 style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}><Scissors size={17} color="#FF6B00" strokeWidth={2} /> {recomandate.length > 0 ? "Restul saloanelor" : "Toți partenerii CalyHub"}</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-                  {restulSaloanelor.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
+                  {restulSaloanelor.map(s => <CardSalon key={s.id} salon={s} ratingReal={ratinguriSaloane[String(s.id)]} distanta={distanteSaloane[String(s.id)]} onSelect={() => setSalonSelectat(s.id)} />)}
                 </div>
                 </>)}
               </>
@@ -2943,7 +2981,7 @@ function RatingBadge({ ratingReal }: { ratingReal?: { medie: number; nr: number 
   return <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 800, color: c.text }}><Star size={13} color="#F59E0B" fill="#F59E0B" strokeWidth={0} /> {ratingReal.medie.toFixed(1)}<span style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>({ratingReal.nr})</span></div>;
 }
 
-function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect: () => void; ratingReal?: { medie: number; nr: number } }) {
+function CardSalon({ salon, onSelect, ratingReal, distanta }: { salon: SalonItem; onSelect: () => void; ratingReal?: { medie: number; nr: number }; distanta?: number }) {
   const { c, theme } = useContext(ThemeCtx);
   // Eticheta vine din date, nu din poziția în listă. Poate lipsi cu totul.
   const badge = calculeazaBadge({ medie: ratingReal?.medie, nrRecenzii: ratingReal?.nr, createdAt: salon.createdAt });
@@ -2973,7 +3011,7 @@ function CardSalon({ salon, onSelect, ratingReal }: { salon: SalonItem; onSelect
           </div>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={c.xmuted} strokeWidth={2} /> {salon.oras}{salon.distanta ? ` · ${salon.distanta}` : ""}</div></div>
+          <div><div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 4 }}>{salon.nume}</div><div style={{ fontSize: 12, color: c.xmuted, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={c.xmuted} strokeWidth={2} /> {salon.oras}{typeof distanta === "number" ? ` · ${scrieDistanta(distanta)}` : ""}</div></div>
           {salon.poza_url && <RatingBadge ratingReal={ratingReal} />}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{salon.servicii.map(s => <Tag key={s} label={s} color={salon.culoare} bg={salon.bg} />)}</div>

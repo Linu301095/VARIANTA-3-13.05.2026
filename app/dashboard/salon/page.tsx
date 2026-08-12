@@ -3725,6 +3725,23 @@ export default function DashboardSalon() {
                         else { patch.specializari = specializariSalon; patch.public_tinta = publicTinta || null; }
                         await supabase.from("saloane").update(patch).eq("user_id", authUser.id);
                         setSalonData((s: any) => ({ ...s, ...patch }));
+
+                        // Adresa s-a putut schimba — refacem punctul de pe hartă,
+                        // altfel distanța arătată clienților rămâne cea veche.
+                        if (profilSalon.adresa.trim() || profilSalon.oras.trim()) {
+                          try {
+                            const q = [profilSalon.adresa, profilSalon.oras].filter(Boolean).join(", ");
+                            const r = await fetch(`/api/geocod?q=${encodeURIComponent(q)}`);
+                            if (r.ok) {
+                              const { lat, lng } = await r.json();
+                              if (typeof lat === "number" && typeof lng === "number") {
+                                await supabase.from("saloane")
+                                  .update({ lat, lng, geocodat_la: new Date().toISOString() })
+                                  .eq("user_id", authUser.id);
+                              }
+                            }
+                          } catch { /* rămâne fără coordonate */ }
+                        }
                       }
                       salveaza("Profil salon actualizat!");
                     }} style={btnPrimary}>Salvează modificările</button>
