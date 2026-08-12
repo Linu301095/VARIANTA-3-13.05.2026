@@ -1691,8 +1691,12 @@ export default function DashboardClient() {
    * apărea în listă ca oraș de sine stătător, lângă București — iar cine alegea
    * Bucureștiul nu găsea nimic.
    */
-  const eDinBucuresti = (s: SalonItem) =>
-    s.judet === BUCURESTI || SECTOARE.includes(s.oras.split(",")[0].trim());
+  const eDinBucuresti = (s: SalonItem) => {
+    const o = s.oras.split(",")[0].trim();
+    // Și saloanele care au scris chiar „București" la oraș, fără sector —
+    // altfel apăreau a doua oară în listă, ca oraș separat de ele însele.
+    return s.judet === BUCURESTI || o === BUCURESTI || SECTOARE.includes(o);
+  };
 
   const oraseleDisponibile: { nume: string; copil?: boolean }[] = (() => {
     const simple = new Set<string>();
@@ -2026,17 +2030,17 @@ export default function DashboardClient() {
                         style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.input, color: c.text, fontSize: 13, fontWeight: 600, fontFamily: "Nunito, sans-serif", outline: "none" }}
                       />
                     </div>
-                    {/* Locația ta — GPS live (doar pe telefon) */}
-                    {esteMobil && (
-                      <button onClick={detecteazaLocatia} disabled={geoLoading} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: geoLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                    {/* Locația ta — GPS. Merge și pe calculator: browserul
+                        aproximează din rețea, mai puțin exact decât pe telefon,
+                        dar destul cât să ordonezi saloanele dintr-un oraș. */}
+                    <button onClick={detecteazaLocatia} disabled={geoLoading} style={{ width: "100%", padding: "12px 18px", textAlign: "left", background: "none", border: "none", borderBottom: `1px solid ${c.border2}`, color: "#FF6B00", fontSize: 13, fontWeight: 800, fontFamily: "Nunito, sans-serif", cursor: geoLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 10 }}>
                         {geoLoading
                           ? <span style={{ fontSize: 15 }}>⏳</span>
                           : <svg width="17" height="17" viewBox="0 0 24 24" fill="#FF6B00" style={{ flexShrink: 0 }}><path d="M21.43 2.57a1 1 0 0 0-1.05-.23L3.4 8.78c-.9.34-.86 1.63.06 1.91l7.11 2.18 2.18 7.11c.28.92 1.57.96 1.91.06l6.44-16.98a1 1 0 0 0-.23-1.05z"/></svg>
                         }
-                        {geoLoading ? "Se detectează..." : "Locația ta"}
-                      </button>
-                    )}
-                    {esteMobil && geoError && (
+                      {geoLoading ? "Se detectează..." : "Locația ta"}
+                    </button>
+                    {geoError && (
                       <div style={{ padding: "8px 18px", fontSize: 11, fontWeight: 600, color: "#EF4444", background: theme === "dark" ? "rgba(239,68,68,.1)" : "#FEF2F2", borderBottom: `1px solid ${c.border2}` }}>{geoError}</div>
                     )}
                     {filtruOras && (
