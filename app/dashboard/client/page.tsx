@@ -1777,6 +1777,14 @@ export default function DashboardClient() {
    */
   const filtreActive = [cautare !== "", filtruOras !== "", filtruSpec !== "", filtruServiciu !== ""].filter(Boolean).length;
 
+  // Escape închide fereastra de ștergere — ieșirea trebuie să fie ușoară.
+  useEffect(() => {
+    if (!stergeDeschis) return;
+    const pe = (e: KeyboardEvent) => { if (e.key === "Escape" && !stergeLoading) setStergeDeschis(false); };
+    window.addEventListener("keydown", pe);
+    return () => window.removeEventListener("keydown", pe);
+  }, [stergeDeschis, stergeLoading]);
+
   const putereNoua = Math.max(0, putereParola(parole.noua));
   const sfaturiNoua = sfaturiParola(parole.noua);
 
@@ -2602,43 +2610,16 @@ export default function DashboardClient() {
                 </div>
               </div>
 
-              {/* ── Zona periculoasă ── */}
+              {/* ── Zona periculoasă ──
+                  Avertismentul nu mai stă aici: ai citi „ștergerea e permanentă"
+                  doar fiindcă ai intrat în Setări. Are efect în clipa în care
+                  apeși, deci l-am mutat în fereastra de confirmare. */}
               <div style={{ background: c.surface, borderRadius: 20, padding: "24px 28px", border: `1.5px solid ${c.border}`, marginTop: 16 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 6 }}>Zona periculoasă</div>
-                <div style={{ fontSize: 13, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>
-                  Ștergerea contului este permanentă și nu poate fi anulată.
-                </div>
-                {!stergeDeschis ? (
-                  <button onClick={() => { setStergeDeschis(true); setStergeParola(""); setStergeEroare(""); }}
-                    style={{ fontSize: 13, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "9px 18px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
-                    Șterge contul
-                  </button>
-                ) : (
-                  <div style={{ border: "1.5px solid rgba(239,68,68,.35)", background: theme === "dark" ? "rgba(239,68,68,.08)" : "#FEF2F2", borderRadius: 14, padding: "16px 18px" }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 800, color: c.text, marginBottom: 8 }}>Ce se întâmplă mai exact</div>
-                    <ul style={{ margin: "0 0 14px", paddingLeft: 18, fontSize: 12.5, color: c.text2, lineHeight: 1.75 }}>
-                      <li>Se șterg numele, telefonul, poza de profil și animalele din cont.</li>
-                      <li>Nu mai poți intra cu acest cont.</li>
-                      <li>Recenziile pe care le-ai scris rămân pe saloane, dar fără numele și poza ta — apar ca „Client CalyHub".</li>
-                      <li>Saloanele la care ai fost își păstrează istoricul programărilor, unde vei apărea ca „Cont închis".</li>
-                    </ul>
-                    <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Scrie parola ca să confirmi</label>
-                    <input type="password" value={stergeParola} autoComplete="current-password"
-                      onChange={e => { setStergeParola(e.target.value); setStergeEroare(""); }}
-                      placeholder="Parola contului" style={{ ...inp, marginBottom: 10 }} />
-                    {stergeEroare && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444", marginBottom: 10 }}>{stergeEroare}</div>}
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button onClick={inchideContul} disabled={stergeLoading}
-                        style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#EF4444", border: "none", padding: "10px 20px", borderRadius: 50, cursor: stergeLoading ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", opacity: stergeLoading ? .6 : 1 }}>
-                        {stergeLoading ? "Se închide..." : "Da, șterge contul"}
-                      </button>
-                      <button onClick={() => { setStergeDeschis(false); setStergeParola(""); setStergeEroare(""); }} disabled={stergeLoading}
-                        style={{ ...btnSecondary, padding: "10px 20px", fontSize: 13 }}>
-                        Renunț
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 12 }}>Zona periculoasă</div>
+                <button onClick={() => { setStergeDeschis(true); setStergeParola(""); setStergeEroare(""); }}
+                  style={{ fontSize: 13, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "9px 18px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                  Șterge contul
+                </button>
               </div>
             </div>
           )}
@@ -2663,6 +2644,51 @@ export default function DashboardClient() {
           )}
 
         </div>
+
+        {/* Fereastra de ștergere a contului. Se închide cu Escape sau cu clic pe
+            fundal, iar „Renunț" e primul buton la care ajungi cu tastatura: la o
+            acțiune fără întoarcere, ieșirea trebuie să fie mai ușoară decât intrarea. */}
+        {stergeDeschis && (
+          <div onClick={() => !stergeLoading && setStergeDeschis(false)}
+            style={{ position: "fixed", inset: 0, background: theme === "dark" ? "rgba(0,0,0,.68)" : "rgba(20,14,10,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18, zIndex: 1000 }}>
+            <div onClick={e => e.stopPropagation()} role="dialog" aria-modal="true"
+              style={{ background: c.surface, borderRadius: 20, maxWidth: 400, width: "100%", boxShadow: c.shadow, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "20px 22px 0" }}>
+                <span style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(239,68,68,.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <AlertTriangle size={20} color="#EF4444" strokeWidth={2.2} />
+                </span>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: c.text, marginBottom: 3 }}>Ștergi contul?</div>
+                  <div style={{ fontSize: 12.5, color: c.muted, lineHeight: 1.5 }}>Nu se poate anula după aceea.</div>
+                </div>
+              </div>
+              <div style={{ padding: "14px 22px 20px" }}>
+                <ul style={{ margin: "0 0 14px", paddingLeft: 18, fontSize: 12.5, color: c.text2, lineHeight: 1.75 }}>
+                  <li>Se șterg numele, telefonul, poza și animalele.</li>
+                  <li>Nu mai poți intra cu acest cont.</li>
+                  <li>Recenziile rămân, dar fără numele tău — „Client CalyHub".</li>
+                  <li>În istoricul saloanelor vei apărea ca „Cont închis".</li>
+                </ul>
+                <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: c.text2, marginBottom: 6 }}>Scrie parola ca să confirmi</label>
+                <input type="password" value={stergeParola} autoComplete="current-password" autoFocus
+                  onChange={e => { setStergeParola(e.target.value); setStergeEroare(""); }}
+                  onKeyDown={e => { if (e.key === "Enter" && !stergeLoading) inchideContul(); }}
+                  placeholder="Parola contului" style={{ ...inp, marginBottom: 10 }} />
+                {stergeEroare && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444", marginBottom: 10 }}>{stergeEroare}</div>}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button onClick={() => setStergeDeschis(false)} disabled={stergeLoading}
+                    style={{ ...btnSecondary, padding: "10px 20px", fontSize: 13 }}>
+                    Renunț
+                  </button>
+                  <button onClick={inchideContul} disabled={stergeLoading}
+                    style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#EF4444", border: "none", padding: "10px 20px", borderRadius: 50, cursor: stergeLoading ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", opacity: stergeLoading ? .6 : 1 }}>
+                    {stergeLoading ? "Se șterge..." : "Da, șterge contul"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {anulareModal && (
           <div onClick={() => !anulareLoading && setAnulareModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 1000 }}>
