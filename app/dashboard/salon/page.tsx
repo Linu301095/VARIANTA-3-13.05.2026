@@ -2033,11 +2033,13 @@ export default function DashboardSalon() {
               )}
               {isSubTab && (
                 <>
-                  <button onClick={() => setTab("statistici")}
-                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
-                    ← Înapoi
+                  {/* Pe telefon rămâne doar săgeata, ca să încapă titlul: „← Înapoi"
+                      singur nu spune unde ești. */}
+                  <button onClick={() => setTab("statistici")} aria-label="Înapoi la statistici"
+                    style={{ display: "flex", alignItems: "center", gap: 5, padding: isMobile ? "5px 11px" : "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                    {isMobile ? "←" : "← Înapoi"}
                   </button>
-                  {!isMobile && <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap" }}>{TAB_LABELS[tab]}</div>}
+                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{TAB_LABELS[tab]}</div>
                 </>
               )}
             </div>

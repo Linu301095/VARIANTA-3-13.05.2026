@@ -2778,13 +2778,15 @@ function Shell({ children, prenume, tab, onLogout, onNav, necitite = 0, avatarUr
             {(tab !== "saloane" || onBack) && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                 {!isMobile && <div style={{ width: 1, height: 22, background: c.border }} />}
+                {/* Pe telefon butonul rămâne doar săgeata: locul câștigat îl ia
+                    titlul, care spune unde ești. Înainte scria doar „← Înapoi"
+                    pe toate ecranele mici — înapoi de unde, nu se știa. */}
                 <button onClick={() => { if (onBack) onBack(); else onNav("saloane"); }}
-                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
-                  ← Înapoi
+                  aria-label={onBack ? "Înapoi" : "Înapoi la saloane"}
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: isMobile ? "5px 11px" : "5px 12px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: c.surface, fontSize: 13, fontWeight: 700, color: c.muted, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                  {isMobile ? "←" : "← Înapoi"}
                 </button>
-                {!isMobile && (
-                  <div style={{ fontSize: 13, fontWeight: 800, color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{backLabel || TAB_LABELS[tab]}</div>
-                )}
+                <div style={{ fontSize: 13, fontWeight: 800, color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{backLabel || TAB_LABELS[tab]}</div>
               </div>
             )}
           </div>
