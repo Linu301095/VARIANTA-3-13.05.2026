@@ -2564,11 +2564,18 @@ export default function DashboardClient() {
                           onChange={e => { setParole(pp => ({ ...pp, [f.key]: e.target.value })); setParolaEroare(""); }}
                           placeholder={f.ph}
                           autoComplete={f.key === "veche" ? "current-password" : "new-password"}
-                          style={{ ...inp, paddingRight: 74 }}
+                          style={{ ...inp, paddingRight: 44 }}
                         />
+                        {/* Același ochi ca la conectare și înregistrare — o singură
+                            convenție în toată aplicația. */}
                         <button type="button" onClick={() => setParolaVizibila(v => ({ ...v, [f.key]: !v[f.key] }))}
-                          style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: c.muted, fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", padding: 4 }}>
-                          {parolaVizibila[f.key] ? "Ascunde" : "Arată"}
+                          aria-label={parolaVizibila[f.key] ? "Ascunde parola" : "Arată parola"}
+                          style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: c.xmuted, cursor: "pointer", padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {parolaVizibila[f.key] ? (
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                          ) : (
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          )}
                         </button>
                       </div>
 
@@ -2614,8 +2621,7 @@ export default function DashboardClient() {
                   Avertismentul nu mai stă aici: ai citi „ștergerea e permanentă"
                   doar fiindcă ai intrat în Setări. Are efect în clipa în care
                   apeși, deci l-am mutat în fereastra de confirmare. */}
-              <div style={{ background: c.surface, borderRadius: 20, padding: "24px 28px", border: `1.5px solid ${c.border}`, marginTop: 16 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 12 }}>Zona periculoasă</div>
+              <div style={{ background: c.surface, borderRadius: 20, padding: "18px 22px", border: `1.5px solid ${c.border}`, marginTop: 16 }}>
                 <button onClick={() => { setStergeDeschis(true); setStergeParola(""); setStergeEroare(""); }}
                   style={{ fontSize: 13, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "9px 18px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                   Șterge contul
