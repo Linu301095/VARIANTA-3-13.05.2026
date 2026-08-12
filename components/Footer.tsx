@@ -65,7 +65,7 @@ export default function Footer({ variant = "full", onAjutor }: { variant?: Varia
         </div>
 
         <div style={bottomBar}>
-          <div style={copyright}>© 2026 CalyHub · România · contact@calyhub.ro</div>
+          <div style={copyright}>© 2026 CalyHub · România · <a href="mailto:contact@calyhub.ro" className="footer-link" style={{ color: "inherit", textDecoration: "none" }}>contact@calyhub.ro</a></div>
         </div>
       </footer>
     );

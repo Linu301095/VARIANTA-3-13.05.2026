@@ -2783,7 +2783,11 @@ export default function DashboardClient() {
               ]} />
               <div style={{ background: c.orangeAccent, border: `1px solid ${c.orangeBorder}`, borderRadius: 16, padding: "18px 22px", marginTop: 20 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "#FF6B00", marginBottom: 4 }}>Nu ai găsit răspunsul?</div>
-                <div style={{ fontSize: 13, color: c.muted }}>Scrie-ne la <strong>support@calyhub.ro</strong> — răspundem de regulă în aceeași zi lucrătoare.</div>
+                <div style={{ fontSize: 13, color: c.muted, lineHeight: 1.6 }}>
+                  Scrie-ne la{" "}
+                  <a href="mailto:support@calyhub.ro?subject=Intrebare%20din%20aplicatie" style={{ color: "#FF6B00", fontWeight: 800 }}>support@calyhub.ro</a>
+                  {" "}— răspundem de regulă în aceeași zi lucrătoare.
+                </div>
               </div>
             </div>
           )}

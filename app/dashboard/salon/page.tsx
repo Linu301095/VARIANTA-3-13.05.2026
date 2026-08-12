@@ -4143,11 +4143,15 @@ export default function DashboardSalon() {
                   { q: "Cum accept o programare noua?", r: "In tab-ul Agenda vei vedea programarile noi marcate cu portocaliu. Click pe Accepta pentru a le confirma." },
                   { q: "Clientul nu s-a prezentat. Ce fac?", r: "Poti marca programarea ca neprezentata din Agenda. Clientul va primi o notificare automata." },
                   { q: "Cand primesc banii din programari?", r: "Platile se proceseaza in 2-3 zile lucratoare dupa finalizarea serviciului." },
-                  { q: "Cum imi schimb programul de lucru?", r: "Functia de gestionare a programului va fi disponibila in urmatoarea versiune." },
+                  { q: "Cum îmi schimb programul de lucru?", r: "Din tabul Program. Acolo setezi orarul pe fiecare zi și poți bloca intervale în care nu primești programări. Fiecare specialist poate avea și un orar propriu, din tabul Echipa mea." },
                 ]} />
                 <div style={{ background: c.orangeAccent, border: `1px solid ${c.orangeBorder}`, borderRadius: 16, padding: "18px 22px", marginTop: 20 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: "#FF6B00", marginBottom: 4 }}>Suport dedicat parteneri</div>
-                  <div style={{ fontSize: 13, color: c.muted }}>Contacteaza-ne la <strong>parteneri@calyhub.ro</strong> sau prin chat prioritar.</div>
+                  <div style={{ fontSize: 13, color: c.muted, lineHeight: 1.6 }}>
+                    Scrie-ne la{" "}
+                    <a href="mailto:parteneri@calyhub.ro?subject=Suport%20partener" style={{ color: "#FF6B00", fontWeight: 800 }}>parteneri@calyhub.ro</a>
+                    {" "}— răspundem de regulă în aceeași zi lucrătoare.
+                  </div>
                 </div>
               </div>
             )}
