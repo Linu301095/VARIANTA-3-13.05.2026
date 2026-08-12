@@ -739,6 +739,23 @@ export default function DashboardClient() {
   const c = C[theme];
   const prenume = user?.nume?.split(" ")[0] || "Utilizator";
   const necitite = notificari.filter(n => !n.citit).length;
+  /**
+   * Escape închide fereastra de ștergere a contului.
+   *
+   * ATENȚIE: hook-ul trebuie să stea aici, deasupra tuturor `return`-urilor din
+   * componentă. Componenta se opreşte mai jos ca să afişeze profilul salonului
+   * sau ecranul de confirmare; un `useEffect` pus după acele opriri nu mai
+   * rulează pe ramurile alea, iar React se opreşte cu eroarea #300 („au fost
+   * executate mai puţine hook-uri decât data trecută"). Exact asta a şi făcut:
+   * deschideai un salon şi pagina crăpa.
+   */
+  useEffect(() => {
+    if (!stergeDeschis) return;
+    const pe = (e: KeyboardEvent) => { if (e.key === "Escape" && !stergeLoading) setStergeDeschis(false); };
+    window.addEventListener("keydown", pe);
+    return () => window.removeEventListener("keydown", pe);
+  }, [stergeDeschis, stergeLoading]);
+
   const salon = saloaneList.find(s => s.id === salonSelectat);
   /** Distanța până la salonul deschis — se calculează aici fiindcă ecranul de
       profil se randează înaintea listei, unde stă harta cu toate distanțele. */
@@ -1837,14 +1854,6 @@ export default function DashboardClient() {
    * nu ce se vede, iar „1 filtru activ" pentru A–Z ar fi o minciună mică.
    */
   const filtreActive = [cautare !== "", filtruOras !== "", filtruSpec !== "", filtruServiciu !== ""].filter(Boolean).length;
-
-  // Escape închide fereastra de ștergere — ieșirea trebuie să fie ușoară.
-  useEffect(() => {
-    if (!stergeDeschis) return;
-    const pe = (e: KeyboardEvent) => { if (e.key === "Escape" && !stergeLoading) setStergeDeschis(false); };
-    window.addEventListener("keydown", pe);
-    return () => window.removeEventListener("keydown", pe);
-  }, [stergeDeschis, stergeLoading]);
 
   const putereNoua = Math.max(0, putereParola(parole.noua));
   const sfaturiNoua = sfaturiParola(parole.noua);
