@@ -47,6 +47,7 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 4. **Bifa de Termeni** — obligatorie ȘI salvată în bază (`profiluri.termeni_acceptati_la` + `termeni_versiune`), ca să existe dovada consimțământului.
 
 **SQL de rulat în Supabase:**
+- `sql/rating_saloane.sql` — **obligatoriu pentru notele de pe carduri**, creează vederea `saloane_rating` (medie + număr per salon). Fără ea, dashboardul clientului nu mai poate calcula notele și toate saloanele apar ca „Nou". Înlocuiește descărcarea tuturor recenziilor din bază la fiecare intrare în cont.
 - `sql/coordonate_salon.sql` — **obligatoriu pentru distanță**, adaugă `saloane.lat`, `saloane.lng`, `saloane.geocodat_la`. Fără el, înscrierea salonului merge dar nu salvează coordonatele, iar pe carduri nu apare nicio distanță.
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
 - `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.

@@ -568,20 +568,24 @@ export default function DashboardClient() {
     loadUser();
   }, []);
 
-  // Agregare rating pentru toate saloanele (carduri)
+  /**
+   * Notele saloanelor, pentru carduri.
+   *
+   * Înainte se cereau TOATE recenziile din bază, fără filtru, iar media se
+   * calcula în telefon. Cu zece recenzii nu se simțea; cu cincizeci de mii ar
+   * fi tras câțiva MB la fiecare intrare, pentru fiecare client, ca să afișeze
+   * trei cifre. Acum media o calculează baza, iar de aici cerem doar
+   * rezultatul: un rând per salon, indiferent câte recenzii ar exista.
+   *
+   * Vederea e `saloane_rating` — vezi sql/rating_saloane.sql.
+   */
   useEffect(() => {
     if (saloaneList.length === 0) return;
     (async () => {
-      const { data } = await supabase.from("recenzii").select("salon_id, rating");
-      if (!data) return;
-      const acc: Record<string, { suma: number; nr: number }> = {};
-      for (const r of data as any[]) {
-        const k = String(r.salon_id);
-        if (!acc[k]) acc[k] = { suma: 0, nr: 0 };
-        acc[k].suma += r.rating; acc[k].nr += 1;
-      }
+      const { data, error } = await supabase.from("saloane_rating").select("salon_id, medie, nr");
+      if (error || !data) return;
       const out: Record<string, { medie: number; nr: number }> = {};
-      for (const k in acc) out[k] = { medie: acc[k].suma / acc[k].nr, nr: acc[k].nr };
+      for (const r of data as any[]) out[String(r.salon_id)] = { medie: Number(r.medie) || 0, nr: Number(r.nr) || 0 };
       setRatinguriSaloane(out);
     })();
   }, [saloaneList]);
