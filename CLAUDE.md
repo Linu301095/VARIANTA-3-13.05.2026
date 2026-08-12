@@ -451,6 +451,38 @@ decât „coafor Cluj". Și e argumentul de vânzare: *„te înscrii și prime�
   Recomandarea: îl afișăm — încrederea contează mai mult decât atribuirea la început.
 - **Termeni** — de scris explicit că datele de profil ale salonului (inclusiv telefonul) apar public.
 
+---
+
+## ⚠️ PLAN ETAPIZAT PÂNĂ LA LANSARE (stabilit 11.08.2026)
+
+**Punctul de plecare, măsurat:** aplicația trăiește doar pe `varianta-3-13-05-2026.vercel.app`.
+Nu există domeniu cumpărat, nici adresă de email. Firma e înființată, dar cu coduri CAEN de
+vânzări online — nepotrivite pentru SaaS. Fără cont bancar pe firmă.
+
+**Codul presupune deja `calyhub.ro`:** `SITE_URL` din `app/layout.tsx` și `app/sitemap.ts`,
+plus 11 fișiere care conțin domeniul și 6 locuri din interfață care trimit la
+`support@calyhub.ro` (ștergerea contului, schimbarea emailului, FAQ, footer).
+
+| # | Etapa | Ce trebuie făcut | Cost | Ce deblochează |
+|---|---|---|---|---|
+| 0 | **Domeniul** | Verifică și cumpără `calyhub.ro` (rotld.ro sau orice registrar). Dacă e ocupat de altcineva → discuție despre schimbarea numelui, care atinge logo, texte și tot SEO-ul. | ~15 EUR/an | absolut tot restul |
+| 1 | **Emailul** | Redirecționare de la registrar către o adresă personală (primire) + cont Resend cu domeniul verificat prin DNS (trimitere). | 0–6 EUR/lună | confirmare programare, emailuri de trial, ștergerea datelor la 45 zile, schimbarea emailului din Profil, bun venit salon |
+| 2 | **Firma** | Coduri CAEN la ONRC (6201, 6311, 6312) · cont bancar pe firmă (Revolut Business, online) · contabil pentru regim fiscal și TVA. | ~400–600 RON | Stripe, facturare |
+| 3 | **Încasările** | Cont Stripe (cere IBAN pe firmă + CUI), integrare, webhook care pune `abonament_activ = true`, portal de facturi. | ~4 zile dev | primul salon plătitor |
+| 4 | **Facturarea** | SmartBill + transmitere în SPV ANAF. **e-Factura e obligatorie B2B din iulie 2024**, iar CalyHub facturează saloane. | — | conformitate |
+| 5 | **Juridic** | CUI afișat pe site (footer + Confidențialitate) · actualizarea politicii **înainte** de activarea Resend (devine procesator) · contract cadru B2B + DPA. | consultant | primul client real |
+| 6 | **SMS Twilio** | Ultima, poate niciodată. Cere firmă pusă la punct, sender ID aprobat de operatori (zile–săptămâni), card, și actualizarea politicii. | ~0.04–0.07 EUR/SMS | reminder 24h |
+
+**Decizii luate în discuție:**
+
+1. **Resend înaintea lui Twilio.** Emailul e gratis, nu cere aprobări de la operatori și deblochează
+   lucruri care azi lipsesc de tot. Twilio cere firma pusă la punct și costă la fiecare mesaj.
+2. **Reminderul de 24h nu justifică singur Twilio** — push-ul din aplicația de telefon îl face gratis.
+   De reevaluat abia atunci; SMS-ul rămâne util doar pentru cine nu instalează aplicația.
+3. **Lansarea nu așteaptă Stripe.** Saloanele intră în trial de 14 zile fără card; Stripe devine
+   necesar în ziua în care primul salon vrea să plătească.
+
+
 ## TODO post-lansare
 
 - **⚠️ NOTIFICĂRI — cererea de permisiune la instalare (decis 11.08.2026).**
