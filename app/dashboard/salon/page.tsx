@@ -2041,15 +2041,17 @@ export default function DashboardSalon() {
     if (upErr) { salveaza("Eroare la upload!"); setUploadingAvatar(false); return; }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     const url = `${urlData.publicUrl}?t=${Date.now()}`;
-    await supabase.from("profiluri").update({ avatar_url: url }).eq("id", userId);
-    setAvatarUrl(url);
+    const { error: eSalvare } = await supabase.from("profiluri").update({ avatar_url: url }).eq("id", userId);
     setUploadingAvatar(false);
+    if (eSalvare) { salveaza("Poza s-a încărcat, dar nu am putut-o salva în cont. Încearcă din nou."); return; }
+    setAvatarUrl(url);
     salveaza("Avatar actualizat!");
   }
 
   async function stergeAvatar() {
     if (!userId) return;
-    await supabase.from("profiluri").update({ avatar_url: null }).eq("id", userId);
+    const { error } = await supabase.from("profiluri").update({ avatar_url: null }).eq("id", userId);
+    if (error) { salveaza("Nu am putut șterge poza. Încearcă din nou."); return; }
     setAvatarUrl(null);
     salveaza("Avatar șters!");
   }
@@ -2093,10 +2095,11 @@ export default function DashboardSalon() {
     if (upErr) { salveaza("Eroare la upload!"); setUploadingCover(false); return; }
     const { data: urlData } = supabase.storage.from("saloane").getPublicUrl(path);
     const url = `${urlData.publicUrl}?t=${Date.now()}`;
-    await supabase.from("saloane").update({ poza_url: url }).eq("id", salonData.id);
+    const { error: eSalvare } = await supabase.from("saloane").update({ poza_url: url }).eq("id", salonData.id);
+    setUploadingCover(false);
+    if (eSalvare) { salveaza("Poza s-a încărcat, dar nu am putut-o salva. Încearcă din nou."); return; }
     setPozaUrl(url);
     setSalonData((s: any) => ({ ...s, poza_url: url }));
-    setUploadingCover(false);
     salveaza("Poza de prezentare actualizată!");
   }
 
@@ -2121,15 +2124,21 @@ export default function DashboardSalon() {
       }
     }
     const updated = [...galerie, ...newUrls];
-    await supabase.from("saloane").update({ galerie: updated }).eq("id", salonData.id);
-    setGalerie(updated);
+    const { error: eSalvare } = await supabase.from("saloane").update({ galerie: updated }).eq("id", salonData.id);
     setUploadingGalerie(false);
-    salveaza(`${newUrls.length} poze adăugate în galerie!`);
+    if (eSalvare) { salveaza("Pozele s-au încărcat, dar nu am putut salva galeria. Încearcă din nou."); return; }
+    setGalerie(updated);
+    if (newUrls.length < files.length) {
+      salveaza(`${newUrls.length} din ${files.length} poze au fost adăugate — restul n-au putut fi încărcate.`);
+      return;
+    }
+    salveaza(`${newUrls.length} ${newUrls.length === 1 ? "poză adăugată" : "poze adăugate"} în galerie!`);
   }
 
   async function stergeGalerie(url: string) {
     const updated = galerie.filter(u => u !== url);
-    await supabase.from("saloane").update({ galerie: updated }).eq("id", salonData.id);
+    const { error } = await supabase.from("saloane").update({ galerie: updated }).eq("id", salonData.id);
+    if (error) { salveaza("Nu am putut șterge poza. Încearcă din nou."); return; }
     setGalerie(updated);
     salveaza("Poza ștearsă din galerie!");
   }
@@ -3848,7 +3857,8 @@ export default function DashboardSalon() {
                         };
                         if (areAnimale) patch.specii = speciiSalon;
                         else { patch.specializari = specializariSalon; patch.public_tinta = publicTinta || null; }
-                        await supabase.from("saloane").update(patch).eq("user_id", authUser.id);
+                        const { error: eProfil } = await supabase.from("saloane").update(patch).eq("user_id", authUser.id);
+                        if (eProfil) { salveaza("Nu am putut salva profilul. Încearcă din nou."); return; }
                         setSalonData((s: any) => ({ ...s, ...patch }));
 
                         // Adresa s-a putut schimba — refacem punctul de pe hartă,
@@ -3948,9 +3958,9 @@ export default function DashboardSalon() {
                 <button onClick={() => setServicii(sv => [...sv, { id: Date.now(), nume: "", pret: "", durata: "", preturi: { mica: "", medie: "", mare: "" }, durate: { mica: "", medie: "", mare: "" } }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga serviciu</button>
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
-                  if (authUser) {
-                    await supabase.from("saloane").update({ servicii }).eq("user_id", authUser.id);
-                  }
+                  if (!authUser) { salveaza("Sesiunea a expirat. Reintră în cont."); return; }
+                  const { error } = await supabase.from("saloane").update({ servicii }).eq("user_id", authUser.id);
+                  if (error) { salveaza("Nu am putut salva serviciile. Încearcă din nou."); return; }
                   salveaza("Servicii actualizate!");
                 }} style={btnPrimary}>Salveaza serviciile</button>
               </div>
@@ -4142,7 +4152,9 @@ export default function DashboardSalon() {
                 </button>
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
-                  if (authUser) await supabase.from("saloane").update({ echipa }).eq("user_id", authUser.id);
+                  if (!authUser) { salveaza("Sesiunea a expirat. Reintră în cont."); return; }
+                  const { error } = await supabase.from("saloane").update({ echipa }).eq("user_id", authUser.id);
+                  if (error) { salveaza("Nu am putut salva echipa. Încearcă din nou."); return; }
                   salveaza("Echipa salvată!");
                 }} style={btnPrimary}>Salvează echipa</button>
               </div>

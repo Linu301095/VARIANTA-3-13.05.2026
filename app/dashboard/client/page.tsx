@@ -903,15 +903,17 @@ export default function DashboardClient() {
     if (upErr) { salveaza("Eroare la upload!"); setUploadingAvatar(false); return; }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     const url = `${urlData.publicUrl}?t=${Date.now()}`;
-    await supabase.from("profiluri").update({ avatar_url: url }).eq("id", userId);
-    setAvatarUrl(url);
+    const { error: eSalvare } = await supabase.from("profiluri").update({ avatar_url: url }).eq("id", userId);
     setUploadingAvatar(false);
+    if (eSalvare) { salveaza("Poza s-a încărcat, dar nu am putut-o salva în cont. Încearcă din nou."); return; }
+    setAvatarUrl(url);
     salveaza("Avatar actualizat!");
   }
 
   async function stergeAvatar() {
     if (!userId) return;
-    await supabase.from("profiluri").update({ avatar_url: null }).eq("id", userId);
+    const { error } = await supabase.from("profiluri").update({ avatar_url: null }).eq("id", userId);
+    if (error) { salveaza("Nu am putut șterge poza. Încearcă din nou."); return; }
     setAvatarUrl(null);
     salveaza("Avatar șters!");
   }
@@ -2514,9 +2516,9 @@ export default function DashboardClient() {
                   </div>
                   <button onClick={async () => {
                     const { data: { user: authUser } } = await supabase.auth.getUser();
-                    if (authUser) {
-                      await supabase.from("profiluri").update({ nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen || null }).eq("id", authUser.id);
-                    }
+                    if (!authUser) { salveaza("Sesiunea a expirat. Reintră în cont."); return; }
+                    const { error } = await supabase.from("profiluri").update({ nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen || null }).eq("id", authUser.id);
+                    if (error) { salveaza("Nu am putut salva profilul. Încearcă din nou."); return; }
                     setUser((u: any) => ({ ...u, nume: profilForm.numeComplet, telefon: profilForm.telefon, gen: profilForm.gen }));
                     // Fără asta, silueta din salut și filtrul „Caut" rămâneau pe valoarea veche până la refresh.
                     setGenUser(profilForm.gen);
@@ -2568,7 +2570,8 @@ export default function DashboardClient() {
                               }} style={{ fontSize: 12, fontWeight: 700, color: c.muted, background: c.surface2, border: `1.5px solid ${c.border}`, padding: "7px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "inline-flex", alignItems: "center", gap: 5 }}><Pencil size={12} strokeWidth={2} /> Editează</button>
                               <button onClick={async () => {
                                 if (!confirm(`Sigur ștergi profilul lui ${a.nume}?`)) return;
-                                await supabase.from("animale").delete().eq("id", a.id);
+                                const { error } = await supabase.from("animale").delete().eq("id", a.id);
+                                if (error) { salveaza("Nu am putut șterge animalul. Încearcă din nou."); return; }
                                 setAnimale(prev => prev.filter(x => x.id !== a.id));
                                 if (selectedAnimalId === a.id) setSelectedAnimalId(null);
                                 salveaza("Animal șters");
@@ -2581,11 +2584,12 @@ export default function DashboardClient() {
                           animalId={a.id} userId={userId} animalPoza={a.poza_url}
                           onPhotoChange={(url) => setAnimale(prev => prev.map(x => x.id === a.id ? { ...x, poza_url: url } : x))}
                           onCancel={() => setEditingAnimalId(null)} onSave={async () => {
-                          await supabase.from("animale").update({
+                          const { error } = await supabase.from("animale").update({
                             nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex,
                             rasa: animalForm.rasa, talie: animalForm.talie || null, greutate: Number(animalForm.greutate),
                             varsta: Number(animalForm.varsta), alergii: animalForm.alergii, vaccinat: animalForm.vaccinat,
                           }).eq("id", a.id);
+                          if (error) { salveaza("Nu am putut salva profilul animalului. Încearcă din nou."); return; }
                           setAnimale(prev => prev.map(x => x.id === a.id ? { ...x, nume: animalForm.numeAnimal, specie: animalForm.specie, sex: animalForm.sex, rasa: animalForm.rasa, talie: animalForm.talie, greutate: Number(animalForm.greutate), varsta: Number(animalForm.varsta), alergii: animalForm.alergii, vaccinat: animalForm.vaccinat } : x));
                           setEditingAnimalId(null);
                           salveaza("Profil actualizat!");
@@ -3303,8 +3307,8 @@ function AnimalEditForm({ form, setForm, c, inp, onSave, onCancel, animalId, use
     if (!error) {
       const { data } = supabase.storage.from("animale").getPublicUrl(path);
       const url = `${data.publicUrl}?t=${Date.now()}`;
-      await supabase.from("animale").update({ poza_url: url }).eq("id", animalId);
-      onPhotoChange?.(url);
+      const { error: eSalvare } = await supabase.from("animale").update({ poza_url: url }).eq("id", animalId);
+      if (!eSalvare) onPhotoChange?.(url);
     }
     setUploadingPoza(false);
   }

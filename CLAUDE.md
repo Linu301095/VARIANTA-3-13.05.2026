@@ -139,6 +139,23 @@ aia. Nimic nu dispare, deci mama care rezervă pentru băiat n-are nevoie de nic
 salonul"). Înainte se putea alege doar în wizard, deci saloanele înscrise mai devreme rămâneau
 `public_tinta` gol pentru totdeauna — și ordonarea lucra pe date pe care nimeni nu le putea completa.
 
+### ⚠️ DE REZOLVAT ÎMPREUNĂ — neprezentările și „încasările" umflate (12.08.2026)
+
+**Cele două sunt aceeași problemă și se rezolvă odată.**
+
+1. **Nu există marcarea unei neprezentări.** Salonul n-are niciun buton pentru „clientul n-a venit".
+   FAQ-ul promitea unul; textul a fost corectat, funcția lipsește în continuare.
+2. **`autoFinalizeaza` trece automat programările confirmate în `finalizat`** când ora a trecut
+   (`app/dashboard/salon/page.tsx`), fără nicio confirmare din partea salonului.
+3. **Statisticile numără drept „Încasări" și programările `confirmat`**, nu doar cele finalizate.
+
+Efectul combinat: un client care nu se prezintă apare ca vizită încheiată și **intră la încasări**.
+Salonul își vede cifrele umflate și nu are cum să le corecteze.
+
+**De făcut la punctul 8 din inventar:** un status nou (`neprezentat`), butonul care îl setează din
+agendă, excluderea lui din încasări, și decizia dacă neprezentările se numără la fel ca anulările
+târzii pentru `ANULARI_PANA_LA_AVERTISMENT`.
+
 ### Închiderea contului de salon (decizie 12.08.2026)
 
 | Ce | Cum |
