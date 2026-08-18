@@ -4262,12 +4262,18 @@ export default function DashboardSalon() {
             {tab === "ajutor" && (
               <div style={{ maxWidth: 620 }}>
                 <PageHeader icon={HelpCircle} title="Ajutor" sub="Suport dedicat pentru partenerii CalyHub" />
+                {/* Răspunsurile promiteau două lucruri care nu există: marcarea
+                    unei programări ca neprezentată, și plăți procesate de noi
+                    „în 2-3 zile lucrătoare". CalyHub nu atinge banii clientului. */}
                 <FAQ items={[
-                  { q: "Cum adaug un serviciu nou?", r: "Din meniu click pe Serviciile mele, apoi + Adauga serviciu. Completeaza denumirea, pretul si durata, apoi salveaza." },
-                  { q: "Cum accept o programare noua?", r: "In tab-ul Agenda vei vedea programarile noi marcate cu portocaliu. Click pe Accepta pentru a le confirma." },
-                  { q: "Clientul nu s-a prezentat. Ce fac?", r: "Poti marca programarea ca neprezentata din Agenda. Clientul va primi o notificare automata." },
-                  { q: "Cand primesc banii din programari?", r: "Platile se proceseaza in 2-3 zile lucratoare dupa finalizarea serviciului." },
+                  { q: "Cum adaug un serviciu nou?", r: areAnimale
+                      ? "Din meniu, Serviciile mele → + Adaugă serviciu. Scrii denumirea, apoi prețul și durata pentru fiecare talie — mică, medie, mare. Poți lăsa goală o talie pentru care nu oferi serviciul."
+                      : "Din meniu, Serviciile mele → + Adaugă serviciu. Scrii denumirea, prețul și durata, apoi salvezi." },
+                  { q: "Cum accept o programare nouă?", r: "În tabul Agendă, cererile noi apar sus, marcate cu portocaliu. Apeși Acceptă ca să confirmi sau Refuză. Clientul e anunțat în ambele cazuri." },
+                  { q: "Clientul nu s-a prezentat. Ce fac?", r: "Deocamdată nu există un buton pentru asta — programarea rămâne în agendă ca și cum s-ar fi desfășurat. Ce poți face: dacă a anulat cu mai puțin de 24 de ore înainte, anularea apare la Anulări de la client, cu motivul scris de el. De la a treia anulare târzie îți semnalăm clientul și îl poți bloca, ca să nu mai poată rezerva la tine." },
+                  { q: "Cum încasez banii de la clienți?", r: "Direct de la client, în salon, ca până acum — CalyHub nu intermediază plata serviciilor și nu reține niciun comision. Aplicația îți aduce programările; banii rămân între tine și client. Singura plată către noi e abonamentul." },
                   { q: "Cum îmi schimb programul de lucru?", r: "Din tabul Program. Acolo setezi orarul pe fiecare zi și poți bloca intervale în care nu primești programări. Fiecare specialist poate avea și un orar propriu, din tabul Echipa mea." },
+                  { q: "Cum îmi schimb planul?", r: "Din meniu, Abonamentul meu → Schimbă planul. Plata online nu e încă activă, așa că deocamdată nu se emite nicio factură și nu se reține nimic de pe card." },
                 ]} />
                 <div style={{ background: c.orangeAccent, border: `1px solid ${c.orangeBorder}`, borderRadius: 16, padding: "18px 22px", marginTop: 20 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: "#FF6B00", marginBottom: 4 }}>Suport dedicat parteneri</div>
