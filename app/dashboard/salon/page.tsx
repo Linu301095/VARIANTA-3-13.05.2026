@@ -1900,6 +1900,8 @@ export default function DashboardSalon() {
           rating: r.rating,
           text: r.text,
           animal: r.animal,
+          // Fără verticală, răspunsul ar vorbi despre blană la un coafor.
+          domeniu: areAnimale ? "grooming" : "infrumusetare",
         }),
       });
       const json = await res.json();

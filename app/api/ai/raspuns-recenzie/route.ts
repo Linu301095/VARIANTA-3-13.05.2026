@@ -1,11 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
+import { claude } from "../../../../lib/claude";
+
+const HAIKU = "claude-haiku-4-5-20251001";
+
+/**
+ * Răspunsul salonului la o recenzie.
+ *
+ * Până acum agentul ăsta nu era AI: alegea la întâmplare una din 17 fraze
+ * scrise de mână, împărțite după numărul de stele. **Textul recenziei era
+ * primit și ignorat.** Un client care scria „doamna Maria a fost superbă, dar
+ * am așteptat 40 de minute" primea același răspuns ca oricine dădea 4 stele.
+ * Pe card scria „Claude scrie un răspuns personalizat" — nu era adevărat.
+ *
+ * Acum răspunsul îl scrie Claude, pornind de la ce a scris omul. Șabloanele au
+ * rămas ca plasă de siguranță: dacă lipsește cheia sau pică serviciul, salonul
+ * primește tot ceva utilizabil, în loc de o eroare.
+ *
+ * Costul e neglijabil — un răspuns are sub 300 de tokeni.
+ */
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/** Ce anume face salonul — ca răspunsul să nu vorbească despre blană la coafor. */
+const PROFIL: Record<string, { tip: string; despre: string }> = {
+  infrumusetare: {
+    tip: "salon de înfrumusețare (frizerie, coafor, manichiură, cosmetică)",
+    despre: "serviciul primit, priceperea specialistului, aspectul salonului, punctualitatea",
+  },
+  grooming: {
+    tip: "salon de grooming pentru animale",
+    despre: "cum s-a simțit animalul, blândețea cu care a fost tratat, rezultatul tunsorii, punctualitatea",
+  },
+};
+
 export async function POST(req: NextRequest) {
-  const { salonNume, clientNume, rating, text, animal } = await req.json();
+  const { salonNume, clientNume, rating, text, animal, domeniu } = await req.json();
 
   if (!text || typeof rating !== "number") {
     return NextResponse.json({ error: "Date lipsă" }, { status: 400 });
@@ -21,6 +52,52 @@ export async function POST(req: NextRequest) {
     ? `micuțul tău ${animalRasa}`
     : "animalul tău";
 
+  // ── Răspunsul scris de Claude ──
+  if (process.env.ANTHROPIC_API_KEY) {
+    const prof = PROFIL[domeniu === "infrumusetare" ? "infrumusetare" : "grooming"];
+    const contextAnimal = animalNume ? `\nAnimalul clientului se numește ${animalNume}${animalRasa ? ` (${animalRasa})` : ""}.` : "";
+
+    const system = [
+      `Ești proprietarul unui ${prof.tip} din România și răspunzi public la o recenzie primită de la un client.`,
+      "",
+      "Reguli:",
+      `- Răspunde la CE A SCRIS clientul. Dacă a lăudat pe cineva anume sau a reclamat ceva anume, referă-te la acel lucru. Ăsta e singurul motiv pentru care răspunsul are valoare.`,
+      "- Scrie la persoana I plural, ca salon. Ton cald, firesc, românesc, fără corporatisme.",
+      "- 2–4 propoziții. Niciodată mai mult.",
+      "- Nu inventa fapte pe care clientul nu le-a spus și nu promite reduceri sau gratuități.",
+      "- Dacă recenzia e critică: recunoaște problema pe scurt, fără scuze lungi, și invită clientul să ia legătura direct.",
+      "- Nu repeta cuvânt cu cuvânt recenzia și evită începutul standard 'Mulțumim pentru recenzie' dacă poți începe mai natural.",
+      "- Scrie doar răspunsul, fără ghilimele și fără nicio introducere.",
+      `- Aspecte care contează la acest tip de salon: ${prof.despre}.`,
+    ].join("\n");
+
+    const userContent = [
+      `Salon: ${salon}`,
+      `Client: ${client}`,
+      `Notă: ${rating}/5`,
+      `Recenzie: „${String(text).slice(0, 1200)}"${contextAnimal}`,
+    ].join("\n");
+
+    try {
+      const msg = await claude.messages.create({
+        model: HAIKU,
+        max_tokens: 300,
+        system,
+        messages: [{ role: "user", content: userContent }],
+      });
+      const scris = (msg.content as any[])
+        .filter((b: any) => b.type === "text")
+        .map((b: any) => b.text as string)
+        .join("")
+        .trim();
+      if (scris) return NextResponse.json({ raspuns: scris, sursa: "ai" });
+    } catch (err) {
+      // Cădem pe șabloane — mai bine un răspuns generic decât niciunul.
+      console.error("raspuns-recenzie: Claude a eșuat, folosim șabloanele.", err);
+    }
+  }
+
+  // ── Plasa de siguranță: fraze gata scrise, alese după notă ──
   let raspuns: string;
 
   if (rating >= 4) {
@@ -61,5 +138,5 @@ export async function POST(req: NextRequest) {
     ]);
   }
 
-  return NextResponse.json({ raspuns });
+  return NextResponse.json({ raspuns, sursa: "sablon" });
 }
