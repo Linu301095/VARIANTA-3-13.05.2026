@@ -891,15 +891,17 @@ export default function DashboardSalon() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [servicii, setServicii] = useState<Serviciu[]>([
-    { id: 1, nume: "Tuns complet", pret: "80", durata: "60" },
-    { id: 2, nume: "Baita + uscare", pret: "50", durata: "40" },
-    { id: 3, nume: "Tuns + Baita + Unghii", pret: "120", durata: "90" },
-  ]);
-  const [echipa, setEchipa] = useState<Groomer[]>([
-    { id: 1, nume: "Maria Ionescu", specialitate: "Rase mici" },
-    { id: 2, nume: "Andrei Pop", specialitate: "Rase mari" },
-  ]);
+  /* Listele pornesc goale.
+     Înainte porneau cu trei servicii inventate („Tuns complet 80 lei") și cu
+     doi angajați care nu existau — „Maria Ionescu", „Andrei Pop". Se vedeau
+     până răspundea baza, iar la saloanele care aveau câmpul necompletat
+     rămâneau pe ecran. Un salon care apăsa Salvează fără să se uite și-i
+     scria în cont, iar clienții ajungeau să rezerve la un specialist
+     inexistent. La un coafor, „Rase mici" era și mai vizibil. */
+  const [servicii, setServicii] = useState<Serviciu[]>([]);
+  const [echipa, setEchipa] = useState<Groomer[]>([]);
+  /** Cât timp încă citim din bază, listele goale nu înseamnă „n-ai nimic". */
+  const [datePregatite, setDatePregatite] = useState(false);
   const [program, setProgram] = useState<ProgramSaptamanal>(PROGRAM_DEFAULT);
   const stepCalendar = useMemo(() => {
     const durate: number[] = [];
@@ -988,9 +990,10 @@ export default function DashboardSalon() {
         if (salonRow.program && typeof salonRow.program === "object" && Object.keys(salonRow.program).length > 0) {
           setProgram({ ...PROGRAM_DEFAULT, ...salonRow.program });
         }
-        if (salonRow.servicii) setServicii(salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })));
-        if (salonRow.echipa) setEchipa(salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })));
+        setServicii(Array.isArray(salonRow.servicii) ? salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })) : []);
+        setEchipa(Array.isArray(salonRow.echipa) ? salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })) : []);
         if (Array.isArray(salonRow.clienti_blocati)) setClientiBlocati(salonRow.clienti_blocati);
+        setDatePregatite(true);
 
         // Toate sub-cererile în paralel — autoFinalizeaza nu blochează UI
         autoFinalizeaza(salonRow.id);
@@ -998,6 +1001,9 @@ export default function DashboardSalon() {
         loadAbateri(salonRow.id);
         loadAnimaleIstoric(salonRow.id, salonRow.domeniu !== "infrumusetare");
         loadNotificari(authUser.id);
+      } else {
+        // Fără rând de salon (wizard neterminat) tot am terminat de citit.
+        setDatePregatite(true);
       }
     }
 
@@ -3901,6 +3907,20 @@ export default function DashboardSalon() {
             {tab === "servicii" && (
               <div style={{ maxWidth: 580 }}>
                 <PageHeader icon={Scissors} title="Serviciile mele" sub="Gestioneaza serviciile oferite de salon" />
+                {/* Lista goală înseamnă două lucruri diferite: „încă se încarcă" și
+                    „chiar n-ai niciunul". Fără distincția asta, salonul ar crede că
+                    și-a pierdut serviciile și le-ar adăuga din nou. */}
+                {!datePregatite && (
+                  <div style={{ fontSize: 13, color: c.muted, padding: "18px 0" }}>Se încarcă serviciile…</div>
+                )}
+                {datePregatite && servicii.length === 0 && (
+                  <div style={{ background: c.surface, border: `1.5px dashed ${c.border}`, borderRadius: 16, padding: "22px 24px", marginBottom: 16, textAlign: "center" }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: c.text, marginBottom: 6 }}>Niciun serviciu adăugat</div>
+                    <div style={{ fontSize: 12.5, color: c.muted, lineHeight: 1.6 }}>
+                      Clienții nu pot rezerva până nu adaugi cel puțin unul.
+                    </div>
+                  </div>
+                )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                   {servicii.map((s, i) => {
                     const preturi = s.preturi || { mica: s.pret || "", medie: s.pret || "", mare: s.pret || "" };
@@ -3982,6 +4002,18 @@ export default function DashboardSalon() {
             {tab === "echipa" && (
               <div style={{ maxWidth: 560 }}>
                 <PageHeader icon={Users} title="Echipa mea" sub={DS.echipaSub} />
+                {!datePregatite && (
+                  <div style={{ fontSize: 13, color: c.muted, padding: "18px 0" }}>Se încarcă echipa…</div>
+                )}
+                {/* Echipa e opțională — mesajul trebuie să spună că nu e o problemă. */}
+                {datePregatite && echipa.length === 0 && (
+                  <div style={{ background: c.surface, border: `1.5px dashed ${c.border}`, borderRadius: 16, padding: "22px 24px", marginBottom: 16, textAlign: "center" }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: c.text, marginBottom: 6 }}>Niciun {DS.rol} adăugat</div>
+                    <div style={{ fontSize: 12.5, color: c.muted, lineHeight: 1.6 }}>
+                      Nu e obligatoriu — clienții pot rezerva direct la salon. Dacă adaugi {DS.rolPlural}, clientul își poate alege persoana și fiecare poate avea orar propriu.
+                    </div>
+                  </div>
+                )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 16 }}>
                   {echipa.map(g => {
                     const orarDeschis = !!groomerOrarDeschis[g.id];
