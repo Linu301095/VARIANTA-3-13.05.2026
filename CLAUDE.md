@@ -48,6 +48,7 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 
 **SQL de rulat în Supabase:**
 - `sql/stergere_salon.sql` — **obligatoriu pentru ștergerea salonului**, adaugă `saloane.sters_la` + index parțial pe saloanele active. Fără el, butonul „Șterge salonul" eșuează, iar căutarea clientului crapă (filtrează după coloana asta).
+- `sql/neprezentari.sql` — **obligatoriu pentru marcarea neprezentărilor**, permite valoarea `neprezentat` pe `programari.status`. Fără el, butonul „Nu s-a prezentat" eșuează.
 - `sql/rating_saloane.sql` — **obligatoriu pentru notele de pe carduri**, creează vederea `saloane_rating` (medie + număr per salon). Fără ea, dashboardul clientului nu mai poate calcula notele și toate saloanele apar ca „Nou". Înlocuiește descărcarea tuturor recenziilor din bază la fiecare intrare în cont.
 - `sql/coordonate_salon.sql` — **obligatoriu pentru distanță**, adaugă `saloane.lat`, `saloane.lng`, `saloane.geocodat_la`. Fără el, înscrierea salonului merge dar nu salvează coordonatele, iar pe carduri nu apare nicio distanță.
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
@@ -139,22 +140,36 @@ aia. Nimic nu dispare, deci mama care rezervă pentru băiat n-are nevoie de nic
 salonul"). Înainte se putea alege doar în wizard, deci saloanele înscrise mai devreme rămâneau
 `public_tinta` gol pentru totdeauna — și ordonarea lucra pe date pe care nimeni nu le putea completa.
 
-### ⚠️ DE REZOLVAT ÎMPREUNĂ — neprezentările și „încasările" umflate (12.08.2026)
+### Neprezentările și încasările reale (rezolvat 12.08.2026)
 
-**Cele două sunt aceeași problemă și se rezolvă odată.**
+**Ce era:** când ora unei programări trecea, `autoFinalizeaza` o marca automat `finalizat`, iar
+„Încasări" numărau și programările `confirmat`. Un client care nu venea intra la încasări, iar
+o programare de peste patru zile apărea deja la „Încasări luna asta". Salonul nu avea cum să
+corecteze nimic.
 
-1. **Nu există marcarea unei neprezentări.** Salonul n-are niciun buton pentru „clientul n-a venit".
-   FAQ-ul promitea unul; textul a fost corectat, funcția lipsește în continuare.
-2. **`autoFinalizeaza` trece automat programările confirmate în `finalizat`** când ora a trecut
-   (`app/dashboard/salon/page.tsx`), fără nicio confirmare din partea salonului.
-3. **Statisticile numără drept „Încasări" și programările `confirmat`**, nu doar cele finalizate.
+**Ce e acum:**
 
-Efectul combinat: un client care nu se prezintă apare ca vizită încheiată și **intră la încasări**.
-Salonul își vede cifrele umflate și nu are cum să le corecteze.
+| Cifră | Ce numără |
+|---|---|
+| **Încasări** | doar `finalizat` — vizite chiar încheiate |
+| **De încasat** | doar `confirmat` — programări viitoare, bani care n-au intrat |
+| Neprezentări | `neprezentat`, arătate sub Încasări când există |
 
-**De făcut la punctul 8 din inventar:** un status nou (`neprezentat`), butonul care îl setează din
-agendă, excluderea lui din încasări, și decizia dacă neprezentările se numără la fel ca anulările
-târzii pentru `ANULARI_PANA_LA_AVERTISMENT`.
+**Marcarea automată a rămas** (decizia utilizatorului): programările trecute devin `finalizat`
+singure, ca salonul să n-aibă de bifat nimic în zilele obișnuite. În agendă, sub calendar, apare
+secțiunea **„Vizite încheiate"** cu butonul „Nu s-a prezentat" pentru excepții, și „Totuși a venit"
+pentru corecție. Doar programările venite din aplicație — cele adăugate manual la telefon n-au
+client care să lipsească.
+
+**Neprezentările se numără separat de anulările târzii** (`neprezentariMap` vs `abateriMap`), iar
+blocarea clientului e oferită **de la prima neprezentare**, nu de la un prag: o neprezentare e mai
+gravă decât o anulare cu trei ore înainte, care măcar dă un semn.
+
+**Clientul vede statusul** ca „Neprezentare", în istoric. Nu primește notificare — e o însemnare
+internă a salonului, nu o acuzație trimisă pe telefon. Nu poate lăsa recenzie la o vizită la care
+n-a fost.
+
+**SQL:** `sql/neprezentari.sql` adaugă valoarea `neprezentat` în restricția de pe `programari.status`.
 
 ### Închiderea contului de salon (decizie 12.08.2026)
 

@@ -198,7 +198,7 @@ function serviciuPentruGroomer(serviciuSalon: any, groomer: any): any {
   };
   return { ...serviciuSalon, preturi, durate, pret: preturi.medie || serviciuSalon.pret || "", durata: durate.medie || serviciuSalon.durata || "" };
 }
-type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat";
+type StatusProgramare = "confirmat" | "în așteptare" | "finalizat" | "anulat" | "neprezentat";
 type Programare = {
   id: string;
   salon_id: string;
@@ -267,6 +267,9 @@ function statusStyle(theme: "light" | "dark") {
     "în așteptare": { bg: d ? "rgba(255,107,0,.15)"   : "#FFF3EA", color: "#FF6B00", label: "În așteptare" },
     "finalizat":    { bg: d ? "rgba(14,165,233,.15)"  : "#F0F9FF", color: "#0EA5E9", label: "Finalizat" },
     "anulat":       { bg: d ? "rgba(239,68,68,.15)"   : "#FEF2F2", color: "#EF4444", label: "✕ Anulat" },
+    // Salonul a marcat că nu te-ai prezentat. Formularea e neutră — poate fi și
+    // o greșeală a lui, iar clientul are dreptul să știe ce s-a consemnat.
+    "neprezentat":  { bg: d ? "rgba(217,119,6,.15)"   : "#FFFBEB", color: "#D97706", label: "Neprezentare" },
   };
 }
 
@@ -1816,11 +1819,11 @@ export default function DashboardClient() {
     progCine === "toate" ? true : progCine === "mine" ? !p.animal_id : !!p.animal_id
   );
   const viitoare = programariLume.filter(p => p.status === "confirmat" || p.status === "în așteptare");
-  const trecute = programariLume.filter(p => p.status === "finalizat");
+  const trecute = programariLume.filter(p => p.status === "finalizat" || p.status === "neprezentat");
   const anulate = programariLume.filter(p => p.status === "anulat");
   const listaProg = progStare === "urmatoarele" ? viitoare : progStare === "istoric" ? trecute : anulate;
   /** Vizite încheiate pe care încă nu le-a evaluat — punctul de pe „Istoric". */
-  const neevaluate = trecute.filter(p => !recenziiProgramari[p.id]).length;
+  const neevaluate = trecute.filter(p => p.status === "finalizat" && !recenziiProgramari[p.id]).length;
 
   // Saloanele din lumea activa — restul nici nu se vad.
   const saloaneLume = saloaneList.filter(s => (s.domeniu || "grooming") === domeniuLume);

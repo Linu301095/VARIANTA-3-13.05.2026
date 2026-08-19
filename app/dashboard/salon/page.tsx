@@ -14,7 +14,7 @@ import SchimbaParola from "../../../components/SchimbaParola";
 import Cropper from "react-easy-crop";
 import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
 
-type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat";
+type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat" | "neprezentat";
 type ProgramareSalon = {
   id: string;
   user_id: string;
@@ -110,6 +110,19 @@ const LUNA_FULL = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie",
  * numără exact rândurile care au `motiv_anulare` completat.
  */
 const ANULARI_PANA_LA_AVERTISMENT = 3;
+
+/**
+ * Ce se numără la încasări.
+ *
+ * Doar programările chiar încheiate. Înainte se numărau și cele `confirmat`,
+ * adică vizite care nu se întâmplaseră încă — iar o programare la care
+ * clientul nu venea devenea automat `finalizat` și intra tot acolo. Salonul
+ * își vedea cifrele umflate și n-avea cum să le corecteze.
+ */
+const eIncasare = (status: string) => status === "finalizat";
+
+/** Ce urmează: confirmat, dar încă neefectuat. Se arată separat de încasări. */
+const eDeIncasat = (status: string) => status === "confirmat";
 
 const PROGRAM_DEFAULT: ProgramSaptamanal = {
   "1": { activ: true, start: "09:00", end: "18:00" },
@@ -303,7 +316,7 @@ const btnPrimary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50
 /* ───────────────────────── Agenda — calendar pe zi ───────────────────────── */
 function AgendaCalendar({
   programari, echipa, program, agendaZi, setAgendaZi, filtruTalie, setFiltruTalie, areAnimale,
-  accepta, respinge, clientiBlocati, abateriMap, toggleBlocClient, highlightProgramare, onHighlightConsumat, c, theme,
+  accepta, respinge, clientiBlocati, abateriMap, neprezentariMap, marcheazaPrezenta, toggleBlocClient, highlightProgramare, onHighlightConsumat, c, theme,
 }: {
   programari: ProgramareSalon[];
   echipa: Groomer[];
@@ -317,6 +330,8 @@ function AgendaCalendar({
   respinge: (id: string) => void;
   clientiBlocati: string[];
   abateriMap: Record<string, number>;
+  neprezentariMap: Record<string, number>;
+  marcheazaPrezenta: (id: string, aVenit: boolean) => void;
   toggleBlocClient: (userId: string) => void;
   highlightProgramare?: string | null;
   onHighlightConsumat?: () => void;
@@ -406,6 +421,18 @@ function AgendaCalendar({
   const total = apptsZi.length;
   const pending = apptsZi.filter(p => p.status === "în așteptare").sort((a, b) => a.ora < b.ora ? -1 : 1);
   const anulate = apptsZi.filter(p => p.status === "anulat").sort((a, b) => a.ora < b.ora ? -1 : 1);
+
+  /**
+   * Vizitele zilei a căror oră a trecut. Aplicația le-a marcat deja
+   * „finalizat" automat — aici salonul le poate corecta pe cele la care
+   * clientul n-a venit. Se arată doar pentru zile care nu sunt în viitor,
+   * și doar la programările venite din aplicație (cele adăugate manual la
+   * telefon nu au client care să lipsească).
+   */
+  const deVerificat = apptsZi
+    .filter(p => (p.status === "finalizat" || p.status === "neprezentat") && p.esteApp)
+    .filter(p => agendaZi < aziIso || (agendaZi === aziIso && (Number(p.ora.slice(0, 2)) * 60 + Number(p.ora.slice(3, 5))) <= nowMin))
+    .sort((a, b) => a.ora < b.ora ? -1 : 1);
 
   const navBtn: React.CSSProperties = { width: 34, height: 34, flexShrink: 0, borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface, color: c.text, fontSize: 18, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" };
 
@@ -632,6 +659,60 @@ function AgendaCalendar({
         </div>
       )}
 
+      {/* Vizitele încheiate — aici se marchează neprezentările */}
+      {deVerificat.length > 0 && (
+        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Vizite încheiate ({deVerificat.length})</div>
+          <div style={{ fontSize: 12, color: c.muted, marginTop: -4 }}>
+            Le trecem automat ca încheiate când ora a trecut. Dacă cineva n-a venit, spune-ne — iese din încasări.
+          </div>
+          {deVerificat.map(p => {
+            const neprezentat = p.status === "neprezentat";
+            const nrNeprez = p.user_id ? (neprezentariMap[p.user_id] || 0) : 0;
+            const blocat = !!p.user_id && clientiBlocati.includes(p.user_id);
+            return (
+              <div key={p.id} style={{ background: neprezentat ? (theme === "dark" ? "rgba(217,119,6,.08)" : "#FFFBEB") : c.surface, borderRadius: 14, padding: "12px 16px", border: `1.5px solid ${neprezentat ? "rgba(217,119,6,.4)" : c.border}`, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <div style={{ width: 46, height: 46, borderRadius: 11, background: neprezentat ? "rgba(217,119,6,.12)" : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: neprezentat ? "#D97706" : c.muted, flexShrink: 0 }}>{p.ora}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, color: c.text }}>{p.client}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+                    <Scissors size={12} color={c.muted} strokeWidth={2} /> {p.serviciu}{p.pret > 0 ? ` · ${p.pret} RON` : ""}
+                  </div>
+                  {neprezentat && (
+                    <div style={{ fontSize: 11.5, fontWeight: 800, color: "#D97706", marginTop: 5 }}>
+                      Nu s-a prezentat — nu intră la încasări
+                      {nrNeprez > 1 ? ` · ${nrNeprez} neprezentări în total` : ""}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+                  {neprezentat ? (
+                    <>
+                      <button onClick={() => marcheazaPrezenta(p.id, true)}
+                        style={{ padding: "7px 13px", borderRadius: 50, border: `1.5px solid ${c.border}`, background: "transparent", color: c.text2, fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                        Totuși a venit
+                      </button>
+                      {/* De la prima neprezentare salonul poate decide. Nu așteptăm un prag. */}
+                      {p.user_id && (
+                        <button onClick={() => toggleBlocClient(p.user_id)}
+                          style={{ padding: "7px 13px", borderRadius: 50, border: `1.5px solid ${blocat ? "#10B981" : "#EF4444"}`, background: "transparent", color: blocat ? "#10B981" : "#EF4444", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                          {blocat ? "✓ Deblochează" : "Blochează"}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <button onClick={() => marcheazaPrezenta(p.id, false)}
+                      style={{ padding: "7px 13px", borderRadius: 50, border: "1.5px solid rgba(217,119,6,.5)", background: "transparent", color: "#D97706", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                      Nu s-a prezentat
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Anulări de la client — sub calendar */}
       {anulate.length > 0 && (
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -838,7 +919,7 @@ export default function DashboardSalon() {
   const [perioadaStat, setPerioadaStat] = useState<PerioadaStat>("azi");
   const [customStart, setCustomStart] = useState<string>(isoData(new Date()));
   const [customEnd, setCustomEnd] = useState<string>(isoData(new Date()));
-  const [statExtins, setStatExtins] = useState<"venituri" | "programari" | "clienti" | "rating" | "servicii" | "talie" | null>(null);
+  const [statExtins, setStatExtins] = useState<"venituri" | "deIncasat" | "programari" | "clienti" | "rating" | "servicii" | "talie" | null>(null);
   const [raportDeschis, setRaportDeschis] = useState(false);
   const [raportSel, setRaportSel] = useState({ venituri: true, programari: true, clienti: true, servicii: true, talie: true });
   const [exportLoading, setExportLoading] = useState(false);
@@ -926,6 +1007,8 @@ export default function DashboardSalon() {
   const [animalDeschis, setAnimalDeschis] = useState<string | null>(null);
   const [clientiBlocati, setClientiBlocati] = useState<string[]>([]);
   const [abateriMap, setAbateriMap] = useState<Record<string, number>>({});
+  /** Neprezentări per client. Se numără separat: o neprezentare e mai gravă decât o anulare târzie. */
+  const [neprezentariMap, setNeprezentariMap] = useState<Record<string, number>>({});
   const [groomerOrarDeschis, setGroomerOrarDeschis] = useState<Record<number, boolean>>({});
   const [sloturiZi, setSloturiZi] = useState<SlotProgramare[]>([]);
   const [modalBlocare, setModalBlocare] = useState<{ slot: string; durata: number } | null>(null);
@@ -999,12 +1082,25 @@ export default function DashboardSalon() {
         autoFinalizeaza(salonRow.id);
         loadProgramari(salonRow.id);
         loadAbateri(salonRow.id);
+        loadNeprezentari(salonRow.id);
         loadAnimaleIstoric(salonRow.id, salonRow.domeniu !== "infrumusetare");
         loadNotificari(authUser.id);
       } else {
         // Fără rând de salon (wizard neterminat) tot am terminat de citit.
         setDatePregatite(true);
       }
+    }
+
+    /** Neprezentările fiecărui client — numărate separat de anulările târzii. */
+    async function loadNeprezentari(salonId: string) {
+      const { data } = await supabase
+        .from("programari")
+        .select("user_id")
+        .eq("salon_id", salonId)
+        .eq("status", "neprezentat");
+      const map: Record<string, number> = {};
+      (data || []).forEach((p: any) => { if (p.user_id) map[p.user_id] = (map[p.user_id] || 0) + 1; });
+      setNeprezentariMap(map);
     }
 
     async function loadAbateri(salonId: string) {
@@ -1466,6 +1562,24 @@ export default function DashboardSalon() {
     }
   }
 
+  /**
+   * „Nu s-a prezentat" / „A venit".
+   *
+   * Programările trecute devin automat `finalizat`, ca salonul să n-aibă de
+   * bifat nimic în zilele obișnuite. Butonul ăsta e pentru excepții: scoate
+   * vizita din încasări și o numără la neprezentările clientului.
+   *
+   * Clientul nu e notificat. E o însemnare internă a salonului, nu o acuzație
+   * trimisă pe telefonul omului.
+   */
+  async function marcheazaPrezenta(id: string, aVenit: boolean) {
+    const nou: StatusProg = aVenit ? "finalizat" : "neprezentat";
+    const { error } = await supabase.from("programari").update({ status: nou }).eq("id", id);
+    if (error) { salveaza("Nu am putut salva. Încearcă din nou."); return; }
+    setProgramari(p => p.map(pr => pr.id === id ? { ...pr, status: nou } : pr));
+    salveaza(aVenit ? "Marcat ca vizită încheiată." : "Marcat ca neprezentare — iese din încasări.");
+  }
+
   async function respinge(id: string) {
     const { error } = await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
     if (error) { console.error("Reject error:", error); return; }
@@ -1502,7 +1616,7 @@ export default function DashboardSalon() {
   async function genereazaRaportExcel() {
     const { start, end, label } = intervalPerioada(perioadaStat, customStart, customEnd);
     const inRange = (d: string) => d >= start && d <= end;
-    const esteVenit = (p: ProgramareSalon) => p.status === "confirmat" || p.status === "finalizat";
+    const esteVenit = (p: ProgramareSalon) => eIncasare(p.status);
     const progRange = programari.filter(p => inRange(p.data));
     const venitRange = progRange.filter(esteVenit);
     if (progRange.length === 0) { salveaza("Nicio programare în perioada aleasă"); return; }
@@ -2278,6 +2392,8 @@ export default function DashboardSalon() {
                 respinge={respinge}
                 clientiBlocati={clientiBlocati}
                 abateriMap={abateriMap}
+                neprezentariMap={neprezentariMap}
+                marcheazaPrezenta={marcheazaPrezenta}
                 toggleBlocClient={toggleBlocClient}
                 highlightProgramare={highlightProgramare}
                 onHighlightConsumat={() => setHighlightProgramare(null)}
@@ -2388,10 +2504,13 @@ export default function DashboardSalon() {
               const now = new Date();
               const { start, end, label: perLabel } = intervalPerioada(perioadaStat, customStart, customEnd);
               const inRange = (d: string) => d >= start && d <= end;
-              const isFinalizata = (p: ProgramareSalon) => p.status === "confirmat" || p.status === "finalizat";
               const progRange = programari.filter(p => inRange(p.data));
-              const venitRange = progRange.filter(isFinalizata);
+              const venitRange = progRange.filter(p => eIncasare(p.status));
               const incasariPer = venitRange.reduce((s, p) => s + (p.pret || 0), 0);
+              // Ce urmează în perioada aleasă — bani care încă n-au intrat.
+              const deIncasatRange = progRange.filter(p => eDeIncasat(p.status));
+              const deIncasatPer = deIncasatRange.reduce((s, p) => s + (p.pret || 0), 0);
+              const neprezentariPer = progRange.filter(p => p.status === "neprezentat").length;
               const clientiPer = new Set(progRange.map(p => p.user_id).filter(Boolean)).size;
               const asteptarePer = progRange.filter(p => p.status === "în așteptare").length;
 
@@ -2400,7 +2519,7 @@ export default function DashboardSalon() {
                 (zileMap[p.data] ||= { venit: 0, nr: 0, clienti: new Set<string>() });
                 zileMap[p.data].nr++;
                 if (p.user_id) zileMap[p.data].clienti.add(p.user_id);
-                if (isFinalizata(p)) zileMap[p.data].venit += p.pret || 0;
+                if (eIncasare(p.status)) zileMap[p.data].venit += p.pret || 0;
               });
               const zileBreakdown = Object.entries(zileMap)
                 .map(([data, v]) => ({ data, venit: v.venit, nr: v.nr, clienti: v.clienti.size }))
@@ -2442,7 +2561,7 @@ export default function DashboardSalon() {
               const prevEndD = new Date(start); prevEndD.setDate(prevEndD.getDate() - 1);
               const prevStartD = new Date(prevEndD); prevStartD.setDate(prevStartD.getDate() - (lenDays - 1));
               const prevStartIso = isoData(prevStartD), prevEndIso = isoData(prevEndD);
-              const incasariPrev = programari.filter(p => isFinalizata(p) && p.data >= prevStartIso && p.data <= prevEndIso).reduce((s, p) => s + (p.pret || 0), 0);
+              const incasariPrev = programari.filter(p => eIncasare(p.status) && p.data >= prevStartIso && p.data <= prevEndIso).reduce((s, p) => s + (p.pret || 0), 0);
               const deltaPct = incasariPrev > 0 ? Math.round(((incasariPer - incasariPrev) / incasariPrev) * 100) : null;
               const lunaCurenta = now.getMonth(), anulCurent = now.getFullYear();
               const LUNI_SCURT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"];
@@ -2452,7 +2571,7 @@ export default function DashboardSalon() {
                 const m = dt.getMonth(), y = dt.getFullYear();
                 const val = programari.filter(p => {
                   const d = new Date(p.data);
-                  return d.getMonth() === m && d.getFullYear() === y && isFinalizata(p);
+                  return d.getMonth() === m && d.getFullYear() === y && eIncasare(p.status);
                 }).reduce((s, p) => s + (p.pret || 0), 0);
                 ultimeleLuni.push({ luna: LUNI_SCURT[m], val });
               }
@@ -2470,8 +2589,13 @@ export default function DashboardSalon() {
                 ...(areAnimale ? [{ key: "talie" as const, label: "Distribuție talie" }] : []),
               ];
               const cards = [
-                { id: "venituri" as const, Icon: Wallet, label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`, sub: `${venitRange.length} programări`, color: "#10B981", clickable: true },
-                { id: "programari" as const, Icon: CalendarDays, label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${venitRange.length} confirmate`, color: "#FF6B00", clickable: true },
+                // „Încasări" înseamnă acum doar vizite chiar încheiate. Ce urmează
+                // stă separat, la „De încasat" — două cifre, amândouă adevărate.
+                { id: "venituri" as const, Icon: Wallet, label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`,
+                  sub: [`${venitRange.length} ${venitRange.length === 1 ? "vizită încheiată" : "vizite încheiate"}`, neprezentariPer > 0 ? `${neprezentariPer} ${neprezentariPer === 1 ? "neprezentare" : "neprezentări"}` : null].filter(Boolean).join(" · "),
+                  color: "#10B981", clickable: true },
+                { id: "deIncasat" as const, Icon: Clock, label: "De încasat", valoare: `${deIncasatPer} RON`, sub: `${deIncasatRange.length} ${deIncasatRange.length === 1 ? "programare confirmată" : "programări confirmate"}, încă neefectuate`, color: "#3B82F6", clickable: false },
+                { id: "programari" as const, Icon: CalendarDays, label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${deIncasatRange.length} confirmate`, color: "#FF6B00", clickable: true },
                 { id: "clienti" as const, Icon: Users, label: `Clienți ${perLabel.toLowerCase()}`, valoare: `${clientiPer}`, sub: `${incasariPer} RON încasați`, color: "#8B5CF6", clickable: true },
                 { id: "rating" as const, Icon: Star, label: "Rating mediu (total)", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B", clickable: true },
               ];
