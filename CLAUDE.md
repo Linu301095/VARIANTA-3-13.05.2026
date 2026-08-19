@@ -536,7 +536,17 @@ plus 11 fișiere care conțin domeniul și 6 locuri din interfață care trimit 
 | 3 | **Încasările** | Cont Stripe (cere IBAN pe firmă + CUI), integrare, webhook care pune `abonament_activ = true`, portal de facturi. | ~4 zile dev | primul salon plătitor |
 | 4 | **Facturarea** | SmartBill + transmitere în SPV ANAF. **e-Factura e obligatorie B2B din iulie 2024**, iar CalyHub facturează saloane. | — | conformitate |
 | 5 | **Juridic** | CUI afișat pe site (footer + Confidențialitate) · actualizarea politicii **înainte** de activarea Resend (devine procesator) · contract cadru B2B + DPA. | consultant | primul client real |
-| 6 | **SMS Twilio** | Ultima, poate niciodată. Cere firmă pusă la punct, sender ID aprobat de operatori (zile–săptămâni), card, și actualizarea politicii. | ~0.04–0.07 EUR/SMS | reminder 24h |
+| 6 | **SMS Twilio** | Ultima, poate niciodată. Cere firmă pusă la punct, sender ID aprobat de operatori (zile–săptămâni), card, și actualizarea politicii. | ~0.04–0.07 EUR/SMS | reminder 24h · **butonul „Trimite SMS" din agentul de clienți inactivi** |
+
+**⚠️ Ce așteaptă concret Twilio (punctul 7 din inventarul dashboardului salon):**
+în `app/dashboard/salon/page.tsx`, agentul „Clienți inactivi" are butonul **„Trimite SMS (în curând)"**,
+dezactivat, fără nicio acțiune în spate. Mesajele de reactivare se scriu deja cu Claude, deci textul
+e gata — lipsește doar canalul prin care pleacă. Când se face Twilio, butonul se leagă acolo.
+Până atunci salonul copiază mesajul și îl trimite singur, iar eticheta „(în curând)" spune adevărul.
+
+**De reevaluat atunci:** dacă până acolo există aplicația de telefon cu notificări push, reactivarea
+prin push e gratis și acoperă clienții care au aplicația instalată. SMS-ul rămâne util doar pentru
+ceilalți — vezi și nota despre permisiunea de notificări din TODO post-lansare.
 
 **Decizii luate în discuție:**
 
