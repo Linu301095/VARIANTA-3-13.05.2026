@@ -2153,6 +2153,7 @@ export default function DashboardSalon() {
   }
 
   async function stergeGalerie(url: string) {
+    if (!confirm("Ștergi poza din galerie?")) return;
     const updated = galerie.filter(u => u !== url);
     const { error } = await supabase.from("saloane").update({ galerie: updated }).eq("id", salonData.id);
     if (error) { salveaza("Nu am putut șterge poza. Încearcă din nou."); return; }
@@ -3934,7 +3935,15 @@ export default function DashboardSalon() {
                     <div key={s.id} style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}` }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                         <div style={{ fontSize: 13, fontWeight: 800, color: "#FF6B00" }}>Serviciul {i + 1}</div>
-                        <button onClick={() => setServicii(sv => sv.filter(x => x.id !== s.id))} style={{ fontSize: 12, color: c.xmuted, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕ Sterge</button>
+                        <button onClick={() => {
+                          // Ultimul serviciu nu se poate șterge: wizardul cere minimum
+                          // unul la înscriere, iar un salon fără servicii nu poate primi
+                          // nicio programare.
+                          if (servicii.length <= 1) { salveaza("Trebuie să rămână cel puțin un serviciu. Modifică-l pe acesta sau adaugă altul întâi."); return; }
+                          const nume = s.nume.trim() || "serviciul fără nume";
+                          if (!confirm(`Ștergi „${nume}"? Se pierd și prețurile pentru el.`)) return;
+                          setServicii(sv => sv.filter(x => x.id !== s.id));
+                        }} style={{ fontSize: 12, color: c.xmuted, background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕ Șterge</button>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <input value={s.nume} onChange={e => setServicii(sv => sv.map(x => x.id === s.id ? { ...x, nume: e.target.value } : x))} placeholder="Denumire serviciu" style={inp} />
@@ -3989,6 +3998,9 @@ export default function DashboardSalon() {
                 </div>
                 <button onClick={() => setServicii(sv => [...sv, { id: Date.now(), nume: "", pret: "", durata: "", preturi: { mica: "", medie: "", mare: "" }, durate: { mica: "", medie: "", mare: "" } }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga serviciu</button>
                 <button onClick={async () => {
+                  // Aceeași regulă ca în wizard: fără servicii, nimeni nu poate rezerva.
+                  const valide = servicii.filter(s => s.nume.trim());
+                  if (valide.length === 0) { salveaza("Adaugă cel puțin un serviciu cu denumire înainte să salvezi."); return; }
                   const { data: { user: authUser } } = await supabase.auth.getUser();
                   if (!authUser) { salveaza("Sesiunea a expirat. Reintră în cont."); return; }
                   const { error } = await supabase.from("saloane").update({ servicii }).eq("user_id", authUser.id);
@@ -4031,7 +4043,13 @@ export default function DashboardSalon() {
                               style={{ fontSize: 12, fontWeight: 800, color: orarDeschis ? "#FF6B00" : c.muted, background: orarDeschis ? c.orangeAccent : c.surface2, border: `1.5px solid ${orarDeschis ? "#FF6B00" : c.border}`, padding: "7px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                               Orar {orarDeschis ? "▲" : "▼"}
                             </button>
-                            <button onClick={() => setEchipa(ec => ec.filter(x => x.id !== g.id))} style={{ fontSize: 13, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "8px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
+                            <button onClick={() => {
+                              const nume = g.nume.trim() || `acest ${DS.rol}`;
+                              // Programările deja făcute pe numele lui rămân, dar apar
+                              // în agendă la „Fără specialist" — merită spus înainte.
+                              if (!confirm(`Ștergi pe ${nume}? Se pierd orarul și prețurile lui, iar programările deja făcute pe numele lui rămân fără specialist.`)) return;
+                              setEchipa(ec => ec.filter(x => x.id !== g.id));
+                            }} aria-label={`Șterge ${g.nume || "specialistul"}`} style={{ fontSize: 13, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "8px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
                           </div>
                         </div>
                         {orarDeschis && (
