@@ -1,4 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { claude } from "../../../../lib/claude";
+
+const HAIKU = "claude-haiku-4-5";
+
+/**
+ * Mesajul de reactivare pentru clienții care n-au mai venit.
+ *
+ * Detectarea clienților a fost mereu reală — se compară absența cu ritmul
+ * obișnuit al fiecăruia. **Mesajul** era însă tot un șablon ales la întâmplare,
+ * deși scria „sugerat de AI".
+ *
+ * Acum îl scrie Claude, pentru fiecare client în parte: cât a trecut, ce
+ * serviciu prefera, cum îl cheamă pe animal. Se trimit toți clienții într-o
+ * singură cerere, ca să nu plătim de zece ori antetul.
+ *
+ * Costă sub o jumătate de ban per client. Se apasă rar — reactivarea are și
+ * un răgaz de 24 de ore între analize.
+ */
 
 type ClientRisc = {
   userId: string;
@@ -80,10 +98,71 @@ export async function POST(req: NextRequest) {
   const reducereVal = typeof reducere === "number" && reducere > 0 ? reducere : 0;
   const codVal = reducereVal > 0 && cod ? cod : "";
 
-  const rezultate = clienti.slice(0, 10).map((c) => {
+  const lot = clienti.slice(0, 10);
+
+  // ── Mesajele scrise de Claude, toate într-o singură cerere ──
+  if (process.env.ANTHROPIC_API_KEY) {
+    const eBeauty = req.headers.get("x-domeniu") === "infrumusetare";
+    const system = [
+      eBeauty
+        ? "Ești proprietarul unui salon de înfrumusețare din România și scrii unor clienți care n-au mai venit de ceva vreme."
+        : "Ești proprietarul unui salon de îngrijire animale din România și scrii unor clienți care n-au mai venit de ceva vreme.",
+      "",
+      "Reguli:",
+      "- Un mesaj scurt pentru fiecare client, 1-2 propoziții, ca pentru WhatsApp.",
+      "- Pornește de la ce știi despre el: de cât timp n-a mai venit, ce serviciu făcea de obicei" + (eBeauty ? "." : ", cum îl cheamă pe animal."),
+      "- Ton prietenos și firesc, ca de la om la om. Fără limbaj de reclamă, fără majuscule, fără emoji peste unul.",
+      "- Nu-l face să se simtă dator sau vinovat că n-a venit.",
+      reducereVal > 0
+        ? `- Menționează discret reducerea de ${reducereVal}% cu codul ${codVal}.`
+        : "- Nu inventa reduceri sau oferte.",
+      "",
+      "Răspunde DOAR cu un array JSON de forma [{\"i\": 0, \"mesaj\": \"...\"}], câte un obiect pentru fiecare client, în ordinea primită. Fără alt text.",
+    ].join("\n");
+
+    const lista = lot.map((c, i) => [
+      `#${i}`,
+      `client: ${c.numeClient || "necunoscut"}`,
+      c.numeAnimal ? `animal: ${c.numeAnimal}${c.rasaAnimal ? ` (${c.rasaAnimal})` : ""}` : null,
+      `ultimul serviciu: ${c.ultimulServiciu || "necunoscut"}`,
+      `nu a mai venit de ${c.zileAbsenta} zile (de obicei revine la ${c.intervalMediu} zile)`,
+    ].filter(Boolean).join(", ")).join("\n");
+
+    try {
+      const msg = await claude.messages.create({
+        model: HAIKU,
+        max_tokens: 900,
+        system,
+        messages: [{ role: "user", content: lista }],
+      });
+      const brut = (msg.content as any[])
+        .filter((b: any) => b.type === "text")
+        .map((b: any) => b.text as string)
+        .join("")
+        .trim();
+      const potrivit = brut.match(/\[[\s\S]*\]/);
+      if (potrivit) {
+        const parsate = JSON.parse(potrivit[0]) as { i: number; mesaj: string }[];
+        const dupaIndex = new Map(parsate.map(p => [p.i, String(p.mesaj || "").trim()]));
+        const rezultateAI = lot.map((c, i) => ({
+          ...c,
+          // Dacă modelul a sărit un client, cade pe șablon doar acela.
+          mesajAI: dupaIndex.get(i) || genereazaMesaj(c, reducereVal, codVal),
+          cod: codVal,
+          reducere: reducereVal,
+        }));
+        return NextResponse.json({ clienti: rezultateAI, sursa: "ai" });
+      }
+    } catch (err) {
+      console.error("clienti-risc: Claude a esuat, folosim sabloanele.", err);
+    }
+  }
+
+  // ── Plasa de siguranță: mesaje gata scrise ──
+  const rezultate = lot.map((c) => {
     const mesajAI = genereazaMesaj(c, reducereVal, codVal);
     return { ...c, mesajAI, cod: codVal, reducere: reducereVal };
   });
 
-  return NextResponse.json({ clienti: rezultate });
+  return NextResponse.json({ clienti: rezultate, sursa: "sablon" });
 }

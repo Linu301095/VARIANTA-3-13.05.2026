@@ -1687,7 +1687,7 @@ export default function DashboardSalon() {
       const cod = reducereRisc > 0 ? `REVIN${reducereRisc}` : "";
       const res = await fetch("/api/ai/clienti-risc", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-domeniu": areAnimale ? "grooming" : "infrumusetare" },
         body: JSON.stringify({ clienti: clientiPayload, reducere: reducereRisc, cod }),
       });
       const json = await res.json();
@@ -1808,7 +1808,16 @@ export default function DashboardSalon() {
     });
   }
 
+  /**
+   * Fișa se scrie o singură dată per programare.
+   *
+   * Fără limita asta, „Regenerează" ar putea fi apăsat la nesfârșit: fiecare
+   * apăsare costă circa un ban, iar zece apăsări pe fiecare programare ar face
+   * din 5 lei pe lună, 50. Textul rămâne editabil de mână după generare.
+   */
   async function genereazaFisa(p: ProgramareSalon) {
+    // Deja scrisă pentru programarea asta — nu mai plătim încă o generare.
+    if (fisaState[p.id]?.draft) return;
     setFisa(p.id, { generand: true, eroare: null });
     try {
       const res = await fetch("/api/ai/fisa-ingrijire", {
@@ -3190,10 +3199,11 @@ export default function DashboardSalon() {
                                     />
                                     {st.eroare && <div style={{ fontSize: 11.5, color: "#DC2626", marginTop: 6 }}>{st.eroare}</div>}
                                     <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                                      <button onClick={() => genereazaFisa(p)} disabled={st.generand}
-                                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "1.5px solid #3B82F6", background: "transparent", color: "#3B82F6", fontSize: 12, fontWeight: 800, cursor: st.generand ? "default" : "pointer", opacity: st.generand ? .6 : 1, fontFamily: "Nunito, sans-serif" }}>
-                                        <Sparkles size={13} strokeWidth={2} /> Regenerează
-                                      </button>
+                                      {/* Fișa se scrie o singură dată. Textul rămâne editabil
+                                          de mână, dar nu se mai cere alta de la model. */}
+                                      <span style={{ fontSize: 11.5, color: c.xmuted, alignSelf: "center" }}>
+                                        Poți edita textul înainte să-l trimiți.
+                                      </span>
                                       <button onClick={() => trimiteFisa(p)} disabled={st.generand || st.trimitand || !st.draft.trim()}
                                         style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 50, border: "none", background: "#3B82F6", color: "#fff", fontSize: 12, fontWeight: 800, cursor: (st.generand || st.trimitand || !st.draft.trim()) ? "default" : "pointer", opacity: (st.generand || st.trimitand || !st.draft.trim()) ? .5 : 1, fontFamily: "Nunito, sans-serif" }}>
                                         <Send size={13} strokeWidth={2} /> {st.trimitand ? "Se trimite…" : "Trimite clientului"}

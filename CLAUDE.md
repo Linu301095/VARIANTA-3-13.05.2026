@@ -209,32 +209,35 @@ tabul „Profilul salonului" → sub Descriere → „Cu ce animale lucrezi". Ap
 la saloanele de grooming (`areAnimale`), se salvează în `saloane.specii` odată cu
 restul datelor de profil și nu se poate salva cu lista goală.
 
-## ⚠️ ETAPĂ ÎNAINTE DE LANSARE — Agenții AI: șabloane vs. model real
+## Agenții AI — toți patru folosesc modele reale (12.08.2026)
 
-**DE AMINTIT LA FIECARE REZUMAT DE STARE, până e rezolvată.**
+Până azi, trei din patru erau șabloane vândute ca AI. Acum:
 
-Stare măsurată (03.08.2026) — din cei 4 agenți promovați ca „asistenți AI",
-**doar unul folosește efectiv un model**:
-
-| Agent | Implementare | Cost tokeni |
+| Agent | Model | Cost / generare |
 |---|---|---|
-| Răspunsuri la recenzii | șabloane (`app/api/ai/raspuns-recenzie/route.ts`) | 0 |
-| Alertă clienți inactivi | șabloane (`app/api/ai/clienti-risc/route.ts`) | 0 |
-| Recomandări după vizită / Fișă post-grooming | șabloane (`app/api/ai/fisa-ingrijire/route.ts`) | 0 |
-| **Consultant AI** | **Haiku 4.5** (`app/api/ai/consultant/route.ts`) | plătit |
+| Răspunsuri la recenzii | Haiku 4.5 | ~0,5 bani |
+| Alertă clienți inactivi | Haiku 4.5 (mesajele; detecția era deja reală) | ~0,4 bani / client |
+| Fișă îngrijire / Recomandări după vizită | Haiku 4.5 | ~1,1 bani |
+| Consultant AI | Haiku 4.5 | ~3–5 bani / raport |
 
-Frâne deja puse pe Consultant: rapoartele se salvează în `consultant_rapoarte`
-(cache, nu se regenerează), întrebările libere sunt limitate la 5/lună prin
-`consultant_utilizare`. Limite: 700 tokeni la rapoarte, 400 la întrebări.
+**Toate au șabloanele vechi ca plasă de siguranță:** dacă lipsește
+`ANTHROPIC_API_KEY` sau pică serviciul, salonul primește tot ceva utilizabil,
+iar răspunsul spune `sursa: "sablon"` în loc de `"ai"`.
 
-**Problema:** pe `/instrumente-ai` toți patru sunt prezentați ca „asistenți AI".
-Pentru trei dintre ei e automatizare pe reguli, nu AI. Nu e o minciună gravă și e
-practică obișnuită, dar la o întrebare tehnică directă răspunsul onest e altul.
+**Frâne puse pe cost:**
+- **Fișa se generează o singură dată per programare** (`genereazaFisa` iese devreme dacă
+  există deja `draft`). Butonul „Regenerează" a fost scos — textul rămâne editabil de mână.
+- Mesajele de reactivare pentru toți clienții se cer **într-o singură cerere**, nu una per client.
+- Consultantul: rapoartele se salvează în `consultant_rapoarte` (cache), întrebările libere sunt
+  limitate la 5/lună prin `consultant_utilizare`.
 
-**De făcut înainte de lansare — prioritatea 1:** convertirea agentului de
-**răspunsuri la recenzii** la model real. Acolo personalizarea chiar se vede —
-AI-ul ar răspunde la *ce a scris* clientul, nu doar la câte stele a dat. Cu Haiku,
-costul e neglijabil. Ceilalți doi pot rămâne pe șabloane.
+**Simulare (curs 4,6 lei/USD, Haiku la $1/$5 per milion de tokeni):** un salon cu 20 de
+programări pe zi și fișă la fiecare costă **~4,8 lei/lună** — 2,6% din abonamentul Business.
+La 200 de saloane, în cel mai negru scenariu, ~980 lei/lună.
+
+**De pus înainte de lansare:** un plafon lunar în console.anthropic.com → Limits.
+
+**Rămâne șablon, dar nu se numește AI:** postările sociale („În curând", neimplementate).
 
 **De reevaluat separat:** agentul de predicție rebooking (vezi
 `docs/BLUEPRINT-MULTI-VERTICALA.md` §9).

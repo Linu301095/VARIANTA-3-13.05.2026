@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { claude } from "../../../../lib/claude";
 
-// Fișă de îngrijire post-grooming generată din șabloane (fără cost tokeni).
-// Personalizare pe tip de blană (dedus din rasă) + serviciul efectuat.
+const HAIKU = "claude-haiku-4-5";
+
+/**
+ * Fișa trimisă clientului după vizită.
+ *
+ * Până acum era un tabel fix: se ghicea tipul de blană din numele rasei și se
+ * întorcea același text pentru toți câinii cu blană dublă. Pe card scria „Fișă
+ * AI", ceea ce nu era adevărat.
+ *
+ * Acum o scrie Claude, pornind de la animalul și serviciile reale. Șabloanele
+ * au rămas dedesubt ca plasă de siguranță — dacă lipsește cheia sau pică
+ * serviciul, salonul primește tot ceva utilizabil.
+ *
+ * Costă circa un ban pe fișă. Dashboardul o generează o singură dată per
+ * programare, ca să nu se poată apăsa la nesfârșit.
+ */
 
 function faraDiacritice(s: string): string {
   return s
@@ -239,6 +254,64 @@ function sfatServiciu(serviciu: string): string {
 
 export async function POST(req: NextRequest) {
   const { animal, rasa, serviciu, specie, salonNume, domeniu, client } = await req.json();
+
+  // ── Fișa scrisă de Claude ──
+  if (process.env.ANTHROPIC_API_KEY) {
+    const eBeauty = domeniu === "infrumusetare";
+    const numeClient = (client && String(client).trim().split(" ")[0]) || null;
+
+    const system = eBeauty
+      ? [
+          "Ești specialistul dintr-un salon de înfrumusețare din România și scrii clientului, după vizită, câteva recomandări de întreținere acasă.",
+          "",
+          "Reguli:",
+          "- Recomandările trebuie să fie despre SERVICIUL chiar efectuat. La vopsit vorbește despre culoare și șampon potrivit; la manichiură despre unghii; la tratament facial despre ten. Nu da sfaturi generale.",
+          "- Structură: un titlu scurt, o propoziție de introducere, 4-6 puncte care încep cu •, apoi o propoziție despre când merită revenit.",
+          "- Ton cald și practic, fără termeni tehnici. Text simplu, fără markdown și fără asteriscuri.",
+          "- Nu inventa produse cu nume comercial și nu promite rezultate.",
+          "- Maximum 180 de cuvinte.",
+        ].join("\n")
+      : [
+          "Ești groomerul dintr-un salon de îngrijire animale din România și scrii stăpânului, după vizită, o fișă de îngrijire pentru acasă.",
+          "",
+          "Reguli:",
+          "- Sfaturile trebuie potrivite RASEI și tipului de blană al animalului, și SERVICIILOR chiar efectuate. Un pudel tuns scurt și un husky deshedding primesc lucruri diferite.",
+          "- Vorbește despre animal pe nume.",
+          "- Structură: un titlu scurt, o propoziție de introducere, 4-6 puncte care încep cu •, apoi o propoziție despre peste cât timp merită revenit.",
+          "- Ton cald și practic. Text simplu, fără markdown și fără asteriscuri.",
+          "- Nu da sfaturi veterinare și nu recomanda medicamente. Dacă ceva ține de sănătate, spune să întrebe medicul veterinar.",
+          "- Maximum 180 de cuvinte.",
+        ].join("\n");
+
+    const detalii = [
+      salonNume ? `Salon: ${salonNume}` : null,
+      numeClient ? `Client: ${numeClient}` : null,
+      !eBeauty && animal ? `Animal: ${animal}` : null,
+      !eBeauty && rasa ? `Rasă: ${rasa}` : null,
+      !eBeauty && specie ? `Specie: ${specie}` : null,
+      serviciu ? `Servicii efectuate: ${serviciu}` : null,
+      salonNume ? `Semnează la final cu: — Echipa ${salonNume}` : null,
+    ].filter(Boolean).join("\n");
+
+    try {
+      const msg = await claude.messages.create({
+        model: HAIKU,
+        max_tokens: 500,
+        system,
+        messages: [{ role: "user", content: detalii || "Scrie o fișă generală de îngrijire." }],
+      });
+      const scris = (msg.content as any[])
+        .filter((b: any) => b.type === "text")
+        .map((b: any) => b.text as string)
+        .join("")
+        .trim();
+      if (scris) return NextResponse.json({ fisa: scris, sursa: "ai" });
+    } catch (err) {
+      console.error("fisa-ingrijire: Claude a esuat, folosim sabloanele.", err);
+    }
+  }
+
+  // ── Plasa de siguranță: șabloane pe tip de blană / serviciu ──
 
   // Saloanele de înfrumusețare primesc recomandări pentru client, nu pentru animal.
   if (domeniu === "infrumusetare") {
