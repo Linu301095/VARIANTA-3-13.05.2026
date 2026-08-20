@@ -10,6 +10,16 @@ function formateazaSnapshot(s: any, rolPlural: string): string {
     `Programari luna curenta: ${s.programari.lunaCurenta} (${semn(s.programari.variatieProc)} fata de luna trecuta: ${s.programari.lunaAnterioara})`,
     `Incasari luna curenta: ${s.incasari.lunaCurenta} RON (${semn(s.incasari.variatieProc)} fata de luna trecuta: ${s.incasari.lunaAnterioara} RON)`,
   ];
+  // Salonul poate lasa necompletat pretul la programarile luate la telefon.
+  // Fara mentiunea asta, consultantul ar interpreta suma ca fiind venitul
+  // intreg si ar semnala scaderi care nu exista.
+  if (s.incasari?.faraPret > 0) {
+    linii.push(
+      `ATENTIE: ${s.incasari.faraPret} dintre vizitele incheiate luna aceasta nu au pretul completat ` +
+      `(de obicei programari luate la telefon). Suma incasarilor de mai sus este incompleta — ` +
+      `spune asta explicit daca vorbesti despre venituri, si sugereaza completarea preturilor.`
+    );
+  }
   if (s.topServicii?.length > 0) {
     linii.push(`Top servicii: ${s.topServicii.map((sv: any) => `${sv.nume} (${sv.count}x, ${sv.venit} RON)`).join("; ")}`);
   }

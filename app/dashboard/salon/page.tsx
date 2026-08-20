@@ -33,6 +33,8 @@ type ProgramareSalon = {
   groomer?: string | null;
   status: StatusProg;
   esteApp: boolean;
+  /** „app" | „telefonic" | „walkin" | „blocaj" — pauzele nu intră în statistici. */
+  sursa?: string | null;
   motivAnulare?: string | null;
   observatii?: string | null;
 };
@@ -120,6 +122,15 @@ const ANULARI_PANA_LA_AVERTISMENT = 3;
  * își vedea cifrele umflate și n-avea cum să le corecteze.
  */
 const eIncasare = (status: string) => status === "finalizat";
+
+/**
+ * Pauzele nu sunt vizite.
+ *
+ * Când salonul blochează o oră pentru pauză, se salvează tot ca rând în
+ * `programari` — altfel calendarul n-ar ști că e ocupat. Dar nu e nici client,
+ * nici bani: n-are ce căuta în statistici sau în raportul Excel.
+ */
+const ePauza = (sursa?: string | null) => sursa === "blocaj";
 
 /** Ce urmează: confirmat, dar încă neefectuat. Se arată separat de încasări. */
 const eDeIncasat = (status: string) => status === "confirmat";
@@ -770,7 +781,9 @@ function computeSnapshot(
   const prevAn = lunaIdx === 0 ? an - 1 : an;
   const isoLunaAnt = `${prevAn}-${pad(prevIdx + 1)}`;
 
-  const fin = programari.filter(p => p.status === "finalizat");
+  // Pauzele nu sunt vizite — nu au ce căuta în datele pe care le analizează
+  // consultantul, altfel îi dă sfaturi pornind de la ore libere.
+  const fin = programari.filter(p => p.status === "finalizat" && p.sursa !== "blocaj");
   const lunaAc = fin.filter(p => p.data.startsWith(isoLunaAc));
   const lunaAnt = fin.filter(p => p.data.startsWith(isoLunaAnt));
   const venAc = lunaAc.reduce((s, p) => s + p.pret, 0);
@@ -840,6 +853,10 @@ function computeSnapshot(
       lunaCurenta: venAc,
       lunaAnterioara: venAnt,
       variatieProc: venAnt > 0 ? Math.round(((venAc - venAnt) / venAnt) * 100) : 0,
+      // Vizite încheiate fără preț completat — de obicei cele de la telefon.
+      // Consultantul trebuie să știe că suma e incompletă, ca să nu tragă
+      // concluzii despre o scădere de venit care nu s-a întâmplat.
+      faraPret: lunaAc.filter(p => !p.pret || p.pret <= 0).length,
     },
     topServicii,
     ziSaptamana,
@@ -1014,6 +1031,12 @@ export default function DashboardSalon() {
   const [modalBlocare, setModalBlocare] = useState<{ slot: string; durata: number } | null>(null);
   const [tipBlocare, setTipBlocare] = useState<"telefonic" | "walkin" | "blocaj">("telefonic");
   const [numeBlocare, setNumeBlocare] = useState("");
+  /** Serviciul ales din lista salonului la o programare telefonică. Gol = niciunul. */
+  const [serviciuBlocare, setServiciuBlocare] = useState("");
+  /** Prețul, opțional. Gol înseamnă „doar programare, fără încasare". */
+  const [pretBlocare, setPretBlocare] = useState("");
+  /** Salonul decide dacă vrea clientul în istoric sau doar ora blocată. */
+  const [tineMinteClient, setTineMinteClient] = useState(false);
   const [durataBlocare, setDurataBlocare] = useState(60);
   const [groomerBlocare, setGroomerBlocare] = useState<string>("toti");
   const [groomerProgramTab, setGroomerProgramTab] = useState<string>("toti");
@@ -1276,6 +1299,7 @@ export default function DashboardSalon() {
           pret: Number(p.pret) || 0,
           status: p.status as StatusProg,
           esteApp,
+          sursa: p.sursa || "app",
           motivAnulare: p.motiv_anulare || null,
           groomer: p.groomer || null,
           observatii: p.observatii || null,
@@ -1617,7 +1641,7 @@ export default function DashboardSalon() {
     const { start, end, label } = intervalPerioada(perioadaStat, customStart, customEnd);
     const inRange = (d: string) => d >= start && d <= end;
     const esteVenit = (p: ProgramareSalon) => eIncasare(p.status);
-    const progRange = programari.filter(p => inRange(p.data));
+    const progRange = programari.filter(p => inRange(p.data) && !ePauza(p.sursa));
     const venitRange = progRange.filter(esteVenit);
     if (progRange.length === 0) { salveaza("Nicio programare în perioada aleasă"); return; }
     setExportLoading(true);
@@ -2132,26 +2156,35 @@ export default function DashboardSalon() {
   async function blocheazaSlot() {
     if (!salonData?.id || !userId || !modalBlocare) return;
     const sursa = tipBlocare;
-    const serviciu = tipBlocare === "blocaj" ? "Pauză / Indisponibil" : tipBlocare === "walkin" ? "Walk-in" : "Programare telefonică";
+    const implicit = tipBlocare === "blocaj" ? "Pauză / Indisponibil" : tipBlocare === "walkin" ? "Walk-in" : "Programare telefonică";
+    // Serviciul ales din listă înlocuiește eticheta generică — apoi statisticile
+    // pe servicii îl numără la fel ca pe o rezervare din aplicație.
+    const serviciu = tipBlocare !== "blocaj" && serviciuBlocare ? serviciuBlocare : implicit;
+    const pretNum = tipBlocare !== "blocaj" ? Number(pretBlocare) || 0 : 0;
     const { data: nou, error } = await supabase.from("programari").insert({
       user_id: userId,
       salon_id: salonData.id,
       serviciu,
-      pret: 0,
+      pret: pretNum,
       data: zilaSelectata,
       ora: modalBlocare.slot,
       durata: durataBlocare,
       status: "confirmat",
       sursa,
-      nume_client_extern: numeBlocare.trim() || null,
+      // Numele se salvează doar dacă salonul a cerut să ținem minte clientul.
+      // Fără el, rândul rămâne o oră blocată, fără nicio persoană în spate.
+      nume_client_extern: tipBlocare !== "blocaj" && tineMinteClient ? (numeBlocare.trim() || null) : null,
       groomer: groomerBlocare === "toti" ? null : groomerBlocare,
     }).select("id, ora, durata, status, sursa, serviciu, nume_client_extern, groomer").single();
     if (error || !nou) { salveaza("Eroare la blocare"); console.error(error); return; }
     setSloturiZi(s => [...s, nou as SlotProgramare]);
     setModalBlocare(null);
     setNumeBlocare("");
+    setServiciuBlocare("");
+    setPretBlocare("");
+    setTineMinteClient(false);
     setGroomerBlocare("toti");
-    salveaza("Slot blocat");
+    salveaza(tipBlocare === "blocaj" ? "Oră blocată" : pretNum > 0 ? "Programare adăugată" : "Programare adăugată — fără preț");
   }
 
   async function deblocheazaSlot(id: string) {
@@ -2504,8 +2537,11 @@ export default function DashboardSalon() {
               const now = new Date();
               const { start, end, label: perLabel } = intervalPerioada(perioadaStat, customStart, customEnd);
               const inRange = (d: string) => d >= start && d <= end;
-              const progRange = programari.filter(p => inRange(p.data));
+              const progRange = programari.filter(p => inRange(p.data) && !ePauza(p.sursa));
               const venitRange = progRange.filter(p => eIncasare(p.status));
+              // Vizite încheiate cărora salonul n-a completat prețul — de obicei
+              // cele de la telefon. Cifra de încasări e incompletă cu ele.
+              const faraPret = venitRange.filter(p => !p.pret || p.pret <= 0).length;
               const incasariPer = venitRange.reduce((s, p) => s + (p.pret || 0), 0);
               // Ce urmează în perioada aleasă — bani care încă n-au intrat.
               const deIncasatRange = progRange.filter(p => eDeIncasat(p.status));
@@ -2592,7 +2628,11 @@ export default function DashboardSalon() {
                 // „Încasări" înseamnă acum doar vizite chiar încheiate. Ce urmează
                 // stă separat, la „De încasat" — două cifre, amândouă adevărate.
                 { id: "venituri" as const, Icon: Wallet, label: `Încasări ${perLabel.toLowerCase()}`, valoare: `${incasariPer} RON`,
-                  sub: [`${venitRange.length} ${venitRange.length === 1 ? "vizită încheiată" : "vizite încheiate"}`, neprezentariPer > 0 ? `${neprezentariPer} ${neprezentariPer === 1 ? "neprezentare" : "neprezentări"}` : null].filter(Boolean).join(" · "),
+                  sub: [
+                    `${venitRange.length} ${venitRange.length === 1 ? "vizită încheiată" : "vizite încheiate"}`,
+                    faraPret > 0 ? `${faraPret} fără preț completat` : null,
+                    neprezentariPer > 0 ? `${neprezentariPer} ${neprezentariPer === 1 ? "neprezentare" : "neprezentări"}` : null,
+                  ].filter(Boolean).join(" · "),
                   color: "#10B981", clickable: true },
                 { id: "deIncasat" as const, Icon: Clock, label: "De încasat", valoare: `${deIncasatPer} RON`, sub: `${deIncasatRange.length} ${deIncasatRange.length === 1 ? "programare confirmată" : "programări confirmate"}, încă neefectuate`, color: "#3B82F6", clickable: false },
                 { id: "programari" as const, Icon: CalendarDays, label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${deIncasatRange.length} confirmate`, color: "#FF6B00", clickable: true },
@@ -3771,11 +3811,63 @@ export default function DashboardSalon() {
                           ))}
                         </div>
 
+                        {/* Doar la clienți reali. La pauză nu se cere nimic — e o oră
+                            blocată, nu o vizită, și nu intră în nicio statistică. */}
                         {tipBlocare !== "blocaj" && (
-                          <div style={{ marginBottom: 16 }}>
-                            <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 6 }}>Nume client (opțional)</div>
-                            <input value={numeBlocare} onChange={e => setNumeBlocare(e.target.value)} placeholder="Ex: Maria, Bibi" style={inp} />
-                          </div>
+                          <>
+                            {servicii.length > 0 && (
+                              <div style={{ marginBottom: 16 }}>
+                                <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 6 }}>Serviciu <span style={{ color: c.xmuted, fontWeight: 600 }}>(opțional)</span></div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                  {servicii.filter(sv => sv.nume.trim()).map(sv => {
+                                    const ales = serviciuBlocare === sv.nume;
+                                    return (
+                                      <button key={sv.id} onClick={() => {
+                                        if (ales) { setServiciuBlocare(""); return; }
+                                        setServiciuBlocare(sv.nume);
+                                        // Prețul și durata se completează singure, ca la
+                                        // rezervarea din aplicație. Pot fi schimbate după.
+                                        const p = sv.pret || sv.preturi?.medie || "";
+                                        if (p) setPretBlocare(String(p));
+                                        const d = Number(sv.durata || sv.durate?.medie || 0);
+                                        if (d > 0) setDurataBlocare(d);
+                                      }}
+                                        style={{ padding: "8px 13px", borderRadius: 50, border: ales ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: ales ? c.orangeAccent : c.surface, color: ales ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                                        {sv.nume}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 6 }}>Preț încasat <span style={{ color: c.xmuted, fontWeight: 600 }}>(opțional)</span></div>
+                              <input value={pretBlocare} onChange={e => setPretBlocare(e.target.value)} type="number" placeholder="—" style={inp} />
+                              <div style={{ fontSize: 11, color: c.muted, marginTop: 6, lineHeight: 1.5 }}>
+                                {pretBlocare
+                                  ? "Intră la Încasări, ca orice vizită."
+                                  : "Fără preț, se numără doar la Programări — nu la Încasări."}
+                              </div>
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 6 }}>Nume client <span style={{ color: c.xmuted, fontWeight: 600 }}>(opțional)</span></div>
+                              <input value={numeBlocare} onChange={e => setNumeBlocare(e.target.value)} placeholder="Ex: Maria Popescu" style={inp} />
+                              <button onClick={() => setTineMinteClient(v => !v)}
+                                style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
+                                <span style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, border: tineMinteClient ? "none" : `1.5px solid ${c.border}`, background: tineMinteClient ? "#FF6B00" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  {tineMinteClient && <span style={{ color: "#fff", fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                                </span>
+                                <span style={{ fontSize: 12.5, color: c.text2, fontWeight: 700 }}>Ține minte clientul</span>
+                              </button>
+                              <div style={{ fontSize: 11, color: c.muted, marginTop: 6, lineHeight: 1.5 }}>
+                                {tineMinteClient
+                                  ? "Apare în Istoric clienți, cu vizitele lui."
+                                  : "Ora se blochează, dar nu reținem pe nimeni."}
+                              </div>
+                            </div>
+                          </>
                         )}
 
                         {echipa.length > 0 && (
