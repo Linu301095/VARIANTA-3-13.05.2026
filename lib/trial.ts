@@ -29,17 +29,36 @@ function zileIntre(de: Date, pana: Date): number {
 
 /**
  * Starea salonului, calculată din datele lui.
- * `abonamentActiv` devine true abia când vom avea plăți (Stripe).
+ *
+ * ATENȚIE: „abonat" se întoarce DOAR când `abonament_activ` e true în bază.
+ * Nimic altceva nu poate produce cuvântul ăsta. Înainte, un salon fără dată de
+ * trial era declarat abonat — apărea cu „Abonament activ" în dashboard și
+ * intra la „MRR real (încasat)" în admin, deși nu plătise nimeni nimic.
+ *
+ * Pentru salonul fără `trial_expira_la` folosim `created_at + ZILE_TRIAL`:
+ * e fix ce ar fi primit dacă trialul ar fi existat la înscrierea lui, și nu se
+ * reîncarcă la fiecare intrare în cont, cum s-ar întâmpla dacă am porni
+ * trialul „de acum".
  */
 export function stareTrial(
   trialExpiraLa: string | null | undefined,
   abonamentActiv?: boolean | null,
+  creatLa?: string | null,
   acum: Date = new Date()
 ): StareTrial {
   if (abonamentActiv) return { stare: "abonat" };
-  if (!trialExpiraLa) return { stare: "abonat" }; // saloane vechi, fără trial înregistrat
 
-  const expira = new Date(trialExpiraLa);
+  const expira = trialExpiraLa
+    ? new Date(trialExpiraLa)
+    : creatLa
+      ? new Date(new Date(creatLa).getTime() + ZILE_TRIAL * 24 * 60 * 60 * 1000)
+      : null;
+
+  // Fără nicio dată nu putem ști nimic. Nu inventăm nici abonament, nici
+  // expirare: îl tratăm ca pe un trial care se încheie azi — banner portocaliu,
+  // nu roșu, și în niciun caz numărat ca salon plătitor.
+  if (!expira) return { stare: "trial", zileRamase: 0 };
+
   const zileRamase = zileIntre(acum, expira);
 
   if (zileRamase >= 0) return { stare: "trial", zileRamase };

@@ -214,7 +214,7 @@ export default function AdminDashboard() {
 
         {tab === "overview" && <OverviewTab data={filtrat} tot={data} vert={vert} />}
         {tab === "stapani" && <ClientiTab data={data} />}
-        {tab === "saloane" && <SaloaneTab data={filtrat} />}
+        {tab === "saloane" && <SaloaneTab data={filtrat} onReload={regenerateData} />}
         {tab === "programari" && <ProgramariTab data={filtrat} />}
         {tab === "abonamente" && <AbonamenteTab data={filtrat} />}
         {tab === "reviews" && <RecenziiTab data={filtrat} />}
@@ -288,7 +288,7 @@ async function fetchAdminData(): Promise<AdminData> {
     const owner = profMap.get(s.user_id);
     const k = String(s.id);
     const agg = ratingAcc.get(k);
-    const st = stareTrial(s.trial_expira_la, s.abonament_activ);
+    const st = stareTrial(s.trial_expira_la, s.abonament_activ, s.created_at);
     return {
       id: k,
       nume: s.nume || "Salon",
@@ -601,8 +601,11 @@ function ClientiTab({ data }: { data: AdminData }) {
 
 /* ══════════════ SALOANE ══════════════ */
 
-function SaloaneTab({ data }: { data: AdminData }) {
+function SaloaneTab({ data, onReload }: { data: AdminData; onReload: () => Promise<void> }) {
   const [search, setSearch] = useState("");
+  /** Salonul asupra căruia se scrie chiar acum — ca butonul lui să se blocheze. */
+  const [lucreaza, setLucreaza] = useState<string | null>(null);
+  const [eroareStare, setEroareStare] = useState("");
   const [filterPlan, setFilterPlan] = useState("");
   const [filterStare, setFilterStare] = useState("");
   const [filterOras, setFilterOras] = useState("");
@@ -614,6 +617,30 @@ function SaloaneTab({ data }: { data: AdminData }) {
     (filterStare === "" || s.stare === filterStare) &&
     (filterOras === "" || s.oras === filterOras)
   ), [data.saloane, search, filterPlan, filterStare, filterOras]);
+
+  /**
+   * Scrie direct starea de abonament a salonului.
+   *
+   * Cât timp Stripe nu e conectat, `abonament_activ` nu poate deveni niciodată
+   * true — deci un salon cu trialul expirat rămâne blocat pe bannerul roșu
+   * „Alege un plan" oricâte planuri ar alege. Aici e comanda manuală care
+   * scoate din fundătura aia și, mai important, permite testarea cap-coadă a
+   * întregului ciclu de viață.
+   *
+   * Când vine Stripe, webhook-ul va scrie exact aceleași coloane. Butoanele de
+   * aici rămân ca override manual — nu se dublează nimic.
+   */
+  async function scrieStare(salonId: string, patch: Record<string, any>) {
+    setLucreaza(salonId);
+    setEroareStare("");
+    const { error } = await supabase.from("saloane").update(patch).eq("id", salonId);
+    if (error) setEroareStare(error.message || "Nu am putut scrie în baza de date.");
+    else await onReload();
+    setLucreaza(null);
+  }
+
+  const zileDeAcum = (n: number) =>
+    new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
 
   return (
     <div>
@@ -665,7 +692,9 @@ function SaloaneTab({ data }: { data: AdminData }) {
                             ["Servicii definite", String(s.nrServicii)],
                             ["Programări total", String(s.nrProgramariTotal)],
                             ["Înregistrat", new Date(s.dataInregistrare).toLocaleDateString("ro-RO")],
-                            ["Trial expiră", s.trialExpiraLa ? new Date(s.trialExpiraLa).toLocaleDateString("ro-RO") : "— (salon vechi, fără trial)"],
+                            ["Trial expiră", s.trialExpiraLa
+                              ? new Date(s.trialExpiraLa).toLocaleDateString("ro-RO")
+                              : `${new Date(new Date(s.dataInregistrare).getTime() + ZILE_TRIAL * 864e5).toLocaleDateString("ro-RO")} (calculat din data înscrierii)`],
                             ...(s.domeniu === "grooming" ? [["Specii acceptate", s.specii.length ? s.specii.join(", ") : "niciuna bifată"] as [string, string]] : []),
                           ].map(([k, v]) => (
                             <div key={k}>
@@ -673,6 +702,39 @@ function SaloaneTab({ data }: { data: AdminData }) {
                               <div style={{ color: "#E5E7EB", fontWeight: 700 }}>{v}</div>
                             </div>
                           ))}
+                        </div>
+
+                        {/* ── Starea abonamentului, scrisă de mână ──
+                            Stripe nu există încă, deci fără butoanele astea
+                            niciun salon nu poate ieși din „trial expirat".  */}
+                        <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid #1F1F1F" }}>
+                          <div style={{ color: "#6B7280", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: .6, marginBottom: 4 }}>
+                            Stare abonament — comandă manuală
+                          </div>
+                          <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 12, lineHeight: 1.6, maxWidth: 640 }}>
+                            Scriu direct în <code style={{ color: "#9CA3AF" }}>saloane.trial_expira_la</code> și{" "}
+                            <code style={{ color: "#9CA3AF" }}>saloane.abonament_activ</code>. Sunt aceleași coloane pe
+                            care le va scrie webhook-ul Stripe — până atunci, singura cale de a parcurge tot ciclul.
+                          </div>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {[
+                              { t: `Trial nou (${ZILE_TRIAL} zile)`, col: "#10B981", patch: { trial_expira_la: zileDeAcum(ZILE_TRIAL), abonament_activ: false } },
+                              { t: `Trial pe terminate (${ZILE_AVERTISMENT - 1} zile)`, col: "#FBBF24", patch: { trial_expira_la: zileDeAcum(ZILE_AVERTISMENT - 1), abonament_activ: false } },
+                              { t: "Trial expirat (ieri)", col: "#F87171", patch: { trial_expira_la: zileDeAcum(-1), abonament_activ: false } },
+                              s.stare === "abonat"
+                                ? { t: "Anulează abonatul", col: "#9CA3AF", patch: { abonament_activ: false } }
+                                : { t: "Marchează abonat", col: "#A855F7", patch: { abonament_activ: true } },
+                            ].map(b => (
+                              <button key={b.t} disabled={lucreaza === s.id}
+                                onClick={() => scrieStare(s.id, b.patch)}
+                                style={{ background: "transparent", border: `1px solid ${b.col}`, color: b.col, padding: "7px 13px", borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: lucreaza === s.id ? "wait" : "pointer", fontFamily: "Nunito", opacity: lucreaza === s.id ? .5 : 1 }}>
+                                {b.t}
+                              </button>
+                            ))}
+                          </div>
+                          {eroareStare && (
+                            <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: "#F87171" }}>{eroareStare}</div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -685,7 +747,8 @@ function SaloaneTab({ data }: { data: AdminData }) {
         </table>
       </div>
       <div style={{ ...card, marginTop: 16, padding: "14px 18px", fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.6 }}>
-        Tabelul e doar de citire. Suspendarea și reactivarea unui salon vor fi posibile când există Stripe — până atunci nu avem în bază o coloană de stare pe care să scriem.
+        Starea abonamentului se poate schimba de aici, din „Detalii" — scrie în coloane reale, nu în memoria browserului.
+        Suspendarea efectivă (ascunderea din căutare, oprirea rezervărilor) rămâne de făcut odată cu Stripe.
       </div>
     </div>
   );

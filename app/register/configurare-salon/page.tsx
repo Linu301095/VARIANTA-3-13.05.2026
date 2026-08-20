@@ -388,7 +388,6 @@ export default function ConfigurareSalon() {
           echipa: echipa.filter(g => g.nume.trim()),
           // Salonul porneste pe planul de intrare, in trial. Planul se schimba la pasul urmator.
           plan: "basic",
-          trial_expira_la: new Date(Date.now() + ZILE_TRIAL * 24 * 60 * 60 * 1000).toISOString(),
           domeniu,
           specii: d?.areSpecii ? speciiSelectate : [],
           public_tinta: d?.areSpecii ? null : publicTinta,
@@ -401,6 +400,20 @@ export default function ConfigurareSalon() {
         }, { onConflict: "user_id" });
 
       if (salonError) console.error("Salon upsert error:", salonError);
+
+      /*
+       * Trialul se dă o singură dată în viața salonului.
+       *
+       * Înainte, `trial_expira_la` era inclus în upsertul de mai sus — deci
+       * oricine retrecea wizardul (accesibil oricând din cont) primea încă 14
+       * zile. Trial nelimitat pentru cine înțelegea asta. Acum se scrie doar
+       * peste rândurile care încă n-au nicio dată.
+       */
+      await supabase
+        .from("saloane")
+        .update({ trial_expira_la: new Date(Date.now() + ZILE_TRIAL * 24 * 60 * 60 * 1000).toISOString() })
+        .eq("user_id", user.id)
+        .is("trial_expira_la", null);
 
       // Punctul pe hartă, ca să putem calcula distanța până la client.
       // Dacă adresa nu e găsită, salonul rămâne fără coordonate și apare mai

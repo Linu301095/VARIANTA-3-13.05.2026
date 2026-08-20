@@ -98,6 +98,34 @@ Scris în Termeni, secțiunea 5 (versiunea 1.1).
    oprirea agenților AI pentru saloanele suspendate.
 3. **Butonul „Alege un plan"** din bannere duce la tabul Abonament — acolo trebuie legat
    checkout-ul real, nu doar salvarea planului în `saloane.plan`.
+4. **Butoanele manuale din `/admin`** (vezi mai jos) rămân ca override după Stripe — scriu
+   exact aceleași două coloane pe care le va scrie webhook-ul.
+
+### Starea abonamentului — comandă manuală în admin (20.08.2026)
+
+**Fundătura de dinainte:** salonul cu trialul expirat vedea bannerul roșu „Alege un plan ca să
+continui", apăsa, alegea Pro — și bannerul rămânea. Alegerea planului scrie doar `saloane.plan`;
+„abonat" cere `abonament_activ = true`, iar singurul lucru care o pune pe true e webhook-ul
+Stripe. Stripe nu există. Deci nimeni nu putea ieși vreodată din „expirat", nici măcar pentru test.
+
+**Acum**, în `/admin` → Saloane → **Detalii**, fiecare salon are patru butoane care scriu direct
+în `saloane.trial_expira_la` și `saloane.abonament_activ`: *Trial nou (14 zile)* · *Trial pe
+terminate (2 zile)* · *Trial expirat (ieri)* · *Marchează abonat / Anulează abonatul*.
+Tot ciclul de viață se poate parcurge cap-coadă fără plăți.
+
+**Trei bug-uri reparate odată cu asta:**
+
+1. **`lib/trial.ts` declara „abonat" salonul fără dată de trial.** Rândul
+   `if (!trialExpiraLa) return { stare: "abonat" }` însemna „nu știu → înseamnă că plătește”:
+   dashboardul scria „Abonament activ", iar adminul îl aduna la **„MRR real (încasat)"** și la
+   rata de conversie. Venituri inventate, exact boala scoasă din admin în 04.08.
+   Acum **„abonat" se întoarce doar când `abonament_activ` e true**, nimic altceva; salonul fără
+   dată își calculează trialul din `created_at + 14 zile`.
+2. **Wizardul reîncărca trialul.** `trial_expira_la` era în `upsert`, deci oricine retrecea
+   wizardul (accesibil oricând din cont) primea încă 14 zile — trial nelimitat. Acum se scrie
+   separat, doar `.is("trial_expira_la", null)`. Trialul se dă o dată în viața salonului.
+3. **Vindecare automată:** la prima intrare în cont, salonul fără dată primește
+   `created_at + 14 zile` scris în bază, o singură dată. Iese din zona de ghicit.
 
 ### ⚠️ DE REVENIT CÂND FACEM EMAIL (Resend)
 

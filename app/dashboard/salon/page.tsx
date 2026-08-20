@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
-import { stareTrial, zileText, ZILE_AVERTISMENT } from "../../../lib/trial";
+import { stareTrial, zileText, ZILE_AVERTISMENT, ZILE_TRIAL } from "../../../lib/trial";
 import { numePlan } from "../../../lib/planuri";
 import { SPECIALIZARI, MAX_SPECIALIZARI } from "../../../lib/specializari";
 import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
@@ -1080,6 +1080,18 @@ export default function DashboardSalon() {
 
       if (salonRow) {
         setSalonData(salonRow);
+
+        /*
+         * Salon fără dată de trial (înscris înainte să existe coloana): o
+         * scriem o singură dată, din data înscrierii. Până acum, lipsa datei
+         * îl declara „abonat" — adică plătitor, în dashboard și în MRR-ul din
+         * admin. Aici iese din zona de ghicit și trece în date reale.
+         */
+        if (!salonRow.trial_expira_la && salonRow.created_at) {
+          const expira = new Date(new Date(salonRow.created_at).getTime() + ZILE_TRIAL * 24 * 60 * 60 * 1000).toISOString();
+          // .then() ca să pornească — fără await, ca să nu întârzie încărcarea.
+          supabase.from("saloane").update({ trial_expira_la: expira }).eq("id", salonRow.id).is("trial_expira_la", null).then(() => {});
+        }
         setProfilSalon({
           numeSalon: salonRow.nume || "",
           adresa: salonRow.adresa || "",
@@ -1471,7 +1483,7 @@ export default function DashboardSalon() {
   const areAnimale = DS.areAnimale;
 
   // Starea trialului. Deocamdata doar informam — blocarea vine odata cu platile.
-  const trial = stareTrial(salonData?.trial_expira_la, salonData?.abonament_activ);
+  const trial = stareTrial(salonData?.trial_expira_la, salonData?.abonament_activ, salonData?.created_at);
 
   // O singura notificare in aplicatie cand trialul expira. Emailul vine cu Resend.
   useEffect(() => {
@@ -4592,7 +4604,7 @@ export default function DashboardSalon() {
                       ? "Din meniu, Serviciile mele → + Adaugă serviciu. Scrii denumirea, apoi prețul și durata pentru fiecare talie — mică, medie, mare. Poți lăsa goală o talie pentru care nu oferi serviciul."
                       : "Din meniu, Serviciile mele → + Adaugă serviciu. Scrii denumirea, prețul și durata, apoi salvezi." },
                   { q: "Cum accept o programare nouă?", r: "În tabul Agendă, cererile noi apar sus, marcate cu portocaliu. Apeși Acceptă ca să confirmi sau Refuză. Clientul e anunțat în ambele cazuri." },
-                  { q: "Clientul nu s-a prezentat. Ce fac?", r: "Deocamdată nu există un buton pentru asta — programarea rămâne în agendă ca și cum s-ar fi desfășurat. Ce poți face: dacă a anulat cu mai puțin de 24 de ore înainte, anularea apare la Anulări de la client, cu motivul scris de el. De la a treia anulare târzie îți semnalăm clientul și îl poți bloca, ca să nu mai poată rezerva la tine." },
+                  { q: "Clientul nu s-a prezentat. Ce fac?", r: "În tabul Agendă, sub calendar, la Vizite încheiate, apeși „Nu s-a prezentat\" pe programarea lui. Iese din încasări și e numărată separat. Dacă te-ai grăbit, „Totuși a venit\" o pune la loc. De la prima neprezentare îți semnalăm clientul și îl poți bloca, ca să nu mai poată rezerva la tine." },
                   { q: "Cum încasez banii de la clienți?", r: "Direct de la client, în salon, ca până acum — CalyHub nu intermediază plata serviciilor și nu reține niciun comision. Aplicația îți aduce programările; banii rămân între tine și client. Singura plată către noi e abonamentul." },
                   { q: "Cum îmi schimb programul de lucru?", r: "Din tabul Program. Acolo setezi orarul pe fiecare zi și poți bloca intervale în care nu primești programări. Fiecare specialist poate avea și un orar propriu, din tabul Echipa mea." },
                   { q: "Cum îmi schimb planul?", r: "Din meniu, Abonamentul meu → Schimbă planul. Plata online nu e încă activă, așa că deocamdată nu se emite nicio factură și nu se reține nimic de pe card." },
