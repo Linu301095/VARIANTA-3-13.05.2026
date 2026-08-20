@@ -140,6 +140,29 @@ aia. Nimic nu dispare, deci mama care rezervă pentru băiat n-are nevoie de nic
 salonul"). Înainte se putea alege doar în wizard, deci saloanele înscrise mai devreme rămâneau
 `public_tinta` gol pentru totdeauna — și ordonarea lucra pe date pe care nimeni nu le putea completa.
 
+### Programările luate la telefon (12.08.2026)
+
+Salonul poate bloca o oră din tabul Program, alegând între **Telefonic · Walk-in · Pauză**.
+Primele două sunt clienți reali fără cont; a treia nu e client.
+
+**Pauzele nu intră nicăieri** — nici la programări, nici la încasări, nici în Excel, nici în datele
+Consultantului AI. Rămân doar în calendar, ca oră ocupată (`ePauza` în `app/dashboard/salon/page.tsx`).
+
+**La Telefonic / Walk-in, trei câmpuri opționale**, iar salonul decide de fiecare dată:
+
+| Câmp | Completat | Gol |
+|---|---|---|
+| Serviciul (din lista salonului) | completează prețul și durata singur; intră în statisticile pe servicii | rămâne „Programare telefonică" |
+| Prețul | intră la **Încasări** | se numără doar la **Programări** |
+| Numele + bifa „Ține minte clientul" | apare în **Istoric clienți**, grupat după nume, marcat „fără cont" | ora se blochează, nu se reține nimeni |
+
+**Sub cardul Încasări scrie câte vizite n-au preț completat**, ca suma să nu pară completă când nu e.
+Aceeași informație ajunge la **Consultantul AI**, cu instrucțiunea să spună explicit că suma e
+incompletă — altfel ar semnala scăderi de venit care nu s-au întâmplat.
+
+Clienții fără cont **nu pot fi blocați** (butonul nu apare) și nu au animal, poză sau telefon în
+aplicație — cardul lor poartă eticheta „fără cont", ca lipsa datelor să se înțeleagă.
+
 ### Neprezentările și încasările reale (rezolvat 12.08.2026)
 
 **Ce era:** când ora unei programări trecea, `autoFinalizeaza` o marca automat `finalizat`, iar

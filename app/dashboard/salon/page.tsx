@@ -1162,7 +1162,7 @@ export default function DashboardSalon() {
     async function loadAnimaleIstoric(salonId: string, peAnimal: boolean) {
       let q = supabase
         .from("programari")
-        .select("id, serviciu, pret, data, ora, status, animal_id, user_id, sursa")
+        .select("id, serviciu, pret, data, ora, status, animal_id, user_id, sursa, nume_client_extern")
         .eq("salon_id", salonId)
         .in("status", ["finalizat", "confirmat"]);
       if (peAnimal) q = q.not("animal_id", "is", null);
@@ -1173,7 +1173,11 @@ export default function DashboardSalon() {
       const aziIso = isoData(new Date());
       const istoric = data.filter((p: any) => {
         const esteApp = !p.sursa || p.sursa === "app";
-        if (!esteApp) return false;
+        // Programările luate la telefon intră în istoric doar dacă salonul a
+        // bifat „Ține minte clientul" — atunci are un nume salvat. Fără nume,
+        // rândul e o oră blocată, nu o persoană. Pauzele nu intră niciodată.
+        const eClientRetinut = !esteApp && p.sursa !== "blocaj" && !!p.nume_client_extern;
+        if (!esteApp && !eClientRetinut) return false;
         if (p.status === "finalizat") return true;
         if (p.status === "confirmat" && p.data < aziIso) return true;
         return false;
@@ -1193,6 +1197,27 @@ export default function DashboardSalon() {
 
       const grupat: Record<string, AnimalIstoric> = {};
       for (const p of istoric) {
+        const esteAppP = !p.sursa || p.sursa === "app";
+        // Clienții de la telefon n-au cont, deci n-au `user_id` propriu — rândul
+        // e pe contul salonului. Îi grupăm după numele scris de salon, ca două
+        // vizite ale aceleiași persoane să ajungă împreună.
+        if (!esteAppP) {
+          const cheie = `tel:${String(p.nume_client_extern).trim().toLowerCase()}`;
+          if (!grupat[cheie]) {
+            grupat[cheie] = {
+              id: cheie, nume: p.nume_client_extern, specie: "", sex: "", rasa: "",
+              greutate: null, talie: null, varsta: null, alergii: "", vaccinat: false, poza_url: null,
+              stapanNume: p.nume_client_extern, stapanTelefon: null,
+              // Fără cont, nu poate fi blocat — butonul nu apare.
+              stapanUserId: null,
+              vizite: [], totalCheltuit: 0, ultimaVizita: null,
+            };
+          }
+          grupat[cheie].vizite.push({ id: p.id, serviciu: p.serviciu, pret: Number(p.pret) || 0, data: p.data, ora: p.ora, status: p.status as StatusProg });
+          grupat[cheie].totalCheltuit += Number(p.pret) || 0;
+          continue;
+        }
+
         // Istoric pe client (saloane de infrumusetare)
         if (!peAnimal) {
           const cheie = p.user_id;
@@ -2458,17 +2483,24 @@ export default function DashboardSalon() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {lista.map(a => {
                         const deschis = animalDeschis === a.id;
+                        // Clienții luați la telefon n-au cont: nu au animal, poză sau
+                        // telefon în aplicație. Îi marcăm, ca lipsa datelor să se
+                        // înțeleagă, nu să pară o eroare.
+                        const faraCont = String(a.id).startsWith("tel:");
                         return (
                           <div key={a.id} style={{ background: c.surface, borderRadius: 16, border: deschis ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, overflow: "hidden" }}>
                             <button onClick={() => setAnimalDeschis(deschis ? null : a.id)}
                               style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left" }}>
                               <div style={{ width: 50, height: 50, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0, overflow: "hidden" }}>
-                                {a.poza_url ? <img src={a.poza_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (areAnimale ? specieIcon(a.specie) : <User size={22} color="#FF6B00" strokeWidth={2} />)}
+                                {a.poza_url ? <img src={a.poza_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (faraCont ? <Phone size={20} color="#FF6B00" strokeWidth={2} /> : areAnimale ? specieIcon(a.specie) : <User size={22} color="#FF6B00" strokeWidth={2} />)}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text }}>{areAnimale ? `${specieIcon(a.specie)} ` : ""}{a.nume}</div>
-                                {areAnimale && <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>{[a.rasa, talieLabel(a.talie), a.greutate ? `${a.greutate}kg` : null].filter(Boolean).join(" · ")}</div>}
-                                {areAnimale
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c.text, display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                                  {areAnimale && !faraCont ? `${specieIcon(a.specie)} ` : ""}{a.nume}
+                                  {faraCont && <span style={{ fontSize: 10, fontWeight: 800, color: c.muted, background: c.surface2, border: `1px solid ${c.border}`, padding: "2px 8px", borderRadius: 50 }}>fără cont</span>}
+                                </div>
+                                {areAnimale && !faraCont && <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>{[a.rasa, talieLabel(a.talie), a.greutate ? `${a.greutate}kg` : null].filter(Boolean).join(" · ")}</div>}
+                                {areAnimale && !faraCont
                                   ? <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.xmuted} strokeWidth={2} /> {a.stapanNume}</div>
                                   : a.ultimaVizita && <div style={{ fontSize: 11, color: c.xmuted, marginTop: 2 }}>Ultima vizită: {new Date(a.ultimaVizita).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}</div>}
                               </div>
@@ -2482,15 +2514,15 @@ export default function DashboardSalon() {
                               <div style={{ borderTop: `1px solid ${c.border}`, padding: "14px 18px", background: c.surface2 }}>
                                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
                                   {!areAnimale && a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} color={c.text2} strokeWidth={2} /> {a.stapanTelefon}</span>}
-                                  {areAnimale && talieLabel(a.talie) && <span style={{ background: c.orangeAccent, color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>{talieLabel(a.talie)}</span>}
-                                  {areAnimale && a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀ Femelă" : "♂ Mascul"}</span>}
-                                  {areAnimale && a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
-                                  {areAnimale && a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} color={c.text2} strokeWidth={2} /> {a.stapanNume} · {a.stapanTelefon}</span>}
-                                  {areAnimale && (areAlergii(a.alergii)
+                                  {areAnimale && !faraCont && talieLabel(a.talie) && <span style={{ background: c.orangeAccent, color: "#FF6B00", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 800 }}>{talieLabel(a.talie)}</span>}
+                                  {areAnimale && !faraCont && a.sex && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.sex === "femela" ? "♀ Femelă" : "♂ Mascul"}</span>}
+                                  {areAnimale && !faraCont && a.varsta ? <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>{a.varsta} ani</span> : null}
+                                  {areAnimale && !faraCont && a.stapanTelefon && <span style={{ background: c.surface3, color: c.text2, padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} color={c.text2} strokeWidth={2} /> {a.stapanNume} · {a.stapanTelefon}</span>}
+                                  {areAnimale && !faraCont && (areAlergii(a.alergii)
                                     ? <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={11} color="#DC2626" strokeWidth={2} /> Alergii: {a.alergii}</span>
                                     : <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckCircle2 size={11} color="#059669" strokeWidth={2} /> Fără alergii</span>
                                   )}
-                                  {areAnimale && (a.vaccinat
+                                  {areAnimale && !faraCont && (a.vaccinat
                                     ? <span style={{ background: "rgba(16,185,129,.12)", color: "#059669", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700 }}>Vaccinat</span>
                                     : <span style={{ background: "rgba(239,68,68,.12)", color: "#DC2626", padding: "3px 10px", borderRadius: 50, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={11} color="#DC2626" strokeWidth={2} /> Nevaccinat</span>
                                   )}
