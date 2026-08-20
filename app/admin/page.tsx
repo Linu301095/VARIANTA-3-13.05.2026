@@ -633,9 +633,25 @@ function SaloaneTab({ data, onReload }: { data: AdminData; onReload: () => Promi
   async function scrieStare(salonId: string, patch: Record<string, any>) {
     setLucreaza(salonId);
     setEroareStare("");
-    const { error } = await supabase.from("saloane").update(patch).eq("id", salonId);
-    if (error) setEroareStare(error.message || "Nu am putut scrie în baza de date.");
-    else await onReload();
+
+    /*
+     * `.select()` nu e decorativ: un update oprit de RLS nu întoarce eroare, ci
+     * zero rânduri. Fără el, butonul părea că funcționează și nu se schimba
+     * nimic — exact ce s-a întâmplat prima dată.
+     */
+    const { data: scrise, error } = await supabase
+      .from("saloane").update(patch).eq("id", salonId).select("id");
+
+    if (error) {
+      setEroareStare(error.message || "Nu am putut scrie în baza de date.");
+    } else if (!scrise || scrise.length === 0) {
+      setEroareStare(
+        "Baza de date a refuzat scrierea (RLS): adminul nu are voie să modifice saloanele altora. " +
+        "Rulează sql/admin_scrie_saloane.sql în Supabase și încearcă din nou."
+      );
+    } else {
+      await onReload();
+    }
     setLucreaza(null);
   }
 

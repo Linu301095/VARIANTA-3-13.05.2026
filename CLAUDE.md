@@ -54,6 +54,9 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
 - `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.
 - `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
+- `sql/admin_scrie_saloane.sql` — **obligatoriu pentru butoanele de stare din `/admin`**, adaugă
+  `public.este_admin()` + politicile RLS de citire/scriere pe `saloane` pentru admin. Fără el,
+  butoanele *Trial nou* / *Marchează abonat* nu schimbă nimic.
 - `sql/gen_client.sql` — adaugă `profiluri.gen` (masculin/feminin). Obligatoriu la înregistrarea clientului, indiferent dacă are animal; editabil din dashboard → Profil. Conturile mai vechi îl au gol.
 - `sql/adresa_judet.sql` — ✅ rulat (adaugă `saloane.judet` și `saloane.public_tinta`, index județ+oraș)
 - `sql/etapa2_domeniu_si_termeni.sql` — ✅ rulat (adaugă `saloane.domeniu`, coloanele de termeni, index domeniu+oraș)
@@ -112,6 +115,13 @@ Stripe. Stripe nu există. Deci nimeni nu putea ieși vreodată din „expirat",
 în `saloane.trial_expira_la` și `saloane.abonament_activ`: *Trial nou (14 zile)* · *Trial pe
 terminate (2 zile)* · *Trial expirat (ieri)* · *Marchează abonat / Anulează abonatul*.
 Tot ciclul de viață se poate parcurge cap-coadă fără plăți.
+
+**⚠️ Cere `sql/admin_scrie_saloane.sql`.** Fără el, RLS respinge scrierea **în tăcere** — un
+`update` blocat de RLS nu întoarce eroare, doar zero rânduri, deci butonul părea că merge și nu
+se schimba nimic. Fișierul adaugă funcția `public.este_admin()` (SECURITY DEFINER, ca politica să
+nu depindă de RLS-ul de pe `profiluri`) și două politici pe `saloane`: citire și scriere pentru
+admin. În cod, `update`-ul are acum `.select("id")` și, la zero rânduri, spune pe ecran că RLS
+a refuzat — nu mai eșuează mut.
 
 **Trei bug-uri reparate odată cu asta:**
 
