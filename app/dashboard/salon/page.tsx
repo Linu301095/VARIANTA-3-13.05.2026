@@ -487,7 +487,17 @@ function AgendaCalendar({
 
   const et = etichetaZi(agendaZi);
   const total = apptsZi.length;
-  const pending = apptsZi.filter(p => p.status === "în așteptare").sort((a, b) => a.ora < b.ora ? -1 : 1);
+  /*
+   * Cererile în așteptare — TOATE, nu doar cele din ziua deschisă în calendar.
+   *
+   * Erau filtrate pe `agendaZi`, deci o rezervare pentru marțea viitoare nu se
+   * vedea nicăieri cât timp salonul stătea pe ziua de azi: primea notificarea
+   * și nu găsea nimic de apăsat. O cerere nouă n-are voie să stea ascunsă în
+   * spatele unei date — se pierde o programare.
+   */
+  const pending = programari
+    .filter(p => p.status === "în așteptare")
+    .sort((a, b) => (a.data === b.data ? (a.ora < b.ora ? -1 : 1) : (a.data < b.data ? -1 : 1)));
   const anulate = apptsZi.filter(p => p.status === "anulat").sort((a, b) => a.ora < b.ora ? -1 : 1);
 
   /**
@@ -553,6 +563,9 @@ function AgendaCalendar({
             <span style={{ fontSize: 13, fontWeight: 900, color: c.text, letterSpacing: 0.3 }}>Cereri noi</span>
             <span style={{ fontSize: 12, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, padding: "1px 9px", borderRadius: 50 }}>{pending.length}</span>
           </div>
+          <div style={{ fontSize: 12, color: c.muted, marginTop: -4 }}>
+            Toate cererile care așteaptă răspuns, indiferent de ziua deschisă în calendar.
+          </div>
           {pending.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             const abateri = p.esteApp && p.user_id ? (abateriMap[p.user_id] || 0) : 0;
@@ -584,7 +597,21 @@ function AgendaCalendar({
                         </div>
                       )}
                     </div>
-                    <div style={{ flexShrink: 0, background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 900, padding: "5px 13px", borderRadius: 50, letterSpacing: 0.3, boxShadow: "0 3px 8px rgba(255,107,0,.35)" }}>{p.ora}</div>
+                    {/* Ziua e scrisă pe card fiindcă lista nu mai e legată de
+                        ziua deschisă în calendar. Clic pe ea duce agenda acolo. */}
+                    <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                      <div style={{ background: "#FF6B00", color: "#fff", fontSize: 13, fontWeight: 900, padding: "5px 13px", borderRadius: 50, letterSpacing: 0.3, boxShadow: "0 3px 8px rgba(255,107,0,.35)" }}>{p.ora}</div>
+                      {(() => {
+                        const e = etichetaZi(p.data);
+                        return (
+                          <button onClick={() => setAgendaZi(p.data)}
+                            title="Vezi ziua în calendar"
+                            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 11.5, fontWeight: 800, color: e.azi ? "#FF6B00" : c.muted, whiteSpace: "nowrap" }}>
+                            {e.prefix || e.rest}
+                          </button>
+                        );
+                      })()}
+                    </div>
                   </div>
 
                   {/* Divider */}

@@ -900,6 +900,17 @@ export default function DashboardClient() {
       if (prog) {
         setSalonSelectat(prog.salon_id);
         setProfilSalonTab("recenzii");
+      } else if (n.programare_id) {
+        /*
+         * Programarea nu e în memorie (listă încă neîncărcată, sau o cerere
+         * care a eșuat). O căutăm în bază, ca notificarea să ducă unde trebuie
+         * în loc să arunce omul în lista de saloane, fără nicio explicație.
+         */
+        supabase.from("programari").select("salon_id").eq("id", n.programare_id).single()
+          .then(({ data }) => {
+            if (data?.salon_id) { setSalonSelectat(data.salon_id); setProfilSalonTab("recenzii"); }
+            else setTab("saloane");
+          });
       } else {
         setTab("saloane");
       }
