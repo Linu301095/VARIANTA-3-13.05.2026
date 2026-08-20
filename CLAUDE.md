@@ -54,6 +54,8 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
 - `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.
 - `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
+- `sql/salon_modifica_programari.sql` — **obligatoriu pentru anularea și mutarea programărilor de
+  către salon**, adaugă `programari.anulat_de` și `programari.mutat_la`.
 - `sql/admin_scrie_saloane.sql` — **obligatoriu pentru butoanele de stare din `/admin`**, adaugă
   `public.este_admin()` + politicile RLS de citire/scriere pe `saloane` pentru admin. Fără el,
   butoanele *Trial nou* / *Marchează abonat* nu schimbă nimic.
@@ -244,6 +246,39 @@ n-a fost.
 
 Căutarea clientului filtrează `.is("sters_la", null)`, deci saloanele închise dispar din listă.
 Se cere parola înainte de confirmare.
+
+### Salonul poate modifica programările confirmate (20.08.2026)
+
+**Ce era:** programarea confirmată era un dreptunghi verde **inert** în calendar. Salonul n-o putea
+anula, muta sau corecta. Dacă specialistul se îmbolnăvea, ora rămânea ocupată la nesfârșit,
+clientul o vedea în cont, iar `autoFinalizeaza` o trecea ca încheiată — deci intra la **încasări**
+o vizită care n-a avut loc. Asimetrie: salonul putea șterge o oră blocată de el (telefonic,
+walk-in, pauză), dar nu putea atinge programarea unui client real.
+
+**Acum**, clic pe programarea confirmată din agendă → trei acțiuni:
+
+| Acțiune | Reguli |
+|---|---|
+| **Mută** (zi, oră, specialist) | ora nouă e **definitivă**, clientul e doar anunțat (varianta A). Suprapunerea e semnalată, nu blocată — unele saloane suprapun intenționat. |
+| **Corectează** serviciul / prețul / durata | clientul primește notificare **doar dacă se schimbă prețul** — acolo e vorba de banii lui |
+| **Anulează** | motivul e **obligatoriu întotdeauna**, spre deosebire de client (unde e cerut doar sub 24h): omul își face alt plan sau își ia liber, deci merită să știe de ce |
+
+**De ce varianta A și nu „salonul propune, clientul confirmă":** salonul sună clientul oricum
+înainte să miște ceva. O propunere de confirmat ar adăuga o stare pe care nimeni n-o urmărește,
+iar ora ar rămâne blocată până răspunde cineva. Compensația: **clientul mutat anulează liber.**
+
+**Două capcane rezolvate odată cu asta:**
+
+1. **`anulat_de`** — dashboardul salonului numără anulările târzii ale clientului ca
+   „anulată + are motiv completat". Din clipa în care și salonul scrie un motiv, motivul lui ar fi
+   fost pus în cârca clientului: un om căruia salonul i-a anulat de trei ori ar fi apărut cu
+   „3 anulări târzii", iar salonul ar fi fost invitat să-l blocheze.
+2. **`mutat_la`** — dacă salonul mută programarea în ziua următoare, clientul ar fi fost obligat
+   să scrie un motiv (regula de sub 24h) pentru o schimbare pe care n-a făcut-o el. Acum
+   programarea mutată se anulează **fără motiv, oricând**, iar pe cardul clientului scrie de ce.
+
+**SQL:** `sql/salon_modifica_programari.sql` — **obligatoriu**, adaugă `programari.anulat_de`
+(client/salon) și `programari.mutat_la`. Fără el, butoanele de anulare și mutare eșuează.
 
 ### Recenziile clientului — modificare și ștergere (12.08.2026)
 

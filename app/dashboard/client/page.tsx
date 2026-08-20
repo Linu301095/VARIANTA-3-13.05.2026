@@ -211,6 +211,8 @@ type Programare = {
   groomer: string | null;
   /** Gol = programare pentru tine. Completat = pentru animal. */
   animal_id: string | null;
+  /** Completat = salonul a mutat ora. Atunci anularea nu mai cere motiv. */
+  mutatLa?: string | null;
 };
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
@@ -537,7 +539,7 @@ export default function DashboardClient() {
     async function loadProgramari(userId: string) {
       const { data } = await supabase
         .from("programari")
-        .select("id, salon_id, serviciu, pret, data, ora, status, groomer, animal_id, saloane(nume)")
+        .select("id, salon_id, serviciu, pret, data, ora, status, groomer, animal_id, mutat_la, saloane(nume)")
         .eq("user_id", userId)
         .order("data", { ascending: false })
         .order("ora", { ascending: false });
@@ -554,6 +556,7 @@ export default function DashboardClient() {
           pret: Number(p.pret) || 0,
           groomer: p.groomer || null,
           animal_id: p.animal_id || null,
+          mutatLa: p.mutat_la || null,
         })));
       }
       const { data: recs } = await supabase
@@ -779,9 +782,16 @@ export default function DashboardClient() {
     return null;
   }
 
-  /** Sub prag se cere motiv; peste, nu. Se calculează din ora programării. */
+  /**
+   * Sub prag se cere motiv; peste, nu. Se calculează din ora programării.
+   *
+   * Excepția: dacă salonul a mutat ora, clientul anulează liber oricând. Ora
+   * cea nouă nu e alegerea lui, deci n-are de ce să se justifice pentru ea —
+   * și nici să fie numărat la anulările târzii.
+   */
   const anulareCereMotiv = anulareModal
-    ? (new Date(`${anulareModal.data}T${anulareModal.ora}:00`).getTime() - Date.now()) / 3600000 < ORE_ANULARE_LIBERA
+    ? !anulareModal.mutatLa &&
+      (new Date(`${anulareModal.data}T${anulareModal.ora}:00`).getTime() - Date.now()) / 3600000 < ORE_ANULARE_LIBERA
     : false;
 
   async function confirmaAnulare() {
@@ -793,7 +803,7 @@ export default function DashboardClient() {
     const prog = anulareModal;
     // `motiv_anulare` rămâne gol la anulările din timp — tot el e și semnalul
     // după care salonul numără anulările târzii ale unui client.
-    const { error } = await supabase.from("programari").update({ status: "anulat", motiv_anulare: anulareCereMotiv ? motiv : null }).eq("id", prog.id);
+    const { error } = await supabase.from("programari").update({ status: "anulat", motiv_anulare: anulareCereMotiv ? motiv : null, anulat_de: "client" }).eq("id", prog.id);
     if (error) { setAnulareError("Nu am putut anula. Încearcă din nou."); setAnulareLoading(false); return; }
     setProgramari(pr => pr.map(x => x.id === prog.id ? { ...x, status: "anulat" } : x));
     const { data: salonRow } = await supabase.from("saloane").select("user_id").eq("id", prog.salon_id).single();
@@ -882,7 +892,8 @@ export default function DashboardClient() {
         if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
       });
     }
-    if (n.tip === "confirmat" || n.tip === "anulat") {
+    // „mutat" și „modificat" vin de la salon când schimbă ora sau prețul.
+    if (n.tip === "confirmat" || n.tip === "anulat" || n.tip === "mutat" || n.tip === "modificat") {
       setTab("programari");
     } else if (n.tip === "raspuns_recenzie") {
       const prog = n.programare_id ? programari.find(p => p.id === n.programare_id) : null;
@@ -2697,11 +2708,15 @@ export default function DashboardClient() {
                               ? <Sparkles size={20} color="#D97706" strokeWidth={2} />
                               : n.tip === "confirmat" ? <CheckCircle2 size={20} color="#10B981" strokeWidth={2} />
                               : n.tip === "anulat" ? <XCircle size={20} color="#EF4444" strokeWidth={2} />
+                              : n.tip === "mutat" ? <Clock size={20} color="#FF6B00" strokeWidth={2} />
+                              : n.tip === "modificat" ? <FileEdit size={20} color="#FF6B00" strokeWidth={2} />
                               : <Bell size={20} color="#FF6B00" strokeWidth={2} />;
                             const badgeTip = esteAI
                               ? <Sparkles size={11} color="#D97706" strokeWidth={2.6} />
                               : n.tip === "confirmat" ? <CheckCircle2 size={12} color="#10B981" strokeWidth={2.6} />
                               : n.tip === "anulat" ? <XCircle size={12} color="#EF4444" strokeWidth={2.6} />
+                              : n.tip === "mutat" ? <Clock size={12} color="#FF6B00" strokeWidth={2.6} />
+                              : n.tip === "modificat" ? <FileEdit size={12} color="#FF6B00" strokeWidth={2.6} />
                               : <Bell size={11} color="#FF6B00" strokeWidth={2.6} />;
                             return (
                               <div key={n.id} onClick={() => deschideNotificare(n)}
@@ -3158,7 +3173,8 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
   const { theme, c } = useContext(ThemeCtx);
   const st = statusStyle(theme)[p.status];
   const oreRamase = (new Date(`${p.data}T${p.ora}:00`).getTime() - Date.now()) / 3600000;
-  const cereMotiv = oreRamase < ORE_ANULARE_LIBERA;
+  // Programarea mutată de salon se anulează liber — vezi `anulareCereMotiv`.
+  const cereMotiv = !p.mutatLa && oreRamase < ORE_ANULARE_LIBERA;
   const anulBtn: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "4px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif" };
 
   const [evaluareDeschisa, setEvaluareDeschisa] = useState(false);
@@ -3192,6 +3208,13 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
           <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.serviciu}</div>
           {p.groomer && <div style={{ fontSize: 12, color: c.muted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.muted} strokeWidth={2} /> {p.groomer}</div>}
           <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><CalendarDays size={11} strokeWidth={2} /> {formatData(p.data)} · <Clock size={11} strokeWidth={2} /> {p.ora}</div>
+          {/* Ora schimbată de salon: spunem de ce arată altfel decât ce a rezervat
+              omul, și că nu e ținut de ea. */}
+          {p.mutatLa && (p.status === "confirmat" || p.status === "în așteptare") && (
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#D97706", marginTop: 5, lineHeight: 1.45 }}>
+              Ora a fost schimbată de salon. Dacă nu îți convine, o poți anula fără să scrii un motiv.
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
           <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: st.bg, padding: "4px 12px", borderRadius: 50 }}>{st.label}</span>

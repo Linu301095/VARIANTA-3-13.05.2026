@@ -328,6 +328,7 @@ const btnPrimary: React.CSSProperties = { padding: "12px 24px", borderRadius: 50
 function AgendaCalendar({
   programari, echipa, program, agendaZi, setAgendaZi, filtruTalie, setFiltruTalie, areAnimale,
   accepta, respinge, clientiBlocati, abateriMap, neprezentariMap, marcheazaPrezenta, toggleBlocClient, highlightProgramare, onHighlightConsumat, c, theme,
+  servicii, anuleazaDeSalon, mutaProgramare, corecteazaProgramare,
 }: {
   programari: ProgramareSalon[];
   echipa: Groomer[];
@@ -348,11 +349,67 @@ function AgendaCalendar({
   onHighlightConsumat?: () => void;
   c: ColorSet;
   theme: "light" | "dark";
+  servicii: Serviciu[];
+  anuleazaDeSalon: (id: string, motiv: string) => Promise<boolean>;
+  mutaProgramare: (id: string, data: string, ora: string, groomer: string | null) => Promise<boolean>;
+  corecteazaProgramare: (id: string, patch: { serviciu: string; pret: number; durata: number }) => Promise<boolean>;
 }) {
   const PX_PER_MIN = 1.4;
   const HEADER_H = 56;
   const GUTTER_W = 50;
   const [colSel, setColSel] = useState<string>("");
+
+  /*
+   * Gestionarea unei programări confirmate.
+   *
+   * Până acum, dreptunghiul verde din calendar era inert: salonul nu putea
+   * anula, muta sau corecta nimic. Dacă specialistul se îmbolnăvea, ora rămânea
+   * ocupată la nesfârșit, clientul o vedea în cont, iar la final era numărată
+   * ca vizită încheiată — deci intra la încasări.
+   *
+   * ⚠️ Toate hook-urile de mai jos stau ÎNAINTE de orice `return`. Un hook pus
+   * după un return timpuriu strică ordinea și React cade cu eroarea #300.
+   */
+  const [gestionat, setGestionat] = useState<string | null>(null);
+  const [mod, setMod] = useState<"meniu" | "anulare" | "mutare" | "corectie">("meniu");
+  const [motivAnul, setMotivAnul] = useState("");
+  const [mutData, setMutData] = useState("");
+  const [mutOra, setMutOra] = useState("");
+  const [mutGroomer, setMutGroomer] = useState("");
+  const [corServiciu, setCorServiciu] = useState("");
+  const [corPret, setCorPret] = useState("");
+  const [corDurata, setCorDurata] = useState("");
+  const [lucru, setLucru] = useState(false);
+  const [eroareMod, setEroareMod] = useState("");
+
+  const gest = gestionat ? programari.find(p => p.id === gestionat) || null : null;
+
+  function deschideGestiune(p: ProgramareSalon) {
+    setGestionat(p.id);
+    setMod("meniu");
+    setMotivAnul(""); setEroareMod(""); setLucru(false);
+    setMutData(p.data); setMutOra(p.ora); setMutGroomer(p.groomer || "");
+    setCorServiciu(p.serviciu); setCorPret(String(p.pret || "")); setCorDurata(String(p.durata || 60));
+  }
+  function inchideGestiune() { setGestionat(null); setLucru(false); }
+
+  // Orele disponibile în ziua aleasă pentru mutare, după programul salonului.
+  const zilaMutare = mutData ? program[String(new Date(`${mutData}T00:00:00`).getDay())] : null;
+  const sloturiMutare = zilaMutare?.activ ? genereazaSloturiZi(zilaMutare) : [];
+
+  // Suprapunerea nu blochează salvarea — unele saloane suprapun intenționat.
+  // O arătăm ca avertisment, ca alegerea să fie conștientă.
+  const conflictMutare = (() => {
+    if (!gest || !mutData || !mutOra) return null;
+    const durata = gest.durata || 60;
+    return programari.find(p =>
+      p.id !== gest.id &&
+      p.data === mutData &&
+      (p.status === "confirmat" || p.status === "în așteptare") &&
+      (!mutGroomer || !p.groomer || p.groomer === mutGroomer) &&
+      suprapunere(mutOra, durata, { ora: p.ora, durata: p.durata ?? 60 })
+    ) || null;
+  })();
 
   const aziIso = isoData(new Date());
   const now = new Date();
@@ -648,9 +705,17 @@ function AgendaCalendar({
                 else if (p.status === "confirmat") { bg = theme === "dark" ? "rgba(16,185,129,.20)" : "#C7F2DE"; border = "#10B981"; accent = "#047857"; bar = "#10B981"; }
                 const compact = h < 44;
                 const evidentiat = highlightProgramare === p.id;
+                // Programările confirmate se pot gestiona. Pauzele și orele
+                // blocate se scot din tabul Program, nu de aici.
+                const gestionabil = p.status === "confirmat" && p.sursa !== "blocaj";
                 return (
-                  <div key={p.id} title={`${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
-                    style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou || evidentiat ? 2 : 1.5}px solid ${evidentiat ? "#FF6B00" : border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "0 8px 0 10px" : "5px 10px 5px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, lineHeight: 1.15, boxShadow: evidentiat ? "0 0 0 4px rgba(255,107,0,.35)" : "none", transition: "box-shadow .2s" }}>
+                  <div key={p.id}
+                    title={gestionabil ? `${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu} — apasă pentru a muta sau anula` : `${p.ora}–${minToTime(e)} · ${p.client} · ${p.serviciu}`}
+                    onClick={gestionabil ? () => deschideGestiune(p) : undefined}
+                    role={gestionabil ? "button" : undefined}
+                    tabIndex={gestionabil ? 0 : undefined}
+                    onKeyDown={gestionabil ? (ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); deschideGestiune(p); } }) : undefined}
+                    style={{ position: "absolute", top, left, width: w, height: h, borderRadius: 10, background: bg, border: `${nou || evidentiat ? 2 : 1.5}px solid ${evidentiat ? "#FF6B00" : border}`, borderLeft: `5px solid ${bar}`, padding: compact ? "0 8px 0 10px" : "5px 10px 5px 11px", overflow: "hidden", opacity: trecut && !nou ? 0.55 : 1, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, lineHeight: 1.15, boxShadow: evidentiat ? "0 0 0 4px rgba(255,107,0,.35)" : "none", transition: "box-shadow .2s", cursor: gestionabil ? "pointer" : "default" }}>
                     <div style={{ fontSize: compact ? 11 : 11.5, fontWeight: 800, color: accent, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ flexShrink: 0 }}>{p.ora}–{minToTime(e)}</span>
                       {p.observatii ? <FileEdit size={10} color={accent} strokeWidth={2} style={{ flexShrink: 0 }} /> : null}
@@ -758,6 +823,198 @@ function AgendaCalendar({
           })}
         </div>
       )}
+
+      {/* ── Gestionarea unei programări confirmate ── */}
+      {gest && (() => {
+        const btnBaza: React.CSSProperties = { padding: "11px 16px", borderRadius: 12, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", border: `1.5px solid ${c.border}`, background: c.surface2, color: c.text, textAlign: "left", display: "flex", alignItems: "center", gap: 10, width: "100%" };
+        const camp: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${c.border}`, background: c.surface2, color: c.text, fontSize: 14, fontFamily: "Nunito, sans-serif", boxSizing: "border-box" };
+        const eticheta: React.CSSProperties = { display: "block", fontSize: 12.5, fontWeight: 800, color: c.text2, marginBottom: 6 };
+        const etGest = etichetaZi(gest.data);
+
+        async function ruleaza(fn: () => Promise<boolean>) {
+          setLucru(true);
+          const ok = await fn();
+          setLucru(false);
+          if (ok) inchideGestiune();
+        }
+
+        return (
+          <div onClick={inchideGestiune}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, padding: "22px 24px", width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,.35)" }}>
+
+              {/* Antetul — cine, când, ce */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 17, fontWeight: 900, color: c.text }}>{gest.client}</div>
+                <div style={{ fontSize: 13, color: c.muted, fontWeight: 600, marginTop: 3 }}>
+                  {etGest.prefix ? `${etGest.prefix}, ` : ""}{etGest.rest} · ora {gest.ora}
+                </div>
+                <div style={{ fontSize: 13, color: c.muted, fontWeight: 600, marginTop: 2, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                  <Scissors size={12} color={c.muted} strokeWidth={2} /> {gest.serviciu}
+                  {gest.pret > 0 && <span style={{ fontWeight: 800, color: "#FF6B00" }}>· {gest.pret} RON</span>}
+                  {gest.groomer && <span>· {gest.groomer}</span>}
+                </div>
+                {!gest.esteApp && (
+                  <div style={{ fontSize: 11.5, fontWeight: 800, color: c.muted, marginTop: 8, background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 50, padding: "3px 10px", display: "inline-block" }}>
+                    fără cont — clientul nu primește notificare
+                  </div>
+                )}
+              </div>
+
+              {mod === "meniu" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                  <button onClick={() => setMod("mutare")} style={btnBaza}>
+                    <Clock size={16} color="#FF6B00" strokeWidth={2.2} />
+                    <span><span style={{ display: "block" }}>Mută programarea</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: c.muted }}>altă zi, altă oră sau alt specialist</span></span>
+                  </button>
+                  <button onClick={() => setMod("corectie")} style={btnBaza}>
+                    <FileEdit size={16} color="#FF6B00" strokeWidth={2.2} />
+                    <span><span style={{ display: "block" }}>Corectează serviciul sau prețul</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: c.muted }}>pentru greșeli de scriere</span></span>
+                  </button>
+                  <button onClick={() => setMod("anulare")} style={{ ...btnBaza, border: "1.5px solid rgba(239,68,68,.4)", background: theme === "dark" ? "rgba(239,68,68,.08)" : "#FEF2F2", color: "#EF4444" }}>
+                    <XCircle size={16} color="#EF4444" strokeWidth={2.2} />
+                    <span><span style={{ display: "block" }}>Anulează programarea</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: c.muted }}>ora se eliberează, clientul e anunțat</span></span>
+                  </button>
+                  <button onClick={inchideGestiune} style={{ ...btnBaza, justifyContent: "center", background: "transparent", border: "none", color: c.muted, fontWeight: 700 }}>Închide</button>
+                </div>
+              )}
+
+              {mod === "mutare" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={eticheta}>Ziua</label>
+                    <input type="date" value={mutData} min={isoData(new Date())} style={camp}
+                      onChange={e => { setMutData(e.target.value); setMutOra(""); }} />
+                  </div>
+                  <div>
+                    <label style={eticheta}>Ora</label>
+                    {zilaMutare?.activ ? (
+                      <select value={mutOra} style={camp} onChange={e => setMutOra(e.target.value)}>
+                        <option value="">Alege ora</option>
+                        {sloturiMutare.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : (
+                      <div style={{ ...camp, color: "#EF4444", fontWeight: 700 }}>Salonul e închis în ziua asta</div>
+                    )}
+                  </div>
+                  {echipa.length > 0 && (
+                    <div>
+                      <label style={eticheta}>Specialist</label>
+                      <select value={mutGroomer} style={camp} onChange={e => setMutGroomer(e.target.value)}>
+                        <option value="">Fără specialist anume</option>
+                        {echipa.map(g => <option key={g.nume} value={g.nume}>{g.nume}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  {conflictMutare && (
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#D97706", background: theme === "dark" ? "rgba(217,119,6,.10)" : "#FFFBEB", border: "1.5px solid rgba(217,119,6,.4)", borderRadius: 12, padding: "10px 14px", lineHeight: 1.5 }}>
+                      Ora se suprapune cu {conflictMutare.client} ({conflictMutare.ora}). Poți salva oricum, dacă așa vrei.
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, color: c.muted, lineHeight: 1.55 }}>
+                    Ora nouă e definitivă. Clientul primește o notificare și, dacă nu îi convine,
+                    poate anula din contul lui fără să scrie niciun motiv.
+                  </div>
+                  {eroareMod && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444" }}>{eroareMod}</div>}
+                  <div style={{ display: "flex", gap: 9 }}>
+                    <button onClick={() => setMod("meniu")} style={{ ...btnBaza, width: "auto", justifyContent: "center", flex: 1 }}>Înapoi</button>
+                    <button disabled={lucru || !mutOra || !mutData}
+                      onClick={() => {
+                        if (!mutOra) { setEroareMod("Alege o oră."); return; }
+                        ruleaza(() => mutaProgramare(gest.id, mutData, mutOra, mutGroomer || null));
+                      }}
+                      style={{ ...btnBaza, width: "auto", flex: 2, justifyContent: "center", border: "none", background: "#FF6B00", color: "#fff", opacity: lucru || !mutOra ? .55 : 1 }}>
+                      {lucru ? "Se mută..." : "Mută programarea"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mod === "corectie" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={eticheta}>Serviciul</label>
+                    <select value={servicii.some(s => s.nume === corServiciu) ? corServiciu : ""} style={camp}
+                      onChange={e => {
+                        const s = servicii.find(x => x.nume === e.target.value);
+                        setCorServiciu(e.target.value);
+                        if (!s) return;
+                        // La grooming prețul depinde de talie; o luăm de pe programare.
+                        const t = (gest.talie || "medie") as keyof PreturiTalie;
+                        const pret = s.preturi ? s.preturi[t] : s.pret;
+                        const dur = s.durate ? s.durate[t] : s.durata;
+                        if (pret) setCorPret(String(pret));
+                        if (dur) setCorDurata(String(dur));
+                      }}>
+                      <option value="">{corServiciu && !servicii.some(s => s.nume === corServiciu) ? corServiciu : "Alege serviciul"}</option>
+                      {servicii.map(s => <option key={s.id} value={s.nume}>{s.nume}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={eticheta}>Preț (RON)</label>
+                      <input type="number" min={0} value={corPret} style={camp} onChange={e => setCorPret(e.target.value)} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={eticheta}>Durata (min)</label>
+                      <input type="number" min={5} step={5} value={corDurata} style={camp} onChange={e => setCorDurata(e.target.value)} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: c.muted, lineHeight: 1.55 }}>
+                    Clientul e anunțat doar dacă se schimbă prețul — acolo e vorba de banii lui.
+                  </div>
+                  {eroareMod && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444" }}>{eroareMod}</div>}
+                  <div style={{ display: "flex", gap: 9 }}>
+                    <button onClick={() => setMod("meniu")} style={{ ...btnBaza, width: "auto", justifyContent: "center", flex: 1 }}>Înapoi</button>
+                    <button disabled={lucru}
+                      onClick={() => {
+                        const nume = corServiciu.trim();
+                        if (!nume) { setEroareMod("Alege serviciul."); return; }
+                        const dur = Number(corDurata) || 60;
+                        if (dur < 5) { setEroareMod("Durata trebuie să fie de cel puțin 5 minute."); return; }
+                        ruleaza(() => corecteazaProgramare(gest.id, { serviciu: nume, pret: Number(corPret) || 0, durata: dur }));
+                      }}
+                      style={{ ...btnBaza, width: "auto", flex: 2, justifyContent: "center", border: "none", background: "#FF6B00", color: "#fff", opacity: lucru ? .55 : 1 }}>
+                      {lucru ? "Se salvează..." : "Salvează"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mod === "anulare" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={eticheta}>De ce anulezi?</label>
+                    <textarea value={motivAnul} onChange={e => { setMotivAnul(e.target.value); setEroareMod(""); }}
+                      rows={3} placeholder="Ex: specialistul e bolnav, salonul e închis în ziua aceea"
+                      style={{ ...camp, resize: "vertical", lineHeight: 1.5 }} />
+                    <div style={{ fontSize: 12, color: c.muted, marginTop: 7, lineHeight: 1.55 }}>
+                      Motivul ajunge la client, în notificare. Îl cerem întotdeauna, nu doar la anulările
+                      de ultim moment: omul își face alt plan sau își ia liber, deci merită să știe de ce.
+                    </div>
+                  </div>
+                  {eroareMod && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#EF4444" }}>{eroareMod}</div>}
+                  <div style={{ display: "flex", gap: 9 }}>
+                    <button onClick={() => setMod("meniu")} style={{ ...btnBaza, width: "auto", justifyContent: "center", flex: 1 }}>Înapoi</button>
+                    <button disabled={lucru}
+                      onClick={() => {
+                        if (motivAnul.trim().length < 5) { setEroareMod("Scrie un motiv de cel puțin 5 caractere."); return; }
+                        ruleaza(() => anuleazaDeSalon(gest.id, motivAnul));
+                      }}
+                      style={{ ...btnBaza, width: "auto", flex: 2, justifyContent: "center", border: "none", background: "#EF4444", color: "#fff", opacity: lucru ? .55 : 1 }}>
+                      {lucru ? "Se anulează..." : "Anulează programarea"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -1144,7 +1401,15 @@ export default function DashboardSalon() {
         .select("user_id")
         .eq("salon_id", salonId)
         .eq("status", "anulat")
-        .not("motiv_anulare", "is", null);
+        .not("motiv_anulare", "is", null)
+        /*
+         * Doar anulările clientului. Salonul scrie și el un motiv când anulează,
+         * iar fără filtrul ăsta motivul lui ar fi numărat împotriva clientului:
+         * omul căruia salonul i-a anulat de trei ori ar apărea cu „3 anulări
+         * târzii" și salonul ar fi invitat să-l blocheze. Rândurile vechi au
+         * `anulat_de` gol și sunt, toate, anulări ale clientului.
+         */
+        .or("anulat_de.is.null,anulat_de.eq.client");
       const map: Record<string, number> = {};
       (data || []).forEach((p: any) => { if (p.user_id) map[p.user_id] = (map[p.user_id] || 0) + 1; });
       setAbateriMap(map);
@@ -1641,8 +1906,101 @@ export default function DashboardSalon() {
     salveaza(aVenit ? "Marcat ca vizită încheiată." : "Marcat ca neprezentare — iese din încasări.");
   }
 
+  /** Data scrisă pe înțelesul omului, pentru notificări: „marți, 3 septembrie". */
+  function dataLunga(dataIso: string) {
+    const e = etichetaZi(dataIso);
+    return e.prefix ? `${e.prefix.toLowerCase()}, ${e.rest.toLowerCase()}` : e.rest.toLowerCase();
+  }
+
+  /**
+   * Salonul anulează o programare confirmată.
+   *
+   * Motivul e obligatoriu întotdeauna, spre deosebire de client, unde e cerut
+   * doar sub 24 de ore. Când salonul anulează, omul își face alt plan sau
+   * ratează o zi liberă — merită să știe de ce, indiferent cu cât timp înainte.
+   *
+   * `anulat_de: "salon"` scoate rândul din numărătoarea anulărilor târzii ale
+   * clientului. Fără el, motivul scris de salon ar fi fost pus în cârca omului.
+   */
+  async function anuleazaDeSalon(id: string, motiv: string) {
+    const prog = programari.find(p => p.id === id);
+    const { data: scrise, error } = await supabase.from("programari")
+      .update({ status: "anulat", motiv_anulare: motiv.trim(), anulat_de: "salon" })
+      .eq("id", id).select("id");
+    if (error || !scrise?.length) { salveaza("Nu am putut anula. Încearcă din nou."); return false; }
+
+    setProgramari(p => p.map(pr => pr.id === id ? { ...pr, status: "anulat" as StatusProg, motivAnulare: motiv.trim() } : pr));
+    if (prog?.user_id && prog.esteApp) {
+      await supabase.from("notificari").insert({
+        user_id: prog.user_id,
+        tip: "anulat",
+        mesaj: `❌ ${numeSalon} a anulat programarea ta de ${dataLunga(prog.data)}, ora ${prog.ora} — ${prog.serviciu}. Motiv: ${motiv.trim()}`,
+        programare_id: id,
+      });
+    }
+    salveaza("Programare anulată — clientul a fost anunțat.");
+    return true;
+  }
+
+  /**
+   * Mutarea unei programări confirmate.
+   *
+   * Ora nouă e definitivă, iar clientul e anunțat (varianta A, decisă cu
+   * utilizatorul): salonul sună omul oricum înainte să miște ceva, iar o
+   * propunere de confirmat ar lăsa ora blocată până răspunde cineva.
+   * În schimb, clientul poate anula liber după mutare, fără motiv.
+   */
+  async function mutaProgramare(id: string, dataNoua: string, oraNoua: string, groomerNou: string | null) {
+    const prog = programari.find(p => p.id === id);
+    if (!prog) return false;
+    const { data: scrise, error } = await supabase.from("programari")
+      // `mutat_la` e ce dă clientului dreptul să anuleze fără motiv după ce
+      // salonul i-a schimbat ora — altfel ar fi obligat să se justifice pentru
+      // o mutare pe care n-a făcut-o el.
+      .update({ data: dataNoua, ora: oraNoua, groomer: groomerNou, mutat_la: new Date().toISOString() })
+      .eq("id", id).select("id");
+    if (error || !scrise?.length) { salveaza("Nu am putut muta programarea."); return false; }
+
+    setProgramari(p => p.map(pr => pr.id === id ? { ...pr, data: dataNoua, ora: oraNoua, groomer: groomerNou } : pr));
+    if (prog.user_id && prog.esteApp) {
+      const schimbaSpecialist = groomerNou && groomerNou !== prog.groomer ? ` Te preia ${groomerNou}.` : "";
+      await supabase.from("notificari").insert({
+        user_id: prog.user_id,
+        tip: "mutat",
+        mesaj: `📅 ${numeSalon} a mutat programarea ta „${prog.serviciu}" din ${dataLunga(prog.data)}, ora ${prog.ora}, în ${dataLunga(dataNoua)}, ora ${oraNoua}.${schimbaSpecialist} Dacă nu îți convine, o poți anula din contul tău.`,
+        programare_id: id,
+      });
+    }
+    salveaza("Programare mutată — clientul a fost anunțat.");
+    return true;
+  }
+
+  /**
+   * Corectarea serviciului, prețului sau duratei — pentru greșeli de scriere.
+   * Nu e o schimbare de plan, deci clientul nu primește notificare decât dacă
+   * se schimbă prețul: acolo e vorba de banii lui.
+   */
+  async function corecteazaProgramare(id: string, patch: { serviciu: string; pret: number; durata: number }) {
+    const prog = programari.find(p => p.id === id);
+    const { data: scrise, error } = await supabase.from("programari")
+      .update(patch).eq("id", id).select("id");
+    if (error || !scrise?.length) { salveaza("Nu am putut salva corectura."); return false; }
+
+    setProgramari(p => p.map(pr => pr.id === id ? { ...pr, ...patch } : pr));
+    if (prog?.user_id && prog.esteApp && prog.pret !== patch.pret) {
+      await supabase.from("notificari").insert({
+        user_id: prog.user_id,
+        tip: "modificat",
+        mesaj: `✏️ ${numeSalon} a actualizat programarea ta de ${dataLunga(prog.data)}: ${patch.serviciu} — ${patch.pret} RON.`,
+        programare_id: id,
+      });
+    }
+    salveaza("Programare actualizată.");
+    return true;
+  }
+
   async function respinge(id: string) {
-    const { error } = await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
+    const { error } = await supabase.from("programari").update({ status: "anulat", anulat_de: "salon" }).eq("id", id);
     if (error) { console.error("Reject error:", error); return; }
     const prog = programari.find(p => p.id === id);
     setProgramari(p => p.filter(pr => pr.id !== id));
@@ -2469,6 +2827,10 @@ export default function DashboardSalon() {
                 onHighlightConsumat={() => setHighlightProgramare(null)}
                 c={c}
                 theme={theme}
+                servicii={servicii}
+                anuleazaDeSalon={anuleazaDeSalon}
+                mutaProgramare={mutaProgramare}
+                corecteazaProgramare={corecteazaProgramare}
               />
             )}
 
