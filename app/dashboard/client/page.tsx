@@ -213,6 +213,9 @@ type Programare = {
   animal_id: string | null;
   /** Completat = salonul a mutat ora. Atunci anularea nu mai cere motiv. */
   mutatLa?: string | null;
+  /** „client" | „salon" | „salon_refuz" — cine a anulat. */
+  anulatDe?: string | null;
+  motivAnulare?: string | null;
 };
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
@@ -539,7 +542,7 @@ export default function DashboardClient() {
     async function loadProgramari(userId: string) {
       const { data } = await supabase
         .from("programari")
-        .select("id, salon_id, serviciu, pret, data, ora, status, groomer, animal_id, mutat_la, saloane(nume)")
+        .select("id, salon_id, serviciu, pret, data, ora, status, groomer, animal_id, mutat_la, anulat_de, motiv_anulare, saloane(nume)")
         .eq("user_id", userId)
         .order("data", { ascending: false })
         .order("ora", { ascending: false });
@@ -557,6 +560,8 @@ export default function DashboardClient() {
           groomer: p.groomer || null,
           animal_id: p.animal_id || null,
           mutatLa: p.mutat_la || null,
+          anulatDe: p.anulat_de || null,
+          motivAnulare: p.motiv_anulare || null,
         })));
       }
       const { data: recs } = await supabase
@@ -3219,6 +3224,22 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
           <div style={{ fontSize: 13, color: c.muted, marginTop: 2 }}>{p.serviciu}</div>
           {p.groomer && <div style={{ fontSize: 12, color: c.muted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><User size={11} color={c.muted} strokeWidth={2} /> {p.groomer}</div>}
           <div style={{ fontSize: 12, color: c.xmuted, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><CalendarDays size={11} strokeWidth={2} /> {formatData(p.data)} · <Clock size={11} strokeWidth={2} /> {p.ora}</div>
+          {/* Cine a anulat și de ce.
+              Până acum pe card scria doar „Anulat" — la fel, indiferent dacă
+              renunțase omul sau îl anulase salonul. Motivul, deși obligatoriu
+              pentru salon, trăia doar în notificare: se citea o dată și se
+              pierdea. Peste o săptămână, în istoric, nu mai avea cum să știe. */}
+          {p.status === "anulat" && p.anulatDe && p.anulatDe !== "client" && (
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#EF4444", marginTop: 5, lineHeight: 1.45 }}>
+              {p.anulatDe === "salon_refuz" ? "Salonul nu a putut prelua cererea" : "Anulată de salon"}
+              {p.motivAnulare ? ` — ${p.motivAnulare}` : ""}
+            </div>
+          )}
+          {p.status === "anulat" && p.anulatDe === "client" && (
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: c.muted, marginTop: 5 }}>
+              Ai anulat tu{p.motivAnulare ? ` — ${p.motivAnulare}` : ""}
+            </div>
+          )}
           {/* Ora schimbată de salon: spunem de ce arată altfel decât ce a rezervat
               omul, și că nu e ținut de ea. */}
           {p.mutatLa && (p.status === "confirmat" || p.status === "în așteptare") && (

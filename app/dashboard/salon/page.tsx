@@ -36,6 +36,8 @@ type ProgramareSalon = {
   /** „app" | „telefonic" | „walkin" | „blocaj" — pauzele nu intră în statistici. */
   sursa?: string | null;
   motivAnulare?: string | null;
+  /** „client" | „salon" (a anulat una confirmată) | „salon_refuz" (a refuzat o cerere). */
+  anulatDe?: string | null;
   observatii?: string | null;
 };
 
@@ -134,6 +136,24 @@ const ePauza = (sursa?: string | null) => sursa === "blocaj";
 
 /** Ce urmează: confirmat, dar încă neefectuat. Se arată separat de încasări. */
 const eDeIncasat = (status: string) => status === "confirmat";
+
+/**
+ * Cerere refuzată de salon.
+ *
+ * În bază arată la fel ca o anulare — status `anulat` — dar înseamnă altceva:
+ * n-a fost niciodată o programare, doar o cerere la care salonul a spus nu.
+ * De asta nu intră la „anulate" în statistici: un salon plin care refuză 20 de
+ * cereri nu are 20 de anulări, are 20 de ore ocupate.
+ */
+const eRefuz = (p: { status: string; anulatDe?: string | null }) =>
+  p.status === "anulat" && p.anulatDe === "salon_refuz";
+
+/** Cine a anulat, scris pe înțelesul salonului. */
+function etichetaAnulare(p: { anulatDe?: string | null }) {
+  if (p.anulatDe === "salon_refuz") return { text: "Ai refuzat cererea", culoare: "#6B7280" };
+  if (p.anulatDe === "salon") return { text: "Ai anulat programarea", culoare: "#D97706" };
+  return { text: "Clientul a anulat", culoare: "#EF4444" };
+}
 
 const PROGRAM_DEFAULT: ProgramSaptamanal = {
   "1": { activ: true, start: "09:00", end: "18:00" },
@@ -339,7 +359,7 @@ function AgendaCalendar({
   setFiltruTalie: (v: "toate" | "mica" | "medie" | "mare") => void;
   areAnimale: boolean;
   accepta: (id: string) => void;
-  respinge: (id: string) => void;
+  respinge: (id: string, motiv?: string) => void;
   clientiBlocati: string[];
   abateriMap: Record<string, number>;
   neprezentariMap: Record<string, number>;
@@ -358,6 +378,9 @@ function AgendaCalendar({
   const HEADER_H = 56;
   const GUTTER_W = 50;
   const [colSel, setColSel] = useState<string>("");
+  /** Cererea pentru care s-a deschis panoul de refuz, plus motivul scris. */
+  const [refuzId, setRefuzId] = useState<string | null>(null);
+  const [motivRefuz, setMotivRefuz] = useState("");
 
   /*
    * Gestionarea unei programări confirmate.
@@ -433,7 +456,10 @@ function AgendaCalendar({
   type Col = { key: string; nume: string; specialitate?: string; appts: ProgramareSalon[] };
   const cols: Col[] = echipa.map(g => ({ key: g.nume, nume: g.nume, specialitate: g.specialitate, appts: [] }));
   const fallbackAppts: ProgramareSalon[] = [];
+  // Cererile refuzate nu apar în grilă: ora n-a fost niciodată ocupată de ele.
+  // Rămân în lista de anulări de sub calendar, marcate „Ai refuzat cererea".
   for (const p of apptsZi) {
+    if (eRefuz(p)) continue;
     const col = p.groomer ? cols.find(x => x.key === p.groomer) : null;
     if (col) col.appts.push(p); else fallbackAppts.push(p);
   }
@@ -461,6 +487,7 @@ function AgendaCalendar({
   let startMin = progZi?.activ ? timeToMin(progZi.start) : 9 * 60;
   let endMin = progZi?.activ ? timeToMin(progZi.end) : 18 * 60;
   for (const p of apptsZi) {
+    if (eRefuz(p)) continue;
     startMin = Math.min(startMin, timeToMin(p.ora));
     endMin = Math.max(endMin, timeToMin(p.ora) + (p.durata || 60));
   }
@@ -642,14 +669,50 @@ function AgendaCalendar({
                   )}
 
                   {/* Action buttons */}
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => respinge(p.id)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(239,68,68,.4)" : "rgba(239,68,68,.3)"}`, background: theme === "dark" ? "rgba(239,68,68,.08)" : "rgba(239,68,68,.05)", color: "#EF4444", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                      <XCircle size={15} color="#EF4444" strokeWidth={2} /> Refuză
-                    </button>
-                    <button onClick={() => accepta(p.id)} style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #FF6B00 0%, #FF9F4A 100%)", color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>
-                      <CheckCircle2 size={15} color="#fff" strokeWidth={2} /> Acceptă programarea
-                    </button>
-                  </div>
+                  {refuzId === p.id ? (
+                    /* Panoul de refuz. Motivul e opțional — de aceea butonul de
+                       trimitere merge și cu câmpul gol, iar scurtăturile sunt
+                       acolo ca să coste un clic, nu o compunere. */
+                    <div style={{ borderTop: `1px solid ${c.border2}`, paddingTop: 12 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 800, color: c.text2, marginBottom: 8 }}>
+                        De ce refuzi? <span style={{ fontWeight: 600, color: c.muted }}>(opțional)</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 9 }}>
+                        {[
+                          "Nu mai am loc la ora asta",
+                          "Specialistul nu e disponibil",
+                          ...(areAnimale ? ["Nu lucrez cu specia asta"] : []),
+                        ].map(m => (
+                          <button key={m} onClick={() => setMotivRefuz(m)}
+                            style={{ padding: "6px 12px", borderRadius: 50, border: `1.5px solid ${motivRefuz === m ? "#FF6B00" : c.border}`, background: motivRefuz === m ? c.orangeAccent : "transparent", color: motivRefuz === m ? "#FF6B00" : c.text2, fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                      <input value={motivRefuz} onChange={e => setMotivRefuz(e.target.value)}
+                        placeholder="Sau scrie tu"
+                        style={{ width: "100%", padding: "10px 13px", borderRadius: 10, border: `1.5px solid ${c.border}`, background: c.surface2, color: c.text, fontSize: 13, fontFamily: "Nunito, sans-serif", boxSizing: "border-box", marginBottom: 10 }} />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => { setRefuzId(null); setMotivRefuz(""); }}
+                          style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${c.border}`, background: "transparent", color: c.text2, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                          Renunț
+                        </button>
+                        <button onClick={() => { respinge(p.id, motivRefuz); setRefuzId(null); setMotivRefuz(""); }}
+                          style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", background: "#EF4444", color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                          {motivRefuz.trim() ? "Refuză și trimite motivul" : "Refuză fără motiv"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => { setRefuzId(p.id); setMotivRefuz(""); }} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1.5px solid ${theme === "dark" ? "rgba(239,68,68,.4)" : "rgba(239,68,68,.3)"}`, background: theme === "dark" ? "rgba(239,68,68,.08)" : "rgba(239,68,68,.05)", color: "#EF4444", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                        <XCircle size={15} color="#EF4444" strokeWidth={2} /> Refuză
+                      </button>
+                      <button onClick={() => accepta(p.id)} style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #FF6B00 0%, #FF9F4A 100%)", color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, boxShadow: "0 4px 14px rgba(255,107,0,.35)" }}>
+                        <CheckCircle2 size={15} color="#fff" strokeWidth={2} /> Acceptă programarea
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -816,21 +879,32 @@ function AgendaCalendar({
         </div>
       )}
 
-      {/* Anulări de la client — sub calendar */}
+      {/* Anulări — sub calendar.
+          Titlul spunea „Anulări de la client" și lista conținea de-a valma
+          anulările clientului, refuzurile salonului și (de la punctul 13)
+          anulările făcute de salon. Trei lucruri diferite sub o etichetă care
+          le punea pe toate în cârca clientului. Acum fiecare card spune cine. */}
       {anulate.length > 0 && (
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Anulări de la client ({anulate.length})</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Anulări ({anulate.length})</div>
           {anulate.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
+            const et = etichetaAnulare(p);
+            const deLaClient = !p.anulatDe || p.anulatDe === "client";
             return (
-              <div key={p.id} style={{ background: theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2", borderRadius: 14, padding: "12px 16px", border: "1.5px solid rgba(239,68,68,.35)", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                <div style={{ width: 46, height: 46, borderRadius: 11, background: "rgba(239,68,68,.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#EF4444", flexShrink: 0 }}>{p.ora}</div>
+              <div key={p.id} style={{ background: deLaClient ? (theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2") : c.surface, borderRadius: 14, padding: "12px 16px", border: `1.5px solid ${deLaClient ? "rgba(239,68,68,.35)" : c.border}`, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <div style={{ width: 46, height: 46, borderRadius: 11, background: deLaClient ? "rgba(239,68,68,.12)" : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: deLaClient ? "#EF4444" : c.muted, flexShrink: 0 }}>{p.ora}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 800, color: c.muted, textDecoration: "line-through" }}>{p.client}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Scissors size={12} color={c.muted} strokeWidth={2} /> {p.serviciu}</div>
-                  {p.motivAnulare && <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: "3px solid rgba(239,68,68,.5)", paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>}
+                  <div style={{ fontSize: 12, fontWeight: 700, color: c.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <Scissors size={12} color={c.muted} strokeWidth={2} /> {p.serviciu}
+                    <span style={{ fontSize: 10.5, fontWeight: 800, color: et.culoare, background: `${et.culoare}1F`, padding: "2px 9px", borderRadius: 50 }}>{et.text}</span>
+                  </div>
+                  {p.motivAnulare && <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: `3px solid ${et.culoare}80`, paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>}
                 </div>
-                {p.esteApp && p.user_id && (() => {
+                {/* Blocarea se oferă doar la anulările clientului. La refuzurile
+                    și anulările proprii n-are ce căuta: n-a greșit nimeni. */}
+                {deLaClient && p.esteApp && p.user_id && (() => {
                   const nrAnulari = abateriMap[p.user_id] || 0;
                   return (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
@@ -1577,13 +1651,24 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data: dataRaw } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, groomer, observatii")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, anulat_de, groomer, observatii")
         .eq("salon_id", salonId)
         .order("data", { ascending: true })
         .order("ora", { ascending: true });
 
-      // Ascundem refuzurile salonului (anulat fără motiv); păstrăm anulările clientului (cu motiv) ca să rămână vizibile în agendă.
-      const data = (dataRaw || []).filter((p: any) => p.status !== "anulat" || !!p.motiv_anulare);
+      /*
+       * Nu mai ascundem nimic.
+       *
+       * Înainte, filtrul de aici arunca orice programare anulată fără motiv —
+       * ca să scape de refuzurile salonului. Efect neintenționat: și anulările
+       * clientului făcute din timp (care n-au motiv, fiindcă nu li-l cerem)
+       * dispăreau din agendă. Salonul nu afla niciodată că cineva a renunțat cu
+       * trei zile înainte; ora arăta pur și simplu liberă.
+       *
+       * Acum știm cine a anulat, din `anulat_de`, deci le putem arăta pe toate,
+       * fiecare cu eticheta ei.
+       */
+      const data = dataRaw || [];
 
       if (data.length === 0) { setProgramari([]); return; }
 
@@ -1630,6 +1715,7 @@ export default function DashboardSalon() {
           esteApp,
           sursa: p.sursa || "app",
           motivAnulare: p.motiv_anulare || null,
+          anulatDe: p.anulat_de || null,
           groomer: p.groomer || null,
           observatii: p.observatii || null,
         };
@@ -2026,19 +2112,37 @@ export default function DashboardSalon() {
     return true;
   }
 
-  async function respinge(id: string) {
-    const { error } = await supabase.from("programari").update({ status: "anulat", anulat_de: "salon" }).eq("id", id);
-    if (error) { console.error("Reject error:", error); return; }
+  /**
+   * Refuzul unei cereri neconfirmate.
+   *
+   * Motivul e **opțional**, spre deosebire de anularea unei programări
+   * confirmate: o cerere n-a fost niciodată o promisiune, iar un salon care
+   * refuză zece cereri pe zi n-are timp să scrie zece explicații. Când există
+   * totuși un motiv, ajunge la client — costă un clic și îl scutește de
+   * întrebări.
+   *
+   * Cardul nu mai dispare de pe ecran, cum se întâmpla înainte: rămâne în
+   * lista de anulări a zilei, marcat „Ai refuzat cererea".
+   */
+  async function respinge(id: string, motiv?: string) {
+    const m = (motiv || "").trim();
+    const { error } = await supabase.from("programari")
+      .update({ status: "anulat", anulat_de: "salon_refuz", motiv_anulare: m || null })
+      .eq("id", id);
+    if (error) { salveaza("Nu am putut refuza cererea. Încearcă din nou."); console.error("Reject error:", error); return; }
     const prog = programari.find(p => p.id === id);
-    setProgramari(p => p.filter(pr => pr.id !== id));
-    if (prog?.user_id) {
+    setProgramari(p => p.map(pr => pr.id === id
+      ? { ...pr, status: "anulat" as StatusProg, anulatDe: "salon_refuz", motivAnulare: m || null }
+      : pr));
+    if (prog?.user_id && prog.esteApp) {
       await supabase.from("notificari").insert({
         user_id: prog.user_id,
         tip: "anulat",
-        mesaj: `❌ ${numeSalon} a respins programarea ta — ${prog.serviciu}`,
+        mesaj: `❌ ${numeSalon} nu a putut prelua cererea ta — ${prog.serviciu}${m ? `. Motiv: ${m}` : ""}`,
         programare_id: id,
       });
     }
+    salveaza("Cerere refuzată — clientul a fost anunțat.");
   }
   function salveaza(msg: string) { setSavedMsg(msg); setTimeout(() => setSavedMsg(""), 2500); }
 
@@ -2970,7 +3074,16 @@ export default function DashboardSalon() {
               const now = new Date();
               const { start, end, label: perLabel } = intervalPerioada(perioadaStat, customStart, customEnd);
               const inRange = (d: string) => d >= start && d <= end;
-              const progRange = programari.filter(p => inRange(p.data) && !ePauza(p.sursa));
+              /*
+               * Cererile refuzate ies din numărătoare.
+               *
+               * Un salon plin care refuză 20 de cereri nu are 20 de anulări și
+               * nici 20 de programări — are 20 de ore ocupate. Le numărăm
+               * separat, ca să nu umfle nici totalul, nici rata de anulare.
+               */
+              const progRange = programari.filter(p => inRange(p.data) && !ePauza(p.sursa) && !eRefuz(p));
+              const refuzateRange = programari.filter(p => inRange(p.data) && !ePauza(p.sursa) && eRefuz(p)).length;
+              const anulateRange = progRange.filter(p => p.status === "anulat").length;
               const venitRange = progRange.filter(p => eIncasare(p.status));
               // Vizite încheiate cărora salonul n-a completat prețul — de obicei
               // cele de la telefon. Cifra de încasări e incompletă cu ele.
@@ -3068,7 +3181,15 @@ export default function DashboardSalon() {
                   ].filter(Boolean).join(" · "),
                   color: "#10B981", clickable: true },
                 { id: "deIncasat" as const, Icon: Clock, label: "De încasat", valoare: `${deIncasatPer} RON`, sub: `${deIncasatRange.length} ${deIncasatRange.length === 1 ? "programare confirmată" : "programări confirmate"}, încă neefectuate`, color: "#3B82F6", clickable: false },
-                { id: "programari" as const, Icon: CalendarDays, label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`, sub: `${asteptarePer} în așteptare · ${deIncasatRange.length} confirmate`, color: "#FF6B00", clickable: true },
+                { id: "programari" as const, Icon: CalendarDays, label: `Programări ${perLabel.toLowerCase()}`, valoare: `${progRange.length}`,
+                  sub: [
+                    `${asteptarePer} în așteptare`,
+                    `${deIncasatRange.length} confirmate`,
+                    anulateRange > 0 ? `${anulateRange} anulate` : null,
+                    // Numărate separat, în afara totalului de deasupra.
+                    refuzateRange > 0 ? `${refuzateRange} refuzate de tine (nesocotite)` : null,
+                  ].filter(Boolean).join(" · "),
+                  color: "#FF6B00", clickable: true },
                 { id: "clienti" as const, Icon: Users, label: `Clienți ${perLabel.toLowerCase()}`, valoare: `${clientiPer}`, sub: `${incasariPer} RON încasați`, color: "#8B5CF6", clickable: true },
                 { id: "rating" as const, Icon: Star, label: "Rating mediu (total)", valoare: ratingSalon.nr > 0 ? ratingSalon.medie.toFixed(1) : "—", sub: ratingSalon.nr > 0 ? `din ${ratingSalon.nr} ${ratingSalon.nr === 1 ? "recenzie" : "recenzii"}` : "Încă fără recenzii", color: "#F59E0B", clickable: true },
               ];

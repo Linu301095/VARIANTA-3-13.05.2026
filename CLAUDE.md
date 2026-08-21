@@ -280,6 +280,42 @@ iar ora ar rămâne blocată până răspunde cineva. Compensația: **clientul m
 **SQL:** `sql/salon_modifica_programari.sql` — **obligatoriu**, adaugă `programari.anulat_de`
 (client/salon) și `programari.mutat_la`. Fără el, butoanele de anulare și mutare eșuează.
 
+### Refuzurile nu mai dispar fără urmă (21.08.2026)
+
+**Ce era, în trei straturi:**
+
+1. `loadProgramari` arunca din start orice programare anulată **fără motiv** — heuristica prin
+   care încerca să ascundă refuzurile salonului. Efect neintenționat: și **anulările clientului
+   făcute din timp** (care n-au motiv, fiindcă nu li-l cerem peste 24h) dispăreau din agendă.
+   Salonul nu afla niciodată că cineva a renunțat cu trei zile înainte — ora arăta liberă.
+2. La apăsarea pe *Refuză*, cardul dispărea instantaneu de pe ecran (`filter`), fără confirmare
+   și fără nicio urmă.
+3. Secțiunea de sub calendar se numea **„Anulări de la client"** și conținea de-a valma anulările
+   clientului, refuzurile salonului și anulările făcute de salon — trei lucruri puse toate în
+   cârca clientului.
+
+**Acum:** nimic nu se mai ascunde. Fiecare card poartă eticheta lui — *Clientul a anulat* ·
+*Ai refuzat cererea* · *Ai anulat programarea* — iar butonul „Blochează" apare doar la primul caz.
+
+**Motivul la refuz e opțional**, spre deosebire de anularea unei programări confirmate (unde e
+obligatoriu): o cerere n-a fost niciodată o promisiune, iar un salon care refuză zece cereri pe zi
+n-are timp să scrie zece explicații. Trei scurtături de un clic + câmp liber.
+
+**`anulat_de` are trei valori:** `client`, `salon` (a anulat una confirmată), `salon_refuz`
+(a refuzat o cerere). Ultimele două arată identic în bază, dar înseamnă altceva.
+
+**În statistici, refuzurile sunt scoase din numărătoare** — nu intră nici la „Programări", nici la
+„anulate". Un salon plin care refuză 20 de cereri nu are 20 de anulări, are 20 de ore ocupate.
+Apar separat, marcate „(nesocotite)". Refuzurile nu apar nici în grila calendarului: ora n-a fost
+niciodată ocupată de ele.
+
+**Clientul vede acum pe card cine a anulat și de ce.** Înainte scria doar „Anulat", identic
+indiferent cine renunțase, iar motivul — obligatoriu pentru salon de la punctul 13 — trăia doar în
+notificare: se citea o dată și se pierdea.
+
+**SQL:** `sql/salon_modifica_programari.sql` — **de rulat din nou**, restricția de pe `anulat_de`
+se reface cu a treia valoare.
+
 ### Recenziile clientului — modificare și ștergere (12.08.2026)
 
 Clientul își poate **modifica** recenzia doar în primele `ORE_EDITARE_RECENZIE = 48` de ore și
