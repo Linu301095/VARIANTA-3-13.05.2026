@@ -1403,6 +1403,8 @@ export default function DashboardSalon() {
   const [animalDeschis, setAnimalDeschis] = useState<string | null>(null);
   const [clientiBlocati, setClientiBlocati] = useState<string[]>([]);
   const [abateriMap, setAbateriMap] = useState<Record<string, number>>({});
+  /** Ce a răspuns baza când n-a mers încărcarea agendei. Gol = totul e bine. */
+  const [eroareAgenda, setEroareAgenda] = useState("");
   /** Neprezentări per client. Se numără separat: o neprezentare e mai gravă decât o anulare târzie. */
   const [neprezentariMap, setNeprezentariMap] = useState<Record<string, number>>({});
   const [groomerOrarDeschis, setGroomerOrarDeschis] = useState<Record<number, boolean>>({});
@@ -1673,7 +1675,7 @@ export default function DashboardSalon() {
     }
 
     async function loadProgramari(salonId: string) {
-      const { data: dataRaw } = await supabase
+      const { data: dataRaw, error: eProg } = await supabase
         .from("programari")
         .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, anulat_de, mutat_la, groomer, observatii")
         .eq("salon_id", salonId)
@@ -1692,6 +1694,23 @@ export default function DashboardSalon() {
        * Acum știm cine a anulat, din `anulat_de`, deci le putem arăta pe toate,
        * fiecare cu eticheta ei.
        */
+      /*
+       * Eroarea nu mai e înghițită.
+       *
+       * Când lipsea o coloană din `select` (de pildă după ce am adăugat
+       * `anulat_de` sau `mutat_la` fără să fie rulat SQL-ul), interogarea
+       * eșua, `data` venea null, iar agenda arăta goală — fără nicio
+       * programare și fără butoane. Salonul primea notificarea de rezervare
+       * nouă și nu găsea nimic de apăsat, fără să afle de ce.
+       */
+      if (eProg) {
+        setEroareAgenda(`Nu am putut încărca programările: ${eProg.message}`);
+        console.error("loadProgramari error:", eProg);
+        setProgramari([]);
+        return;
+      }
+      setEroareAgenda("");
+
       const data = dataRaw || [];
 
       if (data.length === 0) { setProgramari([]); return; }
@@ -2958,6 +2977,22 @@ export default function DashboardSalon() {
                   style={{ padding: "10px 18px", borderRadius: 50, border: "none", background: "#FF6B00", color: "#fff", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
                   Alege un plan →
                 </button>
+              </div>
+            )}
+
+            {/* Interogarea agendei a eșuat — de obicei o coloană care lipsește
+                din bază. Mai bine un mesaj decât un calendar gol care pare
+                pur și simplu o zi liberă. */}
+            {eroareAgenda && (
+              <div style={{ marginBottom: 18, background: theme === "dark" ? "rgba(239,68,68,.10)" : "#FEF2F2", border: "1.5px solid rgba(239,68,68,.35)", borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <AlertTriangle size={20} color="#EF4444" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Agenda nu s-a putut încărca</div>
+                  <div style={{ fontSize: 12.5, color: c.muted, marginTop: 3, lineHeight: 1.55 }}>
+                    {eroareAgenda}
+                    <br />Dacă mesajul pomenește o coloană, lipsește din baza de date — rulează fișierul SQL corespunzător.
+                  </div>
+                </div>
               </div>
             )}
 
