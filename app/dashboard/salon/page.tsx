@@ -156,6 +156,18 @@ const STARE_SCURT: Record<StatusProg, { text: string; culoare: string }> = {
   "neprezentat": { text: "neprezentare", culoare: "#D97706" },
 };
 
+/**
+ * Aceeași informație ca `etichetaAnulare`, dar la persoana a treia — pentru
+ * listele din statistici, unde textul stă lângă alte stări, nu într-un card
+ * care i se adresează salonului.
+ */
+function etichetaAnulareScurt(p: { anulatDe?: string | null; mutatLa?: string | null }) {
+  if (p.anulatDe === "salon_refuz") return { text: "refuzată de tine", culoare: "#6B7280" };
+  if (p.anulatDe === "salon") return { text: "anulată de tine", culoare: "#D97706" };
+  if (p.mutatLa) return { text: "anulată după mutare", culoare: "#D97706" };
+  return { text: "anulată de client", culoare: "#EF4444" };
+}
+
 const eRefuz = (p: { status: string; anulatDe?: string | null }) =>
   p.status === "anulat" && p.anulatDe === "salon_refuz";
 
@@ -905,7 +917,12 @@ function AgendaCalendar({
           le punea pe toate în cârca clientului. Acum fiecare card spune cine. */}
       {anulate.length > 0 && (
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>Anulări ({anulate.length})</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>
+            Anulări — {et.prefix ? `${et.prefix.toLowerCase()}, ` : ""}{et.rest.toLowerCase()} ({anulate.length})
+          </div>
+          <div style={{ fontSize: 12, color: c.muted, marginTop: -4 }}>
+            Doar din ziua deschisă în calendar. Schimbă ziua ca să vezi altele.
+          </div>
           {anulate.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             const et = etichetaAnulare(p);
@@ -3350,7 +3367,10 @@ export default function DashboardSalon() {
                                     {randuri.length > 0 && (
                                       <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 5 }}>
                                         {randuri.map(pr => {
-                                          const st = STARE_SCURT[pr.status];
+                                          // La anulate spunem și cine a anulat: „anulată" sec
+                                          // nu deosebește renunțarea clientului de o mutare
+                                          // făcută de salon.
+                                          const st = pr.status === "anulat" ? etichetaAnulareScurt(pr) : STARE_SCURT[pr.status];
                                           return (
                                             <div key={pr.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, flexWrap: "wrap" }}>
                                               <span style={{ fontWeight: 900, color: c.text2, flexShrink: 0, minWidth: 38 }}>{pr.ora}</span>
