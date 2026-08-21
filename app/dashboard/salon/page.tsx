@@ -38,6 +38,8 @@ type ProgramareSalon = {
   motivAnulare?: string | null;
   /** „client" | „salon" (a anulat una confirmată) | „salon_refuz" (a refuzat o cerere). */
   anulatDe?: string | null;
+  /** Completat = salonul a mutat ora acestei programări. */
+  mutatLa?: string | null;
   observatii?: string | null;
 };
 
@@ -145,14 +147,31 @@ const eDeIncasat = (status: string) => status === "confirmat";
  * De asta nu intră la „anulate" în statistici: un salon plin care refuză 20 de
  * cereri nu are 20 de anulări, are 20 de ore ocupate.
  */
+/** Starea programării, scurtă și colorată — pentru listele din statistici. */
+const STARE_SCURT: Record<StatusProg, { text: string; culoare: string }> = {
+  "în așteptare": { text: "în așteptare", culoare: "#F59E0B" },
+  "confirmat": { text: "confirmată", culoare: "#3B82F6" },
+  "finalizat": { text: "încheiată", culoare: "#10B981" },
+  "anulat": { text: "anulată", culoare: "#EF4444" },
+  "neprezentat": { text: "neprezentare", culoare: "#D97706" },
+};
+
 const eRefuz = (p: { status: string; anulatDe?: string | null }) =>
   p.status === "anulat" && p.anulatDe === "salon_refuz";
 
-/** Cine a anulat, scris pe înțelesul salonului. */
-function etichetaAnulare(p: { anulatDe?: string | null }) {
-  if (p.anulatDe === "salon_refuz") return { text: "Ai refuzat cererea", culoare: "#6B7280" };
-  if (p.anulatDe === "salon") return { text: "Ai anulat programarea", culoare: "#D97706" };
-  return { text: "Clientul a anulat", culoare: "#EF4444" };
+/**
+ * Cine a anulat, scris pe înțelesul salonului.
+ *
+ * Cazul cu `mutatLa` e cel care conta cel mai mult: dacă salonul a mutat ora și
+ * clientului nu i-a convenit, anularea lui apărea drept „Clientul a anulat",
+ * cu buton de blocare alături. Adică omul era pus în culpă pentru o schimbare
+ * pe care a făcut-o salonul.
+ */
+function etichetaAnulare(p: { anulatDe?: string | null; mutatLa?: string | null }) {
+  if (p.anulatDe === "salon_refuz") return { text: "Ai refuzat cererea", culoare: "#6B7280", vinaClientului: false };
+  if (p.anulatDe === "salon") return { text: "Ai anulat programarea", culoare: "#D97706", vinaClientului: false };
+  if (p.mutatLa) return { text: "Clientul a anulat după ce ai mutat ora", culoare: "#D97706", vinaClientului: false };
+  return { text: "Clientul a anulat", culoare: "#EF4444", vinaClientului: true };
 }
 
 const PROGRAM_DEFAULT: ProgramSaptamanal = {
@@ -890,7 +909,7 @@ function AgendaCalendar({
           {anulate.map(p => {
             const blocat = p.esteApp && !!p.user_id && clientiBlocati.includes(p.user_id);
             const et = etichetaAnulare(p);
-            const deLaClient = !p.anulatDe || p.anulatDe === "client";
+            const deLaClient = et.vinaClientului;
             return (
               <div key={p.id} style={{ background: deLaClient ? (theme === "dark" ? "rgba(239,68,68,.07)" : "#FEF2F2") : c.surface, borderRadius: 14, padding: "12px 16px", border: `1.5px solid ${deLaClient ? "rgba(239,68,68,.35)" : c.border}`, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <div style={{ width: 46, height: 46, borderRadius: 11, background: deLaClient ? "rgba(239,68,68,.12)" : c.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: deLaClient ? "#EF4444" : c.muted, flexShrink: 0 }}>{p.ora}</div>
@@ -902,8 +921,10 @@ function AgendaCalendar({
                   </div>
                   {p.motivAnulare && <div style={{ fontSize: 12, color: c.muted, marginTop: 6, borderLeft: `3px solid ${et.culoare}80`, paddingLeft: 8, fontWeight: 600 }}>Motiv: <span style={{ fontWeight: 700 }}>{p.motivAnulare}</span></div>}
                 </div>
-                {/* Blocarea se oferă doar la anulările clientului. La refuzurile
-                    și anulările proprii n-are ce căuta: n-a greșit nimeni. */}
+                {/* Blocarea se oferă doar când clientul a renunțat de capul lui.
+                    La refuzurile și anulările proprii — și la anulările care vin
+                    după o mutare făcută de salon — n-are ce căuta: n-a greșit
+                    nimeni. */}
                 {deLaClient && p.esteApp && p.user_id && (() => {
                   const nrAnulari = abateriMap[p.user_id] || 0;
                   return (
@@ -1510,7 +1531,10 @@ export default function DashboardSalon() {
          * târzii" și salonul ar fi invitat să-l blocheze. Rândurile vechi au
          * `anulat_de` gol și sunt, toate, anulări ale clientului.
          */
-        .or("anulat_de.is.null,anulat_de.eq.client");
+        .or("anulat_de.is.null,anulat_de.eq.client")
+        // Nici anulările care vin după o mutare făcută de salon: ora n-a fost
+        // aleasă de client, deci nu i se pune în cârcă.
+        .is("mutat_la", null);
       const map: Record<string, number> = {};
       (data || []).forEach((p: any) => { if (p.user_id) map[p.user_id] = (map[p.user_id] || 0) + 1; });
       setAbateriMap(map);
@@ -1651,7 +1675,7 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data: dataRaw } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, anulat_de, groomer, observatii")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, anulat_de, mutat_la, groomer, observatii")
         .eq("salon_id", salonId)
         .order("data", { ascending: true })
         .order("ora", { ascending: true });
@@ -1716,6 +1740,7 @@ export default function DashboardSalon() {
           sursa: p.sursa || "app",
           motivAnulare: p.motiv_anulare || null,
           anulatDe: p.anulat_de || null,
+          mutatLa: p.mutat_la || null,
           groomer: p.groomer || null,
           observatii: p.observatii || null,
         };
@@ -3096,15 +3121,26 @@ export default function DashboardSalon() {
               const clientiPer = new Set(progRange.map(p => p.user_id).filter(Boolean)).size;
               const asteptarePer = progRange.filter(p => p.status === "în așteptare").length;
 
-              const zileMap: Record<string, { venit: number; nr: number; clienti: Set<string> }> = {};
+              /*
+               * Ziua păstrează și programările, nu doar cifra.
+               *
+               * Înainte, cardul desfăcut arăta „Azi — 1" și atât: salonul vedea
+               * numărul, dar nu putea afla despre ce e vorba fără să caute prin
+               * agendă. O cifră fără detaliu nu răspunde la nicio întrebare.
+               */
+              const zileMap: Record<string, { venit: number; nr: number; clienti: Set<string>; progs: ProgramareSalon[] }> = {};
               progRange.forEach(p => {
-                (zileMap[p.data] ||= { venit: 0, nr: 0, clienti: new Set<string>() });
+                (zileMap[p.data] ||= { venit: 0, nr: 0, clienti: new Set<string>(), progs: [] });
                 zileMap[p.data].nr++;
+                zileMap[p.data].progs.push(p);
                 if (p.user_id) zileMap[p.data].clienti.add(p.user_id);
                 if (eIncasare(p.status)) zileMap[p.data].venit += p.pret || 0;
               });
               const zileBreakdown = Object.entries(zileMap)
-                .map(([data, v]) => ({ data, venit: v.venit, nr: v.nr, clienti: v.clienti.size }))
+                .map(([data, v]) => ({
+                  data, venit: v.venit, nr: v.nr, clienti: v.clienti.size,
+                  progs: [...v.progs].sort((a, b) => a.ora < b.ora ? -1 : 1),
+                }))
                 .sort((a, b) => a.data < b.data ? 1 : -1);
 
               const servCount: Record<string, number> = {};
@@ -3265,13 +3301,33 @@ export default function DashboardSalon() {
                               {zileBreakdown.map(z => {
                                 const et = etichetaZi(z.data);
                                 const val = card.id === "venituri" ? `${z.venit} RON` : card.id === "programari" ? `${z.nr}` : `${z.clienti}`;
+                                // Ce se enumeră sub zi, după cardul deschis.
+                                const randuri = card.id === "venituri" ? z.progs.filter(p => eIncasare(p.status)) : z.progs;
                                 return (
-                                  <div key={z.data} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 12px", borderRadius: 10, background: c.surface2 }}>
-                                    <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
-                                      {et.prefix && <span style={{ fontSize: 12, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text, flexShrink: 0 }}>{et.prefix}</span>}
-                                      <span style={{ fontSize: 12, fontWeight: 700, color: et.prefix ? c.muted : c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{et.rest}</span>
+                                  <div key={z.data} style={{ padding: "8px 12px", borderRadius: 10, background: c.surface2 }}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                                      <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+                                        {et.prefix && <span style={{ fontSize: 12, fontWeight: 900, color: et.azi ? "#FF6B00" : c.text, flexShrink: 0 }}>{et.prefix}</span>}
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: et.prefix ? c.muted : c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{et.rest}</span>
+                                      </div>
+                                      <span style={{ fontSize: 14, fontWeight: 900, color: c.text, flexShrink: 0 }}>{val}</span>
                                     </div>
-                                    <span style={{ fontSize: 14, fontWeight: 900, color: c.text, flexShrink: 0 }}>{val}</span>
+                                    {randuri.length > 0 && (
+                                      <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 5 }}>
+                                        {randuri.map(pr => {
+                                          const st = STARE_SCURT[pr.status];
+                                          return (
+                                            <div key={pr.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, flexWrap: "wrap" }}>
+                                              <span style={{ fontWeight: 900, color: c.text2, flexShrink: 0, minWidth: 38 }}>{pr.ora}</span>
+                                              <span style={{ fontWeight: 800, color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 150 }}>{pr.client}</span>
+                                              <span style={{ color: c.muted, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pr.serviciu}</span>
+                                              {pr.pret > 0 && <span style={{ fontWeight: 900, color: "#FF6B00", flexShrink: 0 }}>{pr.pret} RON</span>}
+                                              <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: st.culoare, background: `${st.culoare}1F`, padding: "1px 8px", borderRadius: 50 }}>{st.text}</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
