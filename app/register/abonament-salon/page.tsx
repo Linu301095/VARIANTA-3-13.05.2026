@@ -53,10 +53,11 @@ export default function AbonamentSalon() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || anulat) return;
       const { data: salon } = await supabase
-        .from("saloane").select("domeniu, plan").eq("user_id", user.id).single();
+        .from("saloane").select("domeniu, plan, ciclu").eq("user_id", user.id).single();
       if (anulat || !salon) return;
       setVert(salon.domeniu === "infrumusetare" ? "infrumusetare" : "grooming");
       if (salon.plan === "basic" || salon.plan === "pro" || salon.plan === "business") setAles(salon.plan);
+      if (salon.ciclu === "lunar" || salon.ciclu === "anual") setCiclu(salon.ciclu);
     })();
     return () => { anulat = true; };
   }, []);
@@ -70,8 +71,10 @@ export default function AbonamentSalon() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    // Trialul a pornit deja la finalul wizardului. Aici doar retinem planul ales.
-    const { error } = await supabase.from("saloane").update({ plan: ales }).eq("user_id", user.id);
+    // Trialul a pornit deja la finalul wizardului. Aici doar retinem planul ales
+    // si ciclul de facturare — care pana acum se pierdea: omul alegea „anual"
+    // cu -17%, apasa, si alegerea nu ajungea nicaieri in baza.
+    const { error } = await supabase.from("saloane").update({ plan: ales, ciclu }).eq("user_id", user.id);
     if (error) {
       setEroare("Nu am putut salva planul. Încearcă din nou.");
       setLoading(false);

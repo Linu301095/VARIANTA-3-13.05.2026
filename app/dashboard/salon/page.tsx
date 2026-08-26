@@ -7,7 +7,7 @@ import Footer from "../../../components/Footer";
 import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { stareTrial, zileText, ZILE_AVERTISMENT, ZILE_TRIAL } from "../../../lib/trial";
-import { numePlan } from "../../../lib/planuri";
+import { numePlan, planuriPentru, pretPlan, REDUCERE_ANUALA, type PlanId, type Ciclu } from "../../../lib/planuri";
 import { SPECIALIZARI, MAX_SPECIALIZARI } from "../../../lib/specializari";
 import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import SchimbaParola from "../../../components/SchimbaParola";
@@ -1969,6 +1969,73 @@ export default function DashboardSalon() {
     consultant: ["business"].includes(planIdCurent),
     postari: ["business"].includes(planIdCurent),
   };
+  const cicluCurent: Ciclu = salonData?.ciclu === "anual" ? "anual" : "lunar";
+  const PLANURI_SALON = planuriPentru(areAnimale ? "grooming" : "infrumusetare");
+  const [schimbPlan, setSchimbPlan] = useState(false);
+
+  /**
+   * Schimbarea planului, direct din cont.
+   *
+   * În trial se poate face oricând și de câte ori vrea salonul: ce vede în
+   * aplicație e exact ce dă planul pe care stă acum, iar la finalul trialului
+   * îi propunem planul pe care se află. Fără card, fără plată — deocamdată nu
+   * există nicio încasare, iar butonul nu pretinde altceva.
+   *
+   * Fiecare schimbare intră în `plan_istoric`. La prima dispută despre
+   * facturare o să vrei să știi ce a ales omul și când; iar după primele 20 de
+   * saloane îți arată dacă lumea urcă sau coboară în trial. E o informație pe
+   * care n-o poți recupera retroactiv dacă n-o scrii de la început.
+   */
+  /**
+   * Ecranul unui agent AI care nu e în planul curent.
+   *
+   * Cât timp salonul e în trial, lacătul devine ușă: apeși și ești pe planul
+   * ăla, pe loc, fără card. Înainte scria „Disponibil începând cu planul
+   * Business" și te trimitea în alt tab — adică, timp de 14 zile, produsul îi
+   * arăta omului ce nu are, exact în momentul în care voia să vadă ce are.
+   */
+  function PoartaPlan({ plan, text }: { plan: PlanId; text: React.ReactNode }) {
+    const inTrial = trial.stare === "trial";
+    return (
+      <div style={{ padding: "22px 18px", textAlign: "center" }}>
+        <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>
+          {inTrial ? (
+            <>Face parte din planul <strong style={{ color: "#FF6B00" }}>{numePlan(plan)}</strong>. Ești în trial — îl poți încerca acum, fără card. {text}</>
+          ) : (
+            <>Disponibil în planul <strong style={{ color: "#FF6B00" }}>{numePlan(plan)}</strong>. {text}</>
+          )}
+        </div>
+        <button onClick={() => (inTrial ? schimbaPlan(plan) : setTab("abonament"))} disabled={schimbPlan}
+          style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: schimbPlan ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", opacity: schimbPlan ? .6 : 1, maxWidth: "100%" }}>
+          {inTrial ? `Încearcă ${numePlan(plan)} acum` : `Alege planul ${numePlan(plan)}`}
+        </button>
+        {inTrial && (
+          <div style={{ fontSize: 11.5, color: c.xmuted, marginTop: 9 }}>Te poți întoarce oricând la planul de acum.</div>
+        )}
+      </div>
+    );
+  }
+
+  async function schimbaPlan(planNou: PlanId, cicluNou: Ciclu = cicluCurent) {
+    if (!salonData?.id) return;
+    if (planNou === planIdCurent && cicluNou === cicluCurent) { setSchimbPlan(false); return; }
+    const planVechi = planIdCurent;
+    setSchimbPlan(true);
+    const { data: scrise, error } = await supabase
+      .from("saloane").update({ plan: planNou, ciclu: cicluNou }).eq("id", salonData.id).select("id");
+    setSchimbPlan(false);
+    if (error || !scrise?.length) { salveaza("Nu am putut schimba planul. Încearcă din nou."); return; }
+
+    setSalonData((s: any) => ({ ...s, plan: planNou, ciclu: cicluNou }));
+    supabase.from("plan_istoric").insert({
+      salon_id: salonData.id,
+      plan_vechi: planVechi,
+      plan_nou: planNou,
+      ciclu: cicluNou,
+      stare: trial.stare,
+    }).then(() => {});
+    salveaza(`Ai trecut pe planul ${numePlan(planNou)}.`);
+  }
 
   // Contor LUNAR de intrebari libere — sursa: Supabase (cross-device)
   useEffect(() => {
@@ -2969,8 +3036,10 @@ export default function DashboardSalon() {
                   <div style={{ fontSize: 14, fontWeight: 900, color: c.text }}>
                     {trial.zileRamase === 0 ? "Trialul se încheie astăzi" : `Trialul se încheie în ${zileText(trial.zileRamase)}`}
                   </div>
+                  {/* Spunem pe ce plan e, ca ziua 15 să nu fie o surpriză.
+                      Propunerea de facturare va fi exact planul de aici. */}
                   <div style={{ fontSize: 12.5, color: c.muted, marginTop: 2 }}>
-                    Alege un plan ca salonul să rămână vizibil și să primească programări în continuare.
+                    Ești pe planul <strong style={{ color: c.text }}>{numePlan(salonData?.plan)}</strong> — cu el continui, dacă nu schimbi.
                   </div>
                 </div>
                 <button onClick={() => setTab("abonament")}
@@ -3715,10 +3784,7 @@ export default function DashboardSalon() {
                     </div>
 
                     {!aiAccess.recenzii ? (
-                      <div style={{ padding: "22px 18px", textAlign: "center" }}>
-                        <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil începând cu planul <strong style={{ color: "#FF6B00" }}>Basic</strong>. Răspunde clienților în câteva secunde, cu un ton care întărește reputația salonului.</div>
-                        <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Basic</button>
-                      </div>
+                      <PoartaPlan plan="basic" text={"Răspunde clienților în câteva secunde, cu un ton care întărește reputația salonului."} />
                     ) : (
                       <div style={{ padding: "16px 18px" }}>
                         {recenziiSalon.length === 0 ? (
@@ -3825,10 +3891,7 @@ export default function DashboardSalon() {
                     </div>
 
                     {!aiAccess.clientiInactivi ? (
-                      <div style={{ padding: "22px 18px", textAlign: "center" }}>
-                        <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil începând cu planul <strong style={{ color: "#FF6B00" }}>Pro</strong>. Recâștigă clienții care nu au mai trecut pe la salon, cu mesaje pregătite de AI.</div>
-                        <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Pro</button>
-                      </div>
+                      <PoartaPlan plan="pro" text={"Recâștigă clienții care nu au mai trecut pe la salon, cu mesaje pregătite de AI."} />
                     ) : (
                       <div style={{ padding: "16px 18px" }}>
                         {/* Bara de control: ultima analiză + buton */}
@@ -3985,10 +4048,7 @@ export default function DashboardSalon() {
                       </div>
 
                       {!aiAccess.fisaIngrijire ? (
-                        <div style={{ padding: "22px 18px", textAlign: "center" }}>
-                          <div style={{ fontSize: 13.5, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. {DS.fisaPitch}</div>
-                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>Activează planul Business</button>
-                        </div>
+                        <PoartaPlan plan="business" text={DS.fisaPitch} />
                       ) : finalizate.length === 0 ? (
                         <div style={{ padding: "22px 18px", textAlign: "center" }}>
                           <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><ClipboardList size={26} color="#3B82F6" strokeWidth={1.5} /></div>
@@ -4087,10 +4147,7 @@ export default function DashboardSalon() {
                       </div>
 
                       {!aiAccess.consultant ? (
-                        <div style={{ padding: pInner, textAlign: "center" }}>
-                          <div style={{ fontSize: 13, color: c.muted, marginBottom: 14, lineHeight: 1.6 }}>Disponibil în planul <strong style={{ color: "#FF6B00" }}>Business</strong>. Consultantul AI îți pregătește rapoarte de business din datele reale ale salonului tău.</div>
-                          <button onClick={() => setTab("abonament")} style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "10px 22px", cursor: "pointer", fontFamily: "Nunito, sans-serif", width: isMobile ? "100%" : "auto" }}>Activează planul Business</button>
-                        </div>
+                        <PoartaPlan plan="business" text={"Consultantul AI îți pregătește rapoarte de business din datele reale ale salonului tău."} />
                       ) : (
                         <div style={{ padding: pInner }}>
 
@@ -5140,6 +5197,7 @@ export default function DashboardSalon() {
                     {[
                       ["Plan", numePlan(salonData?.plan)],
                       ["Tip salon", DS.areAnimale ? "Grooming" : "Înfrumusețare"],
+                      ["Facturare", cicluCurent === "anual" ? `Anual (-${REDUCERE_ANUALA}%)` : "Lunar"],
                       ["Comision pe programări", "0%"],
                       ["Stare", trial.stare === "trial" ? "Trial gratuit" : trial.stare === "abonat" ? "Abonament activ" : "Trial încheiat"],
                     ].map(([k, v]) => (
@@ -5151,9 +5209,63 @@ export default function DashboardSalon() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
-                  <button onClick={() => router.push("/register/abonament-salon")} style={btnPrimary}>
-                    {trial.stare === "expirat" ? "Alege un plan" : "Schimbă planul"}
+                {/* Schimbarea planului se face aici, nu prin ieșirea pe pagina
+                    de înregistrare. În trial e liberă și instantanee: agenții AI
+                    citesc `saloane.plan`, deci se deschid și se închid singuri. */}
+                <div style={{ background: c.surface, borderRadius: 18, padding: "22px 26px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 4 }}>
+                    {trial.stare === "trial" ? "Încearcă orice plan, cât ești în trial" : "Planuri"}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: c.muted, marginBottom: 16, lineHeight: 1.55 }}>
+                    {trial.stare === "trial"
+                      ? "Te poți muta între ele oricând, de câte ori vrei. Nu îți cerem cardul și nu se plătește nimic — la finalul trialului îți propunem planul pe care ești."
+                      : "Alege planul cu care continui. Plata online nu e încă activă."}
+                  </div>
+
+                  {/* Lunar / anual — alegerea se salvează acum în bază. Înainte
+                      se pierdea, deși era o promisiune de preț. */}
+                  <div style={{ display: "inline-flex", gap: 4, background: c.surface2, border: `1.5px solid ${c.border}`, borderRadius: 50, padding: 4, marginBottom: 16 }}>
+                    {(["lunar", "anual"] as Ciclu[]).map(cc => {
+                      const activ = cicluCurent === cc;
+                      return (
+                        <button key={cc} onClick={() => schimbaPlan(planIdCurent as PlanId, cc)} disabled={schimbPlan}
+                          style={{ border: "none", borderRadius: 50, padding: "8px 18px", fontFamily: "Nunito, sans-serif", fontSize: 13, fontWeight: 800, cursor: "pointer", background: activ ? "#FF6B00" : "transparent", color: activ ? "#fff" : c.muted, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          {cc === "lunar" ? "Lunar" : "Anual"}
+                          {cc === "anual" && <span style={{ fontSize: 10, fontWeight: 900, background: activ ? "rgba(255,255,255,.25)" : c.orangeAccent, color: activ ? "#fff" : "#FF6B00", padding: "2px 7px", borderRadius: 50 }}>-{REDUCERE_ANUALA}%</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12 }}>
+                    {PLANURI_SALON.map(pl => {
+                      const activ = pl.id === planIdCurent;
+                      return (
+                        <div key={pl.id} style={{ borderRadius: 16, padding: "16px 18px", border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? c.orangeAccent : c.surface2, display: "flex", flexDirection: "column", gap: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span style={{ fontSize: 16, fontWeight: 900, color: c.text }}>{pl.nume}</span>
+                            {activ && <span style={{ fontSize: 10.5, fontWeight: 900, color: "#FF6B00", background: c.surface, padding: "2px 9px", borderRadius: 50 }}>PLANUL TĂU</span>}
+                          </div>
+                          <div style={{ fontSize: 12, color: c.muted, fontWeight: 600, lineHeight: 1.45, minHeight: 34 }}>{pl.descriere}</div>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+                            <span style={{ fontSize: 26, fontWeight: 900, color: c.text }}>{pretPlan(pl, cicluCurent)}</span>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: c.muted }}>lei / lună</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: c.xmuted, fontWeight: 600 }}>
+                            {cicluCurent === "anual" ? `facturat anual · ${pl.pretLunar} lei dacă plătești lunar` : "facturat lunar"}
+                          </div>
+                          <button onClick={() => schimbaPlan(pl.id)} disabled={activ || schimbPlan}
+                            style={{ marginTop: 4, padding: "9px 0", borderRadius: 50, border: activ ? `1.5px solid ${c.border}` : "none", background: activ ? "transparent" : "#FF6B00", color: activ ? c.muted : "#fff", fontSize: 12.5, fontWeight: 800, cursor: activ ? "default" : "pointer", fontFamily: "Nunito, sans-serif", opacity: schimbPlan ? .6 : 1 }}>
+                            {activ ? "Ești pe planul ăsta" : trial.stare === "trial" ? `Încearcă ${pl.nume}` : `Alege ${pl.nume}`}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <button onClick={() => router.push("/preturi")}
+                    style={{ marginTop: 14, background: "none", border: "none", padding: 0, color: "#FF6B00", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    Vezi toate caracteristicile fiecărui plan →
                   </button>
                 </div>
 

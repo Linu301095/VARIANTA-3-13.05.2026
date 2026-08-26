@@ -54,6 +54,8 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
 - `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.
 - `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
+- `sql/planuri_si_facturare.sql` — **obligatoriu pentru schimbarea planului din dashboard**,
+  adaugă `saloane.ciclu`, coloanele Stripe și tabelul `plan_istoric`.
 - `sql/salon_modifica_programari.sql` — **obligatoriu pentru anularea și mutarea programărilor de
   către salon**, adaugă `programari.anulat_de` și `programari.mutat_la`.
 - `sql/admin_scrie_saloane.sql` — **obligatoriu pentru butoanele de stare din `/admin`**, adaugă
@@ -105,6 +107,51 @@ Scris în Termeni, secțiunea 5 (versiunea 1.1).
    checkout-ul real, nu doar salvarea planului în `saloane.plan`.
 4. **Butoanele manuale din `/admin`** (vezi mai jos) rămân ca override după Stripe — scriu
    exact aceleași două coloane pe care le va scrie webhook-ul.
+
+### Planul în trial — probă reală, nu lacăte (21.08.2026)
+
+**Ce era:** salonul în trial stă pe planul ales în wizard, de obicei Basic. Deci timp de 14 zile
+vedea **un agent AI din patru** și trei ecrane cu „Disponibil începând cu planul Business", care îl
+trimiteau în alt tab. Trialul, adică exact momentul în care omul ar trebui să vadă ce cumpără, era
+momentul în care i se arăta ce nu are.
+
+**Regula stabilită cu utilizatorul:**
+
+| Când | Ce vede |
+|---|---|
+| În trial | planul pe care stă **acum** — dar se poate muta liber între Basic / Pro / Business, oricând, de câte ori vrea, fără card |
+| Ultimele 3 zile | bannerul spune pe ce plan e: „Ești pe Pro — cu el continui, dacă nu schimbi" |
+| Ziua 15 | i se propune **planul pe care se află**. Atât — fără socoteli de tipul „planul pe care a stat cele mai multe zile", pe care nu i le poți explica într-o propoziție |
+| După trial, fără confirmare | rămâne pe planul lui, în starea „expirat". **Nu** cade automat pe Basic: o retrogradare tăcută ar face să dispară funcții fără ca omul să fi atins nimic |
+
+**Lacătul a devenit ușă.** Pe un agent din alt plan, cât timp salonul e în trial, scrie „Ești în
+trial — îl poți încerca acum, fără card", iar butonul schimbă planul **pe loc**, fără să ieși din
+pagină. Limitarea citește `saloane.plan`, deci agenții se deschid singuri. Sub buton scrie că te
+poți întoarce oricând.
+
+**Schimbarea planului se face din tabul Abonament**, cu cele trei carduri și comutatorul
+lunar/anual. Înainte butonul te scotea pe `/register/abonament-salon` — pagina din înscriere.
+
+**Trei lucruri pregătite pentru facturare (Stripe încă nu există):**
+
+1. **`saloane.ciclu`** — lunar/anual. Până acum omul alegea „anual" cu −17%, apăsa, și alegerea
+   **se pierdea**: nu exista coloană. Era o promisiune de preț pe care n-o rețineam.
+2. **Coloanele Stripe**, goale: `stripe_customer_id`, `stripe_subscription_id`, `plan_status`,
+   `plan_expira_la`. Webhook-ul are unde scrie, fără migrare făcută în grabă.
+3. **`plan_istoric`** — jurnal al schimbărilor (de pe ce, pe ce, ce ciclu, în ce stare de trial).
+   La prima dispută despre facturare o să vrei să știi ce a ales omul și când; iar după primele 20
+   de saloane îți arată dacă lumea urcă sau coboară în trial. Informație care nu se poate recupera
+   retroactiv.
+
+**Ce NU s-a făcut:** nicio simulare de plată, niciun buton „Plătește" care nu plătește, nicio
+factură falsă. Sub planuri scrie mai departe că plata online nu e activă.
+
+**De ținut minte la Stripe:** mutarea între planuri în mijlocul unei luni plătite cere proratare —
+Stripe o face singur, dar interfața va trebui să spună ce se întâmplă cu banii. În trial nu există
+problema asta, fiindcă nu e niciun ban la mijloc.
+
+**SQL:** `sql/planuri_si_facturare.sql` — **obligatoriu**, adaugă `saloane.ciclu`, coloanele Stripe
+și tabelul `plan_istoric`. Fără el, schimbarea planului din dashboard eșuează.
 
 ### Starea abonamentului — comandă manuală în admin (20.08.2026)
 
