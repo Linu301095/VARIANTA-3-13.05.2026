@@ -186,6 +186,50 @@ a refuzat — nu mai eșuează mut.
 3. **Vindecare automată:** la prima intrare în cont, salonul fără dată primește
    `created_at + 14 zile` scris în bază, o singură dată. Iese din zona de ghicit.
 
+### ⚠️ CHECKLIST STRIPE — ce e pregătit și ce rămâne de configurat
+
+**Pregătit în cod și în bază (21.08.2026), nu mai trebuie făcut atunci:**
+
+| Ce | Unde |
+|---|---|
+| `saloane.abonament_activ` | comutatorul citit de `lib/trial.ts`. True → „abonat", niciun banner |
+| `saloane.ciclu` | lunar/anual, ales din tabul Abonament și din wizard |
+| `saloane.stripe_customer_id` | gol; index unic parțial deja creat |
+| `saloane.stripe_subscription_id` | gol |
+| `saloane.plan_status` | gol — pentru `active`/`past_due`/`canceled` de la Stripe |
+| `saloane.plan_expira_la` | gol — sfârșitul perioadei plătite |
+| `plan_istoric` | jurnalul schimbărilor de plan, cu RLS pe salon + admin |
+| Butoanele manuale din `/admin` | scriu exact `trial_expira_la` și `abonament_activ` — rămân ca override |
+
+**De configurat / scris când vine ziua:**
+
+1. **Cont Stripe** — cere IBAN pe firmă + CUI (etapa 2 din planul de lansare).
+2. **Trei produse cu câte două prețuri** (lunar și anual), potrivite cu `lib/planuri.ts`:
+   Basic 69/57 · Pro 119/99 · Business 219/182. Id-urile de preț se pun într-o hartă
+   `{ plan, ciclu } → priceId`, de preferat lângă `lib/planuri.ts`.
+3. **Checkout Session** pornit din tabul Abonament — azi butonul doar scrie în `saloane.plan`.
+4. **Webhook** (`/api/stripe/webhook`), cu semnătura verificată, care tratează cel puțin:
+   `checkout.session.completed`, `customer.subscription.updated`,
+   `customer.subscription.deleted`, `invoice.payment_failed`.
+   Scrie `abonament_activ`, `plan`, `ciclu`, `plan_status`, `plan_expira_la`,
+   `stripe_customer_id`, `stripe_subscription_id` — și adaugă un rând în `plan_istoric`.
+5. **Portalul Stripe Billing** — ca salonul să-și schimbe cardul, să vadă facturile și să anuleze
+   fără să ne scrie nouă.
+6. **Proratarea** — mutarea între planuri în mijlocul unei luni plătite. Stripe o calculează
+   singur, dar interfața trebuie să spună ce se întâmplă cu banii **înainte** de confirmare.
+   În trial problema nu există, fiindcă nu e niciun ban la mijloc.
+7. **Blocarea efectivă a suspendării** — abia atunci se poate aplica: ascunderea profilului din
+   căutare, oprirea rezervărilor noi, oprirea agenților AI. Vezi §„suspendat" mai sus.
+8. **Ștergerea la 45 de zile NU se activează fără Resend** — altfel am șterge datele cuiva care
+   n-a fost anunțat niciodată.
+
+**⚠️ Limitele de plan sunt vândute, dar NU sunt aplicate în cod.** `/preturi` promite „până la 2
+useri" la Basic, „3-6" la Pro, galerie de 5 vs 10 poze, statistici doar Azi/Lună la Basic. În
+`app/dashboard/salon/page.tsx` nu există nicio verificare pentru niciuna: singurul lucru pe care
+planul îl chiar limitează sunt cei patru agenți AI (`aiAccess`). Cât timp nu se încasează nimic,
+n-are efect. **Din ziua în care se facturează, un salon pe Basic cu 8 specialiști plătește ca
+pentru 2** — de decis atunci: ori aplicăm limitele, ori le scoatem din pagina de prețuri.
+
 ### ⚠️ DE REVENIT CÂND FACEM EMAIL (Resend)
 
 1. **Emailurile de trial** — azi există doar notificarea în aplicație, deci un salon care nu
