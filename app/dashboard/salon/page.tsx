@@ -7,7 +7,7 @@ import Footer from "../../../components/Footer";
 import LogoSemn from "../../../components/LogoSemn";
 import { supabase } from "../../../lib/supabase";
 import { stareTrial, zileText, ZILE_AVERTISMENT, ZILE_TRIAL } from "../../../lib/trial";
-import { numePlan, planuriPentru, pretPlan, REDUCERE_ANUALA, type PlanId, type Ciclu } from "../../../lib/planuri";
+import { numePlan, planuriPentru, pretPlan, limitePlan, REDUCERE_ANUALA, type PlanId, type Ciclu } from "../../../lib/planuri";
 import { SPECIALIZARI, MAX_SPECIALIZARI } from "../../../lib/specializari";
 import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import SchimbaParola from "../../../components/SchimbaParola";
@@ -98,7 +98,15 @@ type Tab = "agenda" | "statistici" | "program" | "notificari" | "functii-ai" | "
 type PreturiTalie = { mica: string; medie: string; mare: string };
 type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 type ServiciuOferit = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: (string | ServiciuOferit)[] };
+/**
+ * `activ: false` = user peste limita planului.
+ *
+ * Nu e ștergere: datele, istoricul și programările lui confirmate rămân
+ * intacte, doar nu mai poate fi ales la rezervări noi. Dacă salonul urcă la
+ * loc, revine exact cum era. Lipsa câmpului înseamnă activ — conturile de
+ * dinaintea limitelor nu se dezactivează singure.
+ */
+type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: (string | ServiciuOferit)[]; activ?: boolean };
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
 type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null; groomer: string | null };
@@ -485,7 +493,16 @@ function AgendaCalendar({
 
   // Coloane: una per specialist din echipă; programările fără groomer ajung într-o coloană separată
   type Col = { key: string; nume: string; specialitate?: string; appts: ProgramareSalon[] };
-  const cols: Col[] = echipa.map(g => ({ key: g.nume, nume: g.nume, specialitate: g.specialitate, appts: [] }));
+  /*
+   * Coloanele: userii activi, plus cei inactivi care au totuși programări în
+   * ziua asta. Un user scos peste limita planului nu mai primește rezervări
+   * noi, dar programările lui deja confirmate se desfășoară normal — ar fi
+   * greșit să dispară din calendar cu o zi înainte.
+   */
+  const numeCuProgramari = new Set(apptsZi.map(p => p.groomer).filter(Boolean) as string[]);
+  const cols: Col[] = echipa
+    .filter(g => g.activ !== false || numeCuProgramari.has(g.nume))
+    .map(g => ({ key: g.nume, nume: g.nume, specialitate: g.specialitate, appts: [] }));
   const fallbackAppts: ProgramareSalon[] = [];
   // Cererile refuzate nu apar în grilă: ora n-a fost niciodată ocupată de ele.
   // Rămân în lista de anulări de sub calendar, marcate „Ai refuzat cererea".
@@ -1045,7 +1062,7 @@ function AgendaCalendar({
                       <label style={eticheta}>Specialist</label>
                       <select value={mutGroomer} style={camp} onChange={e => setMutGroomer(e.target.value)}>
                         <option value="">Fără specialist anume</option>
-                        {echipa.map(g => <option key={g.nume} value={g.nume}>{g.nume}</option>)}
+                        {echipa.filter(g => g.activ !== false).map(g => <option key={g.nume} value={g.nume}>{g.nume}</option>)}
                       </select>
                     </div>
                   )}
@@ -1970,6 +1987,25 @@ export default function DashboardSalon() {
     postari: ["business"].includes(planIdCurent),
   };
   const cicluCurent: Ciclu = salonData?.ciclu === "anual" ? "anual" : "lunar";
+
+  /*
+   * Limitele planului — useri și poze.
+   *
+   * Se aplică la **adăugare**, nu retroactiv, și nu șterg niciodată nimic.
+   * Când salonul coboară pe un plan mai mic și e peste limită, își alege
+   * singur cine rămâne activ (vezi `coborareInSuspensie`).
+   */
+  const limiteCurente = limitePlan(planIdCurent);
+  const eUserActiv = (g: Groomer) => g.activ !== false;
+  const userieActivi = echipa.filter(eUserActiv);
+  const pozeAscunse: string[] = Array.isArray(salonData?.galerie_ascunse) ? salonData.galerie_ascunse : [];
+  const galerieVizibila = galerie.filter(u => !pozeAscunse.includes(u));
+  const potAdaugaUser = limiteCurente.maxUseri === null || userieActivi.length < limiteCurente.maxUseri;
+  const potAdaugaPoza = limiteCurente.maxPoze === null || galerieVizibila.length < limiteCurente.maxPoze;
+
+  /** Ecranul „alege cine rămâne", când coborârea de plan trece peste limită. */
+  const [coborare, setCoborare] = useState<{ plan: PlanId; ciclu: Ciclu; useri: number[]; poze: string[] } | null>(null);
+
   const PLANURI_SALON = planuriPentru(areAnimale ? "grooming" : "infrumusetare");
   const [schimbPlan, setSchimbPlan] = useState(false);
 
@@ -2019,14 +2055,56 @@ export default function DashboardSalon() {
   async function schimbaPlan(planNou: PlanId, cicluNou: Ciclu = cicluCurent) {
     if (!salonData?.id) return;
     if (planNou === planIdCurent && cicluNou === cicluCurent) { setSchimbPlan(false); return; }
+
+    /*
+     * Coborâre sub ce are salonul acum: nu tăiem noi.
+     *
+     * Aplicația nu decide cine mai lucrează și nu șterge poze. Deschidem
+     * ecranul în care salonul alege singur ce rămâne activ, cu tot ce e peste
+     * limită păstrat intact în bază.
+     */
+    const lim = limitePlan(planNou);
+    const peUseri = lim.maxUseri !== null && userieActivi.length > lim.maxUseri;
+    const pePoze = lim.maxPoze !== null && galerieVizibila.length > lim.maxPoze;
+    if (peUseri || pePoze) {
+      setCoborare({
+        plan: planNou,
+        ciclu: cicluNou,
+        useri: userieActivi.slice(0, lim.maxUseri ?? userieActivi.length).map(g => g.id),
+        poze: galerieVizibila.slice(0, lim.maxPoze ?? galerieVizibila.length),
+      });
+      return;
+    }
+    /*
+     * Urcare: ce a fost scos revine singur.
+     *
+     * Am promis „dacă urci la loc, revin exact cum erau" — deci nu-l punem pe
+     * om să reactiveze manual, unul câte unul, oameni pe care i-a dezactivat
+     * doar fiindcă îi cerea planul.
+     */
+    const incapUserii = lim.maxUseri === null || echipa.length <= lim.maxUseri;
+    const incapPozele = lim.maxPoze === null || galerie.length <= lim.maxPoze;
+    const extra: Record<string, any> = {};
+    if (incapUserii && echipa.some(g => g.activ === false)) {
+      extra.echipa = echipa.map(g => ({ ...g, activ: true }));
+    }
+    if (incapPozele && pozeAscunse.length > 0) extra.galerie_ascunse = [];
+
+    const ok = await scriePlan(planNou, cicluNou, Object.keys(extra).length ? extra : undefined);
+    if (ok && extra.echipa) setEchipa(extra.echipa);
+  }
+
+  /** Scrierea propriu-zisă a planului, plus rândul din jurnal. */
+  async function scriePlan(planNou: PlanId, cicluNou: Ciclu, extra?: Record<string, any>) {
+    if (!salonData?.id) return false;
     const planVechi = planIdCurent;
     setSchimbPlan(true);
     const { data: scrise, error } = await supabase
-      .from("saloane").update({ plan: planNou, ciclu: cicluNou }).eq("id", salonData.id).select("id");
+      .from("saloane").update({ plan: planNou, ciclu: cicluNou, ...(extra || {}) }).eq("id", salonData.id).select("id");
     setSchimbPlan(false);
-    if (error || !scrise?.length) { salveaza("Nu am putut schimba planul. Încearcă din nou."); return; }
+    if (error || !scrise?.length) { salveaza("Nu am putut schimba planul. Încearcă din nou."); return false; }
 
-    setSalonData((s: any) => ({ ...s, plan: planNou, ciclu: cicluNou }));
+    setSalonData((s: any) => ({ ...s, plan: planNou, ciclu: cicluNou, ...(extra || {}) }));
     supabase.from("plan_istoric").insert({
       salon_id: salonData.id,
       plan_vechi: planVechi,
@@ -2035,6 +2113,23 @@ export default function DashboardSalon() {
       stare: trial.stare,
     }).then(() => {});
     salveaza(`Ai trecut pe planul ${numePlan(planNou)}.`);
+    return true;
+  }
+
+  /**
+   * Confirmarea coborârii: userii nebifați devin inactivi, pozele nebifate se
+   * ascund din profilul public. Nimic nu se șterge — fișierele rămân în
+   * storage, membrii echipei rămân în listă cu tot istoricul lor, iar dacă
+   * salonul urcă la loc revin exact cum erau.
+   */
+  async function aplicaCoborare() {
+    if (!coborare) return;
+    const echipaNoua = echipa.map(g => ({ ...g, activ: coborare.useri.includes(g.id) }));
+    const ascunse = galerie.filter(u => !coborare.poze.includes(u));
+    const ok = await scriePlan(coborare.plan, coborare.ciclu, { echipa: echipaNoua, galerie_ascunse: ascunse });
+    if (!ok) return;
+    setEchipa(echipaNoua);
+    setCoborare(null);
   }
 
   // Contor LUNAR de intrebari libere — sursa: Supabase (cross-device)
@@ -4439,7 +4534,7 @@ export default function DashboardSalon() {
                             style={{ padding: "8px 14px", borderRadius: 10, border: groomerProgramTab === "toti" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerProgramTab === "toti" ? c.orangeAccent : c.surface, color: groomerProgramTab === "toti" ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
                             <Users size={13} color="currentColor" strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> Toți
                           </button>
-                          {echipa.map(g => (
+                          {userieActivi.map(g => (
                             <button key={g.id} onClick={() => setGroomerProgramTab(g.nume)}
                               style={{ padding: "8px 14px", borderRadius: 10, border: groomerProgramTab === g.nume ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerProgramTab === g.nume ? c.orangeAccent : c.surface, color: groomerProgramTab === g.nume ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
                               <User size={13} color="currentColor" strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> {g.nume || "Specialist"}
@@ -4600,7 +4695,7 @@ export default function DashboardSalon() {
                                 style={{ padding: "8px 14px", borderRadius: 50, border: groomerBlocare === "toti" ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerBlocare === "toti" ? "#FF6B00" : c.surface, color: groomerBlocare === "toti" ? "#fff" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                                 Toți
                               </button>
-                              {echipa.map(g => (
+                              {userieActivi.map(g => (
                                 <button key={g.id} onClick={() => setGroomerBlocare(g.nume)}
                                   style={{ padding: "8px 14px", borderRadius: 50, border: groomerBlocare === g.nume ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: groomerBlocare === g.nume ? c.orangeAccent : c.surface, color: groomerBlocare === g.nume ? "#FF6B00" : c.text2, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                                   <User size={12} color="currentColor" strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> {g.nume || "Specialist"}
@@ -4664,8 +4759,8 @@ export default function DashboardSalon() {
                 {/* GALERIE */}
                 <div style={{ background: c.surface, borderRadius: 20, padding: "24px", border: `1.5px solid ${c.border}`, marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, display: "flex", alignItems: "center", gap: 6 }}><ImageIcon size={14} color={c.text2} strokeWidth={2} /> Galerie salon ({galerie.length}/10)</div>
-                    {galerie.length < 10 && (
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, display: "flex", alignItems: "center", gap: 6 }}><ImageIcon size={14} color={c.text2} strokeWidth={2} /> Galerie salon ({galerieVizibila.length}{limiteCurente.maxPoze !== null ? `/${limiteCurente.maxPoze}` : ""})</div>
+                    {potAdaugaPoza && (
                       <label style={{ cursor: "pointer" }}>
                         <div style={{ padding: "8px 16px", borderRadius: 50, border: "1.5px solid #FF6B00", background: c.orangeAccent, color: "#FF6B00", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
                           {uploadingGalerie ? "Se încarcă..." : "+ Adaugă poze"}
@@ -4693,7 +4788,17 @@ export default function DashboardSalon() {
                       ))}
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: c.muted, marginTop: 10 }}>Clienții văd galeria când intră pe profilul salonului tău. Max 10 poze.</div>
+                  <div style={{ fontSize: 11, color: c.muted, marginTop: 10 }}>
+                    Clienții văd galeria când intră pe profilul salonului tău.
+                    {limiteCurente.maxPoze !== null && ` Planul ${numePlan(planIdCurent)} include ${limiteCurente.maxPoze} poze.`}
+                  </div>
+                  {/* Pozele peste limita planului nu se șterg din storage — se
+                      ascund din profil și revin întregi dacă salonul urcă la loc. */}
+                  {pozeAscunse.length > 0 && (
+                    <div style={{ fontSize: 11.5, color: "#D97706", marginTop: 6, fontWeight: 700 }}>
+                      {pozeAscunse.length} {pozeAscunse.length === 1 ? "poză ascunsă" : "poze ascunse"} din profil — depășesc planul curent. Revin dacă urci la un plan mai mare.
+                    </div>
+                  )}
                 </div>
 
                 {/* DATE SALON */}
@@ -4970,7 +5075,24 @@ export default function DashboardSalon() {
                     const orarG: ProgramSaptamanal = g.orar || PROGRAM_DEFAULT;
                     return (
                       <div key={g.id} style={{ background: c.surface, borderRadius: 16, border: `1.5px solid ${c.border}`, overflow: "hidden" }}>
-                        <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                        {/* User scos peste limita planului: datele lui rămân, dar
+                            nu mai primește rezervări noi. Se întoarce cu un clic,
+                            dacă planul are loc. */}
+                        {g.activ === false && (
+                          <div style={{ background: theme === "dark" ? "rgba(217,119,6,.10)" : "#FFFBEB", borderBottom: "1.5px solid rgba(217,119,6,.35)", padding: "9px 20px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: "#D97706", flex: 1, minWidth: 180 }}>
+                              Inactiv — depășește cei {limiteCurente.maxUseri} useri din planul {numePlan(planIdCurent)}. Nu primește rezervări noi.
+                            </span>
+                            <button onClick={() => {
+                              if (!potAdaugaUser) { setTab("abonament"); return; }
+                              setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, activ: true } : x));
+                            }}
+                              style={{ fontSize: 11.5, fontWeight: 800, color: potAdaugaUser ? "#D97706" : c.muted, background: "transparent", border: `1.5px solid ${potAdaugaUser ? "#D97706" : c.border}`, padding: "6px 12px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                              {potAdaugaUser ? "Reactivează" : "Vezi planurile"}
+                            </button>
+                          </div>
+                        )}
+                        <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", opacity: g.activ === false ? .6 : 1 }}>
                           <div style={{ width: 44, height: 44, borderRadius: "50%", background: c.orangeAccent, border: "2px solid #FF6B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><User size={20} color="#FF6B00" strokeWidth={2} /></div>
                           <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 10, minWidth: 0 }}>
                             <input value={g.nume} onChange={e => setEchipa(ec => ec.map(x => x.id === g.id ? { ...x, nume: e.target.value } : x))} placeholder="Nume specialist" style={inp} />
@@ -5146,10 +5268,29 @@ export default function DashboardSalon() {
                     );
                   })}
                 </div>
-                <button onClick={() => setEchipa(ec => [...ec, { id: Date.now(), nume: "", specialitate: "", orar: { ...PROGRAM_DEFAULT } }])}
-                  style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>
-                  + Adaugă specialist
-                </button>
+                {/* Limita se aplică la adăugare. Nu se șterge nimeni retroactiv —
+                    userii peste limită rămân în listă, inactivi. */}
+                {potAdaugaUser ? (
+                  <button onClick={() => setEchipa(ec => [...ec, { id: Date.now(), nume: "", specialitate: "", orar: { ...PROGRAM_DEFAULT } }])}
+                    style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>
+                    + Adaugă specialist
+                  </button>
+                ) : (
+                  <div style={{ padding: "16px 18px", borderRadius: 12, border: `1.5px dashed ${c.border}`, background: c.surface2, marginBottom: 16, textAlign: "center" }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text, marginBottom: 4 }}>
+                      Ai {userieActivi.length} din {limiteCurente.maxUseri} useri incluși în {numePlan(planIdCurent)}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: c.muted, lineHeight: 1.55, marginBottom: 12 }}>
+                      {trial.stare === "trial"
+                        ? "Ești în trial — poți urca la un plan cu mai mulți useri chiar acum, fără card."
+                        : "Urcă la un plan cu mai mulți useri ca să mai adaugi."}
+                    </div>
+                    <button onClick={() => setTab("abonament")}
+                      style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "#FF6B00", border: "none", borderRadius: 50, padding: "9px 20px", cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                      Vezi planurile
+                    </button>
+                  </div>
+                )}
                 <button onClick={async () => {
                   const { data: { user: authUser } } = await supabase.auth.getUser();
                   if (!authUser) { salveaza("Sesiunea a expirat. Reintră în cont."); return; }
@@ -5359,6 +5500,94 @@ export default function DashboardSalon() {
         {/* Fereastra de închidere a contului. Escape sau clic pe fundal o
             închid, iar „Renunț" e primul buton — la o acțiune fără întoarcere,
             ieșirea trebuie să fie mai ușoară decât intrarea. */}
+        {/* ── Coborâre de plan: salonul alege ce rămâne activ ──
+            Nici „rămân toți" (ar face din trial o portiță prin care oricine își
+            adaugă echipa pe Business și coboară pe Basic), nici „taie aplicația
+            primii din listă" (ar decide în locul omului cine mai lucrează). */}
+        {coborare && (() => {
+          const lim = limitePlan(coborare.plan);
+          const preaMultiUseri = lim.maxUseri !== null && coborare.useri.length > lim.maxUseri;
+          const preaMultePoze = lim.maxPoze !== null && coborare.poze.length > lim.maxPoze;
+          const gata = !preaMultiUseri && !preaMultePoze;
+          const arataUseri = lim.maxUseri !== null && userieActivi.length > lim.maxUseri;
+          const arataPoze = lim.maxPoze !== null && galerieVizibila.length > lim.maxPoze;
+          return (
+            <div onClick={() => setCoborare(null)}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.55)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
+              <div onClick={e => e.stopPropagation()}
+                style={{ background: c.surface, borderRadius: 20, border: `1.5px solid ${c.border}`, padding: "24px 26px", width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,.35)" }}>
+                <div style={{ fontSize: 17, fontWeight: 900, color: c.text, marginBottom: 6 }}>
+                  Treci pe planul {numePlan(coborare.plan)}
+                </div>
+                <div style={{ fontSize: 13, color: c.muted, lineHeight: 1.6, marginBottom: 18 }}>
+                  Alege ce rămâne activ. <strong style={{ color: c.text }}>Nu se șterge nimic</strong> — ce rămâne
+                  nebifat își păstrează datele și istoricul, iar dacă urci la loc revine exact cum era.
+                  Programările deja confirmate se desfășoară normal, oricum ai alege.
+                </div>
+
+                {arataUseri && (
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 8 }}>
+                      Useri — {coborare.useri.length} din {lim.maxUseri} incluși
+                      {preaMultiUseri && <span style={{ color: "#EF4444" }}> · mai scoate {coborare.useri.length - (lim.maxUseri || 0)}</span>}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                      {userieActivi.map(g => {
+                        const bifat = coborare.useri.includes(g.id);
+                        return (
+                          <button key={g.id}
+                            onClick={() => setCoborare(cb => cb ? { ...cb, useri: bifat ? cb.useri.filter(x => x !== g.id) : [...cb.useri, g.id] } : cb)}
+                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 13px", borderRadius: 12, border: `1.5px solid ${bifat ? "#FF6B00" : c.border}`, background: bifat ? c.orangeAccent : c.surface2, cursor: "pointer", fontFamily: "Nunito, sans-serif", textAlign: "left", width: "100%" }}>
+                            <span style={{ width: 18, height: 18, borderRadius: 6, border: `2px solid ${bifat ? "#FF6B00" : c.border}`, background: bifat ? "#FF6B00" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              {bifat && <CheckCircle2 size={12} color="#fff" strokeWidth={3} />}
+                            </span>
+                            <span style={{ minWidth: 0 }}>
+                              <span style={{ display: "block", fontSize: 13.5, fontWeight: 800, color: c.text }}>{g.nume || "Fără nume"}</span>
+                              {g.specialitate && <span style={{ fontSize: 11.5, color: c.muted, fontWeight: 600 }}>{g.specialitate}</span>}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {arataPoze && (
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c.text2, marginBottom: 8 }}>
+                      Poze în galerie — {coborare.poze.length} din {lim.maxPoze} incluse
+                      {preaMultePoze && <span style={{ color: "#EF4444" }}> · mai scoate {coborare.poze.length - (lim.maxPoze || 0)}</span>}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {galerieVizibila.map(u => {
+                        const bifat = coborare.poze.includes(u);
+                        return (
+                          <button key={u}
+                            onClick={() => setCoborare(cb => cb ? { ...cb, poze: bifat ? cb.poze.filter(x => x !== u) : [...cb.poze, u] } : cb)}
+                            style={{ padding: 0, border: `2.5px solid ${bifat ? "#FF6B00" : c.border}`, borderRadius: 12, cursor: "pointer", background: "none", width: 74, height: 74, overflow: "hidden", position: "relative", opacity: bifat ? 1 : .45 }}>
+                            <img src={u} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: 9 }}>
+                  <button onClick={() => setCoborare(null)}
+                    style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1.5px solid ${c.border}`, background: "transparent", color: c.text2, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>
+                    Renunț
+                  </button>
+                  <button onClick={aplicaCoborare} disabled={!gata || schimbPlan}
+                    style={{ flex: 2, padding: "11px 0", borderRadius: 12, border: "none", background: gata ? "#FF6B00" : c.border, color: gata ? "#fff" : c.muted, fontSize: 13.5, fontWeight: 900, cursor: gata && !schimbPlan ? "pointer" : "default", fontFamily: "Nunito, sans-serif", opacity: schimbPlan ? .6 : 1 }}>
+                    {schimbPlan ? "Se salvează..." : `Treci pe ${numePlan(coborare.plan)}`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {stergeDeschis && (
           <div onClick={() => !stergeLoading && setStergeDeschis(false)}
             style={{ position: "fixed", inset: 0, background: theme === "dark" ? "rgba(0,0,0,.68)" : "rgba(20,14,10,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18, zIndex: 1000 }}>

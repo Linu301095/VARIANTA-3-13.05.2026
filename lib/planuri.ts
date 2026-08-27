@@ -36,6 +36,19 @@ export const VERTICAL: Record<Vertical, {
 export type Plan = {
   id: PlanId;
   nume: string;
+  /**
+   * Câți useri include planul. `null` = nelimitat.
+   *
+   * „User" nu înseamnă doar un rând în lista de echipă: e un om care își
+   * gestionează singur programul în aplicație. Salonul îl invită să-și facă
+   * cont, iar el își vede și își administrează propriile programări — cazul
+   * clasic e specialistul care închiriază scaunul: încasările se duc la salon,
+   * dar agenda e a lui. Login-ul individual e încă „în curând"; până atunci
+   * limita se aplică pe numărul de membri din echipă, care e același număr.
+   */
+  maxUseri: number | null;
+  /** Câte poze poate avea galeria publică. `null` = nelimitat. */
+  maxPoze: number | null;
   tagline: string;
   descriere: string;
   pretLunar: number;
@@ -59,6 +72,8 @@ export function planuriPentru(v: Vertical): Plan[] {
       descriere: `Pentru un ${V.rol} singur sau cu un asistent`,
       pretLunar: 69,
       pretAnual: 57,
+      maxUseri: 2,
+      maxPoze: 5,
       badge: null,
       recomandat: false,
       prefix: null,
@@ -81,6 +96,8 @@ export function planuriPentru(v: Vertical): Plan[] {
       descriere: "Pentru saloane în creștere, 3-6 persoane",
       pretLunar: 119,
       pretAnual: 99,
+      maxUseri: 6,
+      maxPoze: 10,
       badge: "Cel mai popular",
       recomandat: true,
       prefix: "Tot ce e în Basic, plus:",
@@ -103,6 +120,9 @@ export function planuriPentru(v: Vertical): Plan[] {
       descriere: "Pentru saloane mari sau cu mai multe locații",
       pretLunar: 219,
       pretAnual: 182,
+      maxUseri: null,
+      // Pagina de prețuri nu promite mai mult decât la Pro, deci nu inventăm.
+      maxPoze: 10,
       badge: "All-in",
       recomandat: false,
       prefix: "Tot ce e în Pro, plus:",
@@ -122,6 +142,23 @@ export function planuriPentru(v: Vertical): Plan[] {
 /** Prețul afișat pentru un plan, în funcție de ciclul de facturare. */
 export function pretPlan(p: Plan, ciclu: Ciclu): number {
   return ciclu === "anual" ? p.pretAnual : p.pretLunar;
+}
+
+/**
+ * Limitele unui plan, pornind de la id-ul salvat în bază.
+ *
+ * Regula de aplicare (21.08.2026): **limitele nu șterg nimic**. Când salonul
+ * coboară pe un plan mai mic și e peste limită, își alege singur cine rămâne
+ * activ; restul devin inactivi, cu datele intacte, și revin dacă urcă la loc.
+ * Nici varianta „rămân toți" (ar face din trial o portiță prin care oricine
+ * își adaugă echipa pe Business și coboară pe Basic), nici varianta „taie
+ * aplicația primii doi din listă" (ar decide în locul omului cine mai lucrează).
+ */
+export function limitePlan(id: string | null | undefined): { maxUseri: number | null; maxPoze: number | null } {
+  const p = planuriPentru("infrumusetare").find(x => x.id === id);
+  const fallback = planuriPentru("infrumusetare")[0];
+  const ales = p || fallback;
+  return { maxUseri: ales.maxUseri, maxPoze: ales.maxPoze };
 }
 
 /** Numele afișat al unui plan, pornind de la id-ul salvat în baza de date. */

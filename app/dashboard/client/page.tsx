@@ -84,7 +84,12 @@ function mapSalonDB(s: any, i: number): SalonItem {
     bg: p.bg,
     poza_url: s.poza_url || null,
     galerie: Array.isArray(s.galerie) ? s.galerie : [],
-    echipa: Array.isArray(s.echipa) ? s.echipa : [],
+    /*
+     * Userii peste limita planului salonului sunt marcați `activ: false`.
+     * Nu se șterg — își păstrează datele și programările confirmate — dar nu
+     * mai pot fi aleși la o rezervare nouă, deci nu au ce căuta aici.
+     */
+    echipa: Array.isArray(s.echipa) ? s.echipa.filter((m: any) => m?.activ !== false) : [],
     program: s.program || null,
     adresa: s.adresa || "",
     telefon: s.telefon || "",

@@ -54,6 +54,7 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
 - `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.
 - `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
+- `sql/limite_plan.sql` — **obligatoriu pentru limitele de plan**, adaugă `saloane.galerie_ascunse`.
 - `sql/planuri_si_facturare.sql` — **obligatoriu pentru schimbarea planului din dashboard**,
   adaugă `saloane.ciclu`, coloanele Stripe și tabelul `plan_istoric`.
 - `sql/salon_modifica_programari.sql` — **obligatoriu pentru anularea și mutarea programărilor de
@@ -152,6 +153,46 @@ problema asta, fiindcă nu e niciun ban la mijloc.
 
 **SQL:** `sql/planuri_si_facturare.sql` — **obligatoriu**, adaugă `saloane.ciclu`, coloanele Stripe
 și tabelul `plan_istoric`. Fără el, schimbarea planului din dashboard eșuează.
+
+### Limitele de plan — se aplică fără să șteargă nimic (21.08.2026)
+
+**Ce se limitează de acum:** userii și pozele din galerie. Basic 2 useri / 5 poze · Pro 6 / 10 ·
+Business nelimitat / 10. Cifrele stau în `lib/planuri.ts` (`maxUseri`, `maxPoze`), lângă prețuri.
+
+**Regula, aleasă din patru variante:**
+
+| Variantă | De ce a căzut |
+|---|---|
+| Rămân toți (grandfathering) | portiță: oricine își adaugă echipa pe Business în trial și coboară pe Basic. Nimeni n-ar mai plăti Pro |
+| Surplusul se dezactivează automat | aplicația ar decide cine mai lucrează, după ordinea din listă |
+| Coborârea se blochează până șterge | îl obliges să șteargă date ca să plătească mai puțin |
+| **Salonul alege cine rămâne activ** | ✅ ales |
+
+**Cum arată:** la coborâre, dacă e peste limită, apare un ecran cu userii și pozele lui. Bifează
+ce rămâne activ. Ce rămâne nebifat **nu se șterge**: userul rămâne în echipă marcat „Inactiv"
+(`echipa[].activ = false`), poza rămâne în storage și doar iese din profil
+(`saloane.galerie_ascunse`). **La urcare revin singure**, fără să reactiveze nimeni nimic manual.
+
+**Userul inactiv:** nu apare la clientul care rezervă, nu are coloană proprie în calendar, nu
+poate fi ales la blocarea unei ore. **Programările lui deja confirmate se desfășoară normal** —
+coloana lui reapare în ziua în care are programări. Istoricul și statisticile rămân întregi.
+
+**Limita se aplică la adăugare:** butonul „+ Adaugă specialist" devine un card care spune câți
+useri ai din câți include planul, cu trimitere la Abonament (în trial: „poți urca acum, fără card").
+
+**„User" nu e sinonim cu „rând în lista de echipă"** — decizia utilizatorului, notată ca să nu se
+piardă: un user e un om care își gestionează singur programul în aplicație. Salonul îl invită
+să-și facă cont, iar el își administrează propriile programări. Cazul concret: specialistul care
+închiriază scaunul — încasările se duc la salon, dar agenda e a lui. **Login-ul individual încă nu
+există** (e marcat „în curând" în planul Business); până atunci limita se aplică pe numărul de
+membri din echipă, care e același număr. De asta termenul rămâne „useri" pe `/preturi`, nu
+„specialiști".
+
+**Ce NU se limitează niciodată:** statisticile pe istoricul propriu. Sunt datele salonului — să i
+le ascunzi pentru că a ales un plan mai ieftin e altceva decât să nu-i dai o funcție nouă.
+
+**SQL:** `sql/limite_plan.sql` — adaugă `saloane.galerie_ascunse`. Echipa nu cere migrare
+(`saloane.echipa` e jsonb, deci fiecare membru primește un câmp `activ`).
 
 ### Starea abonamentului — comandă manuală în admin (20.08.2026)
 
