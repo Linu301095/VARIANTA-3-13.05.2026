@@ -54,6 +54,8 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
 - `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.
 - `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
+- `sql/identitate_specialist.sql` — **obligatoriu**, adaugă `programari.membru_uid`. Fără el,
+  rezervările eșuează (clientul scrie coloana la fiecare programare).
 - `sql/limite_plan.sql` — **obligatoriu pentru limitele de plan**, adaugă `saloane.galerie_ascunse`.
 - `sql/planuri_si_facturare.sql` — **obligatoriu pentru schimbarea planului din dashboard**,
   adaugă `saloane.ciclu`, coloanele Stripe și tabelul `plan_istoric`.
@@ -153,6 +155,57 @@ problema asta, fiindcă nu e niciun ban la mijloc.
 
 **SQL:** `sql/planuri_si_facturare.sql` — **obligatoriu**, adaugă `saloane.ciclu`, coloanele Stripe
 și tabelul `plan_istoric`. Fără el, schimbarea planului din dashboard eșuează.
+
+### Identitate în loc de nume scris (21.08.2026)
+
+**Ce era:** tot ce lega lucrurile între ele era **numele**.
+
+| Legătura | Cheia | Ce se rupea la redenumire |
+|---|---|---|
+| Serviciile bifate la un specialist | denumirea serviciului | specialistul dispărea de la serviciul acela în dashboardul clientului, iar prețul lui personalizat se pierdea |
+| Programarea → specialist | `programari.groomer`, text | programările rămâneau agățate de un om care nu mai există; coloana lui din calendar se dubla; istoricul din statistici se rupea în două persoane |
+
+Nimeni nu afla nimic. Salonul vedea doar că scad rezervările la un serviciu.
+
+**Acum** fiecare serviciu are `sid` și fiecare membru al echipei are `uid`, completate automat
+la prima intrare în cont și scrise în bază o singură dată. Numele rămâne, dar e doar eticheta
+afișată. Potrivirea se face **întâi după id, apoi după nume** — programările și bifele scrise
+înainte continuă să funcționeze, fără migrare.
+
+**Redenumirea unui serviciu se propagă** la specialiști în momentul salvării, ca eticheta de lângă
+`sid` să nu rămână cea veche.
+
+**`programari.membru_uid`** ține identitatea specialistului pe fiecare programare. Statisticile pe
+productivitate se grupează după ea, cu numele de acum — deci o redenumire nu mai taie istoricul.
+
+**De ce contează dincolo de bug:** e temelia conturilor de specialist. Dacă legătura dintre cont și
+programări s-ar face prin nume, oricine își schimbă numele și-ar pierde toată agenda.
+
+**SQL:** `sql/identitate_specialist.sql` — adaugă `programari.membru_uid`. Serviciile și echipa nu
+cer migrare (sunt jsonb).
+
+### ⚠️ DE FĂCUT — conturi pentru specialiști (etapă mare, după Resend)
+
+**Logica utilizatorului, notată ca să nu se piardă:** un „user" nu e un rând în lista de echipă, e
+un om care își gestionează singur programul. Salonul îl invită să-și facă cont, iar el își
+administrează propriile programări. Cazul concret: specialistul care închiriază scaunul — încasările
+se duc la salon, dar agenda e a lui. De asta termenul rămâne **„useri"** pe `/preturi`, nu
+„specialiști".
+
+Azi un salon = un singur cont (proprietarul), iar echipa e o listă de nume. Ce cere etapa:
+
+1. **Echipa devine tabel** (`salon_membri`: salon_id, user_id gol până acceptă, nume, rol, activ).
+2. **Invitația** — ⚠️ cere Resend. Până atunci, alternativă: cod de invitație trimis manual.
+3. **Dashboard propriu**, mai mic — specialistul n-are ce căuta în cel de salon.
+4. **Regulile de acces** (propunere): agenda proprie ✅ · confirmă/refuză/mută programările lui ✅ ·
+   își blochează ore ✅ · prețurile doar de citit 👁 · încasările salonului ❌ · echipa, planul,
+   profilul, agenții AI ❌ · istoricul doar clienții lui.
+   **Rămâne de decis:** își vede propriile încasări? (argument pro: pe baza lor își plătește chiria).
+5. **RLS extins** — azi politicile leagă programările de proprietar. Aici greșelile costă: un
+   specialist care ajunge să vadă agenda altuia.
+6. **Abia atunci limita „2 useri" înseamnă chiar 2 conturi**, nu 2 rânduri într-o listă.
+
+Estimare: 3–5 zile. Depinde de Resend, care depinde de domeniu.
 
 ### Limitele de plan — se aplică fără să șteargă nimic (21.08.2026)
 

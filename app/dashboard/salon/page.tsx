@@ -31,6 +31,8 @@ type ProgramareSalon = {
   durata?: number | null;
   pret: number;
   groomer?: string | null;
+  /** Identitatea specialistului. Numele de mai sus e doar eticheta afișată. */
+  membruUid?: string | null;
   status: StatusProg;
   esteApp: boolean;
   /** „app" | „telefonic" | „walkin" | „blocaj" — pauzele nu intră în statistici. */
@@ -96,8 +98,21 @@ const DOM_SALON: Record<DomeniuSalon, {
 
 type Tab = "agenda" | "statistici" | "program" | "notificari" | "functii-ai" | "profil-salon" | "servicii" | "echipa" | "animale" | "abonament" | "setari" | "ajutor";
 type PreturiTalie = { mica: string; medie: string; mare: string };
-type Serviciu = { id: number; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
-type ServiciuOferit = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
+/**
+ * `sid` / `uid` — identitatea stabilă a unui serviciu, respectiv a unui membru.
+ *
+ * Până acum, tot ce lega lucrurile între ele era **numele scris**: serviciile
+ * bifate la un specialist se potriveau după denumirea serviciului, iar
+ * programarea reținea specialistul ca șir de caractere. Redenumeai un serviciu
+ * și se rupea, în tăcere: specialistul dispărea de la serviciul acela în
+ * dashboardul clientului, iar prețul lui personalizat se pierdea. Nimeni nu
+ * afla de ce.
+ *
+ * Câmpul `id` de dedesubt e pozițional (indexul din listă), deci nu poate ține
+ * loc de identitate: se schimbă la ștergerea altui rând.
+ */
+type Serviciu = { id: number; sid?: string; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
+type ServiciuOferit = { sid?: string; nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 /**
  * `activ: false` = user peste limita planului.
  *
@@ -106,7 +121,7 @@ type ServiciuOferit = { nume: string; preturi?: PreturiTalie; durate?: PreturiTa
  * loc, revine exact cum era. Lipsa câmpului înseamnă activ — conturile de
  * dinaintea limitelor nu se dezactivează singure.
  */
-type Groomer = { id: number; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: (string | ServiciuOferit)[]; activ?: boolean };
+type Groomer = { id: number; uid?: string; nume: string; specialitate: string; orar?: ProgramSaptamanal; servicii_oferite?: (string | ServiciuOferit)[]; activ?: boolean };
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
 type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null; groomer: string | null };
@@ -214,6 +229,26 @@ function stepFromDurate(durate: number[]): number {
   let g = valid[0];
   for (let i = 1; i < valid.length; i++) g = gcdNum(g, valid[i]);
   return Math.min(30, Math.max(5, g));
+}
+
+/** Identitate stabilă pentru servicii și membri. Scurtă, dar suficient de rară. */
+function idStabil() {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Serviciul bifat la un specialist, găsit **întâi după `sid`** și abia apoi
+ * după nume. Ordinea contează: numele e doar eticheta, `sid` e identitatea.
+ * Rândurile scrise înainte de `sid` n-au decât numele — de asta rămâne și
+ * potrivirea veche, ca plasă.
+ */
+function gasesteOferit(lista: (string | ServiciuOferit)[] | undefined, sv: { sid?: string; nume: string }): number {
+  if (!Array.isArray(lista)) return -1;
+  if (sv.sid) {
+    const i = lista.findIndex(o => typeof o !== "string" && o?.sid === sv.sid);
+    if (i >= 0) return i;
+  }
+  return lista.findIndex(o => typeof o === "string" ? o === sv.nume : o?.nume === sv.nume);
 }
 
 function timeToMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
@@ -492,23 +527,27 @@ function AgendaCalendar({
     .filter(p => filtruTalie === "toate" ? true : p.talie === filtruTalie);
 
   // Coloane: una per specialist din echipă; programările fără groomer ajung într-o coloană separată
-  type Col = { key: string; nume: string; specialitate?: string; appts: ProgramareSalon[] };
+  type Col = { key: string; nume: string; specialitate?: string; uid?: string; appts: ProgramareSalon[] };
   /*
    * Coloanele: userii activi, plus cei inactivi care au totuși programări în
    * ziua asta. Un user scos peste limita planului nu mai primește rezervări
    * noi, dar programările lui deja confirmate se desfășoară normal — ar fi
    * greșit să dispară din calendar cu o zi înainte.
    */
-  const numeCuProgramari = new Set(apptsZi.map(p => p.groomer).filter(Boolean) as string[]);
+  const cuProgramari = new Set<string>();
+  for (const p of apptsZi) { if (p.membruUid) cuProgramari.add(p.membruUid); if (p.groomer) cuProgramari.add(p.groomer); }
   const cols: Col[] = echipa
-    .filter(g => g.activ !== false || numeCuProgramari.has(g.nume))
-    .map(g => ({ key: g.nume, nume: g.nume, specialitate: g.specialitate, appts: [] }));
+    .filter(g => g.activ !== false || cuProgramari.has(g.nume) || (g.uid ? cuProgramari.has(g.uid) : false))
+    .map(g => ({ key: g.nume, nume: g.nume, specialitate: g.specialitate, uid: g.uid, appts: [] }));
   const fallbackAppts: ProgramareSalon[] = [];
   // Cererile refuzate nu apar în grilă: ora n-a fost niciodată ocupată de ele.
   // Rămân în lista de anulări de sub calendar, marcate „Ai refuzat cererea".
   for (const p of apptsZi) {
     if (eRefuz(p)) continue;
-    const col = p.groomer ? cols.find(x => x.key === p.groomer) : null;
+    // Întâi după identitate, apoi după nume — programările de dinaintea
+    // `membru_uid` au doar numele scris pe ele.
+    const col = (p.membruUid ? cols.find(x => x.uid === p.membruUid) : null)
+      || (p.groomer ? cols.find(x => x.key === p.groomer) : null);
     if (col) col.appts.push(p); else fallbackAppts.push(p);
   }
   if (fallbackAppts.length > 0 || cols.length === 0) {
@@ -1523,8 +1562,25 @@ export default function DashboardSalon() {
         if (salonRow.program && typeof salonRow.program === "object" && Object.keys(salonRow.program).length > 0) {
           setProgram({ ...PROGRAM_DEFAULT, ...salonRow.program });
         }
-        setServicii(Array.isArray(salonRow.servicii) ? salonRow.servicii.map((s: any, i: number) => ({ ...s, id: i + 1 })) : []);
-        setEchipa(Array.isArray(salonRow.echipa) ? salonRow.echipa.map((g: any, i: number) => ({ ...g, id: i + 1 })) : []);
+        /*
+         * Identitățile lipsă se completează o singură dată, la prima intrare.
+         *
+         * Serviciile și membrii scriși înainte n-au `sid`/`uid`, deci legăturile
+         * dintre ei se fac încă după nume. Le dăm un id acum și îl scriem în
+         * bază, ca redenumirile de mâine să nu mai rupă nimic. Dacă scrierea
+         * eșuează, aplicația merge mai departe pe potrivirea după nume.
+         */
+        const srvBrut: any[] = Array.isArray(salonRow.servicii) ? salonRow.servicii : [];
+        const echBrut: any[] = Array.isArray(salonRow.echipa) ? salonRow.echipa : [];
+        const lipsescIduri = srvBrut.some(s => !s?.sid) || echBrut.some(g => !g?.uid);
+        const srvCuId = srvBrut.map((s: any) => ({ ...s, sid: s?.sid || idStabil() }));
+        const echCuId = echBrut.map((g: any) => ({ ...g, uid: g?.uid || idStabil() }));
+        if (lipsescIduri) {
+          supabase.from("saloane").update({ servicii: srvCuId, echipa: echCuId }).eq("id", salonRow.id).then(() => {});
+        }
+
+        setServicii(srvCuId.map((s: any, i: number) => ({ ...s, id: i + 1 })));
+        setEchipa(echCuId.map((g: any, i: number) => ({ ...g, id: i + 1 })));
         if (Array.isArray(salonRow.clienti_blocati)) setClientiBlocati(salonRow.clienti_blocati);
         setDatePregatite(true);
 
@@ -1711,7 +1767,7 @@ export default function DashboardSalon() {
     async function loadProgramari(salonId: string) {
       const { data: dataRaw, error: eProg } = await supabase
         .from("programari")
-        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, anulat_de, mutat_la, groomer, observatii")
+        .select("id, ora, data, serviciu, pret, status, user_id, animal_id, sursa, nume_client_extern, durata, talie_animal, motiv_anulare, anulat_de, mutat_la, groomer, membru_uid, observatii")
         .eq("salon_id", salonId)
         .order("data", { ascending: true })
         .order("ora", { ascending: true });
@@ -1795,6 +1851,7 @@ export default function DashboardSalon() {
           anulatDe: p.anulat_de || null,
           mutatLa: p.mutat_la || null,
           groomer: p.groomer || null,
+          membruUid: p.membru_uid || null,
           observatii: p.observatii || null,
         };
       }));
@@ -2293,11 +2350,16 @@ export default function DashboardSalon() {
       // `mutat_la` e ce dă clientului dreptul să anuleze fără motiv după ce
       // salonul i-a schimbat ora — altfel ar fi obligat să se justifice pentru
       // o mutare pe care n-a făcut-o el.
-      .update({ data: dataNoua, ora: oraNoua, groomer: groomerNou, mutat_la: new Date().toISOString() })
+      .update({
+        data: dataNoua, ora: oraNoua, groomer: groomerNou,
+        membru_uid: groomerNou ? (echipa.find(g => g.nume === groomerNou)?.uid || null) : null,
+        mutat_la: new Date().toISOString(),
+      })
       .eq("id", id).select("id");
     if (error || !scrise?.length) { salveaza("Nu am putut muta programarea."); return false; }
 
-    setProgramari(p => p.map(pr => pr.id === id ? { ...pr, data: dataNoua, ora: oraNoua, groomer: groomerNou } : pr));
+    const uidNou = groomerNou ? (echipa.find(g => g.nume === groomerNou)?.uid || null) : null;
+    setProgramari(p => p.map(pr => pr.id === id ? { ...pr, data: dataNoua, ora: oraNoua, groomer: groomerNou, membruUid: uidNou } : pr));
     if (prog.user_id && prog.esteApp) {
       const schimbaSpecialist = groomerNou && groomerNou !== prog.groomer ? ` Te preia ${groomerNou}.` : "";
       await supabase.from("notificari").insert({
@@ -2924,6 +2986,7 @@ export default function DashboardSalon() {
       // Fără el, rândul rămâne o oră blocată, fără nicio persoană în spate.
       nume_client_extern: tipBlocare !== "blocaj" && tineMinteClient ? (numeBlocare.trim() || null) : null,
       groomer: groomerBlocare === "toti" ? null : groomerBlocare,
+      membru_uid: groomerBlocare === "toti" ? null : (echipa.find(g => g.nume === groomerBlocare)?.uid || null),
     }).select("id, ora, durata, status, sursa, serviciu, nume_client_extern, groomer").single();
     if (error || !nou) { salveaza("Eroare la blocare"); console.error(error); return; }
     setSloturiZi(s => [...s, nou as SlotProgramare]);
@@ -3366,9 +3429,16 @@ export default function DashboardSalon() {
                 nume, pct: totalServ > 0 ? Math.round((cnt / totalServ) * 100) : 0, cnt,
                 col: ["#FF6B00", "#8B5CF6", "#10B981", "#F59E0B", "#EF4444"][i],
               }));
+              /*
+               * Productivitatea se grupează după identitatea specialistului, cu
+               * numele lui de acum. Dacă se grupa după numele scris pe
+               * programare, o redenumire îi rupea istoricul în două persoane.
+               */
+              const numeDupaUid = new Map(echipa.filter(g => g.uid).map(g => [g.uid as string, g.nume]));
               const groomerMap: Record<string, { nr: number; venit: number }> = {};
               venitRange.forEach(p => {
-                const g = (p.groomer && p.groomer.trim()) ? p.groomer : "Neatribuit";
+                const numeCurent = p.membruUid ? numeDupaUid.get(p.membruUid) : undefined;
+                const g = (numeCurent && numeCurent.trim()) || ((p.groomer && p.groomer.trim()) ? p.groomer : "Neatribuit");
                 (groomerMap[g] ||= { nr: 0, venit: 0 });
                 groomerMap[g].nr++;
                 groomerMap[g].venit += p.pret || 0;
@@ -5039,15 +5109,41 @@ export default function DashboardSalon() {
                     );
                   })}
                 </div>
-                <button onClick={() => setServicii(sv => [...sv, { id: Date.now(), nume: "", pret: "", durata: "", preturi: { mica: "", medie: "", mare: "" }, durate: { mica: "", medie: "", mare: "" } }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga serviciu</button>
+                <button onClick={() => setServicii(sv => [...sv, { id: Date.now(), sid: idStabil(), nume: "", pret: "", durata: "", preturi: { mica: "", medie: "", mare: "" }, durate: { mica: "", medie: "", mare: "" } }])} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>+ Adauga serviciu</button>
                 <button onClick={async () => {
                   // Aceeași regulă ca în wizard: fără servicii, nimeni nu poate rezerva.
                   const valide = servicii.filter(s => s.nume.trim());
                   if (valide.length === 0) { salveaza("Adaugă cel puțin un serviciu cu denumire înainte să salvezi."); return; }
                   const { data: { user: authUser } } = await supabase.auth.getUser();
                   if (!authUser) { salveaza("Sesiunea a expirat. Reintră în cont."); return; }
-                  const { error } = await supabase.from("saloane").update({ servicii }).eq("user_id", authUser.id);
+
+                  /*
+                   * Redenumirea unui serviciu se propagă la specialiști.
+                   *
+                   * Legătura ține de `sid`, deci nu se mai rupe — dar numele
+                   * salvat lângă el ar rămâne cel vechi și ar apărea în
+                   * interfață. Îl aducem la zi în același moment.
+                   */
+                  const numeDupaSid = new Map(servicii.filter(sv => sv.sid).map(sv => [sv.sid as string, sv.nume]));
+                  const echipaSincronizata = echipa.map(g => {
+                    if (!Array.isArray(g.servicii_oferite)) return g;
+                    let atins = false;
+                    const arr = g.servicii_oferite.map(o => {
+                      if (typeof o === "string" || !o?.sid) return o;
+                      const numeNou = numeDupaSid.get(o.sid);
+                      if (!numeNou || numeNou === o.nume) return o;
+                      atins = true;
+                      return { ...o, nume: numeNou };
+                    });
+                    return atins ? { ...g, servicii_oferite: arr } : g;
+                  });
+                  const echipaSchimbata = echipaSincronizata.some((g, i) => g !== echipa[i]);
+
+                  const { error } = await supabase.from("saloane")
+                    .update(echipaSchimbata ? { servicii, echipa: echipaSincronizata } : { servicii })
+                    .eq("user_id", authUser.id);
                   if (error) { salveaza("Nu am putut salva serviciile. Încearcă din nou."); return; }
+                  if (echipaSchimbata) setEchipa(echipaSincronizata);
                   salveaza("Servicii actualizate!");
                 }} style={btnPrimary}>Salveaza serviciile</button>
               </div>
@@ -5107,7 +5203,7 @@ export default function DashboardSalon() {
                               const nume = g.nume.trim() || `acest ${DS.rol}`;
                               // Programările deja făcute pe numele lui rămân, dar apar
                               // în agendă la „Fără specialist" — merită spus înainte.
-                              if (!confirm(`Ștergi pe ${nume}? Se pierd orarul și prețurile lui, iar programările deja făcute pe numele lui rămân fără specialist.`)) return;
+                              if (!confirm(`Ștergi pe ${nume}? Se pierd orarul și prețurile lui. Programările lui rămân în agendă și în statistici, cu numele de acum.`)) return;
                               setEchipa(ec => ec.filter(x => x.id !== g.id));
                             }} aria-label={`Șterge ${g.nume || "specialistul"}`} style={{ fontSize: 13, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "8px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
                           </div>
@@ -5150,7 +5246,7 @@ export default function DashboardSalon() {
                                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                                   {servicii.map(sv => {
                                     const oferite = g.servicii_oferite ?? [];
-                                    const idx = oferite.findIndex(o => typeof o === "string" ? o === sv.nume : o.nume === sv.nume);
+                                    const idx = gasesteOferit(oferite, sv);
                                     const activ = idx >= 0;
                                     const curent = activ ? oferite[idx] : null;
                                     const ovObj: ServiciuOferit = typeof curent === "string" ? { nume: sv.nume } : (curent as ServiciuOferit) || { nume: sv.nume };
@@ -5162,9 +5258,11 @@ export default function DashboardSalon() {
                                     const updateOv = (mut: (o: ServiciuOferit) => ServiciuOferit) => setEchipa(ec => ec.map(x => {
                                       if (x.id !== g.id) return x;
                                       const arr = [...(x.servicii_oferite ?? [])];
-                                      const i = arr.findIndex(o => typeof o === "string" ? o === sv.nume : o.nume === sv.nume);
+                                      const i = gasesteOferit(arr, sv);
                                       if (i < 0) return x;
-                                      const obj: ServiciuOferit = typeof arr[i] === "string" ? { nume: sv.nume } : { ...(arr[i] as ServiciuOferit) };
+                                      // Rândurile vechi sunt doar un nume; le urcăm la obiect cu `sid`,
+                                      // ca de-acum înainte să reziste la redenumire.
+                                      const obj: ServiciuOferit = typeof arr[i] === "string" ? { sid: sv.sid, nume: sv.nume } : { ...(arr[i] as ServiciuOferit), sid: sv.sid, nume: sv.nume };
                                       arr[i] = mut(obj);
                                       return { ...x, servicii_oferite: arr };
                                     }));
@@ -5183,9 +5281,9 @@ export default function DashboardSalon() {
                                           <button onClick={() => setEchipa(ec => ec.map(x => {
                                             if (x.id !== g.id) return x;
                                             const arr = [...(x.servicii_oferite ?? [])];
-                                            const i = arr.findIndex(o => typeof o === "string" ? o === sv.nume : o.nume === sv.nume);
+                                            const i = gasesteOferit(arr, sv);
                                             if (i >= 0) arr.splice(i, 1);
-                                            else arr.push({ nume: sv.nume });
+                                            else arr.push({ sid: sv.sid, nume: sv.nume });
                                             return { ...x, servicii_oferite: arr };
                                           }))}
                                             style={{ padding: "5px 12px", borderRadius: 50, border: activ ? "2px solid #FF6B00" : `1.5px solid ${c.border}`, background: activ ? "#FF6B00" : c.surface2, color: activ ? "#fff" : c.muted, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
@@ -5271,7 +5369,7 @@ export default function DashboardSalon() {
                 {/* Limita se aplică la adăugare. Nu se șterge nimeni retroactiv —
                     userii peste limită rămân în listă, inactivi. */}
                 {potAdaugaUser ? (
-                  <button onClick={() => setEchipa(ec => [...ec, { id: Date.now(), nume: "", specialitate: "", orar: { ...PROGRAM_DEFAULT } }])}
+                  <button onClick={() => setEchipa(ec => [...ec, { id: Date.now(), uid: idStabil(), nume: "", specialitate: "", orar: { ...PROGRAM_DEFAULT } }])}
                     style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1.5px dashed #FF6B00`, background: c.orangeAccent, color: "#FF6B00", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", marginBottom: 16 }}>
                     + Adaugă specialist
                   </button>

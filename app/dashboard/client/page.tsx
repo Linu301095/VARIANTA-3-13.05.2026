@@ -15,12 +15,12 @@ import { alegeRecomandate } from "../../../lib/recomandate";
 import { distantaKm, scrieDistanta, punctSalon } from "../../../lib/distanta";
 import SiluetaGen from "../../../components/SiluetaGen";
 import { User, PawPrint, Calendar, CalendarDays, Bell, Settings, HelpCircle, LogOut, Sun, Moon, Star, Scissors, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Clock, Search, Shield, Camera, Sparkles, LayoutGrid, ArrowDownWideNarrow, type LucideIcon } from "lucide-react";
-type ServiciuOferitC = { nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
+type ServiciuOferitC = { sid?: string; nume: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 type Domeniu = "infrumusetare" | "grooming";
 /** Lumea in care se uita clientul: pentru el insusi (infrumusetare) sau pentru animal (grooming). */
 type Lume = "tine" | "animal";
 const LUME_DOMENIU: Record<Lume, Domeniu> = { tine: "infrumusetare", animal: "grooming" };
-type SalonItem = { createdAt?: string | null; lat?: number | null; lng?: number | null; domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[] }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
+type SalonItem = { createdAt?: string | null; lat?: number | null; lng?: number | null; domeniu?: Domeniu; specii?: string[]; specializari?: string[]; publicTinta?: string | null; judet?: string; id: string | number; nume: string; oras: string; rating: number; recenzii: number; servicii: string[]; serviciiComplete: Serviciu[]; pretDe: number; culoare: string; bg: string; poza_url?: string; galerie?: string[]; echipa?: { nume: string; rol?: string; poza?: string; descriere?: string; orar?: Record<string, { activ: boolean; start: string; end: string }>; servicii_oferite?: (string | ServiciuOferitC)[]; uid?: string; activ?: boolean }[]; program?: Record<string, { activ: boolean; start: string; end: string }>; adresa?: string; telefon?: string; descriere?: string };
 
 /**
  * Cu câte ore înainte se poate anula fără explicații.
@@ -178,16 +178,31 @@ function getPretDurata(serviciu: any, talie?: string): { pret: string; durata: s
   const d = serviciu.durate?.[t] || serviciu.durata || "";
   return { pret: String(p), durata: String(d) };
 }
-function getOverrideGroomer(groomer: any, numeServiciu: string): ServiciuOferitC | null {
+/**
+ * Serviciul personalizat al unui specialist.
+ *
+ * Se caută **întâi după `sid`**, identitatea stabilă a serviciului, și abia
+ * apoi după nume. Înainte exista doar potrivirea după nume: salonul redenumea
+ * un serviciu și specialistul dispărea de la el, cu tot cu prețul lui. Aici se
+ * vedea efectul — în lista clientului — dar nimeni nu avea de unde ști de ce.
+ */
+function getOverrideGroomer(groomer: any, serviciu: { sid?: string; nume: string } | string): ServiciuOferitC | null {
   if (!groomer || !Array.isArray(groomer.servicii_oferite)) return null;
+  const sid = typeof serviciu === "string" ? undefined : serviciu.sid;
+  const nume = typeof serviciu === "string" ? serviciu : serviciu.nume;
+  if (sid) {
+    for (const o of groomer.servicii_oferite) {
+      if (typeof o !== "string" && o?.sid === sid) return o;
+    }
+  }
   for (const o of groomer.servicii_oferite) {
-    if (typeof o === "string") { if (o === numeServiciu) return { nume: o }; }
-    else if (o && o.nume === numeServiciu) return o;
+    if (typeof o === "string") { if (o === nume) return { nume: o }; }
+    else if (o && o.nume === nume) return o;
   }
   return null;
 }
 function serviciuPentruGroomer(serviciuSalon: any, groomer: any): any {
-  const ov = getOverrideGroomer(groomer, serviciuSalon.nume);
+  const ov = getOverrideGroomer(groomer, serviciuSalon);
   if (!ov) return serviciuSalon;
   const baza = serviciuSalon.preturi || { mica: serviciuSalon.pret || "", medie: serviciuSalon.pret || "", mare: serviciuSalon.pret || "" };
   const bazaD = serviciuSalon.durate || { mica: serviciuSalon.durata || "", medie: serviciuSalon.durata || "", mare: serviciuSalon.durata || "" };
@@ -223,7 +238,7 @@ type Programare = {
   motivAnulare?: string | null;
 };
 type PreturiTalie = { mica: string; medie: string; mare: string };
-type Serviciu = { nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
+type Serviciu = { sid?: string; nume: string; pret: string; durata: string; preturi?: PreturiTalie; durate?: PreturiTalie };
 type RecenzieUI = { id: string; user_id: string; rating: number; text: string; created_at: string; nume: string; avatar_url: string | null; raspuns_salon: string | null; raspuns_at: string | null };
 
 function timpRelativ(iso: string): string {
@@ -998,6 +1013,15 @@ export default function DashboardClient() {
         status: "în așteptare",
         sursa: "app",
         groomer: groomerSelectat || null,
+        /*
+         * Identitatea specialistului, nu doar numele lui.
+         *
+         * `groomer` rămâne, pentru afișare și pentru programările vechi. Dar
+         * legătura reală se face acum prin `membru_uid`: dacă salonul îl
+         * redenumește pe „Maria" în „Maria Popescu", programările ei nu mai
+         * rămân agățate de un om care nu mai există.
+         */
+        membru_uid: (salon.echipa || []).find((m: any) => m.nume === groomerSelectat)?.uid || null,
         observatii: obsTrim || null,
       })
       .select("id")
@@ -1562,7 +1586,7 @@ export default function DashboardClient() {
                                   if (Number(durata) > 0) durate.push(Number(durata));
                                 } else {
                                   for (const m of echipaS) {
-                                    const ofera = !m.servicii_oferite || m.servicii_oferite.length === 0 || !!getOverrideGroomer(m, s.nume);
+                                    const ofera = !m.servicii_oferite || m.servicii_oferite.length === 0 || !!getOverrideGroomer(m, s);
                                     if (!ofera) continue;
                                     const { pret, durata } = getPretDurata(serviciuPentruGroomer(s, m), talieBooking);
                                     if (Number(pret) > 0) preturi.push(Number(pret));
