@@ -2438,13 +2438,24 @@ export default function DashboardSalon() {
         if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
       });
     }
-    if (n.tip === "programare_noua") {
+    /*
+     * Fiecare notificare duce undeva.
+     *
+     * Jumătate dintre ele erau moarte la clic: aflai că un client a anulat sau
+     * că ți-a expirat trialul, apăsai, și nu se întâmpla nimic. O notificare pe
+     * care o poți apăsa și care nu face nimic e mai rea decât una simplă — pare
+     * stricată.
+     */
+    if (n.tip === "programare_noua" || n.tip === "anulat") {
       const prog = n.programare_id ? programari.find(p => p.id === n.programare_id) : null;
       if (prog) { setAgendaZi(prog.data); setHighlightProgramare(prog.id); }
       setTab("agenda");
     } else if (n.tip === "recenzie_noua") {
       setTab("functii-ai");
       setAiTab("recenzii");
+    } else if (n.tip === "trial_expirat") {
+      // Notificarea spune „alege un plan" — deci te duce acolo unde alegi.
+      setTab("abonament");
     }
   }
 

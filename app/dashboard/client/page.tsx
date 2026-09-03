@@ -364,6 +364,8 @@ export default function DashboardClient() {
   /** Tabul Programări: pentru cine și în ce stare. */
   const [progCine, setProgCine] = useState<"toate" | "mine" | "animal">("toate");
   const [progStare, setProgStare] = useState<"urmatoarele" | "istoric" | "anulate">("urmatoarele");
+  /** Programarea la care duce o notificare — se aprinde câteva secunde. */
+  const [highlightProg, setHighlightProg] = useState<string | null>(null);
   /** Închiderea contului. */
   const [stergeDeschis, setStergeDeschis] = useState(false);
   const [stergeParola, setStergeParola] = useState("");
@@ -859,7 +861,9 @@ export default function DashboardClient() {
    */
   async function retrageCerere(id: string) {
     const prog = programari.find(p => p.id === id);
-    const { error } = await supabase.from("programari").update({ status: "anulat" }).eq("id", id);
+    // `anulat_de` se scrie și aici: retragerea unei cereri e tot o anulare a
+    // clientului, iar fără ea rândul rămâne fără autor în bază.
+    const { error } = await supabase.from("programari").update({ status: "anulat", anulat_de: "client" }).eq("id", id);
     if (error) { salveaza("Nu am putut retrage cererea. Încearcă din nou."); return; }
     setProgramari(pr => pr.map(x => x.id === id ? { ...x, status: "anulat" } : x));
     if (!prog) return;
@@ -917,9 +921,44 @@ export default function DashboardClient() {
         if (error) setNotificari(nots => nots.map(x => x.id === n.id ? { ...x, citit: false } : x));
       });
     }
+    /**
+     * Ducerea la programarea din notificare.
+     *
+     * Înainte te lăsa în lista de programări și te punea s-o cauți singur.
+     * Acum comută pe secțiunea potrivită (Următoarele / Istoric / Anulate),
+     * scoate filtrul „pentru cine" dacă ar ascunde-o, și o aprinde câteva
+     * secunde ca s-o vezi din prima.
+     */
+    function duLaProgramare(id: string | null, sectiune?: "urmatoarele" | "istoric" | "anulate") {
+      const prog = id ? programari.find(p => p.id === id) : null;
+      if (prog) {
+        setProgCine("toate");
+        setProgStare(sectiune || (prog.status === "anulat" ? "anulate"
+          : (prog.status === "finalizat" || prog.status === "neprezentat") ? "istoric" : "urmatoarele"));
+        setHighlightProg(prog.id);
+        setTimeout(() => setHighlightProg(h => h === prog.id ? null : h), 4000);
+      }
+      setTab("programari");
+    }
+
     // „mutat" și „modificat" vin de la salon când schimbă ora sau prețul.
     if (n.tip === "confirmat" || n.tip === "anulat" || n.tip === "mutat" || n.tip === "modificat") {
-      setTab("programari");
+      duLaProgramare(n.programare_id);
+    } else if (n.tip === "fisa_ingrijire") {
+      // Textul fișei e integral în notificare; aici doar arătăm de la ce vizită.
+      duLaProgramare(n.programare_id, "istoric");
+    } else if (n.tip === "mesaj_salon") {
+      /*
+       * Mesaj de reactivare de la salon — „ne-a fost dor de tine, revino".
+       * Locul firesc e profilul salonului, adică exact acolo unde poate
+       * rezerva din nou. Îl aflăm din ultima lui programare acolo.
+       */
+      const prog = n.programare_id ? programari.find(p => p.id === n.programare_id) : null;
+      if (prog) { setSalonSelectat(prog.salon_id); setProfilSalonTab("servicii"); }
+      else if (n.programare_id) {
+        supabase.from("programari").select("salon_id").eq("id", n.programare_id).single()
+          .then(({ data }) => { if (data?.salon_id) { setSalonSelectat(data.salon_id); setProfilSalonTab("servicii"); } else setTab("saloane"); });
+      } else setTab("saloane");
     } else if (n.tip === "raspuns_recenzie") {
       const prog = n.programare_id ? programari.find(p => p.id === n.programare_id) : null;
       if (prog) {
@@ -2471,6 +2510,7 @@ export default function DashboardClient() {
               {listaProg.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {listaProg.map(p => <CardProgramare key={p.id} p={p}
+                    evidentiat={highlightProg === p.id}
                     recenzie={recenziiProgramari[p.id] || null}
                     onTrimiteRecenzie={trimiteRecenziePentruProgramare}
                     onModificaRecenzie={modificaRecenzie}
@@ -3214,7 +3254,7 @@ function formatData(iso: string): string {
   } catch { return iso; }
 }
 
-function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onTrimiteRecenzie, onModificaRecenzie, onStergeRecenzie }: { p: Programare; onAnuleazaConfirmat?: (p: Programare) => void; onRetrageCerere?: (id: string) => void; recenzie?: { id: string; rating: number; text: string; created_at: string; raspuns_salon: string | null } | null; onTrimiteRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null>; onModificaRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null>; onStergeRecenzie?: (p: Programare) => Promise<string | null> }) {
+function CardProgramare({ p, evidentiat, onAnuleazaConfirmat, onRetrageCerere, recenzie, onTrimiteRecenzie, onModificaRecenzie, onStergeRecenzie }: { p: Programare; evidentiat?: boolean; onAnuleazaConfirmat?: (p: Programare) => void; onRetrageCerere?: (id: string) => void; recenzie?: { id: string; rating: number; text: string; created_at: string; raspuns_salon: string | null } | null; onTrimiteRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null>; onModificaRecenzie?: (p: Programare, rating: number, text: string) => Promise<string | null>; onStergeRecenzie?: (p: Programare) => Promise<string | null> }) {
   const { theme, c } = useContext(ThemeCtx);
   const st = statusStyle(theme)[p.status];
   const oreRamase = (new Date(`${p.data}T${p.ora}:00`).getTime() - Date.now()) / 3600000;
@@ -3245,7 +3285,7 @@ function CardProgramare({ p, onAnuleazaConfirmat, onRetrageCerere, recenzie, onT
   }
 
   return (
-    <div style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `1.5px solid ${c.border}`, boxShadow: c.cardShadow }}>
+    <div style={{ background: c.surface, borderRadius: 16, padding: "16px 20px", border: `${evidentiat ? 2 : 1.5}px solid ${evidentiat ? "#FF6B00" : c.border}`, boxShadow: evidentiat ? "0 0 0 4px rgba(255,107,0,.28)" : c.cardShadow, transition: "box-shadow .3s, border-color .3s" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <div style={{ width: 46, height: 46, borderRadius: 12, background: c.orangeAccent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Scissors size={20} color="#FF6B00" strokeWidth={2} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
