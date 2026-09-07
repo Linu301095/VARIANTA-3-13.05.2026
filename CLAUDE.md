@@ -56,6 +56,8 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 - `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
 - `sql/conturi_specialisti.sql` — **obligatoriu pentru conturile de specialist**, adaugă tabelul
   `salon_membri_cont`, funcțiile de invitație/revendicare și RLS-ul pe `programari` pentru specialist.
+- `sql/conturi_specialisti_faza2.sql` — **obligatoriu pentru dashboardul specialistului**, adaugă
+  politica de citire pe `saloane` pentru specialist.
 - `sql/identitate_specialist.sql` — **obligatoriu**, adaugă `programari.membru_uid`. Fără el,
   rezervările eșuează (clientul scrie coloana la fiecare programare).
 - `sql/limite_plan.sql` — **obligatoriu pentru limitele de plan**, adaugă `saloane.galerie_ascunse`.
@@ -213,45 +215,34 @@ programările cu `membru_uid` egal cu al lui (accept/refuz/mutare/anulare/neprez
 proprietarului nu sunt atinse — RLS le combină cu SAU.
 
 **`profiluri.tip` are acum a treia valoare**, `"specialist"` — login-ul redirecționează la
-`/dashboard/specialist` (pagina încă nu există — asta e Faza 2).
+`/dashboard/specialist` (Faza 2, mai jos).
 
 **SQL:** `sql/conturi_specialisti.sql` — **obligatoriu**, adaugă tabelul, funcțiile și toate
 politicile RLS de mai sus, într-un singur fișier.
 
-### ⚠️ DE FĂCUT — Faza 2: dashboardul propriu al specialistului
+### Conturi pentru specialiști — Faza 2: dashboardul propriu (21.08.2026)
 
-**Logica utilizatorului, notată ca să nu se piardă:** un „user" nu e un rând în lista de echipă, e
-un om care își gestionează singur programul. Salonul îl invită să-și facă cont, iar el își
-administrează propriile programări. Cazul concret: specialistul care închiriază scaunul — încasările
-se duc la salon, dar agenda e a lui. De asta termenul rămâne **„useri"** pe `/preturi`, nu
-„specialiști".
+Ruta **`/dashboard/specialist`** — nu e o versiune mică a dashboardului de salon, e agenda unui
+singur om. RLS-ul de la Faza 1 face toată munca grea de izolare; codul de aici doar o respectă.
 
-Azi un salon = un singur cont (proprietarul), iar echipa e o listă de nume. Ce cere etapa:
+**Ce vede și ce poate face:** agenda lui (listă cronologică pe zile, nu calendarul cu coloane al
+salonului — extragerea lui ar fi fost un risc pentru un fișier deja uriaș, pentru un câștig vizual,
+nu funcțional), acceptă/refuză cereri, mută/anulează programările lui (motiv obligatoriu la
+anulare, ca la salon), marchează neprezentări, își blochează și deblochează ore proprii, își vede
+**propriile încasări** (azi + luna curentă, cu semnalarea vizitelor fără preț completat — aceeași
+regulă de onestitate ca la salon), vede prețurile salonului **doar de citit**.
 
-1. **Echipa devine tabel** (`salon_membri`: salon_id, user_id gol până acceptă, nume, rol, activ).
-2. **Invitația** — ⚠️ cere Resend. Până atunci, alternativă: cod de invitație trimis manual.
-3. **Dashboard propriu**, mai mic — specialistul n-are ce căuta în cel de salon.
-4. **Regulile de acces** (propunere): agenda proprie ✅ · confirmă/refuză/mută programările lui ✅ ·
-   își blochează ore ✅ · prețurile doar de citit 👁 · încasările salonului ❌ · echipa, planul,
-   profilul, agenții AI ❌ · istoricul doar clienții lui.
-   **Rămâne de decis:** își vede propriile încasări? (argument pro: pe baza lor își plătește chiria).
-5. **RLS extins** — azi politicile leagă programările de proprietar. Aici greșelile costă: un
-   specialist care ajunge să vadă agenda altuia.
-6. **Abia atunci limita „2 useri" înseamnă chiar 2 conturi**, nu 2 rânduri într-o listă.
+**Ce nu vede:** planul, echipa, profilul salonului, agenții AI, încasările celorlalți sau ale
+salonului în total.
 
-**Ce mai rămâne, concret** (bazei de date și autentificării din Faza 1 nu le lipsește nimic):
+**Auto-finalizarea** programărilor trecute rulează și aici, la intrarea lui în cont — nu mai
+depinde de dacă proprietarul se loghează primul.
 
-1. Ruta `/dashboard/specialist` — agenda lui (poate fi o listă pe zile, nu neapărat calendarul cu
-   coloane al salonului), cu accept/refuz/mutare/anulare/neprezentare — toate funcțiile deja scrise
-   pentru salon, adaptate la un singur specialist.
-2. Blocarea orelor proprii (insert/delete pe `sursa = 'blocaj'`, deja permis de RLS).
-3. Prețurile — doar de citit.
-4. **Propriile încasări — da**, decis cu utilizatorul: pe baza lor își plătește chiria dacă
-   închiriază scaunul.
-5. Un meniu minimal — fără plan, fără echipă, fără agenți AI, fără profilul salonului.
+**SQL suplimentar:** `sql/conturi_specialisti_faza2.sql` — o singură politică nouă, „specialistul
+citește salonul lui" pe `saloane` (nume, servicii, program, echipă), necesară ca dashboardul să
+aibă ce afișa. Nu atinge nimic din politicile proprietarului sau ale adminului.
 
-Depinde de Resend doar pentru fluxul *frumos* cu email — codul manual din Faza 1 funcționează
-independent de asta.
+**SQL de la Faza 1:** `sql/conturi_specialisti.sql`
 
 ### Limitele de plan — se aplică fără să șteargă nimic (21.08.2026)
 
