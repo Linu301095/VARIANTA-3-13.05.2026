@@ -12,7 +12,7 @@ import { SPECIALIZARI, MAX_SPECIALIZARI } from "../../../lib/specializari";
 import { verificaPoza, TEXT_REGULI_POZA } from "../../../lib/poze";
 import SchimbaParola from "../../../components/SchimbaParola";
 import Cropper from "react-easy-crop";
-import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
+import { Store, Scissors, Users, PawPrint, CreditCard, Settings, HelpCircle, LogOut, Sun, Moon, User, Clock, BarChart3, CalendarDays, Bell, Star, MapPin, Phone, AlertTriangle, CheckCircle2, XCircle, Trash2, Pencil, Upload, Download, Lock, Lightbulb, FileEdit, Image as ImageIcon, Wallet, ZoomIn, ZoomOut, Sparkles, Send, Tag, ClipboardList, MessageSquare, RefreshCw, TrendingUp, TrendingDown, KeyRound, Copy, type LucideIcon } from "lucide-react";
 
 type StatusProg = "în așteptare" | "confirmat" | "finalizat" | "anulat" | "neprezentat";
 type ProgramareSalon = {
@@ -125,6 +125,8 @@ type Groomer = { id: number; uid?: string; nume: string; specialitate: string; o
 type ProgramZi = { activ: boolean; start: string; end: string };
 type ProgramSaptamanal = Record<string, ProgramZi>;
 type SlotProgramare = { id: string; ora: string; durata: number; status: string; sursa: string; serviciu: string; nume_client_extern: string | null; groomer: string | null };
+/** Rândul din `salon_membri_cont` pentru un membru — cont legat sau cod în așteptare. */
+type ContMembru = { membru_uid: string; user_id: string | null; cod_invitatie: string | null; cod_expira_la: string | null };
 
 const AZI = new Date();
 const ZILE = ["Lun", "Mar", "Mie", "Joi", "Vin", "Sam", "Dum"];
@@ -1591,6 +1593,7 @@ export default function DashboardSalon() {
         loadNeprezentari(salonRow.id);
         loadAnimaleIstoric(salonRow.id, salonRow.domeniu !== "infrumusetare");
         loadNotificari(authUser.id);
+        loadConturiMembri(salonRow.id);
       } else {
         // Fără rând de salon (wizard neterminat) tot am terminat de citit.
         setDatePregatite(true);
@@ -1598,6 +1601,17 @@ export default function DashboardSalon() {
     }
 
     /** Neprezentările fiecărui client — numărate separat de anulările târzii. */
+    /** Care membri din echipă au deja un cont legat, sau un cod încă valabil. */
+    async function loadConturiMembri(salonId: string) {
+      const { data } = await supabase
+        .from("salon_membri_cont")
+        .select("membru_uid, user_id, cod_invitatie, cod_expira_la")
+        .eq("salon_id", salonId);
+      const map: Record<string, ContMembru> = {};
+      (data || []).forEach((r: any) => { map[r.membru_uid] = r; });
+      setConturiMembri(map);
+    }
+
     async function loadNeprezentari(salonId: string) {
       const { data } = await supabase
         .from("programari")
@@ -2062,6 +2076,59 @@ export default function DashboardSalon() {
 
   /** Ecranul „alege cine rămâne", când coborârea de plan trece peste limită. */
   const [coborare, setCoborare] = useState<{ plan: PlanId; ciclu: Ciclu; useri: number[]; poze: string[] } | null>(null);
+
+  /*
+   * Conturile specialiștilor.
+   *
+   * Cheia e `membru_uid`, exact ce leagă deja programările de specialist
+   * (identitate_specialist.sql). Un membru poate fi în trei stări: fără nimic
+   * (poate fi invitat), cu un cod generat și încă nerevendicat, sau cu un
+   * cont legat.
+   */
+  const [conturiMembri, setConturiMembri] = useState<Record<string, ContMembru>>({});
+  const [codLucru, setCodLucru] = useState<string | null>(null);
+
+  /** Generează un cod de 6 cifre, verificând să nu se ciocnească cu unul încă valabil. */
+  async function genereazaCodInvitatie(uid: string) {
+    if (!salonData?.id) return;
+    setCodLucru(uid);
+    let cod = "";
+    for (let incercare = 0; incercare < 5; incercare++) {
+      cod = String(Math.floor(100000 + Math.random() * 900000));
+      const { data: ciocnire } = await supabase
+        .from("salon_membri_cont")
+        .select("id").eq("cod_invitatie", cod).gt("cod_expira_la", new Date().toISOString()).maybeSingle();
+      if (!ciocnire) break;
+    }
+    const expira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from("salon_membri_cont")
+      .upsert({ salon_id: salonData.id, membru_uid: uid, cod_invitatie: cod, cod_expira_la: expira }, { onConflict: "salon_id,membru_uid" })
+      .select("membru_uid, user_id, cod_invitatie, cod_expira_la").single();
+    setCodLucru(null);
+    if (error || !data) { salveaza("Nu am putut genera codul. Încearcă din nou."); return; }
+    setConturiMembri(m => ({ ...m, [uid]: data as ContMembru }));
+  }
+
+  /**
+   * Șterge legătura — fie un cod încă nerevendicat, fie accesul unui cont deja
+   * legat. În al doilea caz, contul specialistului rămâne (parola lui, email-ul
+   * lui); doar RLS-ul care îi dădea acces la agenda asta dispare, fiindcă nu
+   * mai există rândul pe care se sprijină `este_membru_activ()`.
+   */
+  async function revocaLegatura(uid: string) {
+    if (!salonData?.id) return;
+    const cont = conturiMembri[uid];
+    const eContLegat = !!cont?.user_id;
+    const nume = echipa.find(g => g.uid === uid)?.nume || "acest specialist";
+    if (eContLegat && !confirm(`Revoci accesul lui ${nume} la agendă? Contul lui rămâne, dar nu va mai vedea programările de aici până nu primește un cod nou.`)) return;
+    setCodLucru(uid);
+    const { error } = await supabase.from("salon_membri_cont").delete().eq("salon_id", salonData.id).eq("membru_uid", uid);
+    setCodLucru(null);
+    if (error) { salveaza("Nu am putut anula. Încearcă din nou."); return; }
+    setConturiMembri(m => { const n = { ...m }; delete n[uid]; return n; });
+    salveaza(eContLegat ? "Acces revocat." : "Cod anulat.");
+  }
 
   const PLANURI_SALON = planuriPentru(areAnimale ? "grooming" : "infrumusetare");
   const [schimbPlan, setSchimbPlan] = useState(false);
@@ -5219,6 +5286,62 @@ export default function DashboardSalon() {
                             }} aria-label={`Șterge ${g.nume || "specialistul"}`} style={{ fontSize: 13, color: "#EF4444", background: "rgba(239,68,68,.1)", border: "none", padding: "8px 12px", borderRadius: 10, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>✕</button>
                           </div>
                         </div>
+
+                        {/* ── Contul specialistului ──
+                            g.uid lipsește doar la rândurile scrise înainte de
+                            identitate_specialist.sql, dar acelea capătă uid la
+                            prima intrare în cont — deci practic mereu există. */}
+                        {g.uid && (() => {
+                          const cont = conturiMembri[g.uid as string];
+                          const areCod = !!cont?.cod_invitatie && !cont.user_id;
+                          const areCont = !!cont?.user_id;
+                          const codExpirat = areCod && cont?.cod_expira_la && new Date(cont.cod_expira_la) < new Date();
+                          const lucreaza = codLucru === g.uid;
+                          return (
+                            <div style={{ borderTop: `1.5px solid ${c.border}`, padding: "13px 20px", background: c.surface2, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                              <KeyRound size={15} color={c.muted} strokeWidth={2} style={{ flexShrink: 0 }} />
+                              {areCont ? (
+                                <>
+                                  <span style={{ fontSize: 12.5, fontWeight: 800, color: "#10B981", flex: 1, minWidth: 160 }}>
+                                    Are cont propriu — vede și gestionează singur agenda lui
+                                  </span>
+                                  <button onClick={() => revocaLegatura(g.uid as string)} disabled={lucreaza}
+                                    style={{ fontSize: 11.5, fontWeight: 800, color: "#EF4444", background: "transparent", border: "1.5px solid rgba(239,68,68,.4)", padding: "6px 12px", borderRadius: 50, cursor: lucreaza ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                                    Revocă accesul
+                                  </button>
+                                </>
+                              ) : areCod && !codExpirat ? (
+                                <>
+                                  <span style={{ flex: 1, minWidth: 160, fontSize: 12.5, color: c.text2, fontWeight: 700 }}>
+                                    Cod de invitație: <span style={{ fontSize: 15, fontWeight: 900, color: c.text, letterSpacing: 3 }}>{cont.cod_invitatie}</span>
+                                    <span style={{ display: "block", fontSize: 11, color: c.muted, fontWeight: 600, marginTop: 2 }}>
+                                      Valabil până {cont.cod_expira_la && new Date(cont.cod_expira_la).toLocaleDateString("ro-RO")} · trimite-l manual (WhatsApp, SMS) — specialistul îl introduce pe /inregistrare-cont-specialist
+                                    </span>
+                                  </span>
+                                  <button onClick={() => { navigator.clipboard?.writeText(cont.cod_invitatie || ""); salveaza("Cod copiat."); }}
+                                    style={{ fontSize: 11.5, fontWeight: 800, color: c.text2, background: "transparent", border: `1.5px solid ${c.border}`, padding: "6px 10px", borderRadius: 50, cursor: "pointer", fontFamily: "Nunito, sans-serif", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                                    <Copy size={12} strokeWidth={2} /> Copiază
+                                  </button>
+                                  <button onClick={() => revocaLegatura(g.uid as string)} disabled={lucreaza}
+                                    style={{ fontSize: 11.5, fontWeight: 800, color: c.muted, background: "transparent", border: `1.5px solid ${c.border}`, padding: "6px 12px", borderRadius: 50, cursor: lucreaza ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                                    Anulează codul
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <span style={{ fontSize: 12.5, color: c.muted, fontWeight: 600, flex: 1, minWidth: 160 }}>
+                                    {codExpirat ? "Codul a expirat." : "Fără cont propriu — agenda e administrată de tine."}
+                                  </span>
+                                  <button onClick={() => genereazaCodInvitatie(g.uid as string)} disabled={lucreaza}
+                                    style={{ fontSize: 11.5, fontWeight: 800, color: "#FF6B00", background: c.orangeAccent, border: "1.5px solid #FF6B00", padding: "6px 12px", borderRadius: 50, cursor: lucreaza ? "wait" : "pointer", fontFamily: "Nunito, sans-serif", flexShrink: 0 }}>
+                                    {lucreaza ? "Se generează..." : "Generează cod de acces"}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
+
                         {orarDeschis && (
                           <div style={{ borderTop: `1.5px solid ${c.border}`, padding: "16px 20px", background: c.surface2 }}>
                             <div style={{ fontSize: 12, fontWeight: 800, color: c.xmuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Orar săptămânal — {g.nume || "specialist"}</div>

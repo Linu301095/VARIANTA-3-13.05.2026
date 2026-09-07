@@ -51,7 +51,11 @@ export default function LoginPage() {
       if (anulat || !session?.user) return;
       const { data: profile } = await supabase
         .from("profiluri").select("tip").eq("id", session.user.id).single();
-      router.replace(profile?.tip === "salon" ? "/dashboard/salon" : "/dashboard/client");
+      router.replace(
+        profile?.tip === "salon" ? "/dashboard/salon"
+        : profile?.tip === "specialist" ? "/dashboard/specialist"
+        : "/dashboard/client"
+      );
     })();
     return () => { anulat = true; };
   }, [router]);
@@ -115,6 +119,7 @@ export default function LoginPage() {
     } catch {}
 
     if (profile?.tip === "salon") router.push("/dashboard/salon");
+    else if (profile?.tip === "specialist") router.push("/dashboard/specialist");
     else router.push("/dashboard/client");
   }
 

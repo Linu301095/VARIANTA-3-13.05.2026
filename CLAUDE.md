@@ -54,6 +54,8 @@ Toate cele 7 ecrane sunt refăcute pe direcția dublă, cu dark mode și respons
 - `sql/stergere_cont.sql` — **obligatoriu pentru ștergerea contului**, adaugă `profiluri.sters_la` și `recenzii.autor_anonim`. Fără el, butonul „Șterge contul" din dashboardul clientului eșuează.
 - `sql/specializari_salon.sql` — **obligatoriu**, adaugă `saloane.specializari text[]` + restricția (max 3, doar cele 7 valori) și index GIN. Fără el, înscrierea unui salon de înfrumusețare eșuează.
 - `sql/program_zile_numerice.sql` — **decis să NU se ruleze (10.08.2026).** Repară `saloane.program` la rândurile scrise de wizardul vechi (chei `luni`/`deschis` → `1`/`activ`). Wizardul scrie corect de la 10.08.2026; saloanele mai vechi își resalvează programul manual din dashboard. Fișierul rămâne în repo dacă apar multe rânduri vechi.
+- `sql/conturi_specialisti.sql` — **obligatoriu pentru conturile de specialist**, adaugă tabelul
+  `salon_membri_cont`, funcțiile de invitație/revendicare și RLS-ul pe `programari` pentru specialist.
 - `sql/identitate_specialist.sql` — **obligatoriu**, adaugă `programari.membru_uid`. Fără el,
   rezervările eșuează (clientul scrie coloana la fiecare programare).
 - `sql/limite_plan.sql` — **obligatoriu pentru limitele de plan**, adaugă `saloane.galerie_ascunse`.
@@ -184,7 +186,39 @@ programări s-ar face prin nume, oricine își schimbă numele și-ar pierde toa
 **SQL:** `sql/identitate_specialist.sql` — adaugă `programari.membru_uid`. Serviciile și echipa nu
 cer migrare (sunt jsonb).
 
-### ⚠️ DE FĂCUT — conturi pentru specialiști (etapă mare, după Resend)
+### Conturi pentru specialiști — Faza 1 (21.08.2026)
+
+**Logica utilizatorului, păstrată din nota de mai jos:** un „user" nu e un rând în lista de
+echipă, e un om care își gestionează singur programul. Salonul îl invită să-și facă cont, iar el
+își administrează propriile programări.
+
+**Cum se face invitația, până există Resend:** proprietarul apasă „Generează cod de acces" lângă
+un specialist din „Echipa mea" → cod de **6 cifre, valabil 7 zile** → îl trimite manual (WhatsApp,
+SMS). Specialistul îl introduce pe **`/inregistrare-cont-specialist`** (cont nou sau cont existent,
+dacă lucrează deja la alt salon) și de atunci intră direct în agenda lui.
+
+**De ce n-am transformat `saloane.echipa` într-un tabel real:** UI-ul din „Echipa mea" e construit
+adânc pe forma actuală (jsonb, chei poziționale, orar, servicii bifate) — o rescriere ar fi un risc
+mare pentru un câștig care nu ține de conturi. În loc, un tabel mic și separat —
+`salon_membri_cont` — leagă `uid`-ul membrului (deja existent, din `identitate_specialist.sql`)
+de un `user_id` real din `auth.users`. Echipa rămâne exact cum era.
+
+**Revendicarea codului** trece printr-o singură funcție din bază (`redeem_cod_specialist`,
+`SECURITY DEFINER`, la fel ca `este_admin()`) — niciun cont nu poate scrie direct legătura,
+doar cu codul potrivit.
+
+**RLS-ul pe `programari`** e deja pregătit pentru Faza 2: un specialist poate citi/actualiza doar
+programările cu `membru_uid` egal cu al lui (accept/refuz/mutare/anulare/neprezentare — toate sunt
+`update`), și poate insera/șterge doar ore blocate de el (`sursa = 'blocaj'`). Politicile
+proprietarului nu sunt atinse — RLS le combină cu SAU.
+
+**`profiluri.tip` are acum a treia valoare**, `"specialist"` — login-ul redirecționează la
+`/dashboard/specialist` (pagina încă nu există — asta e Faza 2).
+
+**SQL:** `sql/conturi_specialisti.sql` — **obligatoriu**, adaugă tabelul, funcțiile și toate
+politicile RLS de mai sus, într-un singur fișier.
+
+### ⚠️ DE FĂCUT — Faza 2: dashboardul propriu al specialistului
 
 **Logica utilizatorului, notată ca să nu se piardă:** un „user" nu e un rând în lista de echipă, e
 un om care își gestionează singur programul. Salonul îl invită să-și facă cont, iar el își
@@ -205,7 +239,19 @@ Azi un salon = un singur cont (proprietarul), iar echipa e o listă de nume. Ce 
    specialist care ajunge să vadă agenda altuia.
 6. **Abia atunci limita „2 useri" înseamnă chiar 2 conturi**, nu 2 rânduri într-o listă.
 
-Estimare: 3–5 zile. Depinde de Resend, care depinde de domeniu.
+**Ce mai rămâne, concret** (bazei de date și autentificării din Faza 1 nu le lipsește nimic):
+
+1. Ruta `/dashboard/specialist` — agenda lui (poate fi o listă pe zile, nu neapărat calendarul cu
+   coloane al salonului), cu accept/refuz/mutare/anulare/neprezentare — toate funcțiile deja scrise
+   pentru salon, adaptate la un singur specialist.
+2. Blocarea orelor proprii (insert/delete pe `sursa = 'blocaj'`, deja permis de RLS).
+3. Prețurile — doar de citit.
+4. **Propriile încasări — da**, decis cu utilizatorul: pe baza lor își plătește chiria dacă
+   închiriază scaunul.
+5. Un meniu minimal — fără plan, fără echipă, fără agenți AI, fără profilul salonului.
+
+Depinde de Resend doar pentru fluxul *frumos* cu email — codul manual din Faza 1 funcționează
+independent de asta.
 
 ### Limitele de plan — se aplică fără să șteargă nimic (21.08.2026)
 
